@@ -1,0 +1,124 @@
+
+--- Job TotalLeastSquares.gms Start 06/15/21 07:37:56 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\TotalLeastSquares\TotalLeastSquares.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\TotalLeastSquares\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\TotalLeastSquares\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- TotalLeastSquares.gms(91) 3 Mb
+--- Starting execution: elapsed 0:00:00.040
+--- TotalLeastSquares.gms(88) 4 Mb
+--- Generating MINLP model tls
+--- TotalLeastSquares.gms(89) 6 Mb
+---   26 rows  78 columns  201 non-zeroes
+---   478 nl-code  175 nl-non-zeroes
+--- TotalLeastSquares.gms(89) 4 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.102
+
+GAMS/BARON       34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 21.1.13. Built: WIN-64 Wed Jan 13 16:04:12 EST 2021
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Khajavirad, A. and N. V. Sahinidis,
+ A hybrid LP/NLP paradigm for global optimization relaxations,
+ Mathematical Programming Computation, 10, 383-421, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: ILOG CPLEX                                      
+ For NLP: MINOS, SNOPT, GAMS external NLP, IPOPT, FILTERSD, FILTERSQP
+===========================================================================
+ Doing local search
+ Preprocessing found feasible solution with value  27.8444339253     
+ Solving bounding LP
+ Starting multi-start local search
+ Done with local search
+===========================================================================
+  Iteration    Open nodes         Time (s)    Lower bound      Upper bound
+          1             1             3.94      0.00000         27.8444    
+         22+            4            33.99      0.00000         27.8444    
+         30+            4            64.11      0.00000         27.8444    
+         35+            4            94.16      0.00000         27.8444    
+        242+           17           124.23      0.00000         27.8444    
+        275+           18           154.40      0.00000         27.8444    
+        293+           19           184.65      0.00000         27.8444    
+        307+           16           214.89      0.00000         27.8444    
+        310+           17           245.19      0.00000         27.8444    
+        313+           17           275.54      0.00000         27.8444    
+        316+           18           305.71      0.00000         27.8444    
+        320+           18           335.81      0.00000         27.8444    
+        327+           18           365.87      0.00000         27.8444    
+        408+           47           395.87      0.00000         27.8444    
+        423+           53           425.88      0.00000         27.8444    
+        439+           54           456.21      0.00000         27.8444    
+        450+           55           486.26      0.00000         27.8444    
+        458+           54           516.40      0.00000         27.8444    
+        459+           54           546.42      0.00000         27.8444    
+        460+           54           576.54      0.00000         27.8444    
+        461+           55           606.85      0.00000         27.8444    
+        463+           55           637.03      0.00000         27.8444    
+        468+           54           667.09      0.00000         27.8444    
+        469+           55           697.29      0.00000         27.8444    
+        471+           56           727.30      0.00000         27.8444    
+        477+           56           757.40      0.00000         27.8444    
+        479+           55           787.53      0.00000         27.8444    
+        480+           55           817.70      0.00000         27.8444    
+        481+           56           847.94      0.00000         27.8444    
+        483+           57           878.04      0.00000         27.8444    
+        484+           57           908.05      0.00000         27.8444    
+        519+           56           938.08      0.00000         27.8444    
+        522+           57           968.13      0.00000         27.8444    
+        643+           65           998.29     0.118286         27.8444    
+        643            65          1000.03     0.118286         27.8444    
+
+                    *** Max. allowable time exceeded ***      
+
+ Wall clock time:                  1000.03
+ Total CPU time used:               948.97
+
+ Total no. of BaR iterations:     643
+ Best solution found at node:     343
+ Max. no. of nodes in memory:      68
+ 
+ All done
+===========================================================================
+
+Solution      = 27.8444339228538  found at node 343
+Best possible = 0.118286314438
+Absolute gap  = 27.7261476084158  optca = 1E-9
+Relative gap  = 0.995751886543439  optcr = 1E-9
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+--- Reading solution for model tls
+***
+*** Solver did not provide marginals for model tls
+***
+--- Executing after solve: elapsed 0:16:43.121
+--- TotalLeastSquares.gms(91) 4 Mb
+*** Status: Normal completion
+--- Job TotalLeastSquares.gms Stop 06/15/21 07:54:39 elapsed 0:16:43.124
