@@ -4,9 +4,9 @@ $ontext
 
    This model will have difficulties due to non-differentiability
    of the abs() function.
-   
+
    References:
-       https://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
+      http://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
 
    erwin@amsterdamoptimization.com
 

@@ -1,4 +1,4 @@
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 1
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -9,56 +9,59 @@ C o m p i l a t i o n
          This model will have difficulties due to non-differentiability
          of the abs() function.
        
+         References:
+            http://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
+       
          erwin@amsterdamoptimization.com
        
-  11   
-  12  set i /i1*i5/;
-  13   
-  14  parameter y(i) 'data';
-  15  y(i) = uniform(0,1);
-  16  display y;
-  17   
-  18  variable
-  19     m 'median'
-  20     z 'objective'
-  21  ;
-  22   
-  23  equation sumabs;
-  24   
-  25  sumabs.. z =e= sum(i, abs(y(i)-m));
-  26   
-  27  * initial value
-  28  m.l = 0.5;
+  14   
+  15  set i /i1*i5/;
+  16   
+  17  parameter y(i) 'data';
+  18  y(i) = uniform(0,1);
+  19  display y;
+  20   
+  21  variable
+  22     m 'median'
+  23     z 'objective'
+  24  ;
+  25   
+  26  equation sumabs;
+  27   
+  28  sumabs.. z =e= sum(i, abs(y(i)-m));
   29   
-  30  model median /sumabs/;
-  31  option dnlp=conopt;
-  32  solve median minimizing z using dnlp;
-  33   
-  34  display m.l;
+  30  * initial value
+  31  m.l = 0.5;
+  32   
+  33  model median /sumabs/;
+  34  option dnlp=conopt;
+  35  solve median minimizing z using dnlp;
+  36   
+  37  display m.l;
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 2
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     16 PARAMETER y  data
+----     19 PARAMETER y  data
 
 i1 0.172,    i2 0.843,    i3 0.550,    i4 0.301,    i5 0.292
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 3
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE median Using DNLP From line 32
+Equation Listing    SOLVE median Using DNLP From line 35
 
 
 ---- sumabs  =E=  
 
 sumabs..  - (1)*m + z =E= 0 ; (LHS = -1.128544911, INFES = 1.128544911 ****)
      
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 4
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE median Using DNLP From line 32
+Column Listing      SOLVE median Using DNLP From line 35
 
 
 ---- m  median
@@ -74,9 +77,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       sumabs
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 5
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE median Using DNLP From line 32
+Model Statistics    SOLVE median Using DNLP From line 35
 
 
 MODEL STATISTICS
@@ -87,23 +90,23 @@ NON ZERO ELEMENTS             2     NON LINEAR N-Z              1
 CODE LENGTH                  23     CONSTANT POOL              21
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 6
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE median Using DNLP From line 32
+Solution Report     SOLVE median Using DNLP From line 35
 
 
                S O L V E      S U M M A R Y
 
      MODEL   median              OBJECTIVE  z
      TYPE    DNLP                DIRECTION  MINIMIZE
-     SOLVER  CONOPT              FROM LINE  32
+     SOLVER  CONOPT              FROM LINE  35
 
 **** SOLVER STATUS     4 Terminated By Solver      
 **** MODEL STATUS      7 Feasible Solution         
 **** OBJECTIVE VALUE                0.9297
 
- RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ RESOURCE USAGE, LIMIT          0.094 10000000000.000
  ITERATION COUNT, LIMIT        33    2147483647
  EVALUATION ERRORS              0             0
  
@@ -130,9 +133,9 @@ Solution Report     SOLVE median Using DNLP From line 32
     has been less than 3.0000E-12 for 20 consecutive iterations
  
  
- CONOPT time Total                            0.065 seconds
-   of which: Function evaluations             0.005 =  7.7%
-             1st Derivative evaluations       0.001 =  1.5%
+ CONOPT time Total                            0.087 seconds
+   of which: Function evaluations             0.006 =  6.9%
+             1st Derivative evaluations       0.000 =  0.0%
  
 
                            LOWER          LEVEL          UPPER         MARGINAL
@@ -152,15 +155,15 @@ Solution Report     SOLVE median Using DNLP From line 32
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 7
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:06 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     34 VARIABLE m.L                   =        0.301  median
+----     37 VARIABLE m.L                   =        0.301  median
 
 
-EXECUTION TIME       =        0.391 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+EXECUTION TIME       =        0.453 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN

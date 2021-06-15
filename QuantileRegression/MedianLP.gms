@@ -8,7 +8,6 @@ $ontext
    References:
       http://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
 
-
    erwin@amsterdamoptimization.com
 
 $offtext

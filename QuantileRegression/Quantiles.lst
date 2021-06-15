@@ -1,0 +1,1325 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         find quantiles using an LP model
+       
+         References:
+            http://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
+       
+         erwin@amsterdamoptimization.com
+       
+       
+  12   
+  13  set
+  14    i 'observations' /i1*i25/
+  15    t 'quantile levels' /'0','0.25','0.5','0.75','1'/
+  16  ;
+  17   
+  18  parameter y(i) 'data';
+  19  y(i) = uniform(10,100);
+  20   
+  21  display y,t;
+  22   
+  23  *-------------------------------------------------------------
+  24  * variable splitting LP Model
+  25  *-------------------------------------------------------------
+  26   
+  27  set
+  28    pm /'+','-'/
+  29  ;
+  30   
+  31  scalar tau 'quantile level';
+  32   
+  33  positive variables e(i,pm) 'absolute value';
+  34   
+  35  variable
+  36     z 'objective variable'
+  37     q 'quantile'
+  38  ;
+  39   
+  40   
+  41  equations
+  42     obj      'objective'
+  43     split(i)  'variable splitting'
+  44  ;
+  45   
+  46  obj.. z =e= sum(i, tau*e(i,'+') + (1-tau)*e(i,'-'));
+  47  split(i).. e(i,'+')-e(i,'-') =e= y(i)-q;
+  48   
+  49  model quantileLP /obj,split/;
+  50   
+  51   
+  52  *-------------------------------------------------------------
+  53  * solve loop
+  54  *-------------------------------------------------------------
+  55   
+  56  parameter quantiles(t) 'Solution';
+  57   
+  58  loop(t,
+  59     tau = t.val;
+  60     solve quantileLP minimizing z using lp;
+  61     quantiles(t) = q.l;
+  62  );
+  63  display quantiles;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     21 PARAMETER y  data
+
+i1  25.457,    i2  85.894,    i3  59.534,    i4  37.102,    i5  36.299,    i6  30.165,    i7  41.485,    i8  87.064
+i9  16.040,    i10 55.019,    i11 99.831,    i12 62.086,    i13 99.202,    i14 78.603,    i15 21.762,    i16 67.575
+i17 24.357,    i18 32.507,    i19 70.204,    i20 49.182,    i21 42.373,    i22 41.630,    i23 21.834,    i24 23.509
+i25 63.020
+
+
+----     21 SET t  quantile levels
+
+0   ,    0.25,    0.5 ,    0.75,    1   
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE quantileLP Using LP From line 60
+
+
+---- obj  =E=  objective
+
+obj..  - e(i1,-) - e(i2,-) - e(i3,-) - e(i4,-) - e(i5,-) - e(i6,-) - e(i7,-) - e(i8,-) - e(i9,-) - e(i10,-) - e(i11,-)
+     
+      - e(i12,-) - e(i13,-) - e(i14,-) - e(i15,-) - e(i16,-) - e(i17,-) - e(i18,-) - e(i19,-) - e(i20,-) - e(i21,-)
+     
+      - e(i22,-) - e(i23,-) - e(i24,-) - e(i25,-) + z =E= 0 ; (LHS = 0)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  e(i1,+) - e(i1,-) + q =E= 25.45724188 ; (LHS = 0, INFES = 25.45724188 ****)
+     
+split(i2)..  e(i2,+) - e(i2,-) + q =E= 85.89400372 ; (LHS = 0, INFES = 85.89400372 ****)
+     
+split(i3)..  e(i3,+) - e(i3,-) + q =E= 59.53378204 ; (LHS = 0, INFES = 59.53378204 ****)
+     
+REMAINING 22 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE quantileLP Using LP From line 60
+
+
+---- e  absolute value
+
+e(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split(i1)
+
+e(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+       -1       split(i1)
+
+e(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split(i2)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- z  objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- q  quantile
+
+q
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE quantileLP Using LP From line 60
+
+
+LOOPS                                    t   0
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           26
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           52
+NON ZERO ELEMENTS           101
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+               L O O P S                  t 0
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE quantileLP Using LP From line 60
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quantileLP          OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  60
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU split  variable splitting
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         25.4572        25.4572        25.4572         EPS         
+i2         85.8940        85.8940        85.8940         EPS         
+i3         59.5338        59.5338        59.5338         EPS         
+i4         37.1024        37.1024        37.1024         EPS         
+i5         36.2991        36.2991        36.2991         EPS         
+i6         30.1648        30.1648        30.1648         EPS         
+i7         41.4847        41.4847        41.4847         EPS         
+i8         87.0643        87.0643        87.0643         EPS         
+i9         16.0402        16.0402        16.0402         EPS         
+i10        55.0190        55.0190        55.0190         EPS         
+i11        99.8306        99.8306        99.8306         EPS         
+i12        62.0860        62.0860        62.0860         EPS         
+i13        99.2020        99.2020        99.2020         EPS         
+i14        78.6025        78.6025        78.6025         EPS         
+i15        21.7623        21.7623        21.7623         EPS         
+i16        67.5747        67.5747        67.5747         EPS         
+i17        24.3566        24.3566        24.3566         EPS         
+i18        32.5072        32.5072        32.5072         EPS         
+i19        70.2036        70.2036        70.2036         EPS         
+i20        49.1821        49.1821        49.1821         EPS         
+i21        42.3730        42.3730        42.3730         EPS         
+i22        41.6297        41.6297        41.6297         EPS         
+i23        21.8342        21.8342        21.8342         EPS         
+i24        23.5092        23.5092        23.5092         EPS         
+i25        63.0202        63.0202        63.0202         EPS         
+
+---- VAR e  absolute value
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .             9.4170        +INF             .          
+i1 .-          .              .            +INF            1.0000      
+i2 .+          .            69.8538        +INF             .          
+i2 .-          .              .            +INF            1.0000      
+i3 .+          .            43.4935        +INF             .          
+i3 .-          .              .            +INF            1.0000      
+i4 .+          .            21.0622        +INF             .          
+i4 .-          .              .            +INF            1.0000      
+i5 .+          .            20.2589        +INF             .          
+i5 .-          .              .            +INF            1.0000      
+i6 .+          .            14.1245        +INF             .          
+i6 .-          .              .            +INF            1.0000      
+i7 .+          .            25.4445        +INF             .          
+i7 .-          .              .            +INF            1.0000      
+i8 .+          .            71.0241        +INF             .          
+i8 .-          .              .            +INF            1.0000      
+i9 .+          .              .            +INF            EPS         
+i9 .-          .              .            +INF            1.0000      
+i10.+          .            38.9787        +INF             .          
+i10.-          .              .            +INF            1.0000      
+i11.+          .            83.7904        +INF             .          
+i11.-          .              .            +INF            1.0000      
+i12.+          .            46.0458        +INF             .          
+i12.-          .              .            +INF            1.0000      
+i13.+          .            83.1617        +INF             .          
+i13.-          .              .            +INF            1.0000      
+i14.+          .            62.5623        +INF             .          
+i14.-          .              .            +INF            1.0000      
+i15.+          .             5.7221        +INF             .          
+i15.-          .              .            +INF            1.0000      
+i16.+          .            51.5345        +INF             .          
+i16.-          .              .            +INF            1.0000      
+i17.+          .             8.3164        +INF             .          
+i17.-          .              .            +INF            1.0000      
+i18.+          .            16.4670        +INF             .          
+i18.-          .              .            +INF            1.0000      
+i19.+          .            54.1633        +INF             .          
+i19.-          .              .            +INF            1.0000      
+i20.+          .            33.1418        +INF             .          
+i20.-          .              .            +INF            1.0000      
+i21.+          .            26.3328        +INF             .          
+i21.-          .              .            +INF            1.0000      
+i22.+          .            25.5895        +INF             .          
+i22.-          .              .            +INF            1.0000      
+i23.+          .             5.7940        +INF             .          
+i23.-          .              .            +INF            1.0000      
+i24.+          .             7.4689        +INF             .          
+i24.-          .              .            +INF            1.0000      
+i25.+          .            46.9800        +INF             .          
+i25.-          .              .            +INF            1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+---- VAR q                 -INF           16.0402        +INF             .          
+
+  z  objective variable
+  q  quantile
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE quantileLP Using LP From line 60
+
+
+---- obj  =E=  objective
+
+obj..  - 0.25*e(i1,+) - 0.75*e(i1,-) - 0.25*e(i2,+) - 0.75*e(i2,-) - 0.25*e(i3,+) - 0.75*e(i3,-) - 0.25*e(i4,+)
+     
+      - 0.75*e(i4,-) - 0.25*e(i5,+) - 0.75*e(i5,-) - 0.25*e(i6,+) - 0.75*e(i6,-) - 0.25*e(i7,+) - 0.75*e(i7,-)
+     
+      - 0.25*e(i8,+) - 0.75*e(i8,-) - 0.25*e(i9,+) - 0.75*e(i9,-) - 0.25*e(i10,+) - 0.75*e(i10,-) - 0.25*e(i11,+)
+     
+      - 0.75*e(i11,-) - 0.25*e(i12,+) - 0.75*e(i12,-) - 0.25*e(i13,+) - 0.75*e(i13,-) - 0.25*e(i14,+) - 0.75*e(i14,-)
+     
+      - 0.25*e(i15,+) - 0.75*e(i15,-) - 0.25*e(i16,+) - 0.75*e(i16,-) - 0.25*e(i17,+) - 0.75*e(i17,-) - 0.25*e(i18,+)
+     
+      - 0.75*e(i18,-) - 0.25*e(i19,+) - 0.75*e(i19,-) - 0.25*e(i20,+) - 0.75*e(i20,-) - 0.25*e(i21,+) - 0.75*e(i21,-)
+     
+      - 0.25*e(i22,+) - 0.75*e(i22,-) - 0.25*e(i23,+) - 0.75*e(i23,-) - 0.25*e(i24,+) - 0.75*e(i24,-) - 0.25*e(i25,+)
+     
+      - 0.75*e(i25,-) + z =E= 0 ; (LHS = -217.681921215, INFES = 217.681921215 ****)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  e(i1,+) - e(i1,-) + q =E= 25.45724188 ; (LHS = 25.45724188)
+     
+split(i2)..  e(i2,+) - e(i2,-) + q =E= 85.89400372 ; (LHS = 85.89400372)
+     
+split(i3)..  e(i3,+) - e(i3,-) + q =E= 59.53378204 ; (LHS = 59.53378204)
+     
+REMAINING 22 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE quantileLP Using LP From line 60
+
+
+---- e  absolute value
+
+e(i1,+)
+                (.LO, .L, .UP, .M = 0, 9.41700681, +INF, 0)
+       -0.25    obj
+        1       split(i1)
+
+e(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+       -0.75    obj
+       -1       split(i1)
+
+e(i2,+)
+                (.LO, .L, .UP, .M = 0, 69.85376865, +INF, 0)
+       -0.25    obj
+        1       split(i2)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- z  objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- q  quantile
+
+q
+                (.LO, .L, .UP, .M = -INF, 16.04023507, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE quantileLP Using LP From line 60
+
+
+LOOPS                                    t   0.25
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           26
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           52
+NON ZERO ELEMENTS           126
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+               L O O P S                  t 0.25
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE quantileLP Using LP From line 60
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quantileLP          OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  60
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              177.4324
+
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
+ ITERATION COUNT, LIMIT         6    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.08 ticks)
+
+
+Optimal solution found
+Objective:          177.432389
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU split  variable splitting
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         25.4572        25.4572        25.4572        -0.7500      
+i2         85.8940        85.8940        85.8940         0.2500      
+i3         59.5338        59.5338        59.5338         0.2500      
+i4         37.1024        37.1024        37.1024         0.2500      
+i5         36.2991        36.2991        36.2991         0.2500      
+i6         30.1648        30.1648        30.1648         EPS         
+i7         41.4847        41.4847        41.4847         0.2500      
+i8         87.0643        87.0643        87.0643         0.2500      
+i9         16.0402        16.0402        16.0402        -0.7500      
+i10        55.0190        55.0190        55.0190         0.2500      
+i11        99.8306        99.8306        99.8306         0.2500      
+i12        62.0860        62.0860        62.0860         0.2500      
+i13        99.2020        99.2020        99.2020         0.2500      
+i14        78.6025        78.6025        78.6025         0.2500      
+i15        21.7623        21.7623        21.7623        -0.7500      
+i16        67.5747        67.5747        67.5747         0.2500      
+i17        24.3566        24.3566        24.3566        -0.7500      
+i18        32.5072        32.5072        32.5072         0.2500      
+i19        70.2036        70.2036        70.2036         0.2500      
+i20        49.1821        49.1821        49.1821         0.2500      
+i21        42.3730        42.3730        42.3730         0.2500      
+i22        41.6297        41.6297        41.6297         0.2500      
+i23        21.8342        21.8342        21.8342        -0.7500      
+i24        23.5092        23.5092        23.5092        -0.7500      
+i25        63.0202        63.0202        63.0202         0.2500      
+
+---- VAR e  absolute value
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .              .            +INF            1.0000      
+i1 .-          .             4.7075        +INF             .          
+i2 .+          .            55.7292        +INF             .          
+i2 .-          .              .            +INF            1.0000      
+i3 .+          .            29.3690        +INF             .          
+i3 .-          .              .            +INF            1.0000      
+i4 .+          .             6.9377        +INF             .          
+i4 .-          .              .            +INF            1.0000      
+i5 .+          .             6.1343        +INF             .          
+i5 .-          .              .            +INF            1.0000      
+i6 .+          .              .            +INF            0.2500      
+i6 .-          .              .            +INF            0.7500      
+i7 .+          .            11.3200        +INF             .          
+i7 .-          .              .            +INF            1.0000      
+i8 .+          .            56.8996        +INF             .          
+i8 .-          .              .            +INF            1.0000      
+i9 .+          .              .            +INF            1.0000      
+i9 .-          .            14.1245        +INF             .          
+i10.+          .            24.8542        +INF             .          
+i10.-          .              .            +INF            1.0000      
+i11.+          .            69.6658        +INF             .          
+i11.-          .              .            +INF            1.0000      
+i12.+          .            31.9212        +INF             .          
+i12.-          .              .            +INF            1.0000      
+i13.+          .            69.0372        +INF             .          
+i13.-          .              .            +INF            1.0000      
+i14.+          .            48.4378        +INF             .          
+i14.-          .              .            +INF            1.0000      
+i15.+          .              .            +INF            1.0000      
+i15.-          .             8.4024        +INF             .          
+i16.+          .            37.4099        +INF             .          
+i16.-          .              .            +INF            1.0000      
+i17.+          .              .            +INF            1.0000      
+i17.-          .             5.8082        +INF             .          
+i18.+          .             2.3425        +INF             .          
+i18.-          .              .            +INF            1.0000      
+i19.+          .            40.0388        +INF             .          
+i19.-          .              .            +INF            1.0000      
+i20.+          .            19.0173        +INF             .          
+i20.-          .              .            +INF            1.0000      
+i21.+          .            12.2083        +INF             .          
+i21.-          .              .            +INF            1.0000      
+i22.+          .            11.4650        +INF             .          
+i22.-          .              .            +INF            1.0000      
+i23.+          .              .            +INF            1.0000      
+i23.-          .             8.3305        +INF             .          
+i24.+          .              .            +INF            1.0000      
+i24.-          .             6.6556        +INF             .          
+i25.+          .            32.8555        +INF             .          
+i25.-          .              .            +INF            1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          177.4324        +INF             .          
+---- VAR q                 -INF           30.1648        +INF             .          
+
+  z  objective variable
+  q  quantile
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE quantileLP Using LP From line 60
+
+
+---- obj  =E=  objective
+
+obj..  - 0.5*e(i1,+) - 0.5*e(i1,-) - 0.5*e(i2,+) - 0.5*e(i2,-) - 0.5*e(i3,+) - 0.5*e(i3,-) - 0.5*e(i4,+) - 0.5*e(i4,-)
+     
+      - 0.5*e(i5,+) - 0.5*e(i5,-) - 0.5*e(i6,+) - 0.5*e(i6,-) - 0.5*e(i7,+) - 0.5*e(i7,-) - 0.5*e(i8,+) - 0.5*e(i8,-)
+     
+      - 0.5*e(i9,+) - 0.5*e(i9,-) - 0.5*e(i10,+) - 0.5*e(i10,-) - 0.5*e(i11,+) - 0.5*e(i11,-) - 0.5*e(i12,+)
+     
+      - 0.5*e(i12,-) - 0.5*e(i13,+) - 0.5*e(i13,-) - 0.5*e(i14,+) - 0.5*e(i14,-) - 0.5*e(i15,+) - 0.5*e(i15,-)
+     
+      - 0.5*e(i16,+) - 0.5*e(i16,-) - 0.5*e(i17,+) - 0.5*e(i17,-) - 0.5*e(i18,+) - 0.5*e(i18,-) - 0.5*e(i19,+)
+     
+      - 0.5*e(i19,-) - 0.5*e(i20,+) - 0.5*e(i20,-) - 0.5*e(i21,+) - 0.5*e(i21,-) - 0.5*e(i22,+) - 0.5*e(i22,-)
+     
+      - 0.5*e(i23,+) - 0.5*e(i23,-) - 0.5*e(i24,+) - 0.5*e(i24,-) - 0.5*e(i25,+) - 0.5*e(i25,-) + z =E= 0 ;
+     
+      (LHS = -129.403652715, INFES = 129.403652715 ****)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  e(i1,+) - e(i1,-) + q =E= 25.45724188 ; (LHS = 25.45724188)
+     
+split(i2)..  e(i2,+) - e(i2,-) + q =E= 85.89400372 ; (LHS = 85.89400372)
+     
+split(i3)..  e(i3,+) - e(i3,-) + q =E= 59.53378204 ; (LHS = 59.53378204)
+     
+REMAINING 22 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE quantileLP Using LP From line 60
+
+
+---- e  absolute value
+
+e(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+       -0.5     obj
+        1       split(i1)
+
+e(i1,-)
+                (.LO, .L, .UP, .M = 0, 4.70751615, +INF, 0)
+       -0.5     obj
+       -1       split(i1)
+
+e(i2,+)
+                (.LO, .L, .UP, .M = 0, 55.72924569, +INF, 0)
+       -0.5     obj
+        1       split(i2)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- z  objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 177.432388695, +INF, 0)
+        1       obj
+
+
+---- q  quantile
+
+q
+                (.LO, .L, .UP, .M = -INF, 30.16475803, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE quantileLP Using LP From line 60
+
+
+LOOPS                                    t   0.5
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           26
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           52
+NON ZERO ELEMENTS           126
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+               L O O P S                  t 0.5
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE quantileLP Using LP From line 60
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quantileLP          OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  60
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              262.5325
+
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
+ ITERATION COUNT, LIMIT         6    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.01sec (det. 0.08 ticks)
+
+
+Optimal solution found
+Objective:          262.532480
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU split  variable splitting
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         25.4572        25.4572        25.4572        -0.5000      
+i2         85.8940        85.8940        85.8940         0.5000      
+i3         59.5338        59.5338        59.5338         0.5000      
+i4         37.1024        37.1024        37.1024        -0.5000      
+i5         36.2991        36.2991        36.2991        -0.5000      
+i6         30.1648        30.1648        30.1648        -0.5000      
+i7         41.4847        41.4847        41.4847        -0.5000      
+i8         87.0643        87.0643        87.0643         0.5000      
+i9         16.0402        16.0402        16.0402        -0.5000      
+i10        55.0190        55.0190        55.0190         0.5000      
+i11        99.8306        99.8306        99.8306         0.5000      
+i12        62.0860        62.0860        62.0860         0.5000      
+i13        99.2020        99.2020        99.2020         0.5000      
+i14        78.6025        78.6025        78.6025         0.5000      
+i15        21.7623        21.7623        21.7623        -0.5000      
+i16        67.5747        67.5747        67.5747         0.5000      
+i17        24.3566        24.3566        24.3566        -0.5000      
+i18        32.5072        32.5072        32.5072        -0.5000      
+i19        70.2036        70.2036        70.2036         0.5000      
+i20        49.1821        49.1821        49.1821         0.5000      
+i21        42.3730        42.3730        42.3730         EPS         
+i22        41.6297        41.6297        41.6297        -0.5000      
+i23        21.8342        21.8342        21.8342        -0.5000      
+i24        23.5092        23.5092        23.5092        -0.5000      
+i25        63.0202        63.0202        63.0202         0.5000      
+
+---- VAR e  absolute value
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .              .            +INF            1.0000      
+i1 .-          .            16.9158        +INF             .          
+i2 .+          .            43.5210        +INF             .          
+i2 .-          .              .            +INF            1.0000      
+i3 .+          .            17.1608        +INF             .          
+i3 .-          .              .            +INF            1.0000      
+i4 .+          .              .            +INF            1.0000      
+i4 .-          .             5.2706        +INF             .          
+i5 .+          .              .            +INF            1.0000      
+i5 .-          .             6.0739        +INF             .          
+i6 .+          .              .            +INF            1.0000      
+i6 .-          .            12.2083        +INF             .          
+i7 .+          .              .            +INF            1.0000      
+i7 .-          .             0.8883        +INF             .          
+i8 .+          .            44.6913        +INF             .          
+i8 .-          .              .            +INF            1.0000      
+i9 .+          .              .            +INF            1.0000      
+i9 .-          .            26.3328        +INF             .          
+i10.+          .            12.6459        +INF             .          
+i10.-          .              .            +INF            1.0000      
+i11.+          .            57.4576        +INF             .          
+i11.-          .              .            +INF            1.0000      
+i12.+          .            19.7130        +INF             .          
+i12.-          .              .            +INF            1.0000      
+i13.+          .            56.8289        +INF             .          
+i13.-          .              .            +INF            1.0000      
+i14.+          .            36.2295        +INF             .          
+i14.-          .              .            +INF            1.0000      
+i15.+          .              .            +INF            1.0000      
+i15.-          .            20.6107        +INF             .          
+i16.+          .            25.2017        +INF             .          
+i16.-          .              .            +INF            1.0000      
+i17.+          .              .            +INF            1.0000      
+i17.-          .            18.0164        +INF             .          
+i18.+          .              .            +INF            1.0000      
+i18.-          .             9.8658        +INF             .          
+i19.+          .            27.8306        +INF             .          
+i19.-          .              .            +INF            1.0000      
+i20.+          .             6.8091        +INF             .          
+i20.-          .              .            +INF            1.0000      
+i21.+          .              .            +INF            0.5000      
+i21.-          .              .            +INF            0.5000      
+i22.+          .              .            +INF            1.0000      
+i22.-          .             0.7433        +INF             .          
+i23.+          .              .            +INF            1.0000      
+i23.-          .            20.5388        +INF             .          
+i24.+          .              .            +INF            1.0000      
+i24.-          .            18.8639        +INF             .          
+i25.+          .            20.6472        +INF             .          
+i25.-          .              .            +INF            1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          262.5325        +INF             .          
+---- VAR q                 -INF           42.3730        +INF             .          
+
+  z  objective variable
+  q  quantile
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE quantileLP Using LP From line 60
+
+
+---- obj  =E=  objective
+
+obj..  - 0.75*e(i1,+) - 0.25*e(i1,-) - 0.75*e(i2,+) - 0.25*e(i2,-) - 0.75*e(i3,+) - 0.25*e(i3,-) - 0.75*e(i4,+)
+     
+      - 0.25*e(i4,-) - 0.75*e(i5,+) - 0.25*e(i5,-) - 0.75*e(i6,+) - 0.25*e(i6,-) - 0.75*e(i7,+) - 0.25*e(i7,-)
+     
+      - 0.75*e(i8,+) - 0.25*e(i8,-) - 0.75*e(i9,+) - 0.25*e(i9,-) - 0.75*e(i10,+) - 0.25*e(i10,-) - 0.75*e(i11,+)
+     
+      - 0.25*e(i11,-) - 0.75*e(i12,+) - 0.25*e(i12,-) - 0.75*e(i13,+) - 0.25*e(i13,-) - 0.75*e(i14,+) - 0.25*e(i14,-)
+     
+      - 0.75*e(i15,+) - 0.25*e(i15,-) - 0.75*e(i16,+) - 0.25*e(i16,-) - 0.75*e(i17,+) - 0.25*e(i17,-) - 0.75*e(i18,+)
+     
+      - 0.25*e(i18,-) - 0.75*e(i19,+) - 0.25*e(i19,-) - 0.75*e(i20,+) - 0.25*e(i20,-) - 0.75*e(i21,+) - 0.25*e(i21,-)
+     
+      - 0.75*e(i22,+) - 0.25*e(i22,-) - 0.75*e(i23,+) - 0.25*e(i23,-) - 0.75*e(i24,+) - 0.25*e(i24,-) - 0.75*e(i25,+)
+     
+      - 0.25*e(i25,-) + z =E= 0 ; (LHS = -53.1019907775, INFES = 53.1019907775 ****)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  e(i1,+) - e(i1,-) + q =E= 25.45724188 ; (LHS = 25.45724188)
+     
+split(i2)..  e(i2,+) - e(i2,-) + q =E= 85.89400372 ; (LHS = 85.89400372)
+     
+split(i3)..  e(i3,+) - e(i3,-) + q =E= 59.53378204 ; (LHS = 59.53378204)
+     
+REMAINING 22 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE quantileLP Using LP From line 60
+
+
+---- e  absolute value
+
+e(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+       -0.75    obj
+        1       split(i1)
+
+e(i1,-)
+                (.LO, .L, .UP, .M = 0, 16.91578206, +INF, 0)
+       -0.25    obj
+       -1       split(i1)
+
+e(i2,+)
+                (.LO, .L, .UP, .M = 0, 43.52097978, +INF, 0)
+       -0.75    obj
+        1       split(i2)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- z  objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 262.532480265, +INF, 0)
+        1       obj
+
+
+---- q  quantile
+
+q
+                (.LO, .L, .UP, .M = -INF, 42.37302394, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE quantileLP Using LP From line 60
+
+
+LOOPS                                    t   0.75
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           26
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           52
+NON ZERO ELEMENTS           126
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+               L O O P S                  t 0.75
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE quantileLP Using LP From line 60
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quantileLP          OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  60
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              219.7573
+
+ RESOURCE USAGE, LIMIT          0.031 10000000000.000
+ ITERATION COUNT, LIMIT         6    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.08 ticks)
+
+
+Optimal solution found
+Objective:          219.757293
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU split  variable splitting
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         25.4572        25.4572        25.4572        -0.2500      
+i2         85.8940        85.8940        85.8940         0.7500      
+i3         59.5338        59.5338        59.5338        -0.2500      
+i4         37.1024        37.1024        37.1024        -0.2500      
+i5         36.2991        36.2991        36.2991        -0.2500      
+i6         30.1648        30.1648        30.1648        -0.2500      
+i7         41.4847        41.4847        41.4847        -0.2500      
+i8         87.0643        87.0643        87.0643         0.7500      
+i9         16.0402        16.0402        16.0402        -0.2500      
+i10        55.0190        55.0190        55.0190        -0.2500      
+i11        99.8306        99.8306        99.8306         0.7500      
+i12        62.0860        62.0860        62.0860        -0.2500      
+i13        99.2020        99.2020        99.2020         0.7500      
+i14        78.6025        78.6025        78.6025         0.7500      
+i15        21.7623        21.7623        21.7623        -0.2500      
+i16        67.5747        67.5747        67.5747         EPS         
+i17        24.3566        24.3566        24.3566        -0.2500      
+i18        32.5072        32.5072        32.5072        -0.2500      
+i19        70.2036        70.2036        70.2036         0.7500      
+i20        49.1821        49.1821        49.1821        -0.2500      
+i21        42.3730        42.3730        42.3730        -0.2500      
+i22        41.6297        41.6297        41.6297        -0.2500      
+i23        21.8342        21.8342        21.8342        -0.2500      
+i24        23.5092        23.5092        23.5092        -0.2500      
+i25        63.0202        63.0202        63.0202        -0.2500      
+
+---- VAR e  absolute value
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .              .            +INF            1.0000      
+i1 .-          .            42.1174        +INF             .          
+i2 .+          .            18.3193        +INF             .          
+i2 .-          .              .            +INF            1.0000      
+i3 .+          .              .            +INF            1.0000      
+i3 .-          .             8.0409        +INF             .          
+i4 .+          .              .            +INF            1.0000      
+i4 .-          .            30.4723        +INF             .          
+i5 .+          .              .            +INF            1.0000      
+i5 .-          .            31.2756        +INF             .          
+i6 .+          .              .            +INF            1.0000      
+i6 .-          .            37.4099        +INF             .          
+i7 .+          .              .            +INF            1.0000      
+i7 .-          .            26.0899        +INF             .          
+i8 .+          .            19.4896        +INF             .          
+i8 .-          .              .            +INF            1.0000      
+i9 .+          .              .            +INF            1.0000      
+i9 .-          .            51.5345        +INF             .          
+i10.+          .              .            +INF            1.0000      
+i10.-          .            12.5557        +INF             .          
+i11.+          .            32.2559        +INF             .          
+i11.-          .              .            +INF            1.0000      
+i12.+          .              .            +INF            1.0000      
+i12.-          .             5.4887        +INF             .          
+i13.+          .            31.6273        +INF             .          
+i13.-          .              .            +INF            1.0000      
+i14.+          .            11.0279        +INF             .          
+i14.-          .              .            +INF            1.0000      
+i15.+          .              .            +INF            1.0000      
+i15.-          .            45.8124        +INF             .          
+i16.+          .              .            +INF            0.7500      
+i16.-          .              .            +INF            0.2500      
+i17.+          .              .            +INF            1.0000      
+i17.-          .            43.2181        +INF             .          
+i18.+          .              .            +INF            1.0000      
+i18.-          .            35.0674        +INF             .          
+i19.+          .             2.6289        +INF             .          
+i19.-          .              .            +INF            1.0000      
+i20.+          .              .            +INF            1.0000      
+i20.-          .            18.3926        +INF             .          
+i21.+          .              .            +INF            1.0000      
+i21.-          .            25.2017        +INF             .          
+i22.+          .              .            +INF            1.0000      
+i22.-          .            25.9450        +INF             .          
+i23.+          .              .            +INF            1.0000      
+i23.-          .            45.7404        +INF             .          
+i24.+          .              .            +INF            1.0000      
+i24.-          .            44.0655        +INF             .          
+i25.+          .              .            +INF            1.0000      
+i25.-          .             4.5545        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          219.7573        +INF             .          
+---- VAR q                 -INF           67.5747        +INF             .          
+
+  z  objective variable
+  q  quantile
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE quantileLP Using LP From line 60
+
+
+---- obj  =E=  objective
+
+obj..  - e(i1,+) - e(i2,+) - e(i3,+) - e(i4,+) - e(i5,+) - e(i6,+) - e(i7,+) - e(i8,+) - e(i9,+) - e(i10,+) - e(i11,+)
+     
+      - e(i12,+) - e(i13,+) - e(i14,+) - e(i15,+) - e(i16,+) - e(i17,+) - e(i18,+) - e(i19,+) - e(i20,+) - e(i21,+)
+     
+      - e(i22,+) - e(i23,+) - e(i24,+) - e(i25,+) + z =E= 0 ; (LHS = 104.408411535, INFES = 104.408411535 ****)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  e(i1,+) - e(i1,-) + q =E= 25.45724188 ; (LHS = 25.45724188)
+     
+split(i2)..  e(i2,+) - e(i2,-) + q =E= 85.89400372 ; (LHS = 85.89400372)
+     
+split(i3)..  e(i3,+) - e(i3,-) + q =E= 59.53378204 ; (LHS = 59.53378204)
+     
+REMAINING 22 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE quantileLP Using LP From line 60
+
+
+---- e  absolute value
+
+e(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 1)
+       -1       obj
+        1       split(i1)
+
+e(i1,-)
+                (.LO, .L, .UP, .M = 0, 42.11744643, +INF, 0)
+       -1       split(i1)
+
+e(i2,+)
+                (.LO, .L, .UP, .M = 0, 18.31931541, +INF, 0)
+       -1       obj
+        1       split(i2)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- z  objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 219.757293405, +INF, 0)
+        1       obj
+
+
+---- q  quantile
+
+q
+                (.LO, .L, .UP, .M = -INF, 67.57468831, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE quantileLP Using LP From line 60
+
+
+LOOPS                                    t   1
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           26
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           52
+NON ZERO ELEMENTS           101
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+               L O O P S                  t 1
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE quantileLP Using LP From line 60
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   quantileLP          OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  60
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.032 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.03 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU split  variable splitting
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         25.4572        25.4572        25.4572         EPS         
+i2         85.8940        85.8940        85.8940         EPS         
+i3         59.5338        59.5338        59.5338         EPS         
+i4         37.1024        37.1024        37.1024         EPS         
+i5         36.2991        36.2991        36.2991         EPS         
+i6         30.1648        30.1648        30.1648         EPS         
+i7         41.4847        41.4847        41.4847         EPS         
+i8         87.0643        87.0643        87.0643         EPS         
+i9         16.0402        16.0402        16.0402         EPS         
+i10        55.0190        55.0190        55.0190         EPS         
+i11        99.8306        99.8306        99.8306         EPS         
+i12        62.0860        62.0860        62.0860         EPS         
+i13        99.2020        99.2020        99.2020         EPS         
+i14        78.6025        78.6025        78.6025         EPS         
+i15        21.7623        21.7623        21.7623         EPS         
+i16        67.5747        67.5747        67.5747         EPS         
+i17        24.3566        24.3566        24.3566         EPS         
+i18        32.5072        32.5072        32.5072         EPS         
+i19        70.2036        70.2036        70.2036         EPS         
+i20        49.1821        49.1821        49.1821         EPS         
+i21        42.3730        42.3730        42.3730         EPS         
+i22        41.6297        41.6297        41.6297         EPS         
+i23        21.8342        21.8342        21.8342         EPS         
+i24        23.5092        23.5092        23.5092         EPS         
+i25        63.0202        63.0202        63.0202         EPS         
+
+---- VAR e  absolute value
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .              .            +INF            1.0000      
+i1 .-          .            74.3733        +INF             .          
+i2 .+          .              .            +INF            1.0000      
+i2 .-          .            13.9366        +INF             .          
+i3 .+          .              .            +INF            1.0000      
+i3 .-          .            40.2968        +INF             .          
+i4 .+          .              .            +INF            1.0000      
+i4 .-          .            62.7282        +INF             .          
+i5 .+          .              .            +INF            1.0000      
+i5 .-          .            63.5315        +INF             .          
+i6 .+          .              .            +INF            1.0000      
+i6 .-          .            69.6658        +INF             .          
+i7 .+          .              .            +INF            1.0000      
+i7 .-          .            58.3458        +INF             .          
+i8 .+          .              .            +INF            1.0000      
+i8 .-          .            12.7663        +INF             .          
+i9 .+          .              .            +INF            1.0000      
+i9 .-          .            83.7904        +INF             .          
+i10.+          .              .            +INF            1.0000      
+i10.-          .            44.8116        +INF             .          
+i11.+          .              .            +INF            1.0000      
+i11.-          .              .            +INF            EPS         
+i12.+          .              .            +INF            1.0000      
+i12.-          .            37.7446        +INF             .          
+i13.+          .              .            +INF            1.0000      
+i13.-          .             0.6286        +INF             .          
+i14.+          .              .            +INF            1.0000      
+i14.-          .            21.2280        +INF             .          
+i15.+          .              .            +INF            1.0000      
+i15.-          .            78.0683        +INF             .          
+i16.+          .              .            +INF            1.0000      
+i16.-          .            32.2559        +INF             .          
+i17.+          .              .            +INF            1.0000      
+i17.-          .            75.4740        +INF             .          
+i18.+          .              .            +INF            1.0000      
+i18.-          .            67.3233        +INF             .          
+i19.+          .              .            +INF            1.0000      
+i19.-          .            29.6270        +INF             .          
+i20.+          .              .            +INF            1.0000      
+i20.-          .            50.6485        +INF             .          
+i21.+          .              .            +INF            1.0000      
+i21.-          .            57.4576        +INF             .          
+i22.+          .              .            +INF            1.0000      
+i22.-          .            58.2009        +INF             .          
+i23.+          .              .            +INF            1.0000      
+i23.-          .            77.9963        +INF             .          
+i24.+          .              .            +INF            1.0000      
+i24.-          .            76.3214        +INF             .          
+i25.+          .              .            +INF            1.0000      
+i25.-          .            36.8104        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+---- VAR q                 -INF           99.8306        +INF             .          
+
+  z  objective variable
+  q  quantile
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 04:59:10 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     63 PARAMETER quantiles  Solution
+
+0    16.040,    0.25 30.165,    0.5  42.373,    0.75 67.575,    1    99.831
+
+
+
+EXECUTION TIME       =        1.516 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\QuantileRegression\Quantiles.gms
+Output     D:\projects\blog\QuantileRegression\Quantiles.lst

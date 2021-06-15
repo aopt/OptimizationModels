@@ -1,0 +1,391 @@
+
+--- Job QuantileRegression.gms Start 06/15/21 05:00:34 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\QuantileRegression\QuantileRegression.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\QuantileRegression\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\QuantileRegression\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- QuantileRegression.gms(32) 2 Mb
+--- call csv2gdx quantile_health.csv output=quantile_health.gdx id=data useHeader=T index=1 values=(2..8)
+No errors, CSV2GDX time = 31ms
+--- QuantileRegression.gms(34) 2 Mb
+--- GDXin=D:\projects\blog\QuantileRegression\quantile_health.gdx
+--- GDX File ($gdxIn) D:\projects\blog\QuantileRegression\quantile_health.gdx
+--- QuantileRegression.gms(134) 4 Mb
+--- Starting execution: elapsed 0:00:00.243
+--- QuantileRegression.gms(93) 5 Mb
+--- Generating LP model quantileLP
+--- QuantileRegression.gms(95) 8 Mb
+--- LOOPS q = 0.25
+---   2,956 rows  5,917 columns  26,571 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.396
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.20 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 2.53 Mb (peak 2.57 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.15 Mb (peak 0.72 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 2955 rows, 5916 columns, and 20660 nonzeros.
+Presolve time = 0.03 sec. (11.44 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    99   Dual objective     =       1149614.916667
+Iteration:   200   Dual objective     =       1789675.859375
+Iteration:   303   Dual objective     =       2234797.500000
+Iteration:   405   Dual objective     =       2591183.430000
+Iteration:   508   Dual objective     =       2873833.197368
+Iteration:   615   Dual objective     =       3114299.543478
+Iteration:   717   Dual objective     =       3305701.269231
+Iteration:   822   Dual objective     =       3479274.506579
+Iteration:   923   Dual objective     =       3618994.500000
+Iteration:  1025   Dual objective     =       3745460.881579
+Iteration:  1129   Dual objective     =       3855736.053571
+Iteration:  1233   Dual objective     =       3958418.388889
+Iteration:  1336   Dual objective     =       4044451.890000
+Iteration:  1439   Dual objective     =       4123181.750000
+Iteration:  1546   Dual objective     =       4195636.616667
+Iteration:  1652   Dual objective     =       4259740.000000
+Iteration:  1754   Dual objective     =       4313727.050000
+Iteration:  1857   Dual objective     =       4361463.100000
+Iteration:  1960   Dual objective     =       4403084.712963
+Iteration:  2063   Dual objective     =       4440902.818182
+Iteration:  2166   Dual objective     =       4472197.595238
+Iteration:  2269   Dual objective     =       4500230.750000
+Iteration:  2373   Dual objective     =       4524455.308824
+Iteration:  2477   Dual objective     =       4545578.750000
+Iteration:  2582   Dual objective     =       4561335.258065
+Iteration:  2686   Dual objective     =       4573745.770000
+Iteration:  2789   Dual objective     =       4581689.154762
+Iteration:  2892   Dual objective     =       4586775.480769
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.47sec (det. 376.72 ticks)
+
+
+Optimal solution found
+Objective:      4587677.131944
+
+--- Reading solution for model quantileLP
+--- Executing after solve: elapsed 0:00:01.056
+--- QuantileRegression.gms(93) 8 Mb
+--- Generating LP model quantileLP
+--- QuantileRegression.gms(95) 8 Mb
+--- LOOPS q = 0.5
+---   2,956 rows  5,917 columns  26,571 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.135
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.20 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 2.53 Mb (peak 2.57 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.15 Mb (peak 0.72 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 2955 rows, 5916 columns, and 20660 nonzeros.
+Presolve time = 0.02 sec. (11.43 ticks)
+Using devex.
+
+Iteration log . . .
+Iteration:     1    Objective     =       8640791.785714
+Iteration:   117    Objective     =       8542273.521739
+Iteration:   234    Objective     =       8478749.478261
+Iteration:   351    Objective     =       8442160.333333
+Iteration:   492    Objective     =       8383936.676471
+Iteration:   615    Objective     =       8320288.363636
+Iteration:   739    Objective     =       8238884.161290
+Iteration:   862    Objective     =       8161267.222222
+Iteration:   977    Objective     =       8126595.805556
+Iteration:  1118    Objective     =       8079441.318182
+Iteration:  1256    Objective     =       8048246.575000
+Iteration:  1409    Objective     =       8034477.984127
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.16sec (det. 139.35 ticks)
+
+
+Optimal solution found
+Objective:      8034399.472222
+
+--- Reading solution for model quantileLP
+--- Executing after solve: elapsed 0:00:01.448
+--- QuantileRegression.gms(93) 8 Mb
+--- Generating LP model quantileLP
+--- QuantileRegression.gms(95) 8 Mb
+--- LOOPS q = 0.75
+---   2,956 rows  5,917 columns  26,571 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.545
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.20 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 2.53 Mb (peak 2.57 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.15 Mb (peak 0.72 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 2955 rows, 5916 columns, and 20660 nonzeros.
+Presolve time = 0.02 sec. (11.43 ticks)
+Using devex.
+
+Iteration log . . .
+Iteration:     1    Objective     =      10731380.861111
+Iteration:   118    Objective     =      10474539.000000
+Iteration:   235    Objective     =      10264619.000000
+Iteration:   360    Objective     =      10062830.800000
+Iteration:   476    Objective     =       9920924.259615
+Iteration:   592    Objective     =       9836182.136364
+Iteration:   722    Objective     =       9650738.046875
+Iteration:   838    Objective     =       9576704.557692
+Iteration:   963    Objective     =       9521743.848214
+Iteration:  1084    Objective     =       9450769.200000
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.16sec (det. 114.19 ticks)
+
+
+Optimal solution found
+Objective:      9439800.602273
+
+--- Reading solution for model quantileLP
+--- Executing after solve: elapsed 0:00:01.864
+--- QuantileRegression.gms(126) 8 Mb
+--- Generating LP model quantileDual
+--- QuantileRegression.gms(130) 8 Mb
+--- LOOPS q = 0.25
+---   7 rows  2,956 columns  17,706 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.946
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.06 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.35 Mb (peak 1.37 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.06 Mb (peak 0.35 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 3 columns.
+Reduced LP has 6 rows, 2953 columns, and 14739 nonzeros.
+Presolve time = 0.02 sec. (5.24 ticks)
+
+Iteration log . . .
+
+Sifting iteration    1 [  503]:   Scaled infeas =          1189.683594
+
+
+Sifting iteration    2 [ 1003]:   Scaled infeas =            27.937500
+
+
+Sifting iteration    3 [ 1503]:   Scaled infeas =             0.000000
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.09sec (det. 39.99 ticks)
+
+
+Optimal solution found
+Objective:      4587677.131944
+
+--- Reading solution for model quantileDual
+--- Executing after solve: elapsed 0:00:02.137
+--- QuantileRegression.gms(126) 8 Mb
+--- Generating LP model quantileDual
+--- QuantileRegression.gms(130) 8 Mb
+--- LOOPS q = 0.5
+---   7 rows  2,956 columns  17,706 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.213
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.06 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.35 Mb (peak 1.37 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.06 Mb (peak 0.35 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 3 columns.
+Reduced LP has 6 rows, 2953 columns, and 14739 nonzeros.
+Presolve time = 0.03 sec. (5.23 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1        10216870.269478                            2         7703481.547256            d(20615015)eqdual(intercept) artif
+     3         6898219.575034                            4         6727044.630589                            5         6703495.755589            d(76773019)   eqdual(female) artif
+     6         6703146.547256            d(96002014)    eqdual(white) artif
+     7         6678036.547256            d(91472027)            d(20615015)
+     8         6577971.047256            d(20402012)   eqdual(totchr) artif
+     9         6498272.047256            d(94980026)  eqdual(suppins) artif
+    10         6272817.880589            d(97902019)            d(91472027)
+    11         6248105.047256            d(94089014)            d(94980026)
+    12         6183182.547256            d(93639011)            d(96002014)
+    13         6179889.380589            d(90778018)            d(94089014)
+    14         6177576.713923            d(92586018)            d(97902019)
+    15         6176311.047256            d(93109014)            d(20402012)
+    16         6166245.380589            d(22706015)            d(76773019)
+    17         6164191.047256            d(97421017)            d(92586018)
+    18         6164052.047256            d(23925016)            d(93109014)
+    19         6157098.713923            d(28083010)      eqdual(age) artif
+    20         6155907.047256            d(90280016)            d(23925016)
+    21         6155788.158367            d(94677015)            d(97421017)
+    22         6155742.158367            d(24154013)            d(90280016)
+    23         6155596.958367            d(21346015)            d(93639011)
+    24         6155548.558367            d(93481027)            d(94677015)
+    25         6155394.491700            d(82599026)            d(24154013)
+    26         6155345.621330            d(95513027)            d(93481027)
+    27         6154827.365438            d(23948017)            d(28083010)
+    28         6154820.961049            d(98148026)            d(90778018)
+    29         6154819.461049            d(93904013)            d(82599026)
+    30         6154814.985718            d(93765022)            d(95513027)
+    31         6154809.693410            d(90355029)            d(98148026)
+    32         6154807.491700            d(93755014)            d(23948017)
+    33         6154807.019478            d(96913018)            d(93765022)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.06sec (det. 16.19 ticks)
+
+
+Optimal solution found
+Objective:      8034399.472222
+
+--- Reading solution for model quantileDual
+--- Executing after solve: elapsed 0:00:02.411
+--- QuantileRegression.gms(126) 8 Mb
+--- Generating LP model quantileDual
+--- QuantileRegression.gms(130) 8 Mb
+--- LOOPS q = 0.75
+---   7 rows  2,956 columns  17,706 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.474
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.06 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.35 Mb (peak 1.37 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.06 Mb (peak 0.35 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 3 columns.
+Reduced LP has 6 rows, 2953 columns, and 14739 nonzeros.
+Presolve time = 0.02 sec. (5.23 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1        13586023.528169                            2         6022399.972613            d(24732016)eqdual(intercept) artif
+     3         4569390.805947                            4         4505832.555947                            5         4500820.778169                            6         4500536.500391            d(20151015)   eqdual(female) artif
+     7         4156522.750391            d(26054014)   eqdual(totchr) artif
+     8         4137962.750391            d(93398015)            d(24732016)
+     9         4059413.000391            d(93185028)            d(20151015)
+    10         3884951.000391            d(90935027)            d(26054014)
+    11         3853471.000391            d(26696016)  eqdual(suppins) artif
+    12         3784534.500391            d(94891020)            d(93398015)
+    13         3763143.250391            d(93286013)            d(93185028)
+    14         3751361.500391            d(93337027)            d(90935027)
+    15         3716718.833725            d(92028016)            d(94891020)
+    16         3715952.750391            d(25419011)            d(26696016)
+    17         3711049.000391            d(97874011)            d(93286013)
+    18         3707983.000391            d(23198021)    eqdual(white) artif
+    19         3705347.062891            d(94183022)      eqdual(age) artif
+    20         3704223.562891            d(93439020)            d(92028016)
+    21         3699306.886755            d(93415017)            d(93337027)
+    22         3698601.727664            d(70318023)            d(93439020)
+    23         3692377.437891            d(27848021)            d(97874011)
+    24         3690857.406641            d(90915012)            d(25419011)
+    25         3690151.382744            d(22928019)            d(93415017)
+    26         3689683.866670            d(91805025)            d(70318023)
+    27         3687500.087601            d(24572020)            d(27848021)
+    28         3687423.389926            d(93308025)            d(90915012)
+    29         3687374.389926            d(21962010)            d(24572020)
+    30         3686310.152352            d(71321022)            d(22928019)
+    31         3686260.255293            d(74474021)            d(93308025)
+    32         3686247.029803            d(70748016)            d(23198021)
+    33         3686244.880826            d(91832025)            d(71321022)
+    34         3686240.331913            d(98011010)            d(74474021)
+    35         3686237.102664            d(94264012)            d(91805025)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.06sec (det. 19.41 ticks)
+
+
+Optimal solution found
+Objective:      9439800.602273
+
+--- Reading solution for model quantileDual
+--- Executing after solve: elapsed 0:00:02.648
+--- QuantileRegression.gms(134) 8 Mb
+*** Status: Normal completion
+--- Job QuantileRegression.gms Stop 06/15/21 05:00:37 elapsed 0:00:02.667
