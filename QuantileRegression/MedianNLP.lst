@@ -1,0 +1,173 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Find median using a non-smooth NLP model
+       
+         This model will have difficulties due to non-differentiability
+         of the abs() function.
+       
+         erwin@amsterdamoptimization.com
+       
+  11   
+  12  set i /i1*i5/;
+  13   
+  14  parameter y(i) 'data';
+  15  y(i) = uniform(0,1);
+  16  display y;
+  17   
+  18  variable
+  19     m 'median'
+  20     z 'objective'
+  21  ;
+  22   
+  23  equation sumabs;
+  24   
+  25  sumabs.. z =e= sum(i, abs(y(i)-m));
+  26   
+  27  * initial value
+  28  m.l = 0.5;
+  29   
+  30  model median /sumabs/;
+  31  option dnlp=conopt;
+  32  solve median minimizing z using dnlp;
+  33   
+  34  display m.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     16 PARAMETER y  data
+
+i1 0.172,    i2 0.843,    i3 0.550,    i4 0.301,    i5 0.292
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE median Using DNLP From line 32
+
+
+---- sumabs  =E=  
+
+sumabs..  - (1)*m + z =E= 0 ; (LHS = -1.128544911, INFES = 1.128544911 ****)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE median Using DNLP From line 32
+
+
+---- m  median
+
+m
+                (.LO, .L, .UP, .M = -INF, 0.5, +INF, 0)
+      (-1)      sumabs
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       sumabs
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE median Using DNLP From line 32
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES            2
+NON ZERO ELEMENTS             2     NON LINEAR N-Z              1
+CODE LENGTH                  23     CONSTANT POOL              21
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE median Using DNLP From line 32
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   median              OBJECTIVE  z
+     TYPE    DNLP                DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  32
+
+**** SOLVER STATUS     4 Terminated By Solver      
+**** MODEL STATUS      7 Feasible Solution         
+**** OBJECTIVE VALUE                0.9297
+
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ ITERATION COUNT, LIMIT        33    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T 3   version 3.17L
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 2 variables and 1 constraints
+    with 2 Jacobian elements, 1 of which are nonlinear.
+    The Hessian of the Lagrangian has 1 elements on the diagonal,
+    0 elements below the diagonal, and 1 nonlinear variables.
+ 
+ ** Warning **  The value of LFITER is out of range.
+                LFITER is decreased from 2147483647 to 1000000000.
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+ 
+ 
+ ** Feasible solution. Convergence too slow. The change in objective
+    has been less than 3.0000E-12 for 20 consecutive iterations
+ 
+ 
+ CONOPT time Total                            0.065 seconds
+   of which: Function evaluations             0.005 =  7.7%
+             1st Derivative evaluations       0.001 =  1.5%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU sumabs              .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR m                 -INF            0.3011        +INF            1.0000  NOPT
+---- VAR z                 -INF            0.9297        +INF             .          
+
+  m  median
+  z  objective
+
+
+**** REPORT SUMMARY :        1     NONOPT ( NOPT)
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:12:12 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     34 VARIABLE m.L                   =        0.301  median
+
+
+EXECUTION TIME       =        0.391 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\QuantileRegression\MedianNLP.gms
+Output     D:\projects\blog\QuantileRegression\MedianNLP.lst
