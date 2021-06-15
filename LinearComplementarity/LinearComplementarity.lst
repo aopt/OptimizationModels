@@ -1,0 +1,1722 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         LCP - linear complementarity problem
+       
+       
+         find w,x such that
+            w,x >= 0
+            x'w = 0
+            w = Mx + q
+       
+         assumption: M is pos def
+       
+         Solve in different ways (all but using an LCP solver).
+       
+         See:
+         https://en.wikipedia.org/wiki/Linear_complementarity_problem
+         https://yetanothermathprogrammingconsultant.blogspot.com/2021/05/solving-linear-complementarity-problems.html
+       
+       
+         erwin@amsterdamoptimization.com
+       
+  23   
+  24   
+  25  *---------------------------------------------------------
+  26  * random data
+  27  *---------------------------------------------------------
+  28   
+  29  set
+  30    i /i1*i10/
+  31  ;
+  32   
+  33  alias (i,j,k);
+  34   
+  35  parameter M(i,j) 'positive definite matrix';
+  36  M(i,j) = uniform(-10,10);
+  37  M(i,j) = sum(k, M(k,i)*M(k,j));
+  38   
+  39  parameter q(i);
+  40  q(i) = uniform(-100,100);
+  41   
+  42  *---------------------------------------------------------
+  43  * solve with MCP solver
+  44  *
+  45  *   find x such that
+  46  *        x >= 0 perp Mx + q >= 0
+  47  *---------------------------------------------------------
+  48   
+  49  positive variable x(i);
+  50  equation e(i);
+  51   
+  52  e(i).. sum(j, M(i,j)*x(j)) + q(i) =g= 0;
+  53   
+  54  model lcp1 /e.x/;
+  55  option mcp=path;
+  56  solve lcp1 using mcp;
+  57   
+  58  parameter results(i,*);
+  59  results(i,'x') = x.l(i);
+  60  results(i,'w') = sum(j, M(i,j)*x.l(j)) + q(i);
+  61  display results;
+  62   
+  63   
+  64  *---------------------------------------------------------
+  65  * solve with QP solver
+  66  *
+  67  *   min x'(Mx+q)
+  68  *      Mx + q >= 0
+  69  *      x >= 0
+  70  *---------------------------------------------------------
+  71   
+  72  variable z 'objective';
+  73  equations
+  74    qpobj
+  75    qpcon(i)
+  76  ;
+  77   
+  78  qpobj.. z =e= sum((i,j),M(i,j)*x(i)*x(j)) + sum(i,x(i)*q(i));
+  79  qpcon(i).. sum(j,M(i,j)*x(j)) + q(i) =g= 0;
+  80   
+  81  model lcp2 /qpobj,qpcon/;
+  82  option qcp=cplex;
+  83  solve lcp2 using qcp minimizing z;
+  84   
+  85  results(i,'x') = x.l(i);
+  86  results(i,'w') = sum(j, M(i,j)*x.l(j)) + q(i);
+  87  display results;
+  88   
+  89   
+  90  *---------------------------------------------------------
+  91  * solve with a conic solver
+  92  *
+  93  *      x'Mx <= -x'q
+  94  *      Mx + q >= 0
+  95  *      x >= 0
+  96  *---------------------------------------------------------
+  97   
+  98  equations
+  99     edummy
+ 100     qcpcon
+ 101  ;
+ 102   
+ 103  edummy.. z =e= 0;
+ 104  qcpcon.. sum((i,j),x(i)*M(i,j)*x(j)) + sum(i,x(i)*q(i)) =l= 0;
+ 105   
+ 106  model lcp3 /edummy,qcpcon,qpcon/;
+ 107  option qcp=cplex;
+ 108  solve lcp3 using qcp minimizing z;
+ 109   
+ 110  results(i,'x') = x.l(i);
+ 111  results(i,'w') = sum(j, M(i,j)*x.l(j)) + q(i);
+ 112  display results;
+ 113   
+ 114   
+ 115  *---------------------------------------------------------
+ 116  * solve with MIP solver
+ 117  *
+ 118  *      x(i) <= d(i) * x.up(i)
+ 119  *      w(i) <= (1-d(i)) * w.up(i)
+ 120  *      w = Mx + q
+ 121  *      x,w >= 0
+ 122  *---------------------------------------------------------
+ 123   
+ 124  binary variable d(i);
+ 125  positive variable w(i);
+ 126  equation
+ 127    wdef(i)
+ 128    xbnd(i)
+ 129    wbnd(i)
+ 130  ;
+ 131   
+ 132  x.up(i) = 1000;
+ 133  w.up(i) = 1000;
+ 134   
+ 135  xbnd(i).. x(i) =l= d(i)*x.up(i);
+ 136  wbnd(i).. w(i) =l= (1-d(i))*w.up(i);
+ 137   
+ 138  wdef(i).. w(i) =e= sum(j, M(i,j)*x(j)) + q(i);
+ 139   
+ 140  model lcp4 /edummy,xbnd,wbnd,wdef/;
+ 141  solve lcp4 using mip minimizing z;
+ 142   
+ 143  results(i,'x') = x.l(i);
+ 144  results(i,'w') = w.l(i);
+ 145  display results;
+ 146   
+ 147  * remove bounds
+ 148  x.up(i) = inf;
+ 149  w.up(i) = inf;
+ 150   
+ 151   
+ 152  *---------------------------------------------------------
+ 153  * solve with MIP solver using indicator constraints
+ 154  * Embarrassingly, this is very awkward to do in GAMS.
+ 155  *
+ 156  *      d(i) = 0 => x(i) = 0
+ 157  *      d(i) = 1 => w(i) = 0
+ 158  *      w = Mx + q
+ 159  *      x,w >= 0
+ 160  *---------------------------------------------------------
+ 161   
+ 162  equations
+ 163     xzero(i)
+ 164     wzero(i)
+ 165     edummy2 'need to have d in the model somewhere'
+ 166  ;
+ 167  xzero(i).. x(i) =e= 0;
+ 168  wzero(i).. w(i) =e= 0;
+ 169  edummy2.. sum(i, d(i)) =g= 0;
+ 170   
+ 175   
+ 176  model lcp5 /edummy,xzero,wzero,wdef,edummy2/;
+ 177  lcp5.optfile=1;
+ 178  option mip=cplex;
+ 179  solve lcp5 using mip minimizing z;
+ 180   
+ 181  results(i,'x') = x.l(i);
+ 182  results(i,'w') = w.l(i);
+ 183  display results;
+ 184   
+ 185  *---------------------------------------------------------
+ 186  * solve with MIP solver using SOS1 sets
+ 187  *
+ 188  *      x(i),w(i) in SOS1
+ 189  *      w = Mx + q
+ 190  *      x,w >= 0
+ 191  *---------------------------------------------------------
+ 192   
+ 193  set s /x,w/;
+ 194  sos1 variable xw(i,s);
+ 195   
+ 196  equation wdef2(i);
+ 197   
+ 198  wdef2(i).. xw(i,'w') =e= sum(j, M(i,j)*xw(j,'x')) + q(i);
+ 199   
+ 200  model lcp6 /edummy,wdef2/;
+ 201  solve lcp6 using mip minimizing z;
+ 202   
+ 203  display xw.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp1 Using MCP From line 56
+
+
+---- e  =G=  
+
+e(i1)..  456.695760856441*x(i1) + 123.1229410956*x(i2) + 215.487340028385*x(i3) + 8.17084573668201*x(i4)
+     
+      + 52.7539452171411*x(i5) + 235.162363026566*x(i6) - 92.5241053064281*x(i7) - 53.6677909515532*x(i8)
+     
+      - 57.7628293312445*x(i9) + 57.7866381579014*x(i10) =G= 89.718578 ; (LHS = 0, INFES = 89.718578 ****)
+     
+e(i2)..  123.1229410956*x(i1) + 315.636284936814*x(i2) + 171.789122176717*x(i3) - 41.2234424619483*x(i4)
+     
+      + 65.0371828582492*x(i5) + 29.2851118682948*x(i6) + 39.4767048401848*x(i7) + 73.0122424413464*x(i8)
+     
+      - 112.141977683603*x(i9) + 36.6600648182331*x(i10) =G= 98.7983264 ; (LHS = 0, INFES = 98.7983264 ****)
+     
+e(i3)..  215.487340028385*x(i1) + 171.789122176717*x(i2) + 300.884382719882*x(i3) - 4.17336125137959*x(i4)
+     
+      - 15.198018434854*x(i5) - 32.0506516764183*x(i6) + 18.7410397259935*x(i7) - 37.3309875050709*x(i8)
+     
+      - 76.4936688781081*x(i9) + 66.6787697953152*x(i10) =G= 19.7544634 ; (LHS = 0, INFES = 19.7544634 ****)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp1 Using MCP From line 56
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      456.6958  e(i1)
+      123.1229  e(i2)
+      215.4873  e(i3)
+        8.1708  e(i4)
+       52.7539  e(i5)
+      235.1624  e(i6)
+      -92.5241  e(i7)
+      -53.6678  e(i8)
+      -57.7628  e(i9)
+       57.7866  e(i10)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      123.1229  e(i1)
+      315.6363  e(i2)
+      171.7891  e(i3)
+      -41.2234  e(i4)
+       65.0372  e(i5)
+       29.2851  e(i6)
+       39.4767  e(i7)
+       73.0122  e(i8)
+     -112.142   e(i9)
+       36.6601  e(i10)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+      215.4873  e(i1)
+      171.7891  e(i2)
+      300.8844  e(i3)
+       -4.1734  e(i4)
+      -15.198   e(i5)
+      -32.0507  e(i6)
+       18.741   e(i7)
+      -37.331   e(i8)
+      -76.4937  e(i9)
+       66.6788  e(i10)
+
+REMAINING 7 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp1 Using MCP From line 56
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS           10
+BLOCKS OF VARIABLES           1     SINGLE VARIABLES           10
+NON ZERO ELEMENTS           100     NON LINEAR N-Z              0
+CODE LENGTH                   0     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp1 Using MCP From line 56
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp1                
+     TYPE    MCP                 
+     SOLVER  PATH                FROM LINE  56
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS              0             0
+10 row/cols, 100 non-zeros, 100.00% dense.
+
+Path 5.0.02 (Thu Feb 25 17:48:32 2021)
+Written by Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
+
+INITIAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  0.0000e+00 var: (x(i1))
+Maximum of F. . . . . . . . . .  9.8798e+01 eqn: (e(i2))
+Maximum of Grad F . . . . . . .  4.5670e+02 eqn: (e(i1))
+                                            var: (x(i1))
+
+INITIAL JACOBIAN NORM STATISTICS
+Maximum Row Norm. . . . . . . .  1.4965e+03 eqn: (e(i6))
+Minimum Row Norm. . . . . . . .  6.8946e+02 eqn: (e(i8))
+Maximum Column Norm . . . . . .  1.4965e+03 var: (x(i6))
+Minimum Column Norm . . . . . .  6.8946e+02 var: (x(i8))
+
+FINAL STATISTICS
+Inf-Norm of Complementarity . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Normal Map. . . . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Minimum Map . . . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Fischer Function. .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Grad Fischer Fcn. .  2.7711e-11 eqn: (e(i1))
+Two-Norm of Grad Fischer Fcn. .  3.8890e-11
+
+FINAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  5.3629e-01 var: (x(i8))
+Maximum of F. . . . . . . . . .  1.0823e+02 eqn: (e(i5))
+Maximum of Grad F . . . . . . .  4.5670e+02 eqn: (e(i1))
+                                            var: (x(i1))
+
+
+---- EQU e  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         89.7186        89.7186        +INF            0.2764      
+i2         98.7983        98.7983        +INF            0.2564      
+i3         19.7545        48.3928        +INF             .          
+i4         -3.9762        -3.9762        +INF            0.1521      
+i5        -25.7755        82.4538        +INF             .          
+i6         54.8500        87.4929        +INF             .          
+i7         20.7757        20.7757        +INF            0.1355      
+i8         44.7988        44.7988        +INF            0.5363      
+i9         69.5255        69.5255        +INF            0.4850      
+i10       -87.2646       -59.6560        +INF             .          
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             0.2764        +INF             .          
+i2           .             0.2564        +INF             .          
+i3           .              .            +INF           28.6384      
+i4           .             0.1521        +INF             .          
+i5           .              .            +INF          108.2293      
+i6           .              .            +INF           32.6429      
+i7           .             0.1355        +INF             .          
+i8           .             0.5363        +INF             .          
+i9           .             0.4850        +INF             .          
+i10          .              .            +INF           27.6086      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0  REDEFINED
+                             0     ERRORS
+                             4  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     61 PARAMETER results  
+
+              x           w
+
+i1        0.276 -7.1054E-14
+i2        0.256 4.26326E-14
+i3                   28.638
+i4        0.152 -2.2204E-14
+i5                  108.229
+i6                   32.643
+i7        0.135 3.55271E-15
+i8        0.536
+i9        0.485
+i10                  27.609
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp2 Using QCP From line 83
+
+
+---- qpobj  =E=  
+
+qpobj..  - (89.7185779999999)*x(i1) - (98.7983264000001)*x(i2) - (77.031185929698)*x(i3) + (3.97623740000007)*x(i4)
+     
+      - (190.683082691653)*x(i5) - (120.135841385416)*x(i6) - (20.7757184)*x(i7) - (44.7987738)*x(i8)
+     
+      - (69.5254784)*x(i9) + (32.0474060441507)*x(i10) + z =E= 0 ; (LHS = 0)
+     
+
+---- qpcon  =G=  
+
+qpcon(i1)..  456.695760856441*x(i1) + 123.1229410956*x(i2) + 215.487340028385*x(i3) + 8.17084573668201*x(i4)
+     
+      + 52.7539452171411*x(i5) + 235.162363026566*x(i6) - 92.5241053064281*x(i7) - 53.6677909515532*x(i8)
+     
+      - 57.7628293312445*x(i9) + 57.7866381579014*x(i10) =G= 89.718578 ; (LHS = 89.7185779999999)
+     
+qpcon(i2)..  123.1229410956*x(i1) + 315.636284936814*x(i2) + 171.789122176717*x(i3) - 41.2234424619483*x(i4)
+     
+      + 65.0371828582492*x(i5) + 29.2851118682948*x(i6) + 39.4767048401848*x(i7) + 73.0122424413464*x(i8)
+     
+      - 112.141977683603*x(i9) + 36.6600648182331*x(i10) =G= 98.7983264 ; (LHS = 98.7983264)
+     
+qpcon(i3)..  215.487340028385*x(i1) + 171.789122176717*x(i2) + 300.884382719882*x(i3) - 4.17336125137959*x(i4)
+     
+      - 15.198018434854*x(i5) - 32.0506516764183*x(i6) + 18.7410397259935*x(i7) - 37.3309875050709*x(i8)
+     
+      - 76.4936688781081*x(i9) + 66.6787697953152*x(i10) =G= 19.7544634 ; (LHS = 48.392824664849)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp2 Using QCP From line 83
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0, 0.276429139159535, +INF, 0)
+     (-89.7186) qpobj
+      456.6958  qpcon(i1)
+      123.1229  qpcon(i2)
+      215.4873  qpcon(i3)
+        8.1708  qpcon(i4)
+       52.7539  qpcon(i5)
+      235.1624  qpcon(i6)
+      -92.5241  qpcon(i7)
+      -53.6678  qpcon(i8)
+      -57.7628  qpcon(i9)
+       57.7866  qpcon(i10)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0, 0.256385761681285, +INF, 0)
+     (-98.7983) qpobj
+      123.1229  qpcon(i1)
+      315.6363  qpcon(i2)
+      171.7891  qpcon(i3)
+      -41.2234  qpcon(i4)
+       65.0372  qpcon(i5)
+       29.2851  qpcon(i6)
+       39.4767  qpcon(i7)
+       73.0122  qpcon(i8)
+     -112.142   qpcon(i9)
+       36.6601  qpcon(i10)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 28.638361264849)
+     (-77.0312) qpobj
+      215.4873  qpcon(i1)
+      171.7891  qpcon(i2)
+      300.8844  qpcon(i3)
+       -4.1734  qpcon(i4)
+      -15.198   qpcon(i5)
+      -32.0507  qpcon(i6)
+       18.741   qpcon(i7)
+      -37.331   qpcon(i8)
+      -76.4937  qpcon(i9)
+       66.6788  qpcon(i10)
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       qpobj
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp2 Using QCP From line 83
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           11
+NON ZERO ELEMENTS           111     NON LINEAR N-Z             10
+CODE LENGTH                 422     CONSTANT POOL              81
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp2 Using QCP From line 83
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp2                OBJECTIVE  z
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  83
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- QP status (1): optimal.
+--- Cplex Time: 0.11sec (det. 0.33 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU qpobj               .              .              .             1.0000      
+
+---- EQU qpcon  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         89.7186        89.7186        +INF            0.2764      
+i2         98.7983        98.7983        +INF            0.2564      
+i3         19.7545        48.3928        +INF      4.815202E-12      
+i4         -3.9762        -3.9762        +INF            0.1521      
+i5        -25.7755        82.4538        +INF      1.274142E-12      
+i6         54.8500        87.4929        +INF      4.224486E-12      
+i7         20.7757        20.7757        +INF            0.1355      
+i8         44.7988        44.7988        +INF            0.5363      
+i9         69.5255        69.5255        +INF            0.4850      
+i10       -87.2646       -59.6560        +INF      4.994806E-12      
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             0.2764        +INF      4.990000E-10      
+i2           .             0.2564        +INF      5.375682E-10      
+i3           .              .            +INF           28.6384      
+i4           .             0.1521        +INF      9.064145E-10      
+i5           .              .            +INF          108.2293      
+i6           .              .            +INF           32.6429      
+i7           .             0.1355        +INF      1.0175540E-9      
+i8           .             0.5363        +INF      2.572023E-10      
+i9           .             0.4850        +INF      2.844729E-10      
+i10          .              .            +INF           27.6086      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF      1.3791719E-9        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            10  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     87 PARAMETER results  
+
+              x           w
+
+i1        0.276 -1.88810E-9
+i2        0.256 -6.7919E-10
+i3                   28.638
+i4        0.152 8.69883E-10
+i5                  108.229
+i6                   32.643
+i7        0.135 1.468116E-9
+i8        0.536 6.16481E-10
+i9        0.485 9.31990E-10
+i10                  27.609
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp3 Using QCP From line 108
+
+
+---- edummy  =E=  
+
+edummy..  z =E= 0 ; (LHS = 1.37917191074103E-9, INFES = 1.37917191074103E-9 ****)
+     
+
+---- qcpcon  =L=  
+
+qcpcon..  (89.7185779962238)*x(i1) + (98.7983263986416)*x(i2) + (77.0311859277807)*x(i3) - (3.97623739826024)*x(i4)
+     
+      + (190.683082692151)*x(i5) + (120.135841382966)*x(i6) + (20.7757184029362)*x(i7) + (44.798773801233)*x(i8)
+     
+      + (69.5254784018639)*x(i9) - (32.047406045587)*x(i10) =L= 0 ;
+     
+      (LHS = 4.17870182900515E-10, INFES = 4.17870182900515E-10 ****)
+     
+
+---- qpcon  =G=  
+
+qpcon(i1)..  456.695760856441*x(i1) + 123.1229410956*x(i2) + 215.487340028385*x(i3) + 8.17084573668201*x(i4)
+     
+      + 52.7539452171411*x(i5) + 235.162363026566*x(i6) - 92.5241053064281*x(i7) - 53.6677909515532*x(i8)
+     
+      - 57.7628293312445*x(i9) + 57.7866381579014*x(i10) =G= 89.718578 ;
+     
+      (LHS = 89.7185779981119, INFES = 1.88809679002588E-9 ****)
+     
+qpcon(i2)..  123.1229410956*x(i1) + 315.636284936814*x(i2) + 171.789122176717*x(i3) - 41.2234424619483*x(i4)
+     
+      + 65.0371828582492*x(i5) + 29.2851118682948*x(i6) + 39.4767048401848*x(i7) + 73.0122424413464*x(i8)
+     
+      - 112.141977683603*x(i9) + 36.6600648182331*x(i10) =G= 98.7983264 ;
+     
+      (LHS = 98.7983263993208, INFES = 6.79193590258365E-10 ****)
+     
+qpcon(i3)..  215.487340028385*x(i1) + 171.789122176717*x(i2) + 300.884382719882*x(i3) - 4.17336125137959*x(i4)
+     
+      - 15.198018434854*x(i5) - 32.0506516764183*x(i6) + 18.7410397259935*x(i7) - 37.3309875050709*x(i8)
+     
+      - 76.4936688781081*x(i9) + 66.6787697953152*x(i10) =G= 19.7544634 ; (LHS = 48.3928246638904)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp3 Using QCP From line 108
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0, 0.276429139159261, +INF, 4.98999952469603E-10)
+      (89.7186) qcpcon
+      456.6958  qpcon(i1)
+      123.1229  qpcon(i2)
+      215.4873  qpcon(i3)
+        8.1708  qpcon(i4)
+       52.7539  qpcon(i5)
+      235.1624  qpcon(i6)
+      -92.5241  qpcon(i7)
+      -53.6678  qpcon(i8)
+      -57.7628  qpcon(i9)
+       57.7866  qpcon(i10)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0, 0.256385761678309, +INF, 5.37568212166661E-10)
+      (98.7983) qcpcon
+      123.1229  qpcon(i1)
+      315.6363  qpcon(i2)
+      171.7891  qpcon(i3)
+      -41.2234  qpcon(i4)
+       65.0372  qpcon(i5)
+       29.2851  qpcon(i6)
+       39.4767  qpcon(i7)
+       73.0122  qpcon(i8)
+     -112.142   qpcon(i9)
+       36.6601  qpcon(i10)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 28.6383612655174)
+      (77.0312) qcpcon
+      215.4873  qpcon(i1)
+      171.7891  qpcon(i2)
+      300.8844  qpcon(i3)
+       -4.1734  qpcon(i4)
+      -15.198   qpcon(i5)
+      -32.0507  qpcon(i6)
+       18.741   qpcon(i7)
+      -37.331   qpcon(i8)
+      -76.4937  qpcon(i9)
+       66.6788  qpcon(i10)
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 1.37917191074103E-9, +INF, 0)
+        1       edummy
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp3 Using QCP From line 108
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           12
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           11
+NON ZERO ELEMENTS           111     NON LINEAR N-Z             10
+CODE LENGTH                 421     CONSTANT POOL              81
+
+
+GENERATION TIME      =        0.032 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp3 Using QCP From line 108
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp3                OBJECTIVE  z
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  108
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.062 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.05sec (det. 0.79 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU edummy              .              .              .             1.0000      
+---- EQU qcpcon            -INF      2.4432154E-6          .            -0.6978      
+
+---- EQU qpcon  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         89.7186        89.7186        +INF            0.1929      
+i2         98.7983        98.7983        +INF            0.1789      
+i3         19.7545        48.3928        +INF      -1.578379E-9      
+i4         -3.9762        -3.9762        +INF            0.1062      
+i5        -25.7755        82.4538        +INF      -3.513538E-9      
+i6         54.8500        87.4929        +INF      -1.496978E-9      
+i7         20.7757        20.7757        +INF            0.0945      
+i8         44.7988        44.7988        +INF            0.3742      
+i9         69.5255        69.5255        +INF            0.3384      
+i10       -87.2646       -59.6560        +INF      -1.505867E-9      
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             0.2764        +INF      2.5992134E-7      
+i2           .             0.2564        +INF      2.8434588E-7      
+i3           .              .            +INF           19.9828      
+i4           .             0.1521        +INF      4.8139502E-7      
+i5           .              .            +INF           75.5178      
+i6           .              .            +INF           22.7768      
+i7           .             0.1355        +INF      5.5198104E-7      
+i8           .             0.5363        +INF      1.3391719E-7      
+i9           .             0.4850        +INF      1.4965443E-7      
+i10          .              .            +INF           19.2640      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                             6  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    112 PARAMETER results  
+
+              x           w
+
+i1        0.276 2.248125E-6
+i2        0.256 2.043446E-6
+i3                   28.638
+i4        0.152 1.211279E-6
+i5                  108.229
+i6                   32.643
+i7        0.135 9.660704E-7
+i8        0.536 2.706054E-8
+i9        0.485 6.117374E-7
+i10                  27.609
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp4 Using MIP From line 141
+
+
+---- edummy  =E=  
+
+edummy..  z =E= 0 ; (LHS = 0)
+     
+
+---- xbnd  =L=  
+
+xbnd(i1)..  x(i1) - 1000*d(i1) =L= 0 ; (LHS = 0.27642914590688, INFES = 0.27642914590688 ****)
+     
+xbnd(i2)..  x(i2) - 1000*d(i2) =L= 0 ; (LHS = 0.256385765859179, INFES = 0.256385765859179 ****)
+     
+xbnd(i3)..  x(i3) - 1000*d(i3) =L= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- wbnd  =L=  
+
+wbnd(i1)..  1000*d(i1) + w(i1) =L= 1000 ; (LHS = 0)
+     
+wbnd(i2)..  1000*d(i2) + w(i2) =L= 1000 ; (LHS = 0)
+     
+wbnd(i3)..  1000*d(i3) + w(i3) =L= 1000 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- wdef  =E=  
+
+wdef(i1)..  - 456.695760856441*x(i1) - 123.1229410956*x(i2) - 215.487340028385*x(i3) - 8.17084573668201*x(i4)
+     
+      - 52.7539452171411*x(i5) - 235.162363026566*x(i6) + 92.5241053064281*x(i7) + 53.6677909515532*x(i8)
+     
+      + 57.7628293312445*x(i9) - 57.7866381579014*x(i10) + w(i1) =E= -89.718578 ;
+     
+      (LHS = -89.7185802481245, INFES = 2.24812454518997E-6 ****)
+     
+wdef(i2)..  - 123.1229410956*x(i1) - 315.636284936814*x(i2) - 171.789122176717*x(i3) + 41.2234424619483*x(i4)
+     
+      - 65.0371828582492*x(i5) - 29.2851118682948*x(i6) - 39.4767048401848*x(i7) - 73.0122424413464*x(i8)
+     
+      + 112.141977683603*x(i9) - 36.6600648182331*x(i10) + w(i2) =E= -98.7983264 ;
+     
+      (LHS = -98.7983284434464, INFES = 2.04344640053478E-6 ****)
+     
+wdef(i3)..  - 215.487340028385*x(i1) - 171.789122176717*x(i2) - 300.884382719882*x(i3) + 4.17336125137959*x(i4)
+     
+      + 15.198018434854*x(i5) + 32.0506516764183*x(i6) - 18.7410397259935*x(i7) + 37.3309875050709*x(i8)
+     
+      + 76.4936688781081*x(i9) - 66.6787697953152*x(i10) + w(i3) =E= -19.7544634 ;
+     
+      (LHS = -48.3928263836536, INFES = 28.6383629836536 ****)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp4 Using MIP From line 141
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0, 0.27642914590688, 1000, 2.59921338597727E-7)
+        1       xbnd(i1)
+     -456.6958  wdef(i1)
+     -123.1229  wdef(i2)
+     -215.4873  wdef(i3)
+       -8.1708  wdef(i4)
+      -52.7539  wdef(i5)
+     -235.1624  wdef(i6)
+       92.5241  wdef(i7)
+       53.6678  wdef(i8)
+       57.7628  wdef(i9)
+      -57.7866  wdef(i10)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0, 0.256385765859179, 1000, 2.84345882655062E-7)
+        1       xbnd(i2)
+     -123.1229  wdef(i1)
+     -315.6363  wdef(i2)
+     -171.7891  wdef(i3)
+       41.2234  wdef(i4)
+      -65.0372  wdef(i5)
+      -29.2851  wdef(i6)
+      -39.4767  wdef(i7)
+      -73.0122  wdef(i8)
+      112.142   wdef(i9)
+      -36.6601  wdef(i10)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 19.9827864465281)
+        1       xbnd(i3)
+     -215.4873  wdef(i1)
+     -171.7891  wdef(i2)
+     -300.8844  wdef(i3)
+        4.1734  wdef(i4)
+       15.198   wdef(i5)
+       32.0507  wdef(i6)
+      -18.741   wdef(i7)
+       37.331   wdef(i8)
+       76.4937  wdef(i9)
+      -66.6788  wdef(i10)
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       edummy
+
+
+---- d  
+
+d(i1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+    -1000       xbnd(i1)
+     1000       wbnd(i1)
+
+d(i2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+    -1000       xbnd(i2)
+     1000       wbnd(i2)
+
+d(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+    -1000       xbnd(i3)
+     1000       wbnd(i3)
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- w  
+
+w(i1)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 0)
+        1       wbnd(i1)
+        1       wdef(i1)
+
+w(i2)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 0)
+        1       wbnd(i2)
+        1       wdef(i2)
+
+w(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1000, 0)
+        1       wbnd(i3)
+        1       wdef(i3)
+
+REMAINING 7 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp4 Using MIP From line 141
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           31
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           31
+NON ZERO ELEMENTS           151     DISCRETE VARIABLES         10
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp4 Using MIP From line 141
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp4                OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  141
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.234 10000000000.000
+ ITERATION COUNT, LIMIT         5    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.19sec (det. 1.08 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 0.07 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (5 iterations, 0 nodes)
+Final Solve:             0.000000    (6 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU edummy              .              .              .             1.0000      
+
+---- EQU xbnd  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF         -999.7236          .              .          
+i2         -INF         -999.7436          .              .          
+i3         -INF             .              .              .          
+i4         -INF         -999.8479          .              .          
+i5         -INF             .              .              .          
+i6         -INF             .              .              .          
+i7         -INF         -999.8645          .              .          
+i8         -INF         -999.4637          .              .          
+i9         -INF         -999.5150          .              .          
+i10        -INF             .              .              .          
+
+---- EQU wbnd  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF         1000.0000      1000.0000          .          
+i2         -INF         1000.0000      1000.0000          .          
+i3         -INF           28.6384      1000.0000          .          
+i4         -INF         1000.0000      1000.0000          .          
+i5         -INF          108.2293      1000.0000          .          
+i6         -INF           32.6429      1000.0000          .          
+i7         -INF         1000.0000      1000.0000          .          
+i8         -INF         1000.0000      1000.0000          .          
+i9         -INF         1000.0000      1000.0000          .          
+i10        -INF           27.6086      1000.0000          .          
+
+---- EQU wdef  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1        -89.7186       -89.7186       -89.7186         EPS         
+i2        -98.7983       -98.7983       -98.7983         EPS         
+i3        -19.7545       -19.7545       -19.7545         EPS         
+i4          3.9762         3.9762         3.9762         EPS         
+i5         25.7755        25.7755        25.7755         EPS         
+i6        -54.8500       -54.8500       -54.8500         EPS         
+i7        -20.7757       -20.7757       -20.7757         EPS         
+i8        -44.7988       -44.7988       -44.7988         EPS         
+i9        -69.5255       -69.5255       -69.5255         EPS         
+i10        87.2646        87.2646        87.2646         EPS         
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             0.2764      1000.0000          .          
+i2           .             0.2564      1000.0000          .          
+i3           .              .          1000.0000         EPS         
+i4           .             0.1521      1000.0000          .          
+i5           .              .          1000.0000         EPS         
+i6           .              .          1000.0000         EPS         
+i7           .             0.1355      1000.0000          .          
+i8           .             0.5363      1000.0000          .          
+i9           .             0.4850      1000.0000          .          
+i10          .              .          1000.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  objective
+
+---- VAR d  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             1.0000         1.0000         EPS         
+i2           .             1.0000         1.0000         EPS         
+i3           .              .             1.0000         EPS         
+i4           .             1.0000         1.0000         EPS         
+i5           .              .             1.0000         EPS         
+i6           .              .             1.0000         EPS         
+i7           .             1.0000         1.0000         EPS         
+i8           .             1.0000         1.0000         EPS         
+i9           .             1.0000         1.0000         EPS         
+i10          .              .             1.0000         EPS         
+
+---- VAR w  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .          1000.0000         EPS         
+i2           .              .          1000.0000         EPS         
+i3           .            28.6384      1000.0000          .          
+i4           .              .          1000.0000         EPS         
+i5           .           108.2293      1000.0000          .          
+i6           .            32.6429      1000.0000          .          
+i7           .              .          1000.0000         EPS         
+i8           .              .          1000.0000         EPS         
+i9           .              .          1000.0000         EPS         
+i10          .            27.6086      1000.0000          .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    145 PARAMETER results  
+
+              x           w
+
+i1        0.276
+i2        0.256
+i3                   28.638
+i4        0.152
+i5                  108.229
+i6                   32.643
+i7        0.135
+i8        0.536
+i9        0.485
+i10                  27.609
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp5 Using MIP From line 179
+
+
+---- edummy  =E=  
+
+edummy..  z =E= 0 ; (LHS = 0)
+     
+
+---- xzero  =E=  
+
+xzero(i1)..  x(i1) =E= 0 ; (LHS = 0.276429139159536, INFES = 0.276429139159536 ****)
+     
+xzero(i2)..  x(i2) =E= 0 ; (LHS = 0.256385761681285, INFES = 0.256385761681285 ****)
+     
+xzero(i3)..  x(i3) =E= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- wzero  =E=  
+
+wzero(i1)..  w(i1) =E= 0 ; (LHS = 0)
+     
+wzero(i2)..  w(i2) =E= 0 ; (LHS = 0)
+     
+wzero(i3)..  w(i3) =E= 0 ; (LHS = 28.638361264849, INFES = 28.638361264849 ****)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- wdef  =E=  
+
+wdef(i1)..  - 456.695760856441*x(i1) - 123.1229410956*x(i2) - 215.487340028385*x(i3) - 8.17084573668201*x(i4)
+     
+      - 52.7539452171411*x(i5) - 235.162363026566*x(i6) + 92.5241053064281*x(i7) + 53.6677909515532*x(i8)
+     
+      + 57.7628293312445*x(i9) - 57.7866381579014*x(i10) + w(i1) =E= -89.718578 ; (LHS = -89.718578)
+     
+wdef(i2)..  - 123.1229410956*x(i1) - 315.636284936814*x(i2) - 171.789122176717*x(i3) + 41.2234424619483*x(i4)
+     
+      - 65.0371828582492*x(i5) - 29.2851118682948*x(i6) - 39.4767048401848*x(i7) - 73.0122424413464*x(i8)
+     
+      + 112.141977683603*x(i9) - 36.6600648182331*x(i10) + w(i2) =E= -98.7983264 ; (LHS = -98.7983264)
+     
+wdef(i3)..  - 215.487340028385*x(i1) - 171.789122176717*x(i2) - 300.884382719882*x(i3) + 4.17336125137959*x(i4)
+     
+      + 15.198018434854*x(i5) + 32.0506516764183*x(i6) - 18.7410397259935*x(i7) + 37.3309875050709*x(i8)
+     
+      + 76.4936688781081*x(i9) - 66.6787697953152*x(i10) + w(i3) =E= -19.7544634 ; (LHS = -19.7544634)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- edummy2  =G=  need to have d in the model somewhere
+
+edummy2..  d(i1) + d(i2) + d(i3) + d(i4) + d(i5) + d(i6) + d(i7) + d(i8) + d(i9) + d(i10) =G= 0 ; (LHS = 6)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp5 Using MIP From line 179
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0, 0.276429139159536, +INF, 0)
+        1       xzero(i1)
+     -456.6958  wdef(i1)
+     -123.1229  wdef(i2)
+     -215.4873  wdef(i3)
+       -8.1708  wdef(i4)
+      -52.7539  wdef(i5)
+     -235.1624  wdef(i6)
+       92.5241  wdef(i7)
+       53.6678  wdef(i8)
+       57.7628  wdef(i9)
+      -57.7866  wdef(i10)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0, 0.256385761681285, +INF, 0)
+        1       xzero(i2)
+     -123.1229  wdef(i1)
+     -315.6363  wdef(i2)
+     -171.7891  wdef(i3)
+       41.2234  wdef(i4)
+      -65.0372  wdef(i5)
+      -29.2851  wdef(i6)
+      -39.4767  wdef(i7)
+      -73.0122  wdef(i8)
+      112.142   wdef(i9)
+      -36.6601  wdef(i10)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       xzero(i3)
+     -215.4873  wdef(i1)
+     -171.7891  wdef(i2)
+     -300.8844  wdef(i3)
+        4.1734  wdef(i4)
+       15.198   wdef(i5)
+       32.0507  wdef(i6)
+      -18.741   wdef(i7)
+       37.331   wdef(i8)
+       76.4937  wdef(i9)
+      -66.6788  wdef(i10)
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       edummy
+
+
+---- d  
+
+d(i1)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       edummy2
+
+d(i2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       edummy2
+
+d(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       edummy2
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- w  
+
+w(i1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       wzero(i1)
+        1       wdef(i1)
+
+w(i2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+        1       wzero(i2)
+        1       wdef(i2)
+
+w(i3)
+                (.LO, .L, .UP, .M = 0, 28.638361264849, +INF, 0)
+        1       wzero(i3)
+        1       wdef(i3)
+
+REMAINING 7 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp5 Using MIP From line 179
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           32
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           31
+NON ZERO ELEMENTS           141     DISCRETE VARIABLES         10
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp5 Using MIP From line 179
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp5                OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  179
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.344 10000000000.000
+ ITERATION COUNT, LIMIT       147    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\blog\LinearComplementarity\cplex.opt"
+>>  indic xzero(i)$d(i) 0
+>>  indic wzero(i)$d(i) 1
+Finished reading from "D:\projects\blog\LinearComplementarity\cplex.opt"
+
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.16sec (det. 2.34 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            0.000000    (147 iterations, 49 nodes)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU edummy              .              .              .          
+
+---- EQU xzero  
+
+           LOWER          LEVEL          UPPER
+
+i1           .       -1.00000E+20          .          
+i2           .       -1.00000E+20          .          
+i3           .              .              .          
+i4           .       -1.00000E+20          .          
+i5           .              .              .          
+i6           .              .              .          
+i7           .       -1.00000E+20          .          
+i8           .       -1.00000E+20          .          
+i9           .       -1.00000E+20          .          
+i10          .              .              .          
+
+---- EQU wzero  
+
+           LOWER          LEVEL          UPPER
+
+i1           .              .              .          
+i2           .              .              .          
+i3           .       -1.00000E+20          .          
+i4           .              .              .          
+i5           .       -1.00000E+20          .          
+i6           .       -1.00000E+20          .          
+i7           .              .              .          
+i8           .              .              .          
+i9           .              .              .          
+i10          .       -1.00000E+20          .          
+
+---- EQU wdef  
+
+           LOWER          LEVEL          UPPER
+
+i1        -89.7186       -89.7186       -89.7186      
+i2        -98.7983       -98.7983       -98.7983      
+i3        -19.7545       -19.7545       -19.7545      
+i4          3.9762         3.9762         3.9762      
+i5         25.7755        25.7755        25.7755      
+i6        -54.8500       -54.8500       -54.8500      
+i7        -20.7757       -20.7757       -20.7757      
+i8        -44.7988       -44.7988       -44.7988      
+i9        -69.5255       -69.5255       -69.5255      
+i10        87.2646        87.2646        87.2646      
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU edummy2             .             6.0000        +INF         
+
+  edummy2  need to have d in the model somewhere
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER
+
+i1           .             0.2764        +INF         
+i2           .             0.2564        +INF         
+i3           .              .            +INF         
+i4           .             0.1521        +INF         
+i5           .              .            +INF         
+i6           .              .            +INF         
+i7           .             0.1355        +INF         
+i8           .             0.5363        +INF         
+i9           .             0.4850        +INF         
+i10          .              .            +INF         
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF             .            +INF         
+
+  z  objective
+
+---- VAR d  
+
+           LOWER          LEVEL          UPPER
+
+i1           .             1.0000         1.0000      
+i2           .             1.0000         1.0000      
+i3           .              .             1.0000      
+i4           .             1.0000         1.0000      
+i5           .              .             1.0000      
+i6           .              .             1.0000      
+i7           .             1.0000         1.0000      
+i8           .             1.0000         1.0000      
+i9           .             1.0000         1.0000      
+i10          .              .             1.0000      
+
+---- VAR w  
+
+           LOWER          LEVEL          UPPER
+
+i1           .              .            +INF         
+i2           .              .            +INF         
+i3           .            28.6384        +INF         
+i4           .              .            +INF         
+i5           .           108.2293        +INF         
+i6           .            32.6429        +INF         
+i7           .              .            +INF         
+i8           .              .            +INF         
+i9           .              .            +INF         
+i10          .            27.6086        +INF         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             7  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    183 PARAMETER results  
+
+              x           w
+
+i1        0.276
+i2        0.256
+i3                   28.638
+i4        0.152
+i5                  108.229
+i6                   32.643
+i7        0.135
+i8        0.536
+i9        0.485
+i10                  27.609
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 27
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE lcp6 Using MIP From line 201
+
+
+---- edummy  =E=  
+
+edummy..  z =E= 0 ; (LHS = 0)
+     
+
+---- wdef2  =E=  
+
+wdef2(i1)..  - 456.695760856441*xw(i1,x) + xw(i1,w) - 123.1229410956*xw(i2,x) - 215.487340028385*xw(i3,x)
+     
+      - 8.17084573668201*xw(i4,x) - 52.7539452171411*xw(i5,x) - 235.162363026566*xw(i6,x) + 92.5241053064281*xw(i7,x)
+     
+      + 53.6677909515532*xw(i8,x) + 57.7628293312445*xw(i9,x) - 57.7866381579014*xw(i10,x) =E= -89.718578 ;
+     
+      (LHS = 0, INFES = 89.718578 ****)
+     
+wdef2(i2)..  - 123.1229410956*xw(i1,x) - 315.636284936814*xw(i2,x) + xw(i2,w) - 171.789122176717*xw(i3,x)
+     
+      + 41.2234424619483*xw(i4,x) - 65.0371828582492*xw(i5,x) - 29.2851118682948*xw(i6,x) - 39.4767048401848*xw(i7,x)
+     
+      - 73.0122424413464*xw(i8,x) + 112.141977683603*xw(i9,x) - 36.6600648182331*xw(i10,x) =E= -98.7983264 ;
+     
+      (LHS = 0, INFES = 98.7983264 ****)
+     
+wdef2(i3)..  - 215.487340028385*xw(i1,x) - 171.789122176717*xw(i2,x) - 300.884382719882*xw(i3,x) + xw(i3,w)
+     
+      + 4.17336125137959*xw(i4,x) + 15.198018434854*xw(i5,x) + 32.0506516764183*xw(i6,x) - 18.7410397259935*xw(i7,x)
+     
+      + 37.3309875050709*xw(i8,x) + 76.4936688781081*xw(i9,x) - 66.6787697953152*xw(i10,x) =E= -19.7544634 ;
+     
+      (LHS = 0, INFES = 19.7544634 ****)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 28
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE lcp6 Using MIP From line 201
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       edummy
+
+
+---- xw  
+
+xw(i1,x)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -456.6958  wdef2(i1)
+     -123.1229  wdef2(i2)
+     -215.4873  wdef2(i3)
+       -8.1708  wdef2(i4)
+      -52.7539  wdef2(i5)
+     -235.1624  wdef2(i6)
+       92.5241  wdef2(i7)
+       53.6678  wdef2(i8)
+       57.7628  wdef2(i9)
+      -57.7866  wdef2(i10)
+
+xw(i1,w)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       wdef2(i1)
+
+xw(i2,x)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+     -123.1229  wdef2(i1)
+     -315.6363  wdef2(i2)
+     -171.7891  wdef2(i3)
+       41.2234  wdef2(i4)
+      -65.0372  wdef2(i5)
+      -29.2851  wdef2(i6)
+      -39.4767  wdef2(i7)
+      -73.0122  wdef2(i8)
+      112.142   wdef2(i9)
+      -36.6601  wdef2(i10)
+
+REMAINING 17 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 29
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE lcp6 Using MIP From line 201
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           21
+NON ZERO ELEMENTS           111
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 30
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE lcp6 Using MIP From line 201
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   lcp6                OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  201
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT       157    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.08sec (det. 0.95 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.05 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (157 iterations, 48 nodes)
+Final Solve:             0.000000    (5 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU edummy              .              .              .             1.0000      
+
+---- EQU wdef2  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1        -89.7186       -89.7186       -89.7186         EPS         
+i2        -98.7983       -98.7983       -98.7983         EPS         
+i3        -19.7545       -19.7545       -19.7545         EPS         
+i4          3.9762         3.9762         3.9762         EPS         
+i5         25.7755        25.7755        25.7755         EPS         
+i6        -54.8500       -54.8500       -54.8500         EPS         
+i7        -20.7757       -20.7757       -20.7757         EPS         
+i8        -44.7988       -44.7988       -44.7988         EPS         
+i9        -69.5255       -69.5255       -69.5255         EPS         
+i10        87.2646        87.2646        87.2646         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  objective
+
+---- VAR xw  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .x          .             0.2764        +INF            EPS         
+i1 .w          .              .            +INF            EPS         
+i2 .x          .             0.2564        +INF            EPS         
+i2 .w          .              .            +INF            EPS         
+i3 .x          .              .            +INF            EPS         
+i3 .w          .            28.6384        +INF            EPS         
+i4 .x          .             0.1521        +INF            EPS         
+i4 .w          .              .            +INF            EPS         
+i5 .x          .              .            +INF            EPS         
+i5 .w          .           108.2293        +INF            EPS         
+i6 .x          .              .            +INF            EPS         
+i6 .w          .            32.6429        +INF            EPS         
+i7 .x          .             0.1355        +INF            EPS         
+i7 .w          .              .            +INF            EPS         
+i8 .x          .             0.5363        +INF            EPS         
+i8 .w          .              .            +INF            EPS         
+i9 .x          .             0.4850        +INF            EPS         
+i9 .w          .              .            +INF            EPS         
+i10.x          .              .            +INF            EPS         
+i10.w          .            27.6086        +INF            EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/15/21 08:12:21 Page 31
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    203 VARIABLE xw.L  
+
+              x           w
+
+i1        0.276
+i2        0.256
+i3                   28.638
+i4        0.152
+i5                  108.229
+i6                   32.643
+i7        0.135
+i8        0.536
+i9        0.485
+i10                  27.609
+
+
+
+EXECUTION TIME       =        2.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\LinearComplementarity\LinearComplementarity.gms
+Output     D:\projects\blog\LinearComplementarity\LinearComplementarity.lst

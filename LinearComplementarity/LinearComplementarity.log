@@ -1,0 +1,522 @@
+
+--- Job LinearComplementarity.gms Start 06/15/21 08:12:21 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\LinearComplementarity\LinearComplementarity.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\LinearComplementarity\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\LinearComplementarity\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- LinearComplementarity.gms(203) 3 Mb
+--- Starting execution: elapsed 0:00:00.019
+--- LinearComplementarity.gms(55) 4 Mb
+--- Generating MCP model lcp1
+--- LinearComplementarity.gms(56) 6 Mb
+---   10 rows  10 columns  100 non-zeroes
+---   0 nl-code  0 nl-non-zeroes
+--- LinearComplementarity.gms(56) 4 Mb
+--- Executing PATH (Solvelink=2): elapsed 0:00:00.060
+Reading dictionary...
+Reading row data...
+Evaluating functions...
+Checking model...
+Calculating Jacobian...
+
+PATH             34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+10 row/cols, 100 non-zeros, 100.00% dense.
+
+Path 5.0.02 (Thu Feb 25 17:48:32 2021)
+Written by Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
+
+
+INITIAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  0.0000e+00 var: (x(i1))
+Maximum of F. . . . . . . . . .  9.8798e+01 eqn: (e(i2))
+Maximum of Grad F . . . . . . .  4.5670e+02 eqn: (e(i1))
+                                            var: (x(i1))
+
+INITIAL JACOBIAN NORM STATISTICS
+Maximum Row Norm. . . . . . . .  1.4965e+03 eqn: (e(i6))
+Minimum Row Norm. . . . . . . .  6.8946e+02 eqn: (e(i8))
+Maximum Column Norm . . . . . .  1.4965e+03 var: (x(i6))
+Minimum Column Norm . . . . . .  6.8946e+02 var: (x(i8))
+
+Crash Log
+major  func  diff  size  residual    step       prox   (label)
+    0     0             3.3753e+02             0.0e+00 (e(i2))
+    1     1     7     7 1.5498e+02  1.0e+00    0.0e+00 (e(i8))
+    2     2     2     6 8.5860e-14  1.0e+00    0.0e+00 (e(i1))
+pn_search terminated: no basis change.
+
+Major Iteration Log
+major minor  func  grad  residual    step  type prox    inorm  (label)
+    0     0     3     3 8.5860e-14           I 0.0e+00 7.1e-14 (e(i1))
+
+FINAL STATISTICS
+Inf-Norm of Complementarity . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Normal Map. . . . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Minimum Map . . . .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Fischer Function. .  7.1054e-14 eqn: (e(i1))
+Inf-Norm of Grad Fischer Fcn. .  2.7711e-11 eqn: (e(i1))
+Two-Norm of Grad Fischer Fcn. .  3.8890e-11
+
+FINAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  5.3629e-01 var: (x(i8))
+Maximum of F. . . . . . . . . .  1.0823e+02 eqn: (e(i5))
+Maximum of Grad F . . . . . . .  4.5670e+02 eqn: (e(i1))
+                                            var: (x(i1))
+
+ ** EXIT - solution found.
+
+Major Iterations. . . . 0
+Minor Iterations. . . . 0
+Restarts. . . . . . . . 0
+Crash Iterations. . . . 2
+Gradient Steps. . . . . 0
+Function Evaluations. . 3
+Gradient Evaluations. . 3
+Basis Time. . . . . . . 0.000000
+Total Time. . . . . . . 0.000000
+Residual. . . . . . . . 8.585980e-14
+
+--- Reading solution for model lcp1
+--- Executing after solve: elapsed 0:00:00.609
+--- LinearComplementarity.gms(82) 4 Mb
+--- Generating QCP model lcp2
+--- LinearComplementarity.gms(83) 6 Mb
+---   11 rows  11 columns  111 non-zeroes
+---   422 nl-code  10 nl-non-zeroes
+--- LinearComplementarity.gms(83) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.632
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 45
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.00 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 10
+  Integer space required    = 10
+  Total non-zeros in factor = 55
+  Total FP ops to factor    = 385
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 1 columns.
+QP Presolve added 0 rows and 10 columns.
+Reduced QP has 20 rows, 20 columns, and 165 nonzeros.
+Reduced QP objective Q matrix has 10 nonzeros.
+Presolve time = 0.09 sec. (0.02 ticks)
+Parallel mode: none, using 1 thread for barrier
+Number of nonzeros in lower triangle of A*A' = 190
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Rows in Factor            = 20
+  Integer space required    = 20
+  Total non-zeros in factor = 210
+  Total FP ops to factor    = 2870
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf          
+   0  -2.7986252e+03  -1.3425838e+01  1.99e+02  0.00e+00  2.06e+04
+   1   1.1235816e+04  -1.1299757e+04  1.42e-13  0.00e+00  1.93e-12
+   2   1.6311929e+03  -1.6528680e+03  3.05e-14  0.00e+00  2.33e-12
+   3   2.2837481e+02  -2.3477524e+02  1.08e-14  0.00e+00  7.74e-13
+   4   2.5038197e+01  -2.6682378e+01  5.84e-15  0.00e+00  3.94e-13
+   5   1.3925051e+00  -1.9590209e+00  8.01e-15  0.00e+00  2.45e-13
+   6   8.3877246e-02  -9.2970146e-02  1.34e-14  0.00e+00  2.13e-13
+   7   4.4147987e-03  -4.4116741e-03  7.90e-15  0.00e+00  2.67e-13
+   8   2.2064031e-04  -2.2064037e-04  6.52e-15  0.00e+00  2.25e-13
+   9   1.1031963e-05  -1.1031963e-05  6.01e-15  0.00e+00  1.48e-13
+  10   5.5159802e-07  -5.5159808e-07  7.23e-15  0.00e+00  2.76e-13
+  11   2.7579858e-08  -2.7579915e-08  6.38e-15  0.00e+00  2.00e-13
+  12   1.3791208e-09  -1.3790071e-09  7.66e-15  0.00e+00  2.55e-13
+Barrier time = 0.11 sec. (0.33 ticks)
+
+Total time on 1 threads = 0.11 sec. (0.33 ticks)
+
+--- QP status (1): optimal.
+--- Cplex Time: 0.11sec (det. 0.33 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+--- Reading solution for model lcp2
+--- Executing after solve: elapsed 0:00:00.829
+--- LinearComplementarity.gms(107) 4 Mb
+--- Generating QCP model lcp3
+--- LinearComplementarity.gms(108) 6 Mb
+---   12 rows  11 columns  111 non-zeroes
+---   421 nl-code  10 nl-non-zeroes
+--- LinearComplementarity.gms(108) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.853
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+QCP Presolve eliminated 0 rows and 1 columns.
+Reduced QCP has 22 rows, 22 columns, and 178 nonzeros.
+Reduced QCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: none, using 1 thread for barrier
+Number of nonzeros in lower triangle of A*A' = 221
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Rows in Factor            = 22
+  Integer space required    = 22
+  Total non-zeros in factor = 253
+  Total FP ops to factor    = 3795
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   0.0000000e+00   0.0000000e+00  3.88e+03  0.00e+00  2.14e+01  1.00e+00
+   1   0.0000000e+00   4.5719530e+00  3.88e+03  0.00e+00  2.14e+01  1.85e-01
+   2   0.0000000e+00   6.8795592e+00  3.27e+03  0.00e+00  1.80e+01  1.36e-01
+   3   0.0000000e+00   4.8095708e+00  1.84e+03  0.00e+00  1.01e+01  1.97e-01
+   4   0.0000000e+00   4.5445422e+00  1.06e+03  0.00e+00  5.86e+00  2.08e-01
+   5   0.0000000e+00   1.0834979e+00  1.01e+03  0.00e+00  5.57e+00  8.17e-01
+   6   0.0000000e+00   1.8331418e-01  5.46e+02  0.00e+00  3.01e+00  4.88e+00
+   7   0.0000000e+00   1.1571145e-01  8.37e+01  0.00e+00  4.62e-01  7.99e+00
+   8   0.0000000e+00   7.8019875e-03  3.64e+01  0.00e+00  2.01e-01  1.17e+02
+   9   0.0000000e+00   6.5219530e-03  2.95e+00  0.00e+00  1.63e-02  1.42e+02
+  10   0.0000000e+00   1.8614862e-03  1.96e+00  0.00e+00  1.08e-02  4.96e+02
+  11   0.0000000e+00   1.6326584e-03  6.03e-01  0.00e+00  3.33e-03  5.70e+02
+  12   0.0000000e+00   4.6826561e-04  4.70e-01  0.00e+00  2.59e-03  1.99e+03
+  13   0.0000000e+00   2.4446028e-05  1.29e-01  0.00e+00  7.14e-04  3.84e+04
+  14   0.0000000e+00   2.8200209e-06  6.09e-03  0.00e+00  3.36e-05  3.32e+05
+  15   0.0000000e+00   6.6565804e-08  7.32e-04  0.00e+00  4.04e-06  1.41e+07
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.05sec (det. 0.79 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+--- Reading solution for model lcp3
+--- Executing after solve: elapsed 0:00:00.986
+--- LinearComplementarity.gms(133) 4 Mb
+--- Generating MIP model lcp4
+--- LinearComplementarity.gms(141) 4 Mb
+---   31 rows  31 columns  151 non-zeroes
+---   10 discrete-columns
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.996
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 1 columns.
+MIP Presolve modified 6 coefficients.
+Reduced MIP has 30 rows, 30 columns, and 150 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.05 ticks)
+Probing fixed 0 vars, tightened 14 bounds.
+Probing time = 0.02 sec. (0.67 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve modified 6 coefficients.
+Reduced MIP has 30 rows, 30 columns, and 150 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.07 ticks)
+Probing fixed 0 vars, tightened 5 bounds.
+Probing time = 0.00 sec. (0.05 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+Aggregator did 10 substitutions.
+Reduced LP has 20 rows, 20 columns, and 130 nonzeros.
+Presolve time = 0.00 sec. (0.03 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Root relaxation solution time = 0.00 sec. (0.09 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0     0      integral     0        0.0000        0.0000        5    0.00%
+Elapsed time = 0.19 sec. (1.08 ticks, tree = 0.00 MB, solutions = 1)
+Found incumbent of value 0.000000 after 0.19 sec. (1.08 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.19 sec. (1.08 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.19 sec. (1.08 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.19sec (det. 1.08 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 20 rows and 21 columns.
+Reduced LP has 10 rows, 10 columns, and 64 nonzeros.
+Presolve time = 0.03 sec. (0.04 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 0.07 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (5 iterations, 0 nodes)
+Final Solve:             0.000000    (6 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model lcp4
+--- Executing after solve: elapsed 0:00:01.296
+--- LinearComplementarity.gms(178) 4 Mb
+--- Generating MIP model lcp5
+--- LinearComplementarity.gms(179) 4 Mb
+---   32 rows  31 columns  141 non-zeroes
+---   10 discrete-columns
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.319
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\blog\LinearComplementarity\cplex.opt"
+>>  indic xzero(i)$d(i) 0
+>>  indic wzero(i)$d(i) 1
+Finished reading from "D:\projects\blog\LinearComplementarity\cplex.opt"
+
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 1 rows and 1 columns.
+Reduced MIP has 10 rows, 30 columns, and 110 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 20 indicators.
+Presolve time = 0.03 sec. (0.03 ticks)
+Probing time = 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 10 rows, 30 columns, and 110 nonzeros.
+Reduced MIP has 10 binaries, 0 generals, 0 SOSs, and 20 indicators.
+Presolve time = 0.00 sec. (0.04 ticks)
+Probing time = 0.00 sec. (0.00 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 20 columns.
+Reduced LP has 10 rows, 10 columns, and 100 nonzeros.
+Presolve time = 0.00 sec. (0.01 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.02 sec. (0.04 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000     4                      0.0000        5         
+      0     2        0.0000     4                      0.0000        5         
+Elapsed time = 0.14 sec. (1.20 ticks, tree = 0.01 MB, solutions = 0)
+*    48     2      integral     0        0.0000        0.0000      147    0.00%
+Found incumbent of value 0.000000 after 0.16 sec. (2.33 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.14 sec. (1.20 ticks)
+Sequential b&c:
+  Real time             =    0.02 sec. (1.14 ticks)
+                          ------------
+Total (root+branch&cut) =    0.16 sec. (2.34 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.16sec (det. 2.34 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            0.000000    (147 iterations, 49 nodes)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model lcp5
+***
+*** Solver did not provide marginals for model lcp5
+***
+--- Executing after solve: elapsed 0:00:01.770
+--- LinearComplementarity.gms(183) 4 Mb
+--- Generating MIP model lcp6
+--- LinearComplementarity.gms(201) 4 Mb
+---   11 rows  21 columns  111 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.789
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 1 columns.
+Reduced MIP has 10 rows, 20 columns, and 110 nonzeros.
+Reduced MIP has 0 binaries, 0 generals, 10 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (0.03 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 10 rows, 20 columns, and 110 nonzeros.
+Reduced MIP has 0 binaries, 0 generals, 10 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (0.05 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Initializing dual steep norms . . .
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1               0.000000             xw(i2,'x')             xw(i2,'w')
+     2               0.000000             xw(i9,'x')             xw(i9,'w')
+     3               0.000000             xw(i2,'w')             xw(i8,'w')
+     4               0.000000             xw(i4,'x')             xw(i4,'w')
+     5               0.000000             xw(i8,'x')            xw(i10,'w')
+Root relaxation solution time = 0.02 sec. (0.01 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000     1                      0.0000        5         
+      0     2        0.0000     1                      0.0000        5         
+Elapsed time = 0.06 sec. (0.35 ticks, tree = 0.01 MB, solutions = 0)
+*    47     1      integral     0        0.0000        0.0000      157    0.00%
+Found incumbent of value 0.000000 after 0.08 sec. (0.94 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.05 sec. (0.35 ticks)
+Sequential b&c:
+  Real time             =    0.03 sec. (0.60 ticks)
+                          ------------
+Total (root+branch&cut) =    0.08 sec. (0.95 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.08sec (det. 0.95 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 15 columns.
+Reduced LP has 10 rows, 6 columns, and 60 nonzeros.
+Presolve time = 0.02 sec. (0.03 ticks)
+Initializing dual steep norms . . .
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1               0.000000             xw(i9,'x')        wdef2(i9) artif
+     2               0.000000             xw(i2,'x')        wdef2(i2) artif
+     3               0.000000             xw(i8,'x')        wdef2(i8) artif
+     4               0.000000             xw(i4,'x')        wdef2(i4) artif
+     5               0.000000             xw(i7,'x')        wdef2(i7) artif
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.05 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (157 iterations, 48 nodes)
+Final Solve:             0.000000    (5 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model lcp6
+--- Executing after solve: elapsed 0:00:02.033
+--- LinearComplementarity.gms(203) 4 Mb
+*** Status: Normal completion
+--- Job LinearComplementarity.gms Stop 06/15/21 08:12:23 elapsed 0:00:02.038
