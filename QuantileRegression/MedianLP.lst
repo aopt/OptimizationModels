@@ -1,0 +1,449 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Find Median using an LP model
+       
+         Use two formulations for the absolute values
+       
+       
+         References:
+            http://yetanothermathprogrammingconsultant.blogspot.com/2021/06/median-quantiles-and-quantile.html
+       
+       
+         erwin@amsterdamoptimization.com
+       
+  15   
+  16  set
+  17    i /i1*i5/
+  18  ;
+  19   
+  20  parameter y(i) 'data';
+  21  y(i) = uniform(0,1);
+  22  display y;
+  23   
+  24   
+  25  *-------------------------------------------------------------
+  26  * formulation 1: bounding
+  27  *-------------------------------------------------------------
+  28   
+  29  variables
+  30     m    'median'
+  31     z    'objective'
+  32  ;
+  33  positive variables
+  34     e(i) 'absolute value, formulation 1'
+  35  ;
+  36   
+  37  equations
+  38     obj1      'objective, formulation 1'
+  39     bound1(i)
+  40     bound2(i)
+  41  ;
+  42   
+  43  obj1.. z =e= sum(i, e(i));
+  44  bound1(i).. e(i) =g= m-y(i);
+  45  bound2(i).. e(i) =g= -(m-y(i));
+  46   
+  47  model medianLP1 /obj1,bound1,bound2/;
+  48  solve medianLP1 minimizing z using lp;
+  49   
+  50  display m.l;
+  51   
+  52  *-------------------------------------------------------------
+  53  * formulation 2: variable splitting
+  54  *-------------------------------------------------------------
+  55  set
+  56    pm /'+','-'/
+  57  ;
+  58   
+  59  positive variables
+  60     e2(i,pm) 'absolute value, formulation 2'
+  61  ;
+  62   
+  63  equations
+  64     obj2      'objective, formulation 2'
+  65     split(i)  'variable splitting'
+  66  ;
+  67   
+  68  obj2.. z =e= sum((i,pm), e2(i,pm));
+  69  split(i).. e2(i,'+')-e2(i,'-') =e= m-y(i);
+  70   
+  71  model medianLP2 /obj2,split/;
+  72  solve medianLP2 minimizing z using lp;
+  73   
+  74  display m.l;
+  75   
+  76  display e2.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     22 PARAMETER y  data
+
+i1 0.172,    i2 0.843,    i3 0.550,    i4 0.301,    i5 0.292
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE medianLP1 Using LP From line 48
+
+
+---- obj1  =E=  objective, formulation 1
+
+obj1..  z - e(i1) - e(i2) - e(i3) - e(i4) - e(i5) =E= 0 ; (LHS = 0)
+     
+
+---- bound1  =G=  
+
+bound1(i1)..  - m + e(i1) =G= -0.171747132 ; (LHS = 0)
+     
+bound1(i2)..  - m + e(i2) =G= -0.843266708 ; (LHS = 0)
+     
+bound1(i3)..  - m + e(i3) =G= -0.550375356 ; (LHS = 0)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- bound2  =G=  
+
+bound2(i1)..  m + e(i1) =G= 0.171747132 ; (LHS = 0, INFES = 0.171747132 ****)
+     
+bound2(i2)..  m + e(i2) =G= 0.843266708 ; (LHS = 0, INFES = 0.843266708 ****)
+     
+bound2(i3)..  m + e(i3) =G= 0.550375356 ; (LHS = 0, INFES = 0.550375356 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE medianLP1 Using LP From line 48
+
+
+---- m  median
+
+m
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       bound1(i1)
+       -1       bound1(i2)
+       -1       bound1(i3)
+       -1       bound1(i4)
+       -1       bound1(i5)
+        1       bound2(i1)
+        1       bound2(i2)
+        1       bound2(i3)
+        1       bound2(i4)
+        1       bound2(i5)
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+
+---- e  absolute value, formulation 1
+
+e(i1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj1
+        1       bound1(i1)
+        1       bound2(i1)
+
+e(i2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj1
+        1       bound1(i2)
+        1       bound2(i2)
+
+e(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj1
+        1       bound1(i3)
+        1       bound2(i3)
+
+REMAINING 2 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE medianLP1 Using LP From line 48
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES            7
+NON ZERO ELEMENTS            26
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE medianLP1 Using LP From line 48
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   medianLP1           OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  48
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.9297
+
+ RESOURCE USAGE, LIMIT          0.094 10000000000.000
+ ITERATION COUNT, LIMIT         5    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.06sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:            0.929683
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+
+  obj1  objective, formulation 1
+
+---- EQU bound1  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1        -0.1717        -0.1717        +INF            1.0000      
+i2        -0.8433         0.2410        +INF             .          
+i3        -0.5504        -0.0519        +INF             .          
+i4        -0.3011        -0.3011        +INF             .          
+i5        -0.2922        -0.2922        +INF            1.0000      
+
+---- EQU bound2  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1         0.1717         0.4305        +INF             .          
+i2         0.8433         0.8433        +INF            1.0000      
+i3         0.5504         0.5504        +INF            1.0000      
+i4         0.3011         0.3011        +INF            EPS         
+i5         0.2922         0.3101        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR m                 -INF            0.3011        +INF             .          
+---- VAR z                 -INF            0.9297        +INF             .          
+
+  m  median
+  z  objective
+
+---- VAR e  absolute value, formulation 1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1          .             0.1294        +INF             .          
+i2          .             0.5421        +INF             .          
+i3          .             0.2492        +INF             .          
+i4          .              .            +INF            1.0000      
+i5          .             0.0089        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     50 VARIABLE m.L                   =        0.301  median
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE medianLP2 Using LP From line 72
+
+
+---- obj2  =E=  objective, formulation 2
+
+obj2..  z - e2(i1,+) - e2(i1,-) - e2(i2,+) - e2(i2,-) - e2(i3,+) - e2(i3,-) - e2(i4,+) - e2(i4,-) - e2(i5,+) - e2(i5,-)
+      =E= 0 ; (LHS = 0.929682815, INFES = 0.929682815 ****)
+     
+
+---- split  =E=  variable splitting
+
+split(i1)..  - m + e2(i1,+) - e2(i1,-) =E= -0.171747132 ; (LHS = -0.301137904, INFES = 0.129390772 ****)
+     
+split(i2)..  - m + e2(i2,+) - e2(i2,-) =E= -0.843266708 ; (LHS = -0.301137904, INFES = 0.542128804 ****)
+     
+split(i3)..  - m + e2(i3,+) - e2(i3,-) =E= -0.550375356 ; (LHS = -0.301137904, INFES = 0.249237452 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE medianLP2 Using LP From line 72
+
+
+---- m  median
+
+m
+                (.LO, .L, .UP, .M = -INF, 0.301137904, +INF, 0)
+       -1       split(i1)
+       -1       split(i2)
+       -1       split(i3)
+       -1       split(i4)
+       -1       split(i5)
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.929682815, +INF, 0)
+        1       obj2
+
+
+---- e2  absolute value, formulation 2
+
+e2(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj2
+        1       split(i1)
+
+e2(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj2
+       -1       split(i1)
+
+e2(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj2
+        1       split(i2)
+
+REMAINING 7 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE medianLP2 Using LP From line 72
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS            6
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           12
+NON ZERO ELEMENTS            26
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE medianLP2 Using LP From line 72
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   medianLP2           OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  72
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                0.9297
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT         4    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.09sec (det. 0.01 ticks)
+
+
+Optimal solution found
+Objective:            0.929683
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj2                .              .              .             1.0000      
+
+  obj2  objective, formulation 2
+
+---- EQU split  variable splitting
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1        -0.1717        -0.1717        -0.1717         1.0000      
+i2        -0.8433        -0.8433        -0.8433        -1.0000      
+i3        -0.5504        -0.5504        -0.5504        -1.0000      
+i4        -0.3011        -0.3011        -0.3011         EPS         
+i5        -0.2922        -0.2922        -0.2922         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR m                 -INF            0.3011        +INF             .          
+---- VAR z                 -INF            0.9297        +INF             .          
+
+  m  median
+  z  objective
+
+---- VAR e2  absolute value, formulation 2
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+i1.+          .             0.1294        +INF             .          
+i1.-          .              .            +INF            2.0000      
+i2.+          .              .            +INF            2.0000      
+i2.-          .             0.5421        +INF             .          
+i3.+          .              .            +INF            2.0000      
+i3.-          .             0.2492        +INF             .          
+i4.+          .              .            +INF            1.0000      
+i4.-          .              .            +INF            1.0000      
+i5.+          .             0.0089        +INF             .          
+i5.-          .              .            +INF            2.0000      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/14/21 22:23:20 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     74 VARIABLE m.L                   =        0.301  median
+
+----     76 VARIABLE e2.L  absolute value, formulation 2
+
+             +           -
+
+i1       0.129
+i2                   0.542
+i3                   0.249
+i5       0.009
+
+
+
+EXECUTION TIME       =        0.781 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\QuantileRegression\MedianLP.gms
+Output     D:\projects\blog\QuantileRegression\MedianLP.lst
