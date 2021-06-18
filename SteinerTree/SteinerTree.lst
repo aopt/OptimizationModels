@@ -1,0 +1,1163 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Euclidean Steiner Tree Model
+       
+       
+         Based on model from:
+       
+           Nelson Maculan, Philippe Michelon and Adilson E. Xavier,
+           The Euclidean Steiner tree problem in R^n: A mathematical
+           programming formulation,
+           Annals of Operations Research 96 (2000) 209–220
+       
+         See:
+         https://yetanothermathprogrammingconsultant.blogspot.com/2021/03/euclidean-steiner-tree-problems-as.html
+       
+         erwin@amsterdamoptimization.com
+       
+       
+  20   
+  21   
+  22  * size of the problem
+  23  * np = number of given points
+  24  * ns = number of steiner points
+  25   
+  28   
+  29  set
+  30    i     'all points'     /p1*p5,s1*s3/
+  31    p(i)  'given points'   /p1*p5/
+  32    s(i)  'Steiner points' /s1*s3/
+  33    c     'coordinate'     /x,y/
+  34  ;
+  35   
+  36  scalars
+  37     np 'number of given points' /5/
+  38     ns 'number of Steiner points' /3/
+  39  ;
+  40   
+  41  alias (i,j), (s,s1), (p,p1);
+  42   
+  43  option seed = 1234;
+  44   
+  45  *--------------------------------------------------
+  46  * data
+  47  *--------------------------------------------------
+  48   
+  49  parameters
+  50    x0(p,c)   'coordinates given points'
+  51    box(c,*)  'min/max of x0'
+  52  ;
+  53  x0(p,c) = uniform(0,100);
+  54  box(c,'lo') = smin(p,x0(p,c));
+  55  box(c,'up') = smax(p,x0(p,c));
+  56  box(c,'range') = box(c,'up')-box(c,'lo');
+  57  display x0,box;
+  58   
+  59  set E(i,j) 'edges';
+  60  E(i,j) = ord(i)<ord(j);
+  61   
+  62  scalar epsilon 'protect square root' /0.0001/;
+  63   
+  64  *--------------------------------------------------
+  65  * Nonconvex MINLP model
+  66  *--------------------------------------------------
+  67   
+  68  variables
+  69     x(i,c)    'coordinates of points'
+  70     y(i,j)    'tree'
+  71     z         'objective'
+  72  ;
+  73  binary variable y;
+  74  positive variable d;
+  75   
+  76  x.fx(p,c) = x0(p,c);
+  77  x.lo(s,c) = box(c,'lo');
+  78  x.up(s,c) = box(c,'up');
+  79   
+  80  equations
+  81     objective 'min lengths'
+  82     degree1   'terminal points p have degree 1'
+  83     degree3   'Steiner points have degree 3'
+  84     nocycle   'prevent cycles'
+  85     order     'ordering constraint (symmetry breaker)'
+  86     total     'optional constraint (set total edges)'
+  87  ;
+  88   
+  89  objective..
+  90     z =e= sum(E(i,j),sqrt(sum(c,sqr(x(i,c)-x(j,c)))+epsilon)*y(E));
+  91   
+  92  degree1(p)..
+  93     sum(E(p,s), y(E)) =e= 1;
+  94   
+  95  degree3(s)..
+  96     sum(E(p,s), y(E)) + sum(E(s1,s), y(E)) + sum(E(s,s1), y(E)) =e= 3;
+  97   
+  98  nocycle(s)$(ord(s)>1)..
+  99     sum(E(s1,s),y(E)) =e= 1;
+ 100   
+ 101  order(s+1)..
+ 102     x(s,'x') =l= x(s+1,'x');
+ 103   
+ 104  total..
+ 105    sum(E,y(E)) =e= card(i)-1;
+ 106   
+ 107  model m1 /objective,degree1,degree3,nocycle,order,total/;
+ 108  option minlp=baron, optcr=0, threads=8;
+ 109  solve m1 minimizing z using minlp;
+ 110   
+ 111   
+ 112  *--------------------------------------------------
+ 113  * MISOCP model
+ 114  *--------------------------------------------------
+ 115   
+ 116  variables
+ 117    d(i,j)    'distance (length)'
+ 118    d2(i,j,c) 'auxiliary variable in convex distance calculation'
+ 119    d3(i,j)   'auxiliary variable in convex distance calculation'
+ 120  ;
+ 121  positive variable d3;
+ 122   
+ 123  equations
+ 124     objective2    'min lengths'
+ 125     defd2(i,j,c)  'auxiliary constraint for socp constraint'
+ 126     socp(i,j)     'convex conic constraint'
+ 127     bound(i,j)    'auxiliary constraint for socp constraint'
+ 128  ;
+ 129   
+ 130  scalar M;
+ 131  M = sqrt(2)*(smax(c,box(c,'up'))-smin(c,box(c,'lo')));
+ 132   
+ 133  objective2..       z =e= sum(E,d(E));
+ 134   
+ 135  defd2(E(i,j),c)..  d2(E,c) =e= x(i,c)-x(j,c);
+ 136  socp(E)..          sqr(d3(E)) =g= sum(c,sqr(d2(E,c)));
+ 137  bound(E)..         d(E) =g= d3(E) - M*(1-y(E));
+ 138   
+ 139   
+ 140  model m2 /objective2,defd2,socp,bound,degree1,degree3,nocycle,order,total/;
+ 141  option miqcp=cplex;
+ 142  solve m2 minimizing z using miqcp;
+ 143   
+ 144   
+ 145  *--------------------------------------------------
+ 146  * prepare data for plotting in R
+ 147  *--------------------------------------------------
+ 148   
+ 149  alias(*,c2,point);
+ 150   
+ 151  parameter
+ 152    Points(i,point,c)
+ 153    Tree(i,j,c2)
+ 154  ;
+ 155  Points(p,'given',c) = x.l(p,c);
+ 156  Points(s,'steiner',c) = x.l(s,c);
+ 157  loop((i,j)$(y.l(i,j)>0.5),
+ 158    Tree(i,j,'x1') = x.l(i,'x');
+ 159    Tree(i,j,'y1') = x.l(i,'y');
+ 160    Tree(i,j,'x2') = x.l(j,'x');
+ 161    Tree(i,j,'y2') = x.l(j,'y');
+ 162  );
+ 163  display Points,Tree;
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     57 PARAMETER x0  coordinates given points
+
+             x           y
+
+p1       4.421      38.227
+p2      62.306      57.268
+p3      46.068      87.792
+p4      92.771      59.338
+p5      27.269      83.898
+
+
+----     57 PARAMETER box  min/max of x0
+
+           lo          up       range
+
+x       4.421      92.771      88.350
+y      38.227      87.792      49.565
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using MINLP From line 109
+
+
+---- objective  =E=  min lengths
+
+objective..  (0)*x(p1,x) + (0)*x(p1,y) + (0)*x(p2,x) + (0)*x(p2,y) + (0)*x(p3,x) + (0)*x(p3,y) + (0)*x(p4,x)
+     
+      + (0)*x(p4,y) + (0)*x(p5,x) + (0)*x(p5,y) + (0)*x(s1,x) + (0)*x(s1,y) + (0)*x(s2,x) + (0)*x(s2,y) + (0)*x(s3,x)
+     
+      + (0)*x(s3,y) - (60.9361158922018)*y(p1,p2) - (64.7389914785363)*y(p1,p3) - (90.8374578756049)*y(p1,p4)
+     
+      - (51.0668420656754)*y(p1,p5) - (0.01)*y(p1,s1) - (0.01)*y(p1,s2) - (0.01)*y(p1,s3) - (34.5748434359843)*y(p2,p3)
+     
+      - (30.5355492822575)*y(p2,p4) - (44.0090610793342)*y(p2,p5) - (60.9361158922018)*y(p2,s1)
+     
+      - (60.9361158922018)*y(p2,s2) - (60.9361158922018)*y(p2,s3) - (54.6884750143343)*y(p3,p4)
+     
+      - (19.1984309625218)*y(p3,p5) - (64.7389914785363)*y(p3,s1) - (64.7389914785363)*y(p3,s2)
+     
+      - (64.7389914785363)*y(p3,s3) - (69.9556083455038)*y(p4,p5) - (90.8374578756049)*y(p4,s1)
+     
+      - (90.8374578756049)*y(p4,s2) - (90.8374578756049)*y(p4,s3) - (51.0668420656754)*y(p5,s1)
+     
+      - (51.0668420656754)*y(p5,s2) - (51.0668420656754)*y(p5,s3) - (0.01)*y(s1,s2) - (0.01)*y(s1,s3) - (0.01)*y(s2,s3)
+     
+      + z =E= 0 ; (LHS = 0)
+     
+
+---- degree1  =E=  terminal points p have degree 1
+
+degree1(p1)..  y(p1,s1) + y(p1,s2) + y(p1,s3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+degree1(p2)..  y(p2,s1) + y(p2,s2) + y(p2,s3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+degree1(p3)..  y(p3,s1) + y(p3,s2) + y(p3,s3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- degree3  =E=  Steiner points have degree 3
+
+degree3(s1)..  y(p1,s1) + y(p2,s1) + y(p3,s1) + y(p4,s1) + y(p5,s1) + y(s1,s2) + y(s1,s3) =E= 3 ;
+     
+      (LHS = 0, INFES = 3 ****)
+     
+degree3(s2)..  y(p1,s2) + y(p2,s2) + y(p3,s2) + y(p4,s2) + y(p5,s2) + y(s1,s2) + y(s2,s3) =E= 3 ;
+     
+      (LHS = 0, INFES = 3 ****)
+     
+degree3(s3)..  y(p1,s3) + y(p2,s3) + y(p3,s3) + y(p4,s3) + y(p5,s3) + y(s1,s3) + y(s2,s3) =E= 3 ;
+     
+      (LHS = 0, INFES = 3 ****)
+     
+
+---- nocycle  =E=  prevent cycles
+
+nocycle(s2)..  y(s1,s2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+nocycle(s3)..  y(s1,s3) + y(s2,s3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- order  =L=  ordering constraint (symmetry breaker)
+
+order(s2)..  x(s1,x) - x(s2,x) =L= 0 ; (LHS = 0)
+     
+order(s3)..  x(s2,x) - x(s3,x) =L= 0 ; (LHS = 0)
+     
+
+---- total  =E=  optional constraint (set total edges)
+
+total..  y(p1,p2) + y(p1,p3) + y(p1,p4) + y(p1,p5) + y(p1,s1) + y(p1,s2) + y(p1,s3) + y(p2,p3) + y(p2,p4) + y(p2,p5)
+     
+      + y(p2,s1) + y(p2,s2) + y(p2,s3) + y(p3,p4) + y(p3,p5) + y(p3,s1) + y(p3,s2) + y(p3,s3) + y(p4,p5) + y(p4,s1)
+     
+      + y(p4,s2) + y(p4,s3) + y(p5,s1) + y(p5,s2) + y(p5,s3) + y(s1,s2) + y(s1,s3) + y(s2,s3) =E= 7 ;
+     
+      (LHS = 0, INFES = 7 ****)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using MINLP From line 109
+
+
+---- x  coordinates of points
+
+x(p1,x)
+                (.LO, .L, .UP, .M = 4.4210132, 4.4210132, 4.4210132, 0)
+       (0)      objective
+
+x(p1,y)
+                (.LO, .L, .UP, .M = 38.2274024, 38.2274024, 38.2274024, 0)
+       (0)      objective
+
+x(p2,x)
+                (.LO, .L, .UP, .M = 62.3060668, 62.3060668, 62.3060668, 0)
+       (0)      objective
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- y  tree
+
+y(p1,p2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     (-60.9361) objective
+        1       total
+
+y(p1,p3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     (-64.739)  objective
+        1       total
+
+y(p1,p4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     (-90.8375) objective
+        1       total
+
+REMAINING 25 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using MINLP From line 109
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS           14
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           45  6 projected
+NON ZERO ELEMENTS           116     NON LINEAR N-Z             44
+CODE LENGTH                 310     CONSTANT POOL              17     DISCRETE VARIABLES         28
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using MINLP From line 109
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  BARON               FROM LINE  109
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              135.0212
+
+ RESOURCE USAGE, LIMIT         26.570 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS              0             0
+
+GAMS/BARON       34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+BARON is a product of The Optimization Firm, LLC. http://www.minlp.com/
+Parts of the BARON software were created at the
+University of Illinois at Urbana-Champaign.
+
+
+===========================================================================
+ BARON version 21.1.13. Built: WIN-64 Wed Jan 13 16:04:12 EST 2021
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhou, K., M. Kilinc, X. Chen, and N. V. Sahinidis,
+ An efficient strategy for the activation of MIP
+ relaxations in a multicore global MINLP solver,
+ Journal of Global Optimization, 70:497-516, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: ILOG CPLEX                                      
+
+Solution      = 135.021184666979  found at node 1
+Best possible = 135.021184532
+Absolute gap  = 1.3497862028089E-7  optca = 1E-9
+Relative gap  = 9.99684757720105E-10  optcr = 1E-9
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  min lengths
+
+---- EQU degree1  terminal points p have degree 1
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+p1         1.0000         1.0000         1.0000          .          
+p2         1.0000         1.0000         1.0000          .          
+p3         1.0000         1.0000         1.0000          .          
+p4         1.0000         1.0000         1.0000          .          
+p5         1.0000         1.0000         1.0000          .          
+
+---- EQU degree3  Steiner points have degree 3
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+s1         3.0000         3.0000         3.0000          .          
+s2         3.0000         3.0000         3.0000          .          
+s3         3.0000         3.0000         3.0000          .          
+
+---- EQU nocycle  prevent cycles
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+s2         1.0000         1.0000         1.0000        17.2161      
+s3         1.0000         1.0000         1.0000          .          
+
+---- EQU order  ordering constraint (symmetry breaker)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+s2        -INF          -17.1864          .              .          
+s3        -INF          -17.9083          .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU total              7.0000         7.0000         7.0000          .          
+
+  total  optional constraint (set total edges)
+
+---- VAR x  coordinates of points
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+p1.x         4.4210         4.4210         4.4210        -0.4500      
+p1.y        38.2274        38.2274        38.2274        -0.8930      
+p2.x        62.3061        62.3061        62.3061        -0.4483      
+p2.y        57.2676        57.2676        57.2676        -0.8934      
+p3.x        46.0680        46.0680        46.0680         0.4483      
+p3.y        87.7921        87.7921        87.7921         0.8939      
+p4.x        92.7713        92.7713        92.7713         0.9983      
+p4.y        59.3382        59.3382        59.3382         0.0582      
+p5.x        27.2687        27.2687        27.2687        -0.5483      
+p5.y        83.8980        83.8980        83.8980         0.8343      
+s1.x         4.4210        27.3634        92.7713          .          
+s1.y        38.2274        83.7539        87.7921          .          
+s2.x         4.4210        44.5498        92.7713          .          
+s2.y        38.2274        84.7647        87.7921          .          
+s3.x         4.4210        62.4580        92.7713          .          
+s3.y        38.2274        57.5705        87.7921          .          
+
+---- VAR y  tree
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+p1.p2          .              .             1.0000        60.9361      
+p1.p3          .              .             1.0000        64.7390      
+p1.p4          .              .             1.0000        90.8375      
+p1.p5          .              .             1.0000        51.0668      
+p1.s1          .             1.0000         1.0000        50.9806      
+p1.s2          .              .             1.0000        61.4495      
+p1.s3          .              .             1.0000        61.1756      
+p2.p3          .              .             1.0000        34.5748      
+p2.p4          .              .             1.0000        30.5355      
+p2.p5          .              .             1.0000        44.0091      
+p2.s1          .              .             1.0000        43.8465      
+p2.s2          .              .             1.0000        32.7319      
+p2.s3          .             1.0000         1.0000         0.3390      
+p3.p4          .              .             1.0000        54.6885      
+p3.p5          .              .             1.0000        19.1984      
+p3.s1          .              .             1.0000        19.1356      
+p3.s2          .             1.0000         1.0000         3.3868      
+p3.s3          .              .             1.0000        34.3800      
+p4.p5          .              .             1.0000        69.9556      
+p4.s1          .              .             1.0000        69.8164      
+p4.s2          .              .             1.0000        54.5145      
+p4.s3          .             1.0000         1.0000        30.3648      
+p5.s1          .             1.0000         1.0000         0.1727      
+p5.s2          .              .             1.0000        17.3028      
+p5.s3          .              .             1.0000        43.9481      
+s1.s2          .             1.0000         1.0000         EPS         
+s1.s3          .              .             1.0000        43.7860      
+s2.s3          .             1.0000         1.0000        32.5612      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          135.0212        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            14  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIQCP From line 142
+
+
+---- objective2  =E=  min lengths
+
+objective2..  z - d(p1,p2) - d(p1,p3) - d(p1,p4) - d(p1,p5) - d(p1,s1) - d(p1,s2) - d(p1,s3) - d(p2,p3) - d(p2,p4)
+     
+      - d(p2,p5) - d(p2,s1) - d(p2,s2) - d(p2,s3) - d(p3,p4) - d(p3,p5) - d(p3,s1) - d(p3,s2) - d(p3,s3) - d(p4,p5)
+     
+      - d(p4,s1) - d(p4,s2) - d(p4,s3) - d(p5,s1) - d(p5,s2) - d(p5,s3) - d(s1,s2) - d(s1,s3) - d(s2,s3) =E= 0 ;
+     
+      (LHS = 135.021184666979, INFES = 135.021184666979 ****)
+     
+
+---- defd2  =E=  auxiliary constraint for socp constraint
+
+defd2(p1,p2,x)..  - x(p1,x) + x(p2,x) + d2(p1,p2,x) =E= 0 ; (LHS = 57.8850536, INFES = 57.8850536 ****)
+     
+defd2(p1,p2,y)..  - x(p1,y) + x(p2,y) + d2(p1,p2,y) =E= 0 ; (LHS = 19.0402387, INFES = 19.0402387 ****)
+     
+defd2(p1,p3,x)..  - x(p1,x) + x(p3,x) + d2(p1,p3,x) =E= 0 ; (LHS = 41.6470047, INFES = 41.6470047 ****)
+     
+REMAINING 53 ENTRIES SKIPPED
+
+
+---- socp  =G=  convex conic constraint
+
+socp(p1,p2)..  (0)*d2(p1,p2,x) + (0)*d2(p1,p2,y) + (0)*d3(p1,p2) =G= 0 ; (LHS = 0)
+     
+socp(p1,p3)..  (0)*d2(p1,p3,x) + (0)*d2(p1,p3,y) + (0)*d3(p1,p3) =G= 0 ; (LHS = 0)
+     
+socp(p1,p4)..  (0)*d2(p1,p4,x) + (0)*d2(p1,p4,y) + (0)*d3(p1,p4) =G= 0 ; (LHS = 0)
+     
+REMAINING 25 ENTRIES SKIPPED
+
+
+---- bound  =G=  auxiliary constraint for socp constraint
+
+bound(p1,p2)..  - 124.946224460958*y(p1,p2) + d(p1,p2) - d3(p1,p2) =G= -124.946224460958 ; (LHS = 0)
+     
+bound(p1,p3)..  - 124.946224460958*y(p1,p3) + d(p1,p3) - d3(p1,p3) =G= -124.946224460958 ; (LHS = 0)
+     
+bound(p1,p4)..  - 124.946224460958*y(p1,p4) + d(p1,p4) - d3(p1,p4) =G= -124.946224460958 ; (LHS = 0)
+     
+REMAINING 25 ENTRIES SKIPPED
+
+
+---- degree1  =E=  terminal points p have degree 1
+
+degree1(p1)..  y(p1,s1) + y(p1,s2) + y(p1,s3) =E= 1 ; (LHS = 1)
+     
+degree1(p2)..  y(p2,s1) + y(p2,s2) + y(p2,s3) =E= 1 ; (LHS = 1)
+     
+degree1(p3)..  y(p3,s1) + y(p3,s2) + y(p3,s3) =E= 1 ; (LHS = 1)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- degree3  =E=  Steiner points have degree 3
+
+degree3(s1)..  y(p1,s1) + y(p2,s1) + y(p3,s1) + y(p4,s1) + y(p5,s1) + y(s1,s2) + y(s1,s3) =E= 3 ; (LHS = 3)
+     
+degree3(s2)..  y(p1,s2) + y(p2,s2) + y(p3,s2) + y(p4,s2) + y(p5,s2) + y(s1,s2) + y(s2,s3) =E= 3 ; (LHS = 3)
+     
+degree3(s3)..  y(p1,s3) + y(p2,s3) + y(p3,s3) + y(p4,s3) + y(p5,s3) + y(s1,s3) + y(s2,s3) =E= 3 ; (LHS = 3)
+     
+
+---- nocycle  =E=  prevent cycles
+
+nocycle(s2)..  y(s1,s2) =E= 1 ; (LHS = 1)
+     
+nocycle(s3)..  y(s1,s3) + y(s2,s3) =E= 1 ; (LHS = 1)
+     
+
+---- order  =L=  ordering constraint (symmetry breaker)
+
+order(s2)..  x(s1,x) - x(s2,x) =L= 0 ; (LHS = -17.1863940289068)
+     
+order(s3)..  x(s2,x) - x(s3,x) =L= 0 ; (LHS = -17.9082766040012)
+     
+
+---- total  =E=  optional constraint (set total edges)
+
+total..  y(p1,p2) + y(p1,p3) + y(p1,p4) + y(p1,p5) + y(p1,s1) + y(p1,s2) + y(p1,s3) + y(p2,p3) + y(p2,p4) + y(p2,p5)
+     
+      + y(p2,s1) + y(p2,s2) + y(p2,s3) + y(p3,p4) + y(p3,p5) + y(p3,s1) + y(p3,s2) + y(p3,s3) + y(p4,p5) + y(p4,s1)
+     
+      + y(p4,s2) + y(p4,s3) + y(p5,s1) + y(p5,s2) + y(p5,s3) + y(s1,s2) + y(s1,s3) + y(s2,s3) =E= 7 ; (LHS = 7)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIQCP From line 142
+
+
+---- x  coordinates of points
+
+x(p1,x)
+                (.LO, .L, .UP, .M = 4.4210132, 4.4210132, 4.4210132, -0.450021524199654)
+       -1       defd2(p1,p2,x)
+       -1       defd2(p1,p3,x)
+       -1       defd2(p1,p4,x)
+       -1       defd2(p1,p5,x)
+       -1       defd2(p1,s1,x)
+       -1       defd2(p1,s2,x)
+       -1       defd2(p1,s3,x)
+
+x(p1,y)
+                (.LO, .L, .UP, .M = 38.2274024, 38.2274024, 38.2274024, -0.89301768699222)
+       -1       defd2(p1,p2,y)
+       -1       defd2(p1,p3,y)
+       -1       defd2(p1,p4,y)
+       -1       defd2(p1,p5,y)
+       -1       defd2(p1,s1,y)
+       -1       defd2(p1,s2,y)
+       -1       defd2(p1,s3,y)
+
+x(p2,x)
+                (.LO, .L, .UP, .M = 62.3060668, 62.3060668, 62.3060668, -0.448316431091362)
+        1       defd2(p1,p2,x)
+       -1       defd2(p2,p3,x)
+       -1       defd2(p2,p4,x)
+       -1       defd2(p2,p5,x)
+       -1       defd2(p2,s1,x)
+       -1       defd2(p2,s2,x)
+       -1       defd2(p2,s3,x)
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- y  tree
+
+y(p1,p2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 60.9361158922018)
+     -124.9462  bound(p1,p2)
+        1       total
+
+y(p1,p3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 64.7389914785363)
+     -124.9462  bound(p1,p3)
+        1       total
+
+y(p1,p4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 90.8374578756049)
+     -124.9462  bound(p1,p4)
+        1       total
+
+REMAINING 25 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 135.021184666979, +INF, 0)
+        1       objective2
+
+
+---- d  distance (length)
+
+d(p1,p2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       objective2
+        1       bound(p1,p2)
+
+d(p1,p3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       objective2
+        1       bound(p1,p3)
+
+d(p1,p4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       objective2
+        1       bound(p1,p4)
+
+REMAINING 25 ENTRIES SKIPPED
+
+---- d2  auxiliary variable in convex distance calculation
+
+d2(p1,p2,x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       defd2(p1,p2,x)
+       (0)      socp(p1,p2)
+
+d2(p1,p2,y)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       defd2(p1,p2,y)
+       (0)      socp(p1,p2)
+
+d2(p1,p3,x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       defd2(p1,p3,x)
+       (0)      socp(p1,p3)
+
+REMAINING 53 ENTRIES SKIPPED
+
+---- d3  auxiliary variable in convex distance calculation
+
+d3(p1,p2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      socp(p1,p2)
+       -1       bound(p1,p2)
+
+d3(p1,p3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      socp(p1,p3)
+       -1       bound(p1,p3)
+
+d3(p1,p4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      socp(p1,p4)
+       -1       bound(p1,p4)
+
+REMAINING 25 ENTRIES SKIPPED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIQCP From line 142
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           9     SINGLE EQUATIONS          126
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          157
+NON ZERO ELEMENTS           436     NON LINEAR N-Z             84
+CODE LENGTH                 280     CONSTANT POOL              16     DISCRETE VARIABLES         28
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIQCP From line 142
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  142
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE              135.0207
+
+ RESOURCE USAGE, LIMIT          0.719 10000000000.000
+ ITERATION COUNT, LIMIT      3740    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 0.64sec (det. 53.18 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:          135.020674    (3740 iterations, 111 nodes)
+
+Best possible:         135.020674
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU objective2          .              .              .          
+
+  objective2  min lengths
+
+---- EQU defd2  auxiliary constraint for socp constraint
+
+               LOWER          LEVEL          UPPER
+
+p1.p2.x          .              .              .          
+p1.p2.y          .              .              .          
+p1.p3.x          .              .              .          
+p1.p3.y          .              .              .          
+p1.p4.x          .              .              .          
+p1.p4.y          .              .              .          
+p1.p5.x          .              .              .          
+p1.p5.y          .              .              .          
+p1.s1.x          .              .              .          
+p1.s1.y          .              .              .          
+p1.s2.x          .              .              .          
+p1.s2.y          .              .              .          
+p1.s3.x          .              .              .          
+p1.s3.y          .              .              .          
+p2.p3.x          .              .              .          
+p2.p3.y          .              .              .          
+p2.p4.x          .              .              .          
+p2.p4.y          .              .              .          
+p2.p5.x          .              .              .          
+p2.p5.y          .              .              .          
+p2.s1.x          .              .              .          
+p2.s1.y          .              .              .          
+p2.s2.x          .              .              .          
+p2.s2.y          .              .              .          
+p2.s3.x          .              .              .          
+p2.s3.y          .              .              .          
+p3.p4.x          .              .              .          
+p3.p4.y          .              .              .          
+p3.p5.x          .              .              .          
+p3.p5.y          .              .              .          
+p3.s1.x          .              .              .          
+p3.s1.y          .              .              .          
+p3.s2.x          .              .              .          
+p3.s2.y          .              .              .          
+p3.s3.x          .              .              .          
+p3.s3.y          .              .              .          
+p4.p5.x          .              .              .          
+p4.p5.y          .              .              .          
+p4.s1.x          .              .              .          
+p4.s1.y          .              .              .          
+p4.s2.x          .              .              .          
+p4.s2.y          .              .              .          
+p4.s3.x          .              .              .          
+p4.s3.y          .              .              .          
+p5.s1.x          .              .              .          
+p5.s1.y          .              .              .          
+p5.s2.x          .              .              .          
+p5.s2.y          .              .              .          
+p5.s3.x          .              .              .          
+p5.s3.y          .              .              .          
+s1.s2.x          .              .              .          
+s1.s2.y          .              .              .          
+s1.s3.x          .              .              .          
+s1.s3.y          .              .              .          
+s2.s3.x          .              .              .          
+s2.s3.y          .              .              .          
+
+---- EQU socp  convex conic constraint
+
+             LOWER          LEVEL          UPPER
+
+p1.p2          .              .            +INF         
+p1.p3          .              .            +INF         
+p1.p4          .              .            +INF         
+p1.p5          .              .            +INF         
+p1.s1          .       9.8115515E-7        +INF         
+p1.s2          .          4651.3803        +INF         
+p1.s3          .          4724.0684        +INF         
+p2.p3          .              .            +INF         
+p2.p4          .              .            +INF         
+p2.p5          .              .            +INF         
+p2.s1          .          5425.3482        +INF         
+p2.s2          .          5809.6290        +INF         
+p2.s3          .              .            +INF         
+p3.p4          .              .            +INF         
+p3.p5          .              .            +INF         
+p3.s1          .          6414.8190        +INF         
+p3.s2          .       2.1916154E-8        +INF         
+p3.s3          .          5817.6047        +INF         
+p4.p5          .              .            +INF         
+p4.s1          .          4119.0301        +INF         
+p4.s2          .          4942.8150        +INF         
+p4.s3          .       9.6840267E-8        +INF         
+p5.s1          .              .            +INF         
+p5.s2          .          6430.4621        +INF         
+p5.s3          .          5460.6951        +INF         
+s1.s2          .       8.2493273E-8        +INF         
+s1.s3          .          5661.7381        +INF         
+s2.s3          .       1.2400869E-7        +INF         
+
+---- EQU bound  auxiliary constraint for socp constraint
+
+             LOWER          LEVEL          UPPER
+
+p1.p2      -124.9462       -60.9361        +INF         
+p1.p3      -124.9462       -64.7390        +INF         
+p1.p4      -124.9462       -90.8375        +INF         
+p1.p5      -124.9462       -51.0668        +INF         
+p1.s1      -124.9462      -124.9462        +INF         
+p1.s2      -124.9462       -91.8302        +INF         
+p1.s3      -124.9462       -92.0195        +INF         
+p2.p3      -124.9462       -34.5748        +INF         
+p2.p4      -124.9462       -30.5355        +INF         
+p2.p5      -124.9462       -44.0091        +INF         
+p2.s1      -124.9462       -85.7506        +INF         
+p2.s2      -124.9462       -82.9620        +INF         
+p2.s3      -124.9462      -124.9462        +INF         
+p3.p4      -124.9462       -54.6885        +INF         
+p3.p5      -124.9462       -19.1984        +INF         
+p3.s1      -124.9462       -82.3522        +INF         
+p3.s2      -124.9462      -124.9462        +INF         
+p3.s3      -124.9462       -83.6607        +INF         
+p4.p5      -124.9462       -69.9556        +INF         
+p4.s1      -124.9462       -94.8715        +INF         
+p4.s2      -124.9462       -88.9666        +INF         
+p4.s3      -124.9462      -124.9462        +INF         
+p5.s1      -124.9462      -124.9462        +INF         
+p5.s2      -124.9462       -82.0399        +INF         
+p5.s3      -124.9462       -85.9765        +INF         
+s1.s2      -124.9462      -124.9462        +INF         
+s1.s3      -124.9462       -87.0865        +INF         
+s2.s3      -124.9462      -124.9462        +INF         
+
+---- EQU degree1  terminal points p have degree 1
+
+          LOWER          LEVEL          UPPER
+
+p1         1.0000         1.0000         1.0000      
+p2         1.0000         1.0000         1.0000      
+p3         1.0000         1.0000         1.0000      
+p4         1.0000         1.0000         1.0000      
+p5         1.0000         1.0000         1.0000      
+
+---- EQU degree3  Steiner points have degree 3
+
+          LOWER          LEVEL          UPPER
+
+s1         3.0000         3.0000         3.0000      
+s2         3.0000         3.0000         3.0000      
+s3         3.0000         3.0000         3.0000      
+
+---- EQU nocycle  prevent cycles
+
+          LOWER          LEVEL          UPPER
+
+s2         1.0000         1.0000         1.0000      
+s3         1.0000         1.0000         1.0000      
+
+---- EQU order  ordering constraint (symmetry breaker)
+
+          LOWER          LEVEL          UPPER
+
+s2        -INF          -17.2396          .          
+s3        -INF          -17.8959          .          
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU total              7.0000         7.0000         7.0000      
+
+  total  optional constraint (set total edges)
+
+---- VAR x  coordinates of points
+
+            LOWER          LEVEL          UPPER
+
+p1.x         4.4210         4.4210         4.4210      
+p1.y        38.2274        38.2274        38.2274      
+p2.x        62.3061        62.3061        62.3061      
+p2.y        57.2676        57.2676        57.2676      
+p3.x        46.0680        46.0680        46.0680      
+p3.y        87.7921        87.7921        87.7921      
+p4.x        92.7713        92.7713        92.7713      
+p4.y        59.3382        59.3382        59.3382      
+p5.x        27.2687        27.2687        27.2687      
+p5.y        83.8980        83.8980        83.8980      
+s1.x         4.4210        27.3281        92.7713      
+s1.y        38.2274        83.8076        87.7921      
+s2.x         4.4210        44.5678        92.7713      
+s2.y        38.2274        84.8069        87.7921      
+s3.x         4.4210        62.4637        92.7713      
+s3.y        38.2274        57.5812        87.7921      
+
+---- VAR y  tree
+
+             LOWER          LEVEL          UPPER
+
+p1.p2          .              .             1.0000      
+p1.p3          .              .             1.0000      
+p1.p4          .              .             1.0000      
+p1.p5          .              .             1.0000      
+p1.s1          .             1.0000         1.0000      
+p1.s2          .              .             1.0000      
+p1.s3          .              .             1.0000      
+p2.p3          .              .             1.0000      
+p2.p4          .              .             1.0000      
+p2.p5          .              .             1.0000      
+p2.s1          .              .             1.0000      
+p2.s2          .              .             1.0000      
+p2.s3          .             1.0000         1.0000      
+p3.p4          .              .             1.0000      
+p3.p5          .              .             1.0000      
+p3.s1          .              .             1.0000      
+p3.s2          .             1.0000         1.0000      
+p3.s3          .              .             1.0000      
+p4.p5          .              .             1.0000      
+p4.s1          .              .             1.0000      
+p4.s2          .              .             1.0000      
+p4.s3          .             1.0000         1.0000      
+p5.s1          .             1.0000         1.0000      
+p5.s2          .              .             1.0000      
+p5.s3          .              .             1.0000      
+s1.s2          .             1.0000         1.0000      
+s1.s3          .              .             1.0000      
+s2.s3          .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF          135.0207        +INF         
+
+  z  objective
+
+---- VAR d  distance (length)
+
+             LOWER          LEVEL          UPPER
+
+p1.p2          .              .            +INF         
+p1.p3          .              .            +INF         
+p1.p4          .              .            +INF         
+p1.p5          .              .            +INF         
+p1.s1          .            51.0126        +INF         
+p1.s2          .              .            +INF         
+p1.s3          .              .            +INF         
+p2.p3          .              .            +INF         
+p2.p4          .              .            +INF         
+p2.p5          .              .            +INF         
+p2.s1          .              .            +INF         
+p2.s2          .              .            +INF         
+p2.s3          .             0.3510        +INF         
+p3.p4          .              .            +INF         
+p3.p5          .              .            +INF         
+p3.s1          .              .            +INF         
+p3.s2          .             3.3410        +INF         
+p3.s3          .              .            +INF         
+p4.p5          .              .            +INF         
+p4.s1          .              .            +INF         
+p4.s2          .              .            +INF         
+p4.s3          .            30.3585        +INF         
+p5.s1          .             0.1082        +INF         
+p5.s2          .              .            +INF         
+p5.s3          .              .            +INF         
+s1.s2          .            17.2686        +INF         
+s1.s3          .              .            +INF         
+s2.s3          .            32.5807        +INF         
+
+---- VAR d2  auxiliary variable in convex distance calculation
+
+               LOWER          LEVEL          UPPER
+
+p1.p2.x        -INF          -57.8851        +INF         
+p1.p2.y        -INF          -19.0402        +INF         
+p1.p3.x        -INF          -41.6470        +INF         
+p1.p3.y        -INF          -49.5647        +INF         
+p1.p4.x        -INF          -88.3503        +INF         
+p1.p4.y        -INF          -21.1108        +INF         
+p1.p5.x        -INF          -22.8477        +INF         
+p1.p5.y        -INF          -45.6706        +INF         
+p1.s1.x        -INF          -22.9071        +INF         
+p1.s1.y        -INF          -45.5802        +INF         
+p1.s2.x        -INF          -40.1467        +INF         
+p1.s2.y        -INF          -46.5795        +INF         
+p1.s3.x        -INF          -58.0427        +INF         
+p1.s3.y        -INF          -19.3538        +INF         
+p2.p3.x        -INF           16.2380        +INF         
+p2.p3.y        -INF          -30.5245        +INF         
+p2.p4.x        -INF          -30.4653        +INF         
+p2.p4.y        -INF           -2.0705        +INF         
+p2.p5.x        -INF           35.0374        +INF         
+p2.p5.y        -INF          -26.6304        +INF         
+p2.s1.x        -INF           34.9779        +INF         
+p2.s1.y        -INF          -26.5399        +INF         
+p2.s2.x        -INF           17.7383        +INF         
+p2.s2.y        -INF          -27.5393        +INF         
+p2.s3.x        -INF           -0.1576        +INF         
+p2.s3.y        -INF           -0.3136        +INF         
+p3.p4.x        -INF          -46.7033        +INF         
+p3.p4.y        -INF           28.4540        +INF         
+p3.p5.x        -INF           18.7994        +INF         
+p3.p5.y        -INF            3.8941        +INF         
+p3.s1.x        -INF           18.7399        +INF         
+p3.s1.y        -INF            3.9846        +INF         
+p3.s2.x        -INF            1.5003        +INF         
+p3.s2.y        -INF            2.9852        +INF         
+p3.s3.x        -INF          -16.3956        +INF         
+p3.s3.y        -INF           30.2109        +INF         
+p4.p5.x        -INF           65.5027        +INF         
+p4.p5.y        -INF          -24.5599        +INF         
+p4.s1.x        -INF           65.4432        +INF         
+p4.s1.y        -INF          -24.4694        +INF         
+p4.s2.x        -INF           48.2036        +INF         
+p4.s2.y        -INF          -25.4688        +INF         
+p4.s3.x        -INF           30.3077        +INF         
+p4.s3.y        -INF            1.7569        +INF         
+p5.s1.x        -INF           -0.0595        +INF         
+p5.s1.y        -INF            0.0905        +INF         
+p5.s2.x        -INF          -17.2991        +INF         
+p5.s2.y        -INF           -0.9089        +INF         
+p5.s3.x        -INF          -35.1950        +INF         
+p5.s3.y        -INF           26.3168        +INF         
+s1.s2.x        -INF          -17.2396        +INF         
+s1.s2.y        -INF           -0.9993        +INF         
+s1.s3.x        -INF          -35.1355        +INF         
+s1.s3.y        -INF           26.2263        +INF         
+s2.s3.x        -INF          -17.8959        +INF         
+s2.s3.y        -INF           27.2257        +INF         
+
+---- VAR d3  auxiliary variable in convex distance calculation
+
+             LOWER          LEVEL          UPPER
+
+p1.p2          .            60.9361        +INF         
+p1.p3          .            64.7390        +INF         
+p1.p4          .            90.8375        +INF         
+p1.p5          .            51.0668        +INF         
+p1.s1          .            51.0126        +INF         
+p1.s2          .            91.8302        +INF         
+p1.s3          .            92.0195        +INF         
+p2.p3          .            34.5748        +INF         
+p2.p4          .            30.5355        +INF         
+p2.p5          .            44.0091        +INF         
+p2.s1          .            85.7506        +INF         
+p2.s2          .            82.9620        +INF         
+p2.s3          .             0.3510        +INF         
+p3.p4          .            54.6885        +INF         
+p3.p5          .            19.1984        +INF         
+p3.s1          .            82.3522        +INF         
+p3.s2          .             3.3410        +INF         
+p3.s3          .            83.6607        +INF         
+p4.p5          .            69.9556        +INF         
+p4.s1          .            94.8715        +INF         
+p4.s2          .            88.9666        +INF         
+p4.s3          .            30.3585        +INF         
+p5.s1          .             0.1082        +INF         
+p5.s2          .            82.0399        +INF         
+p5.s3          .            85.9765        +INF         
+s1.s2          .            17.2686        +INF         
+s1.s3          .            87.0865        +INF         
+s2.s3          .            32.5807        +INF         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            51  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 07:54:54 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    163 PARAMETER Points  
+
+                     x           y
+
+p1.given         4.421      38.227
+p2.given        62.306      57.268
+p3.given        46.068      87.792
+p4.given        92.771      59.338
+p5.given        27.269      83.898
+s1.steiner      27.328      83.808
+s2.steiner      44.568      84.807
+s3.steiner      62.464      57.581
+
+
+----    163 PARAMETER Tree  
+
+               x1          y1          x2          y2
+
+p1.s1       4.421      38.227      27.328      83.808
+p2.s3      62.306      57.268      62.464      57.581
+p3.s2      46.068      87.792      44.568      84.807
+p4.s3      92.771      59.338      62.464      57.581
+p5.s1      27.269      83.898      27.328      83.808
+s1.s2      27.328      83.808      44.568      84.807
+s2.s3      44.568      84.807      62.464      57.581
+
+
+
+EXECUTION TIME       =       29.109 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\SteinerTree\SteinerTree.gms
+Output     D:\projects\blog\SteinerTree\SteinerTree.lst

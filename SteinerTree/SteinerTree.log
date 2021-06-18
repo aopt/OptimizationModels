@@ -1,0 +1,196 @@
+
+--- Job SteinerTree.gms Start 06/18/21 07:54:54 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\SteinerTree\SteinerTree.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\SteinerTree\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\SteinerTree\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- SteinerTree.gms(163) 3 Mb
+--- Starting execution: elapsed 0:00:00.025
+--- SteinerTree.gms(108) 4 Mb
+--- Generating MINLP model m1
+--- SteinerTree.gms(109) 6 Mb
+---   14 rows  45 columns  116 non-zeroes
+---   310 nl-code  44 nl-non-zeroes
+---   28 discrete-columns
+--- SteinerTree.gms(109) 4 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.092
+
+GAMS/BARON       34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 21.1.13. Built: WIN-64 Wed Jan 13 16:04:12 EST 2021
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhou, K., M. Kilinc, X. Chen, and N. V. Sahinidis,
+ An efficient strategy for the activation of MIP
+ relaxations in a multicore global MINLP solver,
+ Journal of Global Optimization, 70:497-516, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: ILOG CPLEX                                      
+ For NLP: MINOS, SNOPT, GAMS external NLP, IPOPT, FILTERSD, FILTERSQP
+===========================================================================
+ Doing local search
+ Preprocessing found feasible solution with value  136.356206009     
+ Solving bounding LP
+ Starting multi-start local search
+ Preprocessing found feasible solution with value  135.021184667     
+ Done with local search
+===========================================================================
+  Iteration    Open nodes         Time (s)    Lower bound      Upper bound
+          1             1             4.09     7.78624          135.021    
+        591             0            26.58     135.021          135.021    
+
+ Calculating duals
+
+                         *** Normal completion ***            
+
+ Wall clock time:                    26.58
+ Total CPU time used:                26.17
+
+ Total no. of BaR iterations:     591
+ Best solution found at node:       1
+ Max. no. of nodes in memory:      10
+ 
+ All done
+===========================================================================
+
+Solution      = 135.021184666979  found at node 1
+Best possible = 135.021184532
+Absolute gap  = 1.3497862028089E-7  optca = 1E-9
+Relative gap  = 9.99684757720105E-10  optcr = 1E-9
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:28.267
+--- SteinerTree.gms(141) 4 Mb
+--- Generating MIQCP model m2
+--- SteinerTree.gms(142) 6 Mb
+---   126 rows  157 columns  436 non-zeroes
+---   280 nl-code  84 nl-non-zeroes
+---   28 discrete-columns
+--- SteinerTree.gms(142) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:28.289
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIQCP Presolve eliminated 35 rows and 63 columns.
+MIQCP Presolve modified 15 coefficients.
+Aggregator did 7 substitutions.
+Reduced MIQCP has 55 rows, 87 columns, and 149 nonzeros.
+Reduced MIQCP has 16 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 18 quadratic constraints.
+Presolve time = 0.02 sec. (0.24 ticks)
+Probing time = 0.00 sec. (0.01 ticks)
+Clique table members: 5.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Tried aggregator 1 time.
+LP Presolve eliminated 47 rows and 71 columns.
+Reduced LP has 8 rows, 16 columns, and 32 nonzeros.
+Presolve time = 0.00 sec. (0.03 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.01 sec. (0.07 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000     0                      0.0000        8         
+      0     0        0.0000     0                    Cone: 17       32         
+      0     0        0.0000    13                    Cone: 29       44         
+      0     0        0.0000    13                    Cone: 39       54         
+      0     0        0.0000    13                      0.0000       54         
+*     0+    0                          161.9144        0.0000           100.00%
+Found incumbent of value 161.914359 after 0.13 sec. (4.19 ticks)
+      0     0        0.0000     9      161.9144    MIRcuts: 3       59  100.00%
+*     0+    0                          156.0723        0.0000           100.00%
+Found incumbent of value 156.072252 after 0.19 sec. (9.33 ticks)
+      0     0        0.0000     3      156.0723      Cuts: 21       70  100.00%
+*     0+    0                          144.8930        0.0000           100.00%
+Found incumbent of value 144.893030 after 0.25 sec. (14.49 ticks)
+      0     0        0.0000    10      144.8930      Cuts: 25       81  100.00%
+*     0+    0                          135.0207        0.0000           100.00%
+Found incumbent of value 135.020676 after 0.33 sec. (19.43 ticks)
+      0     0        0.0000    12      135.0207      Cuts: 13       87  100.00%
+      0     2        0.0000    12      135.0207        0.0000       87  100.00%
+Elapsed time = 0.47 sec. (30.75 ticks, tree = 0.02 MB, solutions = 5)
+*   106     3      integral     0      135.0207       29.3181     3177   78.29%
+                                                     Cuts: 83                  
+Found incumbent of value 135.020674 after 0.61 sec. (52.10 ticks)
+
+Mixed integer rounding cuts applied:  13
+Cone linearizations applied:  209
+
+Root node processing (before b&c):
+  Real time             =    0.44 sec. (30.69 ticks)
+Parallel b&c, 8 threads:
+  Real time             =    0.19 sec. (22.49 ticks)
+  Sync time (average)   =    0.09 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.63 sec. (53.18 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 0.64sec (det. 53.18 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:          135.020674    (3740 iterations, 111 nodes)
+
+Best possible:         135.020674
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+***
+*** Solver did not provide marginals for model m2
+***
+--- Executing after solve: elapsed 0:00:29.146
+--- SteinerTree.gms(163) 4 Mb
+*** Status: Normal completion
+--- Job SteinerTree.gms Stop 06/18/21 07:55:23 elapsed 0:00:29.151
