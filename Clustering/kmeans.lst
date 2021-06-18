@@ -1,0 +1,1774 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         kmeans.gms
+       
+         K-means clustering as MIQCP model
+       
+         The model below tries both pure k-means and a model that adds an
+         ordering constraint.
+       
+         See:
+         http://yetanothermathprogrammingconsultant.blogspot.com/2021/05/clustering-models.html
+       
+         erwin@amsterdamoptimization.com
+       
+       
+  17   
+  18  set
+  19    i 'points' /p1*p40/
+  20    c 'coordinates' /x,y/
+  21    k 'clusters'  /cluster1*cluster3/
+  22  ;
+  23   
+  24  alias (i,j);
+  25   
+  26   
+  27  * pure random data.
+  28  parameter p(i,c) 'points';
+  29  p(i,c) = uniform(0,100);
+  30  display p;
+  31   
+  32   
+  33   
+  34  *-------------------------------------------------------
+  35  * reporting macros
+  36  *-------------------------------------------------------
+  37   
+  38  acronym TimeLimit;
+  39  acronym Optimal;
+  40  acronym Error;
+  41   
+  42  parameter results(*,*);
+  43  $macro report(m,label)  \
+  44      results('points',label) = card(i); \
+  45      results('clusters',label) = card(k); \
+  46      results('vars',label) = m.numVar; \
+  47      results('  discr',label) = m.numDVar; \
+  48      results('equs',label) = m.numEqu; \
+  49      results('status',label) = Error; \
+  50      results('status',label)$(m.solvestat=1) = Optimal; \
+  51      results('status',label)$(m.solvestat=3) = TimeLimit; \
+  52      results('obj',label) = z.l; \
+  53      results('time',label) = m.resusd; \
+  54      results('nodes',label) = m.nodusd; \
+  55      results('iterations',label) = m.iterusd; \
+  56      results('gap%',label)$(m.solvestat=3) = 100*abs(m.objest - m.objval)/abs(m.objest);
+  57   
+  58  *-------------------------------------------------------
+  59  * model: min ||x-mu(i)||^2 for x in cluster i  (k-means)
+  60  *-------------------------------------------------------
+  61   
+  62  scalar M 'big-M';
+  63  M = smax((i,j),sum(c, sqr(p(i,c)-p(j,c))));
+  64   
+  65  binary variables
+  66     x(i,k) 'assignment'
+  67  ;
+  68   
+  69  positive variables
+  70     d(i,k) 'distance from centroid of nearest cluster (or zero)'
+  71  ;
+  72   
+  73  variables
+  74     mu(k,c) 'cluster locations'
+  75     z       'objective'
+  76  ;
+  77  * cluster center is inside convex hull of points
+  78  * so for sure inside box formed by points
+  79  mu.lo(k,c) = smin(i,p(i,c));
+  80  mu.up(k,c) = smax(i,p(i,c));
+  81   
+  82   
+  83  equations
+  84     edist(i,k) '(squared) distance calculation'
+  85     select(i)  'assign points to clusters'
+  86     obj        'objective'
+  87     order      'optional symmetry breaker'
+  88  ;
+  89   
+  90  edist(i,k).. d(i,k) =g= sum(c, sqr(p(i,c)-mu(k,c))) - M*(1-x(i,k));
+  91   
+  92  select(i).. sum(k, x(i,k)) =e= 1;
+  93   
+  94  obj.. z =e= sum((i,k), d(i,k));
+  95   
+  96  * order clusters by their x coordinate
+  97  order(k+1).. mu(k,'x') =l= mu(k+1,'x');
+  98   
+  99  * compare model with/without ordering constraint
+ 100  model kmeans  /edist,select,obj/;
+ 101  model kmeans2 /edist,select,obj,order/;
+ 102  option miqcp = cplex, optcr = 0, threads = 8, reslim = 3600;
+ 103   
+ 104   
+ 105  solve kmeans minimizing z using miqcp;
+ 106   results('points',"standard") = card(i); results('clusters',"standard") = card(k); results('vars',"standard") = km
+      eans.numVar; results('  discr',"standard") = kmeans.numDVar; results('equs',"standard") = kmeans.numEqu; results('
+      status',"standard") = Error; results('status',"standard")$(kmeans.solvestat=1) = Optimal; results('status',"standa
+      rd")$(kmeans.solvestat=3) = TimeLimit; results('obj',"standard") = z.l; results('time',"standard") = kmeans.resusd
+      ; results('nodes',"standard") = kmeans.nodusd; results('iterations',"standard") = kmeans.iterusd; results('gap%',"
+      standard")$(kmeans.solvestat=3) = 100*abs(kmeans.objest - kmeans.objval)/abs(kmeans.objest);
+ 107   
+ 108  solve kmeans2 minimizing z using miqcp;
+ 109   results('points',"with order") = card(i); results('clusters',"with order") = card(k); results('vars',"with order"
+      ) = kmeans2.numVar; results('  discr',"with order") = kmeans2.numDVar; results('equs',"with order") = kmeans2.numE
+      qu; results('status',"with order") = Error; results('status',"with order")$(kmeans2.solvestat=1) = Optimal; result
+      s('status',"with order")$(kmeans2.solvestat=3) = TimeLimit; results('obj',"with order") = z.l; results('time',"wit
+      h order") = kmeans2.resusd; results('nodes',"with order") = kmeans2.nodusd; results('iterations',"with order") = k
+      means2.iterusd; results('gap%',"with order")$(kmeans2.solvestat=3) = 100*abs(kmeans2.objest - kmeans2.objval)/abs(
+      kmeans2.objest);
+ 110  display results;
+ 111   
+ 112  parameter clusters(*,*);
+ 113  clusters(k,'points') = sum(i, x.l(i,k));
+ 114  clusters('total','points') = card(i);
+ 115  clusters(k,'SoS') = sum((i,c), sqr(p(i,c)-mu.l(k,c))*x.l(i,k));
+ 116  clusters('total','SoS') = z.l;
+ 117  clusters(k,'mu(x)') = mu.l(k,'x');
+ 118  clusters(k,'mu(y)') = mu.l(k,'y');
+ 119  clusters(k,'avg(x)') = sum(i$(x.l(i,k)>0.5), p(i,'x'))/sum(i, x.l(i,k));
+ 120  clusters(k,'avg(y)') = sum(i$(x.l(i,k)>0.5), p(i,'y'))/sum(i, x.l(i,k));
+ 121  display clusters;
+ 122   
+ 123   
+ 124   
+ 125   
+ 126   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     30 PARAMETER p  points
+
+              x           y
+
+p1       17.175      84.327
+p2       55.038      30.114
+p3       29.221      22.405
+p4       34.983      85.627
+p5        6.711      50.021
+p6       99.812      57.873
+p7       99.113      76.225
+p8       13.069      63.972
+p9       15.952      25.008
+p10      66.893      43.536
+p11      35.970      35.144
+p12      13.149      15.010
+p13      58.911      83.089
+p14      23.082      66.573
+p15      77.586      30.366
+p16      11.049      50.238
+p17      16.017      87.246
+p18      26.511      28.581
+p19      59.396      72.272
+p20      62.825      46.380
+p21      41.331      11.770
+p22      31.421       4.655
+p23      33.855      18.210
+p24      64.573      56.075
+p25      76.996      29.781
+p26      66.111      75.582
+p27      62.745      28.386
+p28       8.642      10.251
+p29      64.125      54.531
+p30       3.152      79.236
+p31       7.277      17.566
+p32      52.563      75.021
+p33      17.812       3.414
+p34      58.513      62.123
+p35      38.936      35.871
+p36      24.303      24.642
+p37      13.050      93.345
+p38      37.994      78.340
+p39      30.003      12.548
+p40      74.887       6.923
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE kmeans Using MIQCP From line 105
+
+
+---- edist  =G=  (squared) distance calculation
+
+edist(p1,cluster1)..  - 12537.4863933451*x(p1,cluster1) + d(p1,cluster1) + (28.044456)*mu(cluster1,x)
+     
+      + (161.8251444)*mu(cluster1,y) =G= -12537.4863933451 ; (LHS = -6743.4672181042)
+     
+edist(p1,cluster2)..  - 12537.4863933451*x(p1,cluster2) + d(p1,cluster2) + (28.044456)*mu(cluster2,x)
+     
+      + (161.8251444)*mu(cluster2,y) =G= -12537.4863933451 ; (LHS = -6743.4672181042)
+     
+edist(p1,cluster3)..  - 12537.4863933451*x(p1,cluster3) + d(p1,cluster3) + (28.044456)*mu(cluster3,x)
+     
+      + (161.8251444)*mu(cluster3,y) =G= -12537.4863933451 ; (LHS = -6743.4672181042)
+     
+REMAINING 117 ENTRIES SKIPPED
+
+
+---- select  =E=  assign points to clusters
+
+select(p1)..  x(p1,cluster1) + x(p1,cluster2) + x(p1,cluster3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+select(p2)..  x(p2,cluster1) + x(p2,cluster2) + x(p2,cluster3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+select(p3)..  x(p3,cluster1) + x(p3,cluster2) + x(p3,cluster3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 37 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - d(p1,cluster1) - d(p1,cluster2) - d(p1,cluster3) - d(p2,cluster1) - d(p2,cluster2) - d(p2,cluster3)
+     
+      - d(p3,cluster1) - d(p3,cluster2) - d(p3,cluster3) - d(p4,cluster1) - d(p4,cluster2) - d(p4,cluster3)
+     
+      - d(p5,cluster1) - d(p5,cluster2) - d(p5,cluster3) - d(p6,cluster1) - d(p6,cluster2) - d(p6,cluster3)
+     
+      - d(p7,cluster1) - d(p7,cluster2) - d(p7,cluster3) - d(p8,cluster1) - d(p8,cluster2) - d(p8,cluster3)
+     
+      - d(p9,cluster1) - d(p9,cluster2) - d(p9,cluster3) - d(p10,cluster1) - d(p10,cluster2) - d(p10,cluster3)
+     
+      - d(p11,cluster1) - d(p11,cluster2) - d(p11,cluster3) - d(p12,cluster1) - d(p12,cluster2) - d(p12,cluster3)
+     
+      - d(p13,cluster1) - d(p13,cluster2) - d(p13,cluster3) - d(p14,cluster1) - d(p14,cluster2) - d(p14,cluster3)
+     
+      - d(p15,cluster1) - d(p15,cluster2) - d(p15,cluster3) - d(p16,cluster1) - d(p16,cluster2) - d(p16,cluster3)
+     
+      - d(p17,cluster1) - d(p17,cluster2) - d(p17,cluster3) - d(p18,cluster1) - d(p18,cluster2) - d(p18,cluster3)
+     
+      - d(p19,cluster1) - d(p19,cluster2) - d(p19,cluster3) - d(p20,cluster1) - d(p20,cluster2) - d(p20,cluster3)
+     
+      - d(p21,cluster1) - d(p21,cluster2) - d(p21,cluster3) - d(p22,cluster1) - d(p22,cluster2) - d(p22,cluster3)
+     
+      - d(p23,cluster1) - d(p23,cluster2) - d(p23,cluster3) - d(p24,cluster1) - d(p24,cluster2) - d(p24,cluster3)
+     
+      - d(p25,cluster1) - d(p25,cluster2) - d(p25,cluster3) - d(p26,cluster1) - d(p26,cluster2) - d(p26,cluster3)
+     
+      - d(p27,cluster1) - d(p27,cluster2) - d(p27,cluster3) - d(p28,cluster1) - d(p28,cluster2) - d(p28,cluster3)
+     
+      - d(p29,cluster1) - d(p29,cluster2) - d(p29,cluster3) - d(p30,cluster1) - d(p30,cluster2) - d(p30,cluster3)
+     
+      - d(p31,cluster1) - d(p31,cluster2) - d(p31,cluster3) - d(p32,cluster1) - d(p32,cluster2) - d(p32,cluster3)
+     
+      - d(p33,cluster1) - d(p33,cluster2) - d(p33,cluster3) - d(p34,cluster1) - d(p34,cluster2) - d(p34,cluster3)
+     
+      - d(p35,cluster1) - d(p35,cluster2) - d(p35,cluster3) - d(p36,cluster1) - d(p36,cluster2) - d(p36,cluster3)
+     
+      - d(p37,cluster1) - d(p37,cluster2) - d(p37,cluster3) - d(p38,cluster1) - d(p38,cluster2) - d(p38,cluster3)
+     
+      - d(p39,cluster1) - d(p39,cluster2) - d(p39,cluster3) - d(p40,cluster1) - d(p40,cluster2) - d(p40,cluster3) + z
+      =E= 0 ; (LHS = 0)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE kmeans Using MIQCP From line 105
+
+
+---- x  assignment
+
+x(p1,cluster1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+   -12537.4864  edist(p1,cluster1)
+        1       select(p1)
+
+x(p1,cluster2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+   -12537.4864  edist(p1,cluster2)
+        1       select(p1)
+
+x(p1,cluster3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+   -12537.4864  edist(p1,cluster3)
+        1       select(p1)
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- d  distance from centroid of nearest cluster (or zero)
+
+d(p1,cluster1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       edist(p1,cluster1)
+       -1       obj
+
+d(p1,cluster2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       edist(p1,cluster2)
+       -1       obj
+
+d(p1,cluster3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       edist(p1,cluster3)
+       -1       obj
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- mu  cluster locations
+
+mu(cluster1,x)
+                (.LO, .L, .UP, .M = 3.1524852, 3.1524852, 99.8117627, 0)
+      (28.0445) edist(p1,cluster1)
+     (103.7701) edist(p2,cluster1)
+      (52.1375) edist(p3,cluster1)
+      (63.6611) edist(p4,cluster1)
+       (7.1178) edist(p5,cluster1)
+     (193.3186) edist(p6,cluster1)
+     (191.9216) edist(p7,cluster1)
+      (19.8335) edist(p8,cluster1)
+      (25.5986) edist(p9,cluster1)
+     (127.4808) edist(p10,cluster1)
+      (65.6351) edist(p11,cluster1)
+      (19.9933) edist(p12,cluster1)
+     (111.5178) edist(p13,cluster1)
+      (39.8582) edist(p14,cluster1)
+     (148.8666) edist(p15,cluster1)
+      (15.7935) edist(p16,cluster1)
+      (25.7296) edist(p17,cluster1)
+      (46.7179) edist(p18,cluster1)
+     (112.4862) edist(p19,cluster1)
+     (119.3448) edist(p20,cluster1)
+      (76.3564) edist(p21,cluster1)
+      (56.5375) edist(p22,cluster1)
+      (61.4051) edist(p23,cluster1)
+     (122.8405) edist(p24,cluster1)
+     (147.6874) edist(p25,cluster1)
+     (125.9163) edist(p26,cluster1)
+     (119.1845) edist(p27,cluster1)
+      (10.98)   edist(p28,cluster1)
+     (121.9453) edist(p29,cluster1)
+       (0)      edist(p30,cluster1)
+       (8.2484) edist(p31,cluster1)
+      (98.8216) edist(p32,cluster1)
+      (29.3198) edist(p33,cluster1)
+     (110.7213) edist(p34,cluster1)
+      (71.5674) edist(p35,cluster1)
+      (42.302)  edist(p36,cluster1)
+      (19.7956) edist(p37,cluster1)
+      (69.6826) edist(p38,cluster1)
+      (53.7019) edist(p39,cluster1)
+     (143.4699) edist(p40,cluster1)
+        0       (OLD LEVEL ****)
+
+mu(cluster1,y)
+                (.LO, .L, .UP, .M = 3.4140986, 3.4140986, 93.344972, 0)
+     (161.8251) edist(p1,cluster1)
+      (53.3994) edist(p2,cluster1)
+      (37.9824) edist(p3,cluster1)
+     (164.4259) edist(p4,cluster1)
+      (93.2139) edist(p5,cluster1)
+     (108.9185) edist(p6,cluster1)
+     (145.6219) edist(p7,cluster1)
+     (121.1156) edist(p8,cluster1)
+      (43.1879) edist(p9,cluster1)
+      (80.2431) edist(p10,cluster1)
+      (63.4601) edist(p11,cluster1)
+      (23.1922) edist(p12,cluster1)
+     (159.3504) edist(p13,cluster1)
+     (126.3187) edist(p14,cluster1)
+      (53.9035) edist(p15,cluster1)
+      (93.6488) edist(p16,cluster1)
+     (167.6643) edist(p17,cluster1)
+      (50.3347) edist(p18,cluster1)
+     (137.7156) edist(p19,cluster1)
+      (85.9314) edist(p20,cluster1)
+      (16.7109) edist(p21,cluster1)
+       (2.4821) edist(p22,cluster1)
+      (29.5917) edist(p23,cluster1)
+     (105.3209) edist(p24,cluster1)
+      (52.733)  edist(p25,cluster1)
+     (144.3361) edist(p26,cluster1)
+      (49.9446) edist(p27,cluster1)
+      (13.6747) edist(p28,cluster1)
+     (102.2337) edist(p29,cluster1)
+     (151.6439) edist(p30,cluster1)
+      (28.304)  edist(p31,cluster1)
+     (143.2133) edist(p32,cluster1)
+       (0)      edist(p33,cluster1)
+     (117.4178) edist(p34,cluster1)
+      (64.9146) edist(p35,cluster1)
+      (42.4561) edist(p36,cluster1)
+     (179.8617) edist(p37,cluster1)
+     (149.8519) edist(p38,cluster1)
+      (18.2684) edist(p39,cluster1)
+       (7.0183) edist(p40,cluster1)
+        0       (OLD LEVEL ****)
+
+mu(cluster2,x)
+                (.LO, .L, .UP, .M = 3.1524852, 3.1524852, 99.8117627, 0)
+      (28.0445) edist(p1,cluster2)
+     (103.7701) edist(p2,cluster2)
+      (52.1375) edist(p3,cluster2)
+      (63.6611) edist(p4,cluster2)
+       (7.1178) edist(p5,cluster2)
+     (193.3186) edist(p6,cluster2)
+     (191.9216) edist(p7,cluster2)
+      (19.8335) edist(p8,cluster2)
+      (25.5986) edist(p9,cluster2)
+     (127.4808) edist(p10,cluster2)
+      (65.6351) edist(p11,cluster2)
+      (19.9933) edist(p12,cluster2)
+     (111.5178) edist(p13,cluster2)
+      (39.8582) edist(p14,cluster2)
+     (148.8666) edist(p15,cluster2)
+      (15.7935) edist(p16,cluster2)
+      (25.7296) edist(p17,cluster2)
+      (46.7179) edist(p18,cluster2)
+     (112.4862) edist(p19,cluster2)
+     (119.3448) edist(p20,cluster2)
+      (76.3564) edist(p21,cluster2)
+      (56.5375) edist(p22,cluster2)
+      (61.4051) edist(p23,cluster2)
+     (122.8405) edist(p24,cluster2)
+     (147.6874) edist(p25,cluster2)
+     (125.9163) edist(p26,cluster2)
+     (119.1845) edist(p27,cluster2)
+      (10.98)   edist(p28,cluster2)
+     (121.9453) edist(p29,cluster2)
+       (0)      edist(p30,cluster2)
+       (8.2484) edist(p31,cluster2)
+      (98.8216) edist(p32,cluster2)
+      (29.3198) edist(p33,cluster2)
+     (110.7213) edist(p34,cluster2)
+      (71.5674) edist(p35,cluster2)
+      (42.302)  edist(p36,cluster2)
+      (19.7956) edist(p37,cluster2)
+      (69.6826) edist(p38,cluster2)
+      (53.7019) edist(p39,cluster2)
+     (143.4699) edist(p40,cluster2)
+        0       (OLD LEVEL ****)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE kmeans Using MIQCP From line 105
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS          161
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          247  6 projected
+NON ZERO ELEMENTS           721     NON LINEAR N-Z            240
+CODE LENGTH               1,200     CONSTANT POOL              96     DISCRETE VARIABLES        120
+
+
+GENERATION TIME      =        0.250 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE kmeans Using MIQCP From line 105
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   kmeans              OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  105
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            16523.3820
+
+ RESOURCE USAGE, LIMIT        190.610      3600.000
+ ITERATION COUNT, LIMIT  11580969    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.58 Mb (peak 0.58 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.01 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 190.50sec (det. 107269.47 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:        16523.382026    (11580969 iterations, 2076464 nodes)
+
+Best possible:       16523.382026
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU edist  (squared) distance calculation
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1    -12537.4864      3063.5094        +INF         
+p1 .cluster2    -12537.4864      3685.2802        +INF         
+p1 .cluster3    -12537.4864     -5131.5282        +INF         
+p2 .cluster1    -12537.4864      2927.4378        +INF         
+p2 .cluster2    -12537.4864     -8601.5162        +INF         
+p2 .cluster3    -12537.4864       619.9153        +INF         
+p3 .cluster1    -12537.4864    -11181.6102        +INF         
+p3 .cluster2    -12537.4864     -1069.1997        +INF         
+p3 .cluster3    -12537.4864     -1429.4750        +INF         
+p4 .cluster1    -12537.4864      4014.3194        +INF         
+p4 .cluster2    -12537.4864      6268.7503        +INF         
+p4 .cluster3    -12537.4864     -3981.6835        +INF         
+p5 .cluster1    -12537.4864      1234.7133        +INF         
+p5 .cluster2    -12537.4864     -1305.3568        +INF         
+p5 .cluster3    -12537.4864     -9990.3367        +INF         
+p6 .cluster1    -12537.4864      6245.3783        +INF         
+p6 .cluster2    -12537.4864       774.2254        +INF         
+p6 .cluster3    -12537.4864      6300.9404        +INF         
+p7 .cluster1    -12537.4864      6904.9565        +INF         
+p7 .cluster2    -12537.4864      3096.2191        +INF         
+p7 .cluster3    -12537.4864      8988.4291        +INF         
+p8 .cluster1    -12537.4864      2084.8745        +INF         
+p8 .cluster2    -12537.4864      1013.3101        +INF         
+p8 .cluster3    -12537.4864     -8274.2802        +INF         
+p9 .cluster1    -12537.4864    -11657.6243        +INF         
+p9 .cluster2    -12537.4864     -2624.4118        +INF         
+p9 .cluster3    -12537.4864     -1512.6542        +INF         
+p10.cluster1    -12537.4864      4035.8832        +INF         
+p10.cluster2    -12537.4864     -6167.4799        +INF         
+p10.cluster3    -12537.4864      3021.4419        +INF         
+p11.cluster1    -12537.4864    -10008.5331        +INF         
+p11.cluster2    -12537.4864      1177.7459        +INF         
+p11.cluster3    -12537.4864       691.0782        +INF         
+p12.cluster1    -12537.4864    -12139.2806        +INF         
+p12.cluster2    -12537.4864     -4044.9286        +INF         
+p12.cluster3    -12537.4864     -3089.0037        +INF         
+p13.cluster1    -12537.4864      5129.6194        +INF         
+p13.cluster2    -12537.4864     -2163.1085        +INF         
+p13.cluster3    -12537.4864      8585.4935        +INF         
+p14.cluster1    -12537.4864      2690.2759        +INF         
+p14.cluster2    -12537.4864      2659.4647        +INF         
+p14.cluster3    -12537.4864     -7572.7036        +INF         
+p15.cluster1    -12537.4864      4078.5131        +INF         
+p15.cluster2    -12537.4864     -5595.8516        +INF         
+p15.cluster3    -12537.4864      1452.1312        +INF         
+p16.cluster1    -12537.4864      1462.5556        +INF         
+p16.cluster2    -12537.4864      -686.3445        +INF         
+p16.cluster3    -12537.4864     -9891.4954        +INF         
+p17.cluster1    -12537.4864      3115.4701        +INF         
+p17.cluster2    -12537.4864      3828.3955        +INF         
+p17.cluster3    -12537.4864     -4669.0284        +INF         
+p18.cluster1    -12537.4864    -11017.7308        +INF         
+p18.cluster2    -12537.4864      -802.3759        +INF         
+p18.cluster3    -12537.4864      -612.2670        +INF         
+p19.cluster1    -12537.4864      4744.5040        +INF         
+p19.cluster2    -12537.4864     -3786.4213        +INF         
+p19.cluster3    -12537.4864      7003.9161        +INF         
+p20.cluster1    -12537.4864      3937.6379        +INF         
+p20.cluster2    -12537.4864     -6439.4379        +INF         
+p20.cluster3    -12537.4864      3298.3432        +INF         
+p21.cluster1    -12537.4864    -10690.7377        +INF         
+p21.cluster2    -12537.4864      -505.1829        +INF         
+p21.cluster3    -12537.4864     -2574.3483        +INF         
+p22.cluster1    -12537.4864    -11528.5225        +INF         
+p22.cluster2    -12537.4864     -2604.4263        +INF         
+p22.cluster3    -12537.4864     -3975.1208        +INF         
+p23.cluster1    -12537.4864    -11059.7210        +INF         
+p23.cluster2    -12537.4864      -866.3617        +INF         
+p23.cluster3    -12537.4864     -1886.1121        +INF         
+p24.cluster1    -12537.4864      4393.2440        +INF         
+p24.cluster2    -12537.4864     -5223.4956        +INF         
+p24.cluster3    -12537.4864      4792.7104        +INF         
+p25.cluster1    -12537.4864      4026.5019        +INF         
+p25.cluster2    -12537.4864     -5722.1928        +INF         
+p25.cluster3    -12537.4864      1344.8514        +INF         
+p26.cluster1    -12537.4864      5209.8127        +INF         
+p26.cluster2    -12537.4864     -2454.2071        +INF         
+p26.cluster3    -12537.4864      7729.8709        +INF         
+p27.cluster1    -12537.4864      3252.2129        +INF         
+p27.cluster2    -12537.4864     -7794.7943        +INF         
+p27.cluster3    -12537.4864       636.3626        +INF         
+p28.cluster1    -12537.4864    -12357.7018        +INF         
+p28.cluster2    -12537.4864     -5157.3389        +INF         
+p28.cluster3    -12537.4864     -3951.1608        +INF         
+p29.cluster1    -12537.4864      4312.1309        +INF         
+p29.cluster2    -12537.4864     -5451.8315        +INF         
+p29.cluster3    -12537.4864      4548.8076        +INF         
+p30.cluster1    -12537.4864      2160.8476        +INF         
+p30.cluster2    -12537.4864      1230.0196        +INF         
+p30.cluster3    -12537.4864     -6249.1944        +INF         
+p31.cluster1    -12537.4864    -12175.9681        +INF         
+p31.cluster2    -12537.4864     -4587.8281        +INF         
+p31.cluster3    -12537.4864     -2918.3161        +INF         
+p32.cluster1    -12537.4864      4502.7024        +INF         
+p32.cluster2    -12537.4864     -4146.4745        +INF         
+p32.cluster3    -12537.4864      7169.2750        +INF         
+p33.cluster1    -12537.4864    -12208.5498        +INF         
+p33.cluster2    -12537.4864     -4604.2818        +INF         
+p33.cluster3    -12537.4864     -4638.3272        +INF         
+p34.cluster1    -12537.4864      4315.5110        +INF         
+p34.cluster2    -12537.4864     -5254.4345        +INF         
+p34.cluster3    -12537.4864      5472.9433        +INF         
+p35.cluster1    -12537.4864     -9734.7009        +INF         
+p35.cluster2    -12537.4864      1660.9237        +INF         
+p35.cluster3    -12537.4864       903.1351        +INF         
+p36.cluster1    -12537.4864    -11339.5924        +INF         
+p36.cluster2    -12537.4864     -1513.8501        +INF         
+p36.cluster3    -12537.4864     -1272.2802        +INF         
+p37.cluster1    -12537.4864      3196.2082        +INF         
+p37.cluster2    -12537.4864      4051.8321        +INF         
+p37.cluster3    -12537.4864     -3653.8928        +INF         
+p38.cluster1    -12537.4864      3890.7995        +INF         
+p38.cluster2    -12537.4864      5928.3043        +INF         
+p38.cluster3    -12537.4864     -4956.7955        +INF         
+p39.cluster1    -12537.4864    -11479.8205        +INF         
+p39.cluster2    -12537.4864     -1982.1733        +INF         
+p39.cluster3    -12537.4864     -2858.6121        +INF         
+p40.cluster1    -12537.4864      3054.1866        +INF         
+p40.cluster2    -12537.4864     -6881.4313        +INF         
+p40.cluster3    -12537.4864     -2107.4756        +INF         
+
+---- EQU select  assign points to clusters
+
+           LOWER          LEVEL          UPPER
+
+p1          1.0000         1.0000         1.0000      
+p2          1.0000         1.0000         1.0000      
+p3          1.0000         1.0000         1.0000      
+p4          1.0000         1.0000         1.0000      
+p5          1.0000         1.0000         1.0000      
+p6          1.0000         1.0000         1.0000      
+p7          1.0000         1.0000         1.0000      
+p8          1.0000         1.0000         1.0000      
+p9          1.0000         1.0000         1.0000      
+p10         1.0000         1.0000         1.0000      
+p11         1.0000         1.0000         1.0000      
+p12         1.0000         1.0000         1.0000      
+p13         1.0000         1.0000         1.0000      
+p14         1.0000         1.0000         1.0000      
+p15         1.0000         1.0000         1.0000      
+p16         1.0000         1.0000         1.0000      
+p17         1.0000         1.0000         1.0000      
+p18         1.0000         1.0000         1.0000      
+p19         1.0000         1.0000         1.0000      
+p20         1.0000         1.0000         1.0000      
+p21         1.0000         1.0000         1.0000      
+p22         1.0000         1.0000         1.0000      
+p23         1.0000         1.0000         1.0000      
+p24         1.0000         1.0000         1.0000      
+p25         1.0000         1.0000         1.0000      
+p26         1.0000         1.0000         1.0000      
+p27         1.0000         1.0000         1.0000      
+p28         1.0000         1.0000         1.0000      
+p29         1.0000         1.0000         1.0000      
+p30         1.0000         1.0000         1.0000      
+p31         1.0000         1.0000         1.0000      
+p32         1.0000         1.0000         1.0000      
+p33         1.0000         1.0000         1.0000      
+p34         1.0000         1.0000         1.0000      
+p35         1.0000         1.0000         1.0000      
+p36         1.0000         1.0000         1.0000      
+p37         1.0000         1.0000         1.0000      
+p38         1.0000         1.0000         1.0000      
+p39         1.0000         1.0000         1.0000      
+p40         1.0000         1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU obj                 .              .              .          
+
+  obj  objective
+
+---- VAR x  assignment
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1          .              .             1.0000      
+p1 .cluster2          .              .             1.0000      
+p1 .cluster3          .             1.0000         1.0000      
+p2 .cluster1          .              .             1.0000      
+p2 .cluster2          .             1.0000         1.0000      
+p2 .cluster3          .              .             1.0000      
+p3 .cluster1          .             1.0000         1.0000      
+p3 .cluster2          .              .             1.0000      
+p3 .cluster3          .              .             1.0000      
+p4 .cluster1          .              .             1.0000      
+p4 .cluster2          .              .             1.0000      
+p4 .cluster3          .             1.0000         1.0000      
+p5 .cluster1          .              .             1.0000      
+p5 .cluster2          .              .             1.0000      
+p5 .cluster3          .             1.0000         1.0000      
+p6 .cluster1          .              .             1.0000      
+p6 .cluster2          .             1.0000         1.0000      
+p6 .cluster3          .              .             1.0000      
+p7 .cluster1          .              .             1.0000      
+p7 .cluster2          .             1.0000         1.0000      
+p7 .cluster3          .              .             1.0000      
+p8 .cluster1          .              .             1.0000      
+p8 .cluster2          .              .             1.0000      
+p8 .cluster3          .             1.0000         1.0000      
+p9 .cluster1          .             1.0000         1.0000      
+p9 .cluster2          .              .             1.0000      
+p9 .cluster3          .              .             1.0000      
+p10.cluster1          .              .             1.0000      
+p10.cluster2          .             1.0000         1.0000      
+p10.cluster3          .              .             1.0000      
+p11.cluster1          .             1.0000         1.0000      
+p11.cluster2          .              .             1.0000      
+p11.cluster3          .              .             1.0000      
+p12.cluster1          .             1.0000         1.0000      
+p12.cluster2          .              .             1.0000      
+p12.cluster3          .              .             1.0000      
+p13.cluster1          .              .             1.0000      
+p13.cluster2          .             1.0000         1.0000      
+p13.cluster3          .              .             1.0000      
+p14.cluster1          .              .             1.0000      
+p14.cluster2          .              .             1.0000      
+p14.cluster3          .             1.0000         1.0000      
+p15.cluster1          .              .             1.0000      
+p15.cluster2          .             1.0000         1.0000      
+p15.cluster3          .              .             1.0000      
+p16.cluster1          .              .             1.0000      
+p16.cluster2          .              .             1.0000      
+p16.cluster3          .             1.0000         1.0000      
+p17.cluster1          .              .             1.0000      
+p17.cluster2          .              .             1.0000      
+p17.cluster3          .             1.0000         1.0000      
+p18.cluster1          .             1.0000         1.0000      
+p18.cluster2          .              .             1.0000      
+p18.cluster3          .              .             1.0000      
+p19.cluster1          .              .             1.0000      
+p19.cluster2          .             1.0000         1.0000      
+p19.cluster3          .              .             1.0000      
+p20.cluster1          .              .             1.0000      
+p20.cluster2          .             1.0000         1.0000      
+p20.cluster3          .              .             1.0000      
+p21.cluster1          .             1.0000         1.0000      
+p21.cluster2          .              .             1.0000      
+p21.cluster3          .              .             1.0000      
+p22.cluster1          .             1.0000         1.0000      
+p22.cluster2          .              .             1.0000      
+p22.cluster3          .              .             1.0000      
+p23.cluster1          .             1.0000         1.0000      
+p23.cluster2          .              .             1.0000      
+p23.cluster3          .              .             1.0000      
+p24.cluster1          .              .             1.0000      
+p24.cluster2          .             1.0000         1.0000      
+p24.cluster3          .              .             1.0000      
+p25.cluster1          .              .             1.0000      
+p25.cluster2          .             1.0000         1.0000      
+p25.cluster3          .              .             1.0000      
+p26.cluster1          .              .             1.0000      
+p26.cluster2          .             1.0000         1.0000      
+p26.cluster3          .              .             1.0000      
+p27.cluster1          .              .             1.0000      
+p27.cluster2          .             1.0000         1.0000      
+p27.cluster3          .              .             1.0000      
+p28.cluster1          .             1.0000         1.0000      
+p28.cluster2          .              .             1.0000      
+p28.cluster3          .              .             1.0000      
+p29.cluster1          .              .             1.0000      
+p29.cluster2          .             1.0000         1.0000      
+p29.cluster3          .              .             1.0000      
+p30.cluster1          .              .             1.0000      
+p30.cluster2          .              .             1.0000      
+p30.cluster3          .             1.0000         1.0000      
+p31.cluster1          .             1.0000         1.0000      
+p31.cluster2          .              .             1.0000      
+p31.cluster3          .              .             1.0000      
+p32.cluster1          .              .             1.0000      
+p32.cluster2          .             1.0000         1.0000      
+p32.cluster3          .              .             1.0000      
+p33.cluster1          .             1.0000         1.0000      
+p33.cluster2          .              .             1.0000      
+p33.cluster3          .              .             1.0000      
+p34.cluster1          .              .             1.0000      
+p34.cluster2          .             1.0000         1.0000      
+p34.cluster3          .              .             1.0000      
+p35.cluster1          .             1.0000         1.0000      
+p35.cluster2          .              .             1.0000      
+p35.cluster3          .              .             1.0000      
+p36.cluster1          .             1.0000         1.0000      
+p36.cluster2          .              .             1.0000      
+p36.cluster3          .              .             1.0000      
+p37.cluster1          .              .             1.0000      
+p37.cluster2          .              .             1.0000      
+p37.cluster3          .             1.0000         1.0000      
+p38.cluster1          .              .             1.0000      
+p38.cluster2          .              .             1.0000      
+p38.cluster3          .             1.0000         1.0000      
+p39.cluster1          .             1.0000         1.0000      
+p39.cluster2          .              .             1.0000      
+p39.cluster3          .              .             1.0000      
+p40.cluster1          .              .             1.0000      
+p40.cluster2          .             1.0000         1.0000      
+p40.cluster3          .              .             1.0000      
+
+---- VAR d  distance from centroid of nearest cluster (or zero)
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1          .       2.0902720E-6        +INF         
+p1 .cluster2          .       2.0860870E-6        +INF         
+p1 .cluster3          .           109.0738        +INF         
+p2 .cluster1          .       2.0918892E-6        +INF         
+p2 .cluster2          .           657.0518        +INF         
+p2 .cluster3          .       2.0913402E-6        +INF         
+p3 .cluster1          .            27.3241        +INF         
+p3 .cluster2          .       2.0976958E-6        +INF         
+p3 .cluster3          .       2.0998649E-6        +INF         
+p4 .cluster1          .       2.0772911E-6        +INF         
+p4 .cluster2          .       2.0751795E-6        +INF         
+p4 .cluster3          .           438.8889        +INF         
+p5 .cluster1          .       2.0998561E-6        +INF         
+p5 .cluster2          .       2.0976108E-6        +INF         
+p5 .cluster3          .           689.0291        +INF         
+p6 .cluster1          .       2.0837842E-6        +INF         
+p6 .cluster2          .          1001.7843        +INF         
+p6 .cluster3          .       2.0828711E-6        +INF         
+p7 .cluster1          .       2.0817461E-6        +INF         
+p7 .cluster2          .          1519.7877        +INF         
+p7 .cluster3          .       2.0806029E-6        +INF         
+p8 .cluster1          .       2.0946472E-6        +INF         
+p8 .cluster2          .       2.0912229E-6        +INF         
+p8 .cluster3          .           119.2056        +INF         
+p9 .cluster1          .           124.5293        +INF         
+p9 .cluster2          .       2.1024768E-6        +INF         
+p9 .cluster3          .       2.1031511E-6        +INF         
+p10.cluster1          .       2.0880546E-6        +INF         
+p10.cluster2          .            71.2287        +INF         
+p10.cluster3          .       2.0870902E-6        +INF         
+p11.cluster1          .           376.3425        +INF         
+p11.cluster2          .       2.0913548E-6        +INF         
+p11.cluster3          .       2.0939127E-6        +INF         
+p12.cluster1          .           163.3566        +INF         
+p12.cluster2          .       2.1078917E-6        +INF         
+p12.cluster3          .       2.1083868E-6        +INF         
+p13.cluster1          .       2.0795898E-6        +INF         
+p13.cluster2          .          1077.9727        +INF         
+p13.cluster3          .       2.0782620E-6        +INF         
+p14.cluster1          .       2.0919220E-6        +INF         
+p14.cluster2          .       2.0877673E-6        +INF         
+p14.cluster3          .            83.3113        +INF         
+p15.cluster1          .       2.0881436E-6        +INF         
+p15.cluster2          .           535.9968        +INF         
+p15.cluster3          .       2.0881850E-6        +INF         
+p16.cluster1          .       2.0984597E-6        +INF         
+p16.cluster2          .       2.0958137E-6        +INF         
+p16.cluster3          .           602.8025        +INF         
+p17.cluster1          .       2.0900811E-6        +INF         
+p17.cluster2          .       2.0859399E-6        +INF         
+p17.cluster3          .           180.9123        +INF         
+p18.cluster1          .            94.5112        +INF         
+p18.cluster2          .       2.0967069E-6        +INF         
+p18.cluster3          .       2.0984693E-6        +INF         
+p19.cluster1          .       2.0774936E-6        +INF         
+p19.cluster2          .           508.0455        +INF         
+p19.cluster3          .       2.0763743E-6        +INF         
+p20.cluster1          .       2.0882530E-6        +INF         
+p20.cluster2          .            64.1957        +INF         
+p20.cluster3          .       2.0870360E-6        +INF         
+p21.cluster1          .           307.8918        +INF         
+p21.cluster2          .       2.0964593E-6        +INF         
+p21.cluster3          .       2.1001659E-6        +INF         
+p22.cluster1          .           241.1918        +INF         
+p22.cluster2          .       2.1033600E-6        +INF         
+p22.cluster3          .       2.1062472E-6        +INF         
+p23.cluster1          .            73.4887        +INF         
+p23.cluster2          .       2.0972579E-6        +INF         
+p23.cluster3          .       2.1000060E-6        +INF         
+p24.cluster1          .       2.0872107E-6        +INF         
+p24.cluster2          .            36.0472        +INF         
+p24.cluster3          .       2.0856396E-6        +INF         
+p25.cluster1          .       2.0882781E-6        +INF         
+p25.cluster2          .           551.3251        +INF         
+p25.cluster3          .       2.0883384E-6        +INF         
+p26.cluster1          .       2.0791395E-6        +INF         
+p26.cluster2          .           574.1441        +INF         
+p26.cluster3          .       2.0780509E-6        +INF         
+p27.cluster1          .       2.0906876E-6        +INF         
+p27.cluster2          .           582.7916        +INF         
+p27.cluster3          .       2.0904450E-6        +INF         
+p28.cluster1          .           353.2942        +INF         
+p28.cluster2          .       2.1123848E-6        +INF         
+p28.cluster3          .       2.1123527E-6        +INF         
+p29.cluster1          .       2.0873616E-6        +INF         
+p29.cluster2          .            29.0771        +INF         
+p29.cluster3          .       2.0858350E-6        +INF         
+p30.cluster1          .       2.0937702E-6        +INF         
+p30.cluster2          .       2.0905287E-6        +INF         
+p30.cluster3          .           238.0957        +INF         
+p31.cluster1          .           327.1821        +INF         
+p31.cluster2          .       2.1098205E-6        +INF         
+p31.cluster3          .       2.1095144E-6        +INF         
+p32.cluster1          .       2.0771514E-6        +INF         
+p32.cluster2          .           802.9092        +INF         
+p32.cluster3          .       2.0758712E-6        +INF         
+p33.cluster1          .           297.1247        +INF         
+p33.cluster2          .       2.1106212E-6        +INF         
+p33.cluster3          .       2.1119429E-6        +INF         
+p34.cluster1          .       2.0873177E-6        +INF         
+p34.cluster2          .           212.1447        +INF         
+p34.cluster3          .       2.0853297E-6        +INF         
+p35.cluster1          .           472.4688        +INF         
+p35.cluster2          .       2.0902280E-6        +INF         
+p35.cluster3          .       2.0930416E-6        +INF         
+p36.cluster1          .            33.6036        +INF         
+p36.cluster2          .       2.0989475E-6        +INF         
+p36.cluster3          .       2.1005531E-6        +INF         
+p37.cluster1          .       2.0777362E-6        +INF         
+p37.cluster2          .       2.0760646E-6        +INF         
+p37.cluster3          .           399.3484        +INF         
+p38.cluster1          .       2.0881487E-6        +INF         
+p38.cluster2          .       2.0833700E-6        +INF         
+p38.cluster3          .           434.5397        +INF         
+p39.cluster1          .            62.7747        +INF         
+p39.cluster2          .       2.1009139E-6        +INF         
+p39.cluster3          .       2.1034048E-6        +INF         
+p40.cluster1          .       2.0919452E-6        +INF         
+p40.cluster2          .          2048.5884        +INF         
+p40.cluster3          .       2.0936749E-6        +INF         
+
+---- VAR mu  cluster locations
+
+                  LOWER          LEVEL          UPPER
+
+cluster1.x         3.1525        25.3131        99.8118      
+cluster1.y         3.4141        18.9339        93.3450      
+cluster2.x         3.1525        68.7554        99.8118      
+cluster2.y         3.4141        51.7673        93.3450      
+cluster3.x         3.1525        17.6281        99.8118      
+cluster3.y         3.4141        73.8927        93.3450      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF        16523.3820        +INF         
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE kmeans2 Using MIQCP From line 108
+
+
+---- edist  =G=  (squared) distance calculation
+
+edist(p1,cluster1)..  - 12537.4863933451*x(p1,cluster1) + d(p1,cluster1) - (16.2767509593836)*mu(cluster1,x)
+     
+      + (130.785558831246)*mu(cluster1,y) =G= -12537.4863933451 ; (LHS = -4342.4487530585)
+     
+edist(p1,cluster2)..  - 12537.4863933451*x(p1,cluster2) + d(p1,cluster2) - (103.16130668988)*mu(cluster2,x)
+     
+      + (65.1187905075282)*mu(cluster2,y) =G= -12537.4863933451 ; (LHS = -3720.6780166956)
+     
+edist(p1,cluster3)..  - 12537.4863933451*x(p1,cluster3) + d(p1,cluster3) - (0.90680779348682)*mu(cluster3,x)
+     
+      + (20.8679894342922)*mu(cluster3,y) =G= -12537.4863933451 ;
+     
+      (LHS = -12537.4863999927, INFES = 6.6475691511414E-6 ****)
+     
+REMAINING 117 ENTRIES SKIPPED
+
+
+---- select  =E=  assign points to clusters
+
+select(p1)..  x(p1,cluster1) + x(p1,cluster2) + x(p1,cluster3) =E= 1 ; (LHS = 1)
+     
+select(p2)..  x(p2,cluster1) + x(p2,cluster2) + x(p2,cluster3) =E= 1 ; (LHS = 1)
+     
+select(p3)..  x(p3,cluster1) + x(p3,cluster2) + x(p3,cluster3) =E= 1 ; (LHS = 1)
+     
+REMAINING 37 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - d(p1,cluster1) - d(p1,cluster2) - d(p1,cluster3) - d(p2,cluster1) - d(p2,cluster2) - d(p2,cluster3)
+     
+      - d(p3,cluster1) - d(p3,cluster2) - d(p3,cluster3) - d(p4,cluster1) - d(p4,cluster2) - d(p4,cluster3)
+     
+      - d(p5,cluster1) - d(p5,cluster2) - d(p5,cluster3) - d(p6,cluster1) - d(p6,cluster2) - d(p6,cluster3)
+     
+      - d(p7,cluster1) - d(p7,cluster2) - d(p7,cluster3) - d(p8,cluster1) - d(p8,cluster2) - d(p8,cluster3)
+     
+      - d(p9,cluster1) - d(p9,cluster2) - d(p9,cluster3) - d(p10,cluster1) - d(p10,cluster2) - d(p10,cluster3)
+     
+      - d(p11,cluster1) - d(p11,cluster2) - d(p11,cluster3) - d(p12,cluster1) - d(p12,cluster2) - d(p12,cluster3)
+     
+      - d(p13,cluster1) - d(p13,cluster2) - d(p13,cluster3) - d(p14,cluster1) - d(p14,cluster2) - d(p14,cluster3)
+     
+      - d(p15,cluster1) - d(p15,cluster2) - d(p15,cluster3) - d(p16,cluster1) - d(p16,cluster2) - d(p16,cluster3)
+     
+      - d(p17,cluster1) - d(p17,cluster2) - d(p17,cluster3) - d(p18,cluster1) - d(p18,cluster2) - d(p18,cluster3)
+     
+      - d(p19,cluster1) - d(p19,cluster2) - d(p19,cluster3) - d(p20,cluster1) - d(p20,cluster2) - d(p20,cluster3)
+     
+      - d(p21,cluster1) - d(p21,cluster2) - d(p21,cluster3) - d(p22,cluster1) - d(p22,cluster2) - d(p22,cluster3)
+     
+      - d(p23,cluster1) - d(p23,cluster2) - d(p23,cluster3) - d(p24,cluster1) - d(p24,cluster2) - d(p24,cluster3)
+     
+      - d(p25,cluster1) - d(p25,cluster2) - d(p25,cluster3) - d(p26,cluster1) - d(p26,cluster2) - d(p26,cluster3)
+     
+      - d(p27,cluster1) - d(p27,cluster2) - d(p27,cluster3) - d(p28,cluster1) - d(p28,cluster2) - d(p28,cluster3)
+     
+      - d(p29,cluster1) - d(p29,cluster2) - d(p29,cluster3) - d(p30,cluster1) - d(p30,cluster2) - d(p30,cluster3)
+     
+      - d(p31,cluster1) - d(p31,cluster2) - d(p31,cluster3) - d(p32,cluster1) - d(p32,cluster2) - d(p32,cluster3)
+     
+      - d(p33,cluster1) - d(p33,cluster2) - d(p33,cluster3) - d(p34,cluster1) - d(p34,cluster2) - d(p34,cluster3)
+     
+      - d(p35,cluster1) - d(p35,cluster2) - d(p35,cluster3) - d(p36,cluster1) - d(p36,cluster2) - d(p36,cluster3)
+     
+      - d(p37,cluster1) - d(p37,cluster2) - d(p37,cluster3) - d(p38,cluster1) - d(p38,cluster2) - d(p38,cluster3)
+     
+      - d(p39,cluster1) - d(p39,cluster2) - d(p39,cluster3) - d(p40,cluster1) - d(p40,cluster2) - d(p40,cluster3) + z
+      =E= 0 ; (LHS = 0)
+     
+
+---- order  =L=  optional symmetry breaker
+
+order(cluster2)..  mu(cluster1,x) - mu(cluster2,x) =L= 0 ; (LHS = -43.442277865248)
+     
+order(cluster3)..  mu(cluster2,x) - mu(cluster3,x) =L= 0 ; (LHS = 51.1272494481964, INFES = 51.1272494481964 ****)
+     
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE kmeans2 Using MIQCP From line 108
+
+
+---- x  assignment
+
+x(p1,cluster1)
+                (.LO, .L, .UP, .M = 0, 0, 1, NA)
+   -12537.4864  edist(p1,cluster1)
+        1       select(p1)
+
+x(p1,cluster2)
+                (.LO, .L, .UP, .M = 0, 0, 1, NA)
+   -12537.4864  edist(p1,cluster2)
+        1       select(p1)
+
+x(p1,cluster3)
+                (.LO, .L, .UP, .M = 0, 1, 1, NA)
+   -12537.4864  edist(p1,cluster3)
+        1       select(p1)
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- d  distance from centroid of nearest cluster (or zero)
+
+d(p1,cluster1)
+                (.LO, .L, .UP, .M = 0, 2.09027200540787E-6, +INF, NA)
+        1       edist(p1,cluster1)
+       -1       obj
+
+d(p1,cluster2)
+                (.LO, .L, .UP, .M = 0, 2.08608700596859E-6, +INF, NA)
+        1       edist(p1,cluster2)
+       -1       obj
+
+d(p1,cluster3)
+                (.LO, .L, .UP, .M = 0, 109.073814203446, +INF, NA)
+        1       edist(p1,cluster3)
+       -1       obj
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- mu  cluster locations
+
+mu(cluster1,x)
+                (.LO, .L, .UP, .M = 3.1524852, 25.3130886796918, 99.8117627, NA)
+     (-16.2768) edist(p1,cluster1)
+      (59.4489) edist(p2,cluster1)
+       (7.8162) edist(p3,cluster1)
+      (19.3399) edist(p4,cluster1)
+     (-37.2034) edist(p5,cluster1)
+     (148.9973) edist(p6,cluster1)
+     (147.6004) edist(p7,cluster1)
+     (-24.4877) edist(p8,cluster1)
+     (-18.7226) edist(p9,cluster1)
+      (83.1595) edist(p10,cluster1)
+      (21.3139) edist(p11,cluster1)
+     (-24.3279) edist(p12,cluster1)
+      (67.1966) edist(p13,cluster1)
+      (-4.463)  edist(p14,cluster1)
+     (104.5453) edist(p15,cluster1)
+     (-28.5277) edist(p16,cluster1)
+     (-18.5916) edist(p17,cluster1)
+       (2.3967) edist(p18,cluster1)
+      (68.165)  edist(p19,cluster1)
+      (75.0236) edist(p20,cluster1)
+      (32.0352) edist(p21,cluster1)
+      (12.2163) edist(p22,cluster1)
+      (17.0839) edist(p23,cluster1)
+      (78.5192) edist(p24,cluster1)
+     (103.3662) edist(p25,cluster1)
+      (81.5951) edist(p26,cluster1)
+      (74.8633) edist(p27,cluster1)
+     (-33.3413) edist(p28,cluster1)
+      (77.6241) edist(p29,cluster1)
+     (-44.3212) edist(p30,cluster1)
+     (-36.0728) edist(p31,cluster1)
+      (54.5003) edist(p32,cluster1)
+     (-15.0014) edist(p33,cluster1)
+      (66.4001) edist(p34,cluster1)
+      (27.2462) edist(p35,cluster1)
+      (-2.0193) edist(p36,cluster1)
+     (-24.5256) edist(p37,cluster1)
+      (25.3614) edist(p38,cluster1)
+       (9.3807) edist(p39,cluster1)
+      (99.1486) edist(p40,cluster1)
+        1       order(cluster2)
+
+mu(cluster1,y)
+                (.LO, .L, .UP, .M = 3.4140986, 18.9338913843771, 93.344972, NA)
+     (130.7856) edist(p1,cluster1)
+      (22.3598) edist(p2,cluster1)
+       (6.9428) edist(p3,cluster1)
+     (133.3863) edist(p4,cluster1)
+      (62.1744) edist(p5,cluster1)
+      (77.8789) edist(p6,cluster1)
+     (114.5823) edist(p7,cluster1)
+      (90.076)  edist(p8,cluster1)
+      (12.1483) edist(p9,cluster1)
+      (49.2035) edist(p10,cluster1)
+      (32.4205) edist(p11,cluster1)
+      (-7.8474) edist(p12,cluster1)
+     (128.3108) edist(p13,cluster1)
+      (95.2791) edist(p14,cluster1)
+      (22.8639) edist(p15,cluster1)
+      (62.6092) edist(p16,cluster1)
+     (136.6247) edist(p17,cluster1)
+      (19.2951) edist(p18,cluster1)
+     (106.676)  edist(p19,cluster1)
+      (54.8918) edist(p20,cluster1)
+     (-14.3287) edist(p21,cluster1)
+     (-28.5575) edist(p22,cluster1)
+      (-1.4479) edist(p23,cluster1)
+      (74.2813) edist(p24,cluster1)
+      (21.6934) edist(p25,cluster1)
+     (113.2966) edist(p26,cluster1)
+      (18.9051) edist(p27,cluster1)
+     (-17.3648) edist(p28,cluster1)
+      (71.1941) edist(p29,cluster1)
+     (120.6043) edist(p30,cluster1)
+      (-2.7356) edist(p31,cluster1)
+     (112.1738) edist(p32,cluster1)
+     (-31.0396) edist(p33,cluster1)
+      (86.3782) edist(p34,cluster1)
+      (33.875)  edist(p35,cluster1)
+      (11.4165) edist(p36,cluster1)
+     (148.8222) edist(p37,cluster1)
+     (118.8123) edist(p38,cluster1)
+     (-12.7711) edist(p39,cluster1)
+     (-24.0213) edist(p40,cluster1)
+
+mu(cluster2,x)
+                (.LO, .L, .UP, .M = 3.1524852, 68.7553665449398, 99.8117627, NA)
+    (-103.1613) edist(p1,cluster2)
+     (-27.4357) edist(p2,cluster2)
+     (-79.0683) edist(p3,cluster2)
+     (-67.5446) edist(p4,cluster2)
+    (-124.088)  edist(p5,cluster2)
+      (62.1128) edist(p6,cluster2)
+      (60.7159) edist(p7,cluster2)
+    (-111.3722) edist(p8,cluster2)
+    (-105.6072) edist(p9,cluster2)
+      (-3.725)  edist(p10,cluster2)
+     (-65.5707) edist(p11,cluster2)
+    (-111.2124) edist(p12,cluster2)
+     (-19.688)  edist(p13,cluster2)
+     (-91.3476) edist(p14,cluster2)
+      (17.6608) edist(p15,cluster2)
+    (-115.4123) edist(p16,cluster2)
+    (-105.4762) edist(p17,cluster2)
+     (-84.4878) edist(p18,cluster2)
+     (-18.7195) edist(p19,cluster2)
+     (-11.861)  edist(p20,cluster2)
+     (-54.8493) edist(p21,cluster2)
+     (-74.6683) edist(p22,cluster2)
+     (-69.8007) edist(p23,cluster2)
+      (-8.3653) edist(p24,cluster2)
+      (16.4816) edist(p25,cluster2)
+      (-5.2895) edist(p26,cluster2)
+     (-12.0212) edist(p27,cluster2)
+    (-120.2258) edist(p28,cluster2)
+      (-9.2605) edist(p29,cluster2)
+    (-131.2058) edist(p30,cluster2)
+    (-122.9573) edist(p31,cluster2)
+     (-32.3842) edist(p32,cluster2)
+    (-101.886)  edist(p33,cluster2)
+     (-20.4845) edist(p34,cluster2)
+     (-59.6384) edist(p35,cluster2)
+     (-88.9038) edist(p36,cluster2)
+    (-111.4102) edist(p37,cluster2)
+     (-61.5232) edist(p38,cluster2)
+     (-77.5039) edist(p39,cluster2)
+      (12.2641) edist(p40,cluster2)
+       -1       order(cluster2)
+        1       order(cluster3)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 16523.3820256331, +INF, 0)
+        1       obj
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE kmeans2 Using MIQCP From line 108
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS          163
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          247
+NON ZERO ELEMENTS           725     NON LINEAR N-Z            240
+CODE LENGTH               1,200     CONSTANT POOL              96     DISCRETE VARIABLES        120
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE kmeans2 Using MIQCP From line 108
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   kmeans2             OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  108
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE            16523.3832
+
+ RESOURCE USAGE, LIMIT        462.625      3600.000
+ ITERATION COUNT, LIMIT  17567015    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 0.58 Mb (peak 0.58 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.01 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 462.59sec (det. 256912.65 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:        16523.383250    (17567015 iterations, 1617190 nodes)
+
+Best possible:       16523.383250
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU edist  (squared) distance calculation
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1    -12537.4864     -5131.5282        +INF         
+p1 .cluster2    -12537.4864      3063.4821        +INF         
+p1 .cluster3    -12537.4864      3685.2839        +INF         
+p2 .cluster1    -12537.4864       619.9251        +INF         
+p2 .cluster2    -12537.4864      2927.4201        +INF         
+p2 .cluster3    -12537.4864     -8601.5157        +INF         
+p3 .cluster1    -12537.4864     -1429.4714        +INF         
+p3 .cluster2    -12537.4864    -11181.6103        +INF         
+p3 .cluster3    -12537.4864     -1069.2001        +INF         
+p4 .cluster1    -12537.4864     -3981.6835        +INF         
+p4 .cluster2    -12537.4864      4014.2840        +INF         
+p4 .cluster3    -12537.4864      6268.7535        +INF         
+p5 .cluster1    -12537.4864     -9990.3367        +INF         
+p5 .cluster2    -12537.4864      1234.7065        +INF         
+p5 .cluster3    -12537.4864     -1305.3548        +INF         
+p6 .cluster1    -12537.4864      6300.9608        +INF         
+p6 .cluster2    -12537.4864      6245.3288        +INF         
+p6 .cluster3    -12537.4864       774.2248        +INF         
+p7 .cluster1    -12537.4864      8988.4491        +INF         
+p7 .cluster2    -12537.4864      6904.8987        +INF         
+p7 .cluster3    -12537.4864      3096.2183        +INF         
+p8 .cluster1    -12537.4864     -8274.2802        +INF         
+p8 .cluster2    -12537.4864      2084.8585        +INF         
+p8 .cluster3    -12537.4864      1013.3128        +INF         
+p9 .cluster1    -12537.4864     -1512.6539        +INF         
+p9 .cluster2    -12537.4864    -11657.6242        +INF         
+p9 .cluster3    -12537.4864     -2624.4117        +INF         
+p10.cluster1    -12537.4864      3021.4544        +INF         
+p10.cluster2    -12537.4864      4035.8543        +INF         
+p10.cluster3    -12537.4864     -6167.4798        +INF         
+p11.cluster1    -12537.4864       691.0833        +INF         
+p11.cluster2    -12537.4864    -10008.5332        +INF         
+p11.cluster3    -12537.4864      1177.7460        +INF         
+p12.cluster1    -12537.4864     -3089.0039        +INF         
+p12.cluster2    -12537.4864    -12139.2805        +INF         
+p12.cluster3    -12537.4864     -4044.9290        +INF         
+p13.cluster1    -12537.4864      8585.5035        +INF         
+p13.cluster2    -12537.4864      5129.5752        +INF         
+p13.cluster3    -12537.4864     -2163.1088        +INF         
+p14.cluster1    -12537.4864     -7572.7036        +INF         
+p14.cluster2    -12537.4864      2690.2545        +INF         
+p14.cluster3    -12537.4864      2659.4672        +INF         
+p15.cluster1    -12537.4864      1452.1465        +INF         
+p15.cluster2    -12537.4864      4078.4858        +INF         
+p15.cluster3    -12537.4864     -5595.8514        +INF         
+p16.cluster1    -12537.4864     -9891.4954        +INF         
+p16.cluster2    -12537.4864      1462.5469        +INF         
+p16.cluster3    -12537.4864      -686.3426        +INF         
+p17.cluster1    -12537.4864     -4669.0284        +INF         
+p17.cluster2    -12537.4864      3115.4419        +INF         
+p17.cluster3    -12537.4864      3828.3995        +INF         
+p18.cluster1    -12537.4864      -612.2642        +INF         
+p18.cluster2    -12537.4864    -11017.7309        +INF         
+p18.cluster3    -12537.4864      -802.3759        +INF         
+p19.cluster1    -12537.4864      7003.9263        +INF         
+p19.cluster2    -12537.4864      4744.4646        +INF         
+p19.cluster3    -12537.4864     -3786.4215        +INF         
+p20.cluster1    -12537.4864      3298.3547        +INF         
+p20.cluster2    -12537.4864      3937.6093        +INF         
+p20.cluster3    -12537.4864     -6439.4378        +INF         
+p21.cluster1    -12537.4864     -2574.3416        +INF         
+p21.cluster2    -12537.4864    -10690.7377        +INF         
+p21.cluster3    -12537.4864      -505.1844        +INF         
+p22.cluster1    -12537.4864     -3975.1164        +INF         
+p22.cluster2    -12537.4864    -11528.5225        +INF         
+p22.cluster3    -12537.4864     -2604.4279        +INF         
+p23.cluster1    -12537.4864     -1886.1073        +INF         
+p23.cluster2    -12537.4864    -11059.7209        +INF         
+p23.cluster3    -12537.4864      -866.3625        +INF         
+p24.cluster1    -12537.4864      4792.7222        +INF         
+p24.cluster2    -12537.4864      4393.2101        +INF         
+p24.cluster3    -12537.4864     -5223.4955        +INF         
+p25.cluster1    -12537.4864      1344.8666        +INF         
+p25.cluster2    -12537.4864      4026.4752        +INF         
+p25.cluster3    -12537.4864     -5722.1926        +INF         
+p26.cluster1    -12537.4864      7729.8827        +INF         
+p26.cluster2    -12537.4864      5209.7690        +INF         
+p26.cluster3    -12537.4864     -2454.2075        +INF         
+p27.cluster1    -12537.4864       636.3743        +INF         
+p27.cluster2    -12537.4864      3252.1928        +INF         
+p27.cluster3    -12537.4864     -7794.7939        +INF         
+p28.cluster1    -12537.4864     -3951.1620        +INF         
+p28.cluster2    -12537.4864    -12357.7016        +INF         
+p28.cluster3    -12537.4864     -5157.3394        +INF         
+p29.cluster1    -12537.4864      4548.8193        +INF         
+p29.cluster2    -12537.4864      4312.0979        +INF         
+p29.cluster3    -12537.4864     -5451.8315        +INF         
+p30.cluster1    -12537.4864     -6249.1944        +INF         
+p30.cluster2    -12537.4864      2160.8286        +INF         
+p30.cluster3    -12537.4864      1230.0236        +INF         
+p31.cluster1    -12537.4864     -2918.3178        +INF         
+p31.cluster2    -12537.4864    -12175.9680        +INF         
+p31.cluster3    -12537.4864     -4587.8281        +INF         
+p32.cluster1    -12537.4864      7169.2836        +INF         
+p32.cluster2    -12537.4864      4502.6646        +INF         
+p32.cluster3    -12537.4864     -4146.4745        +INF         
+p33.cluster1    -12537.4864     -4638.3261        +INF         
+p33.cluster2    -12537.4864    -12208.5497        +INF         
+p33.cluster3    -12537.4864     -4604.2830        +INF         
+p34.cluster1    -12537.4864      5472.9535        +INF         
+p34.cluster2    -12537.4864      4315.4768        +INF         
+p34.cluster3    -12537.4864     -5254.4346        +INF         
+p35.cluster1    -12537.4864       903.1409        +INF         
+p35.cluster2    -12537.4864     -9734.7011        +INF         
+p35.cluster3    -12537.4864      1660.9237        +INF         
+p36.cluster1    -12537.4864     -1272.2778        +INF         
+p36.cluster2    -12537.4864    -11339.5924        +INF         
+p36.cluster3    -12537.4864     -1513.8502        +INF         
+p37.cluster1    -12537.4864     -3653.8928        +INF         
+p37.cluster2    -12537.4864      3196.1784        +INF         
+p37.cluster3    -12537.4864      4051.8366        +INF         
+p38.cluster1    -12537.4864     -4956.7954        +INF         
+p38.cluster2    -12537.4864      3890.7663        +INF         
+p38.cluster3    -12537.4864      5928.3070        +INF         
+p39.cluster1    -12537.4864     -2858.6081        +INF         
+p39.cluster2    -12537.4864    -11479.8204        +INF         
+p39.cluster3    -12537.4864     -1982.1743        +INF         
+p40.cluster1    -12537.4864     -2107.4606        +INF         
+p40.cluster2    -12537.4864      3054.1715        +INF         
+p40.cluster3    -12537.4864     -6881.4308        +INF         
+
+---- EQU select  assign points to clusters
+
+           LOWER          LEVEL          UPPER
+
+p1          1.0000         1.0000         1.0000      
+p2          1.0000         1.0000         1.0000      
+p3          1.0000         1.0000         1.0000      
+p4          1.0000         1.0000         1.0000      
+p5          1.0000         1.0000         1.0000      
+p6          1.0000         1.0000         1.0000      
+p7          1.0000         1.0000         1.0000      
+p8          1.0000         1.0000         1.0000      
+p9          1.0000         1.0000         1.0000      
+p10         1.0000         1.0000         1.0000      
+p11         1.0000         1.0000         1.0000      
+p12         1.0000         1.0000         1.0000      
+p13         1.0000         1.0000         1.0000      
+p14         1.0000         1.0000         1.0000      
+p15         1.0000         1.0000         1.0000      
+p16         1.0000         1.0000         1.0000      
+p17         1.0000         1.0000         1.0000      
+p18         1.0000         1.0000         1.0000      
+p19         1.0000         1.0000         1.0000      
+p20         1.0000         1.0000         1.0000      
+p21         1.0000         1.0000         1.0000      
+p22         1.0000         1.0000         1.0000      
+p23         1.0000         1.0000         1.0000      
+p24         1.0000         1.0000         1.0000      
+p25         1.0000         1.0000         1.0000      
+p26         1.0000         1.0000         1.0000      
+p27         1.0000         1.0000         1.0000      
+p28         1.0000         1.0000         1.0000      
+p29         1.0000         1.0000         1.0000      
+p30         1.0000         1.0000         1.0000      
+p31         1.0000         1.0000         1.0000      
+p32         1.0000         1.0000         1.0000      
+p33         1.0000         1.0000         1.0000      
+p34         1.0000         1.0000         1.0000      
+p35         1.0000         1.0000         1.0000      
+p36         1.0000         1.0000         1.0000      
+p37         1.0000         1.0000         1.0000      
+p38         1.0000         1.0000         1.0000      
+p39         1.0000         1.0000         1.0000      
+p40         1.0000         1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU obj                 .              .              .          
+
+  obj  objective
+
+---- EQU order  optional symmetry breaker
+
+                LOWER          LEVEL          UPPER
+
+cluster2        -INF           -7.6846          .          
+cluster3        -INF          -43.4425          .          
+
+---- VAR x  assignment
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1          .             1.0000         1.0000      
+p1 .cluster2          .              .             1.0000      
+p1 .cluster3          .              .             1.0000      
+p2 .cluster1          .              .             1.0000      
+p2 .cluster2          .              .             1.0000      
+p2 .cluster3          .             1.0000         1.0000      
+p3 .cluster1          .              .             1.0000      
+p3 .cluster2          .             1.0000         1.0000      
+p3 .cluster3          .              .             1.0000      
+p4 .cluster1          .             1.0000         1.0000      
+p4 .cluster2          .              .             1.0000      
+p4 .cluster3          .              .             1.0000      
+p5 .cluster1          .             1.0000         1.0000      
+p5 .cluster2          .              .             1.0000      
+p5 .cluster3          .              .             1.0000      
+p6 .cluster1          .              .             1.0000      
+p6 .cluster2          .              .             1.0000      
+p6 .cluster3          .             1.0000         1.0000      
+p7 .cluster1          .              .             1.0000      
+p7 .cluster2          .              .             1.0000      
+p7 .cluster3          .             1.0000         1.0000      
+p8 .cluster1          .             1.0000         1.0000      
+p8 .cluster2          .              .             1.0000      
+p8 .cluster3          .              .             1.0000      
+p9 .cluster1          .              .             1.0000      
+p9 .cluster2          .             1.0000         1.0000      
+p9 .cluster3          .              .             1.0000      
+p10.cluster1          .              .             1.0000      
+p10.cluster2          .              .             1.0000      
+p10.cluster3          .             1.0000         1.0000      
+p11.cluster1          .              .             1.0000      
+p11.cluster2          .             1.0000         1.0000      
+p11.cluster3          .              .             1.0000      
+p12.cluster1          .              .             1.0000      
+p12.cluster2          .             1.0000         1.0000      
+p12.cluster3          .              .             1.0000      
+p13.cluster1          .              .             1.0000      
+p13.cluster2          .              .             1.0000      
+p13.cluster3          .             1.0000         1.0000      
+p14.cluster1          .             1.0000         1.0000      
+p14.cluster2          .              .             1.0000      
+p14.cluster3          .              .             1.0000      
+p15.cluster1          .              .             1.0000      
+p15.cluster2          .              .             1.0000      
+p15.cluster3          .             1.0000         1.0000      
+p16.cluster1          .             1.0000         1.0000      
+p16.cluster2          .              .             1.0000      
+p16.cluster3          .              .             1.0000      
+p17.cluster1          .             1.0000         1.0000      
+p17.cluster2          .              .             1.0000      
+p17.cluster3          .              .             1.0000      
+p18.cluster1          .              .             1.0000      
+p18.cluster2          .             1.0000         1.0000      
+p18.cluster3          .              .             1.0000      
+p19.cluster1          .              .             1.0000      
+p19.cluster2          .              .             1.0000      
+p19.cluster3          .             1.0000         1.0000      
+p20.cluster1          .              .             1.0000      
+p20.cluster2          .              .             1.0000      
+p20.cluster3          .             1.0000         1.0000      
+p21.cluster1          .              .             1.0000      
+p21.cluster2          .             1.0000         1.0000      
+p21.cluster3          .              .             1.0000      
+p22.cluster1          .              .             1.0000      
+p22.cluster2          .             1.0000         1.0000      
+p22.cluster3          .              .             1.0000      
+p23.cluster1          .              .             1.0000      
+p23.cluster2          .             1.0000         1.0000      
+p23.cluster3          .              .             1.0000      
+p24.cluster1          .              .             1.0000      
+p24.cluster2          .              .             1.0000      
+p24.cluster3          .             1.0000         1.0000      
+p25.cluster1          .              .             1.0000      
+p25.cluster2          .              .             1.0000      
+p25.cluster3          .             1.0000         1.0000      
+p26.cluster1          .              .             1.0000      
+p26.cluster2          .              .             1.0000      
+p26.cluster3          .             1.0000         1.0000      
+p27.cluster1          .              .             1.0000      
+p27.cluster2          .              .             1.0000      
+p27.cluster3          .             1.0000         1.0000      
+p28.cluster1          .              .             1.0000      
+p28.cluster2          .             1.0000         1.0000      
+p28.cluster3          .              .             1.0000      
+p29.cluster1          .              .             1.0000      
+p29.cluster2          .              .             1.0000      
+p29.cluster3          .             1.0000         1.0000      
+p30.cluster1          .             1.0000         1.0000      
+p30.cluster2          .              .             1.0000      
+p30.cluster3          .              .             1.0000      
+p31.cluster1          .              .             1.0000      
+p31.cluster2          .             1.0000         1.0000      
+p31.cluster3          .              .             1.0000      
+p32.cluster1          .              .             1.0000      
+p32.cluster2          .              .             1.0000      
+p32.cluster3          .             1.0000         1.0000      
+p33.cluster1          .              .             1.0000      
+p33.cluster2          .             1.0000         1.0000      
+p33.cluster3          .              .             1.0000      
+p34.cluster1          .              .             1.0000      
+p34.cluster2          .              .             1.0000      
+p34.cluster3          .             1.0000         1.0000      
+p35.cluster1          .              .             1.0000      
+p35.cluster2          .             1.0000         1.0000      
+p35.cluster3          .              .             1.0000      
+p36.cluster1          .              .             1.0000      
+p36.cluster2          .             1.0000         1.0000      
+p36.cluster3          .              .             1.0000      
+p37.cluster1          .             1.0000         1.0000      
+p37.cluster2          .              .             1.0000      
+p37.cluster3          .              .             1.0000      
+p38.cluster1          .             1.0000         1.0000      
+p38.cluster2          .              .             1.0000      
+p38.cluster3          .              .             1.0000      
+p39.cluster1          .              .             1.0000      
+p39.cluster2          .             1.0000         1.0000      
+p39.cluster3          .              .             1.0000      
+p40.cluster1          .              .             1.0000      
+p40.cluster2          .              .             1.0000      
+p40.cluster3          .             1.0000         1.0000      
+
+---- VAR d  distance from centroid of nearest cluster (or zero)
+
+                    LOWER          LEVEL          UPPER
+
+p1 .cluster1          .           109.0741        +INF         
+p1 .cluster2          .       1.5331729E-5        +INF         
+p1 .cluster3          .       1.5276217E-5        +INF         
+p2 .cluster1          .       1.5340101E-5        +INF         
+p2 .cluster2          .       1.5343715E-5        +INF         
+p2 .cluster3          .           657.0532        +INF         
+p3 .cluster1          .       1.5411696E-5        +INF         
+p3 .cluster2          .            27.3273        +INF         
+p3 .cluster3          .       1.5386815E-5        +INF         
+p4 .cluster1          .           438.8848        +INF         
+p4 .cluster2          .       1.5148985E-5        +INF         
+p4 .cluster3          .       1.5111477E-5        +INF         
+p5 .cluster1          .           689.0314        +INF         
+p5 .cluster2          .       1.5417438E-5        +INF         
+p5 .cluster3          .       1.5388218E-5        +INF         
+p6 .cluster1          .       1.5224758E-5        +INF         
+p6 .cluster2          .       1.5227548E-5        +INF         
+p6 .cluster3          .          1001.7844        +INF         
+p7 .cluster1          .       1.5196609E-5        +INF         
+p7 .cluster2          .       1.5212288E-5        +INF         
+p7 .cluster3          .          1519.7864        +INF         
+p8 .cluster1          .           119.2065        +INF         
+p8 .cluster2          .       1.5371820E-5        +INF         
+p8 .cluster3          .       1.5328106E-5        +INF         
+p9 .cluster1          .       1.5438414E-5        +INF         
+p9 .cluster2          .           124.5284        +INF         
+p9 .cluster3          .       1.5433416E-5        +INF         
+p10.cluster1          .       1.5300170E-5        +INF         
+p10.cluster2          .       1.5308574E-5        +INF         
+p10.cluster3          .            71.2292        +INF         
+p11.cluster1          .       1.5357860E-5        +INF         
+p11.cluster2          .           376.3545        +INF         
+p11.cluster3          .       1.5328116E-5        +INF         
+p12.cluster1          .       1.5490902E-5        +INF         
+p12.cluster2          .           163.3498        +INF         
+p12.cluster3          .       1.5488033E-5        +INF         
+p13.cluster1          .       1.5149670E-5        +INF         
+p13.cluster2          .       1.5171228E-5        +INF         
+p13.cluster3          .          1077.9701        +INF         
+p14.cluster1          .            83.3099        +INF         
+p14.cluster2          .       1.5347235E-5        +INF         
+p14.cluster3          .       1.5295019E-5        +INF         
+p15.cluster1          .       1.5314862E-5        +INF         
+p15.cluster2          .       1.5307329E-5        +INF         
+p15.cluster3          .           535.9986        +INF         
+p16.cluster1          .           602.8037        +INF         
+p16.cluster2          .       1.5404700E-5        +INF         
+p16.cluster3          .       1.5370970E-5        +INF         
+p17.cluster1          .           180.9128        +INF         
+p17.cluster2          .       1.5329627E-5        +INF         
+p17.cluster3          .       1.5273896E-5        +INF         
+p18.cluster1          .       1.5397230E-5        +INF         
+p18.cluster2          .            94.5162        +INF         
+p18.cluster3          .       1.5377854E-5        +INF         
+p19.cluster1          .       1.5133225E-5        +INF         
+p19.cluster2          .       1.5147918E-5        +INF         
+p19.cluster3          .           508.0437        +INF         
+p20.cluster1          .       1.5298716E-5        +INF         
+p20.cluster2          .       1.5311001E-5        +INF         
+p20.cluster3          .            64.1960        +INF         
+p21.cluster1          .       1.5420065E-5        +INF         
+p21.cluster2          .           307.8952        +INF         
+p21.cluster3          .       1.5374221E-5        +INF         
+p22.cluster1          .       1.5476772E-5        +INF         
+p22.cluster2          .           241.1876        +INF         
+p22.cluster3          .       1.5441200E-5        +INF         
+p23.cluster1          .       1.5415030E-5        +INF         
+p23.cluster2          .            73.4920        +INF         
+p23.cluster3          .       1.5382336E-5        +INF         
+p24.cluster1          .       1.5283000E-5        +INF         
+p24.cluster2          .       1.5300364E-5        +INF         
+p24.cluster3          .            36.0469        +INF         
+p25.cluster1          .       1.5316418E-5        +INF         
+p25.cluster2          .       1.5308689E-5        +INF         
+p25.cluster3          .           551.3270        +INF         
+p26.cluster1          .       1.5149723E-5        +INF         
+p26.cluster2          .       1.5165351E-5        +INF         
+p26.cluster3          .           574.1422        +INF         
+p27.cluster1          .       1.5333926E-5        +INF         
+p27.cluster2          .       1.5332400E-5        +INF         
+p27.cluster3          .           582.7932        +INF         
+p28.cluster1          .       1.5532549E-5        +INF         
+p28.cluster2          .           353.2832        +INF         
+p28.cluster3          .       1.5536496E-5        +INF         
+p29.cluster1          .       1.5285336E-5        +INF         
+p29.cluster2          .       1.5302037E-5        +INF         
+p29.cluster3          .            29.0768        +INF         
+p30.cluster1          .           238.0993        +INF         
+p30.cluster2          .       1.5365152E-5        +INF         
+p30.cluster3          .       1.5321810E-5        +INF         
+p31.cluster1          .       1.5500725E-5        +INF         
+p31.cluster2          .           327.1740        +INF         
+p31.cluster3          .       1.5508684E-5        +INF         
+p32.cluster1          .       1.5127208E-5        +INF         
+p32.cluster2          .       1.5144770E-5        +INF         
+p32.cluster3          .           802.9072        +INF         
+p33.cluster1          .       1.5531739E-5        +INF         
+p33.cluster2          .           297.1143        +INF         
+p33.cluster3          .       1.5517086E-5        +INF         
+p34.cluster1          .       1.5278278E-5        +INF         
+p34.cluster2          .       1.5301911E-5        +INF         
+p34.cluster3          .           212.1437        +INF         
+p35.cluster1          .       1.5350730E-5        +INF         
+p35.cluster2          .           472.4823        +INF         
+p35.cluster3          .       1.5317635E-5        +INF         
+p36.cluster1          .       1.5416337E-5        +INF         
+p36.cluster2          .            33.6059        +INF         
+p36.cluster3          .       1.5398958E-5        +INF         
+p37.cluster1          .           399.3498        +INF         
+p37.cluster2          .       1.5158954E-5        +INF         
+p37.cluster3          .       1.5127002E-5        +INF         
+p38.cluster1          .           434.5348        +INF         
+p38.cluster2          .       1.5310627E-5        +INF         
+p38.cluster3          .       1.5248107E-5        +INF         
+p39.cluster1          .       1.5446889E-5        +INF         
+p39.cluster2          .            62.7737        +INF         
+p39.cluster3          .       1.5417266E-5        +INF         
+p40.cluster1          .       1.5374264E-5        +INF         
+p40.cluster2          .       1.5340181E-5        +INF         
+p40.cluster3          .          2048.5919        +INF         
+
+---- VAR mu  cluster locations
+
+                  LOWER          LEVEL          UPPER
+
+cluster1.x         3.1525        17.6282        99.8118      
+cluster1.y         3.4141        73.8927        93.3450      
+cluster2.x         3.1525        25.3129        99.8118      
+cluster2.y         3.4141        18.9337        93.3450      
+cluster3.x         3.1525        68.7553        99.8118      
+cluster3.y         3.4141        51.7673        93.3450      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF        16523.3832        +INF         
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/17/21 14:52:27 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    110 PARAMETER results  
+
+              standard  with order
+
+points          40.000      40.000
+clusters         3.000       3.000
+vars           247.000     247.000
+  discr        120.000     120.000
+equs           161.000     163.000
+status         Optimal     Optimal
+obj          16523.382   16523.383
+time           190.610     462.625
+nodes      2076464.000 1617190.000
+iterations 1.158097E+7 1.756701E+7
+
+
+----    121 PARAMETER clusters  
+
+              points         SoS       mu(x)       mu(y)      avg(x)      avg(y)
+
+cluster1      10.000    3295.207      17.628      73.893      17.628      73.893
+cluster2      14.000    2955.084      25.313      18.934      25.313      18.934
+cluster3      16.000   10273.090      68.755      51.767      68.755      51.767
+total         40.000   16523.383
+
+
+
+EXECUTION TIME       =      655.078 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\clustering\kmeans.gms
+Output     D:\projects\blog\clustering\kmeans.lst
