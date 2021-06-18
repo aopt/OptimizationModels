@@ -1,4 +1,4 @@
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 1
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -11,7 +11,7 @@ C o m p i l a t i o n
          The model below tries both pure k-medoids and a model that adds an
          ordering constraint.
        
-         Cplex is not doing rather poorly on this model.
+         Cplex is doing rather poorly on this model.
        
          See:
          http://yetanothermathprogrammingconsultant.blogspot.com/2021/05/clustering-models.html
@@ -165,7 +165,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.016 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 2
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -200,7 +200,7 @@ p23      33.855      18.210
 p24      64.573      56.075
 p25      76.996      29.781
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 3
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE quadratic1 Using MIQCP From line 129
 
@@ -312,7 +312,7 @@ nlobj..  (0)*x(p1,cluster1) + (0)*x(p1,cluster2) + (0)*x(p1,cluster3) + (0)*x(p2
       + (0)*y(p24,cluster2) + (0)*y(p24,cluster3) + (0)*y(p25,cluster1) + (0)*y(p25,cluster2) + (0)*y(p25,cluster3) + z
       =E= 0 ; (LHS = 0)
      
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 4
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE quadratic1 Using MIQCP From line 129
 
@@ -361,7 +361,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       nlobj
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 5
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE quadratic1 Using MIQCP From line 129
 
@@ -374,8 +374,8 @@ NON ZERO ELEMENTS           301     NON LINEAR N-Z            150
 CODE LENGTH               7,203     CONSTANT POOL             316     DISCRETE VARIABLES        150
 
 
-GENERATION TIME      =        0.094 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 6
+GENERATION TIME      =        0.047 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE quadratic1 Using MIQCP From line 129
 
@@ -390,7 +390,7 @@ Solution Report     SOLVE quadratic1 Using MIQCP From line 129
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              428.7277
 
- RESOURCE USAGE, LIMIT        731.156      3600.000
+ RESOURCE USAGE, LIMIT        586.093      3600.000
  ITERATION COUNT, LIMIT  28727495    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
@@ -401,13 +401,13 @@ Solution Report     SOLVE quadratic1 Using MIQCP From line 129
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 731.06sec (det. 277641.31 ticks)
+--- Cplex Time: 586.05sec (det. 277641.31 ticks)
 
 --- Fixing integer variables and solving final QP...
 
 
 --- Fixed MIQP status (1): optimal.
---- Cplex Time: 0.06sec (det. 0.88 ticks)
+--- Cplex Time: 0.01sec (det. 0.88 ticks)
 
 
 Proven optimal solution
@@ -634,7 +634,7 @@ p25.cluster3          .              .             1.0000       403.6421
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 7
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE quadratic2 Using MIQCP From line 131
 
@@ -845,7 +845,7 @@ order(cluster2)..  center(cluster1,x) - center(cluster2,x) =L= 0 ; (LHS = 0)
      
 order(cluster3)..  center(cluster2,x) - center(cluster3,x) =L= 0 ; (LHS = 0)
      
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 8
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE quadratic2 Using MIQCP From line 131
 
@@ -919,7 +919,7 @@ center(cluster2,x)
         1       order(cluster3)
 
 REMAINING 3 ENTRIES SKIPPED
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 9
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE quadratic2 Using MIQCP From line 131
 
@@ -932,8 +932,8 @@ NON ZERO ELEMENTS           461     NON LINEAR N-Z            150
 CODE LENGTH               7,202     CONSTANT POOL             316     DISCRETE VARIABLES        150
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 10
+GENERATION TIME      =        0.969 SECONDS      4 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE quadratic2 Using MIQCP From line 131
 
@@ -948,7 +948,7 @@ Solution Report     SOLVE quadratic2 Using MIQCP From line 131
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              428.7277
 
- RESOURCE USAGE, LIMIT         16.562      3600.000
+ RESOURCE USAGE, LIMIT         14.578      3600.000
  ITERATION COUNT, LIMIT    507918    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
@@ -959,13 +959,13 @@ Solution Report     SOLVE quadratic2 Using MIQCP From line 131
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 16.51sec (det. 5947.01 ticks)
+--- Cplex Time: 14.45sec (det. 5947.01 ticks)
 
 --- Fixing integer variables and solving final QP...
 
 
 --- Fixed MIQP status (1): optimal.
---- Cplex Time: 0.05sec (det. 0.91 ticks)
+--- Cplex Time: 0.09sec (det. 0.91 ticks)
 
 
 Proven optimal solution
@@ -1221,7 +1221,7 @@ cluster3.y        -INF           43.5356        +INF             .
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 11
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE linear1 Using MIP From line 134
 
@@ -2967,7 +2967,7 @@ defxy(p1,p2,cluster3)..  - x(p1,cluster3) - y(p2,cluster3) + xy(p1,p2,cluster3) 
      
 REMAINING 1797 ENTRIES SKIPPED
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 12
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE linear1 Using MIP From line 134
 
@@ -3173,7 +3173,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 428.727730842857, +INF, 0)
         1       linobj
 
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 13
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE linear1 Using MIP From line 134
 
@@ -3185,8 +3185,8 @@ BLOCKS OF VARIABLES           4     SINGLE VARIABLES        1,951
 NON ZERO ELEMENTS         7,351     DISCRETE VARIABLES      1,950
 
 
-GENERATION TIME      =        0.047 SECONDS      5 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 14
+GENERATION TIME      =        0.063 SECONDS      5 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE linear1 Using MIP From line 134
 
@@ -3201,7 +3201,7 @@ Solution Report     SOLVE linear1 Using MIP From line 134
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              428.7277
 
- RESOURCE USAGE, LIMIT         64.297      3600.000
+ RESOURCE USAGE, LIMIT         55.172      3600.000
  ITERATION COUNT, LIMIT   2267610    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- Space for names approximately 0.11 Mb
@@ -3213,13 +3213,13 @@ Solution Report     SOLVE linear1 Using MIP From line 134
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 64.19sec (det. 25831.11 ticks)
+--- Cplex Time: 55.08sec (det. 25831.11 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.09sec (det. 1.46 ticks)
+--- Cplex Time: 0.06sec (det. 1.46 ticks)
 
 
 Proven optimal solution
@@ -7055,7 +7055,7 @@ p25.p24.cluster3          .              .             1.0000        29.0812
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 15
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE linear2 Using MIP From line 136
 
@@ -8860,7 +8860,7 @@ order(cluster2)..  center(cluster1,x) - center(cluster2,x) =L= 0 ; (LHS = -16.15
      
 order(cluster3)..  center(cluster2,x) - center(cluster3,x) =L= 0 ; (LHS = -37.6716492)
      
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 16
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE linear2 Using MIP From line 136
 
@@ -9091,7 +9091,7 @@ center(cluster2,x)
         1       order(cluster3)
 
 REMAINING 3 ENTRIES SKIPPED
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 17
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE linear2 Using MIP From line 136
 
@@ -9104,7 +9104,7 @@ NON ZERO ELEMENTS         7,511     DISCRETE VARIABLES      1,950
 
 
 GENERATION TIME      =        0.016 SECONDS      5 MB  34.3.0 rac355f3 WEX-WEI
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 18
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE linear2 Using MIP From line 136
 
@@ -9119,7 +9119,7 @@ Solution Report     SOLVE linear2 Using MIP From line 136
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              428.7277
 
- RESOURCE USAGE, LIMIT         16.469      3600.000
+ RESOURCE USAGE, LIMIT         13.937      3600.000
  ITERATION COUNT, LIMIT    639711    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- Space for names approximately 0.11 Mb
@@ -9131,13 +9131,13 @@ Solution Report     SOLVE linear2 Using MIP From line 136
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 16.45sec (det. 5933.02 ticks)
+--- Cplex Time: 13.91sec (det. 5933.02 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.02sec (det. 1.60 ticks)
+--- Cplex Time: 0.01sec (det. 1.60 ticks)
 
 
 Proven optimal solution
@@ -13002,7 +13002,7 @@ cluster3.y        -INF           43.5356        +INF             .
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 00:26:33 Page 19
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 01:12:10 Page 19
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -13018,13 +13018,13 @@ vars           151.000     157.000    1951.000    1957.000
 equs            29.000      37.000    1829.000    1837.000
 status         Optimal     Optimal     Optimal     Optimal
 obj            428.728     428.728     428.728     428.728
-time           731.156      16.562      64.297      16.469
+time           586.093      14.578      55.172      13.937
 nodes      1767437.000   25358.000  153340.000   30785.000
 iterations 2.872750E+7  507918.000 2267610.000  639711.000
 
 
 
-EXECUTION TIME       =      829.156 SECONDS      5 MB  34.3.0 rac355f3 WEX-WEI
+EXECUTION TIME       =      671.453 SECONDS      5 MB  34.3.0 rac355f3 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN
