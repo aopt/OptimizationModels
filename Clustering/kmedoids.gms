@@ -7,7 +7,7 @@ $ontext
    The model below tries both pure k-medoids and a model that adds an
    ordering constraint.
 
-   Cplex is not doing rather poorly on this model.
+   Cplex is doing rather poorly on this model.
 
    See:
    http://yetanothermathprogrammingconsultant.blogspot.com/2021/05/clustering-models.html
