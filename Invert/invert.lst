@@ -1,0 +1,276 @@
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Invert.gms
+       
+         Invert a matrix as LP problem.
+         The second version is optimized.
+       
+         See:
+         http://yetanothermathprogrammingconsultant.blogspot.com/2021/04/inverting-matrix-by-lp.html
+       
+         erwin@amsterdamoptimization.com
+       
+       
+  15   
+  16   
+  17  *---------------------------------------------------------
+  18  * data
+  19  *   ident: identity matrix
+  20  *   A    : minij matrix
+  21  *---------------------------------------------------------
+  22   
+  23  set i /i1*i200/;
+  24  alias(i,j,k);
+  25   
+  26   
+  27  parameters
+  28    A(i,j)     'minij matrix'
+  29    ident(i,j) 'identity matrix'
+  30  ;
+  31  A(i,j) = min(ord(i),ord(j));
+  32  display$(card(i)<25) A;
+  33   
+  34  ident(i,i) = 1;
+  35   
+  36   
+  37  *---------------------------------------------------------
+  38  * standard approach
+  39  *---------------------------------------------------------
+  40   
+  41  variables
+  42     Ainv(j,i) 'inverse'
+  43     z         'dummy objective'
+  44  ;
+  45   
+  46  equations
+  47     obj
+  48     matmul(i,j)  'A*Ainv = I'
+  49  ;
+  50   
+  51  obj.. z =e= 1;
+  52   
+  53  matmul(i,j)..
+  54      sum(k,A(i,k)*Ainv(k,j)) =e= ident(i,j);
+  55   
+  56  model m1 /all/;
+  57  option limrow=0,limcol=0,solprint=off;
+  58  solve m1 minimizing z using lp;
+  59  display$(card(i)<25) Ainv.l;
+  60   
+  61  parameter err(i,j) 'errors';
+  62  err(i,j) =  sum(k,A(i,k)*Ainv.l(k,j)) - ident(i,j);
+  63  display$(card(i)<25) err;
+  64   
+  65  scalar maxerr 'maximum absolute error';
+  66  maxerr = smax((i,j), abs(err(i,j)));
+  67  display maxerr;
+  68   
+  69  parameter statistics(*,*);
+  70  statistics('generation','default') = m1.resgen;
+  71  statistics('solver','default') = m1.resusd;
+  72  statistics('iterations','default') = m1.iterusd;
+  73  statistics('maxerr','default') = maxerr;
+  74  display statistics;
+  75   
+  76   
+  77  *---------------------------------------------------------
+  78  * optimized approach
+  79  *---------------------------------------------------------
+  80   
+  81  equations matmul2(i,j) 'faster version';
+  82   
+  83  matmul2(i,j)..
+  84      sum(k,A(i,k)*Ainv(j,k)) =e= ident(i,j);
+  85   
+  86   
+  87  * advanced basis
+  88   
+  89  * basic
+  90  Ainv.m(i,j) = 0;
+  91  z.m = 0;
+  92  * non-basic
+  93  matmul2.m(i,j) = 1;
+  94  obj.m = 1;
+  95  option bratio=0;
+  96   
+  97  model m2 /obj,matmul2/;
+  98  m2.optfile=1;
+  99  solve m2 minimizing z using lp;
+ 100  display$(card(i)<25) Ainv.l;
+ 101   
+ 102   
+ 103  err(i,j) =  sum(k,A(i,k)*Ainv.l(k,j)) - ident(i,j);
+ 104  display$(card(i)<25) err;
+ 105   
+ 106  maxerr = smax((i,j), abs(err(i,j)));
+ 107  display maxerr;
+ 108   
+ 109  statistics('generation','optimized') = m2.resgen;
+ 110  statistics('solver','optimized') = m2.resusd;
+ 111  statistics('iterations','optimized') = m2.iterusd;
+ 112  statistics('maxerr','optimized') = maxerr;
+ 113  display statistics;
+ 114   
+ 115   
+ 116   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using LP From line 58
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS       40,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES       40,001
+NON ZERO ELEMENTS     8,000,001
+
+
+GENERATION TIME      =       40.734 SECONDS    716 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using LP From line 58
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  58
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                1.0000
+
+ RESOURCE USAGE, LIMIT         25.219 10000000000.000
+ ITERATION COUNT, LIMIT      1121    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 1.82 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 375.66 Mb (peak 375.96 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 1.22 Mb (peak 95.55 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 22.91sec (det. 3231.09 ticks)
+
+
+Optimal solution found
+Objective:            1.000000
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                         16608  PROJECTED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     67 PARAMETER maxerr               =  2.84217E-12  maximum absolute error
+
+----     74 PARAMETER statistics  
+
+               default
+
+generation      40.734
+solver          25.219
+iterations    1121.000
+maxerr     2.84217E-12
+
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using LP From line 99
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS       40,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES       40,001
+NON ZERO ELEMENTS     8,000,001
+
+
+GENERATION TIME      =       14.453 SECONDS    719 MB  34.3.0 rac355f3 WEX-WEI
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using LP From line 99
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  99
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE                1.0000
+
+ RESOURCE USAGE, LIMIT          3.704 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\blog\invert\cplex.opt"
+>>  preind = 0
+>>  advind = 1
+Finished reading from "D:\projects\blog\invert\cplex.opt"
+
+--- Space for names approximately 1.86 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 375.66 Mb (peak 375.96 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 1.22 Mb (peak 95.59 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 1.80sec (det. 798.90 ticks)
+
+
+Optimal solution found
+Objective:            1.000000
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 34.3.0  rac355f3 Released Feb 25, 2021 WEX-WEI x86 64bit/MS Windows - 06/18/21 04:11:39 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    107 PARAMETER maxerr               =  4.21778E-11  maximum absolute error
+
+----    113 PARAMETER statistics  
+
+               default   optimized
+
+generation      40.734      14.453
+solver          25.219       3.704
+iterations    1121.000
+maxerr     2.84217E-12 4.21778E-11
+
+
+
+EXECUTION TIME       =      118.594 SECONDS    719 MB  34.3.0 rac355f3 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\blog\invert\invert.gms
+Output     D:\projects\blog\invert\invert.lst

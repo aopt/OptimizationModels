@@ -1,0 +1,117 @@
+
+--- Job invert.gms Start 06/18/21 04:11:39 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\invert\invert.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\invert\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\invert\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- invert.gms(120) 3 Mb
+--- Starting execution: elapsed 0:00:00.036
+--- invert.gms(57) 5 Mb
+--- Generating LP model m1
+--- invert.gms(53) 716 Mb  30 secs
+--- invert.gms(58) 716 Mb  5 secs
+---   40,001 rows  40,001 columns  8,000,001 non-zeroes
+--- invert.gms(58) 716 Mb  6 secs
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:40.808
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 1.82 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 375.66 Mb (peak 375.96 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 1.22 Mb (peak 95.55 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 40000 rows, 40000 columns, and 8000000 nonzeros.
+Presolve time = 20.34 sec. (2739.25 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             1.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             1.000000
+Iteration:   439   Dual objective     =             1.000000
+Iteration:   788   Dual objective     =             1.000000
+Removing perturbation.
+
+--- LP status (1): optimal.
+--- Cplex Time: 22.91sec (det. 3231.09 ticks)
+
+
+Optimal solution found
+Objective:            1.000000
+
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:01:16.507
+--- invert.gms(62) 716 Mb  7 secs
+--- invert.gms(98) 716 Mb
+--- Generating LP model m2
+--- invert.gms(83) 719 Mb  11 secs
+--- invert.gms(99) 719 Mb
+---   40,001 rows  40,001 columns  8,000,001 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:01:38.903
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\blog\invert\cplex.opt"
+>>  preind = 0
+>>  advind = 1
+Finished reading from "D:\projects\blog\invert\cplex.opt"
+
+--- Space for names approximately 1.86 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 375.66 Mb (peak 375.96 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 1.22 Mb (peak 95.59 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Preprocessing_Presolve                  0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Using devex.
+
+--- LP status (1): optimal.
+--- Cplex Time: 1.80sec (det. 798.90 ticks)
+
+
+Optimal solution found
+Objective:            1.000000
+
+--- Reading solution for model m2
+--- invert.gms(99) 719 Mb  15 secs
+--- Executing after solve: elapsed 0:01:51.615
+--- invert.gms(103) 719 Mb  6 secs
+--- invert.gms(113) 719 Mb
+*** Status: Normal completion
+--- Job invert.gms Stop 06/18/21 04:13:38 elapsed 0:01:58.643
