@@ -1,4 +1,4 @@
-This model tries to arrange points on a 1d line such that the minimum distance between points is maximized.
+This model tries to arrange points on a 1d line such that the **minimum distance between points** is maximized.
 
 See: https://yetanothermathprogrammingconsultant.blogspot.com/2021/06/arranging-points-on-line.html
 
@@ -28,6 +28,13 @@ i43.lo 25.137,    i43.up 30.730,    i44.lo  3.724,    i44.up 15.304,    i45.lo 2
 i46.lo 14.568,    i46.up 28.264,    i47.lo 51.658,    i47.up 53.452,    i48.lo 44.860,    i48.up 55.892
 i49.lo 61.597,    i49.up 62.428,    i50.lo 23.824,    i50.up 32.469
 ```
-The final solution can be depicted as:
 
+We can picture this as:
 
+![](data.png)
+
+An optimal solution can be depicted as:
+
+![](results.png)
+
+At the bottom is the arrangement along a horizontal line. Above, the individual intervals are shown.
