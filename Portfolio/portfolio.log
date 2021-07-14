@@ -1,0 +1,573 @@
+
+--- Job portfolio.gms Start 06/15/21 07:12:50 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\blog\portfolio\portfolio.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\blog\portfolio\225a\
+    SysDir C:\GAMS\34\
+    WorkDir D:\projects\blog\portfolio\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- portfolio.gms(75) 2 Mb
+--- call "c:\Program Files\R\R-4.0.3\bin\Rscript.exe" --vanilla script.R
+> library(pprobeData)
+> library(Matrix)
+> library(reshape2)
+> library(gdxrrw)
+> 
+> # data in pprobeData:
+> #    xassetPrices
+> #    xassetLogReturns
+> # I rescale the risk/return a bit
+> 
+> r <- xassetLogReturns[1:1000,]
+> mu <- colSums(r)
+> summary(mu)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+-3.33511 -0.22480  0.08890  0.04127  0.36161  2.31104 
+> # make sure the Covariance matrix is PD
+> covmat <- 1000.0*as.matrix(nearPD(cov(r))$mat)
+> summary(as.vector(covmat))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.05816 0.21319 0.30882 0.35847 0.44543 5.96184 
+> 
+> 
+> #
+> # organize data to be exported to GAMS
+> #
+> mudf <- data.frame(
++     as.factor(names(mu)),
++     mu
++ )
+> names(mudf) <- c("i","mu")
+> attr(mudf,"symName") = "mu"
+> attr(mudf,"domains") = c("i")
+> attr(mudf,"domInfo") = "relaxed"
+> 
+> 
+> covdf <- melt(covmat)
+> covdf2 <- data.frame(
++     as.factor(covdf$Var1),
++     as.factor(covdf$Var2),
++     covdf$value
++ )
+> names(covdf2) <- c("i","j","cov")
+> attr(covdf2,"symName") = "cov"
+> attr(covdf2,"domains") = c("i","i")
+> attr(covdf2,"domInfo") = "relaxed"
+> 
+> wgdx.lst("data.gdx",mudf,covdf2)
+> 
+--- portfolio.gms(85) 3 Mb
+--- GDXin=D:\projects\blog\portfolio\data.gdx
+--- GDX File ($gdxIn) D:\projects\blog\portfolio\data.gdx
+--- portfolio.gms(189) 7 Mb
+--- Starting execution: elapsed 0:00:15.866
+--- portfolio.gms(168) 8 Mb
+--- Generating QCP model m1
+--- portfolio.gms(170) 14 Mb
+---   3 rows  351 columns  1,051 non-zeroes
+---   490,002 nl-code  350 nl-non-zeroes
+--- portfolio.gms(170) 9 Mb 
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:16.658
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 5.70 Mb (peak 6.64 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.01 Mb (peak 2.35 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Number of nonzeros in lower triangle of Q = 61075
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (1.19 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 350
+  Integer space required    = 350
+  Total non-zeros in factor = 61425
+  Total FP ops to factor    = 14352975
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 1 columns.
+QP Presolve added 0 rows and 350 columns.
+Reduced QP has 352 rows, 700 columns, and 62475 nonzeros.
+Reduced QP objective Q matrix has 350 nonzeros.
+Presolve time = 0.09 sec. (10.84 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 61776
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.05 sec. (28.81 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 352
+  Integer space required    = 352
+  Total non-zeros in factor = 62128
+  Total FP ops to factor    = 14600080
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf          
+   0   5.2250858e-02  -5.2250858e-02  1.82e+04  0.00e+00  3.51e+05
+   1   3.0456417e+01  -9.4039599e+02  1.27e+03  0.00e+00  2.45e+04
+   2   3.0768081e-01  -9.6298126e+02  1.90e+01  0.00e+00  3.66e+02
+   3   3.2692007e-01  -8.2675968e+02  8.46e+00  0.00e+00  1.63e+02
+   4   3.4694467e-01  -5.8653442e+02  3.53e+00  0.00e+00  6.82e+01
+   5   3.5943689e-01  -2.4820298e+02  1.09e-13  0.00e+00  1.24e-10
+   6   3.5903165e-01  -1.4591113e+00  2.17e-14  0.00e+00  5.40e-11
+   7   3.2315471e-01  -1.6686888e-01  2.00e-14  0.00e+00  1.44e-11
+   8   1.7479585e-01   1.8914683e-02  2.07e-14  0.00e+00  1.13e-12
+   9   1.3243123e-01   7.4260715e-02  7.80e-15  0.00e+00  4.14e-13
+  10   1.1626115e-01   8.6502017e-02  7.31e-15  0.00e+00  2.26e-13
+  11   1.0236560e-01   9.5127676e-02  4.43e-15  0.00e+00  5.82e-14
+  12   9.7825030e-02   9.7440915e-02  1.42e-14  0.00e+00  3.03e-14
+  13   9.7681555e-02   9.7643103e-02  6.76e-14  0.00e+00  3.02e-14
+  14   9.7675158e-02   9.7673678e-02  4.44e-13  0.00e+00  3.23e-14
+  15   9.7675034e-02   9.7675022e-02  2.89e-12  0.00e+00  2.85e-14
+  16   9.7675029e-02   9.7675029e-02  2.13e-13  0.00e+00  2.86e-14
+Barrier time = 0.61 sec. (126.86 ticks)
+
+Total time on 8 threads = 0.63 sec. (126.86 ticks)
+
+--- QP status (1): optimal.
+--- Cplex Time: 0.66sec (det. 126.86 ticks)
+
+
+Optimal solution found
+Objective:            0.097675
+
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:17.894
+--- portfolio.gms(173) 9 Mb
+--- Generating QCP model m3
+--- portfolio.gms(174) 14 Mb
+---   3 rows  351 columns  1,051 non-zeroes
+---   490,002 nl-code  350 nl-non-zeroes
+--- portfolio.gms(174) 9 Mb 
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:18.667
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO memory 5.70 Mb (peak 6.64 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.01 Mb (peak 0.95 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Tried aggregator 1 time.
+QCP Presolve eliminated 0 rows and 1 columns.
+Reduced QCP has 352 rows, 701 columns, and 62126 nonzeros.
+Reduced QCP has 1 quadratic constraints.
+Presolve time = 0.06 sec. (34.85 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 61775
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.06 sec. (28.88 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 352
+  Integer space required    = 352
+  Total non-zeros in factor = 62128
+  Total FP ops to factor    = 14600080
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.4445451e+01   0.0000000e+00  1.49e+03  0.00e+00  3.88e+02  1.44e+01
+   1   1.8301041e+01   5.9458889e+00  1.49e+03  0.00e+00  3.88e+02  3.41e+00
+   2   7.5250782e+00   3.8973455e+00  8.98e+02  0.00e+00  2.34e+02  1.80e+01
+   3   2.9125056e+00   2.2642878e+00  3.13e+02  0.00e+00  8.15e+01  3.78e+02
+   4   2.7362343e+00   2.1145079e+00  6.75e+01  0.00e+00  1.76e+01  3.65e+02
+   5   1.5185290e+00   1.2318772e+00  6.44e+01  0.00e+00  1.68e+01  4.88e+02
+   6   9.7340575e-01   8.4634492e-01  2.84e+01  0.00e+00  7.41e+00  9.53e+02
+   7   6.5372489e-01   6.1522675e-01  1.24e+01  0.00e+00  3.23e+00  2.50e+03
+   8   5.8027375e-01   5.5620240e-01  3.62e+00  0.00e+00  9.43e-01  3.94e+03
+   9   5.6464884e-01   5.5051284e-01  2.26e+00  0.00e+00  5.88e-01  6.97e+03
+  10   5.5015709e-01   5.3905201e-01  1.33e+00  0.00e+00  3.48e-01  1.02e+04
+  11   5.2300602e-01   5.1735119e-01  1.07e+00  0.00e+00  2.79e-01  1.94e+04
+  12   5.0128457e-01   5.0098946e-01  5.43e-01  0.00e+00  1.41e-01  5.14e+05
+  13   5.0007243e-01   5.0006042e-01  2.95e-02  0.00e+00  7.70e-03  1.39e+07
+  14   5.0000089e-01   5.0000061e-01  1.21e-03  0.00e+00  3.16e-04  5.25e+08
+  15   5.0000008e-01   5.0000006e-01  2.77e-05  0.00e+00  7.21e-06  5.91e+09
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.41sec (det. 99.51 ticks)
+
+
+Optimal solution found
+Objective:            0.500000
+
+--- Reading solution for model m3
+--- Executing after solve: elapsed 0:00:19.495
+--- portfolio.gms(177) 9 Mb
+--- Generating MIQCP model m1mip
+--- portfolio.gms(179) 14 Mb
+---   354 rows  701 columns  2,101 non-zeroes
+---   490,002 nl-code  350 nl-non-zeroes
+---   350 discrete-columns
+--- portfolio.gms(179) 10 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:20.693
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 5.82 Mb (peak 6.76 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.02 Mb (peak 2.36 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQP Presolve eliminated 0 rows and 1 columns.
+MIQP Presolve modified 350 coefficients.
+Reduced MIQP has 353 rows, 700 columns, and 1749 nonzeros.
+Reduced MIQP has 350 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 122500 nonzeros.
+Presolve time = 0.08 sec. (13.36 ticks)
+Probing time = 0.00 sec. (0.09 ticks)
+Tried aggregator 1 time.
+Reduced MIQP has 353 rows, 700 columns, and 1749 nonzeros.
+Reduced MIQP has 350 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 122500 nonzeros.
+Presolve time = 0.02 sec. (12.58 ticks)
+Classifier predicts products in MIQP should be linearized.
+Probing time = 0.00 sec. (0.09 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Number of nonzeros in lower triangle of Q = 61075
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (1.19 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 350
+  Integer space required    = 350
+  Total non-zeros in factor = 61425
+  Total FP ops to factor    = 14352975
+Tried aggregator 1 time.
+No QP presolve or aggregator reductions.
+Presolve time = 0.01 sec. (7.43 ticks)
+Number of nonzeros in lower triangle of Q = 61075
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (1.19 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 350
+  Integer space required    = 350
+  Total non-zeros in factor = 61425
+  Total FP ops to factor    = 14352975
+Tried aggregator 1 time.
+QP Presolve added 0 rows and 350 columns.
+Reduced QP has 703 rows, 1050 columns, and 63524 nonzeros.
+Reduced QP objective Q matrix has 350 nonzeros.
+Presolve time = 0.05 sec. (11.35 ticks)
+Parallel mode: using up to 8 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 124250
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.06 sec. (31.43 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 8
+  Rows in Factor            = 703
+  Integer space required    = 28662
+  Total non-zeros in factor = 138877
+  Total FP ops to factor    = 39183615
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf          
+   0   5.9634897e-02  -7.0000006e+05  2.51e+03  7.00e+02  3.51e+05
+   1   3.3036237e-01  -6.6430406e+04  1.71e+02  4.79e+01  2.40e+04
+   2   3.1510856e-01  -1.5431141e+04  1.54e+01  4.31e+00  2.16e+03
+   3   3.3860635e-01  -1.1314149e+04  7.29e+00  2.04e+00  1.02e+03
+   4   3.6340463e-01  -3.1234100e+03  2.22e-01  6.20e-02  3.11e+01
+   5   3.6375177e-01  -1.8311231e+01  1.27e-03  3.54e-04  1.78e-01
+   6   3.4176661e-01  -2.4086433e+00  1.86e-04  5.20e-05  2.61e-02
+   7   2.8162076e-01  -1.5792670e+00  1.25e-04  3.50e-05  1.76e-02
+   8   2.1891126e-01  -1.0170961e+00  8.30e-05  2.32e-05  1.16e-02
+   9   1.3706577e-01  -7.4663951e-02  1.23e-05  3.44e-06  1.73e-03
+  10   1.1683044e-01   1.6507341e-02  5.82e-06  1.62e-06  8.15e-04
+  11   1.0420857e-01   7.2936177e-02  1.80e-06  5.03e-07  2.52e-04
+  12   9.9168625e-02   9.2082519e-02  4.07e-07  1.14e-07  5.70e-05
+  13   9.7714240e-02   9.7536877e-02  9.59e-09  2.68e-09  1.34e-06
+  14   9.7675247e-02   9.7674239e-02  4.83e-11  1.35e-11  6.76e-09
+  15   9.7675030e-02   9.7675025e-02  2.32e-13  6.87e-14  3.38e-11
+  16   9.7675029e-02   9.7675029e-02  4.85e-14  2.02e-14  2.00e-13
+Barrier time = 0.78 sec. (187.33 ticks)
+
+Total time on 8 threads = 0.80 sec. (194.77 ticks)
+Barrier time = 0.78 sec. (187.35 ticks)
+
+QP crossover.
+  Primal and Dual:  Fixing 367 variables.
+  Primal:  Pushed 339, exchanged 28.
+  Dual  :  Pushed 0, exchanged 10.
+Total crossover time = 0.05 sec. (13.13 ticks)
+
+Total time on 8 threads = 0.84 sec. (207.91 ticks)
+Root relaxation solution time = 0.86 sec. (208.10 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0977    20                      0.0977       16         
+*     0+    0                            0.1390        0.0977            29.72%
+Found incumbent of value 0.138983 after 1.42 sec. (324.99 ticks)
+      0     0        0.0977    21        0.1390    MIRcuts: 1       20   29.72%
+      0     0        0.0977    20        0.1390    MIRcuts: 1       24   29.72%
+*     0+    0                            0.1145        0.0977            14.66%
+Found incumbent of value 0.114456 after 2.08 sec. (485.19 ticks)
+*     0+    0                            0.1102        0.0977            11.39%
+Found incumbent of value 0.110234 after 2.61 sec. (739.75 ticks)
+*     0+    0                            0.1012        0.0977             3.53%
+Found incumbent of value 0.101248 after 2.66 sec. (752.62 ticks)
+*     0+    0                            0.1004        0.0977             2.76%
+Found incumbent of value 0.100444 after 2.67 sec. (758.89 ticks)
+*     0+    0                            0.1001        0.0977             2.41%
+Found incumbent of value 0.100089 after 2.69 sec. (765.23 ticks)
+*     0+    0                            0.0997        0.0977             2.06%
+Found incumbent of value 0.099728 after 2.72 sec. (771.46 ticks)
+*     0+    0                            0.0995        0.0977             1.81%
+Found incumbent of value 0.099471 after 2.73 sec. (777.03 ticks)
+*     0+    0                            0.0994        0.0977             1.72%
+Found incumbent of value 0.099387 after 2.78 sec. (786.36 ticks)
+*     0+    0                            0.0994        0.0977             1.72%
+Found incumbent of value 0.099386 after 2.97 sec. (821.09 ticks)
+*     0+    0                            0.0993        0.0977             1.60%
+Found incumbent of value 0.099263 after 3.00 sec. (829.11 ticks)
+      0     0  -1.00000e+75     0        0.0993        0.0977       24    1.60%
+      0     2        0.0977    20        0.0993        0.0977       24    1.60%
+Elapsed time = 3.19 sec. (847.21 ticks, tree = 0.02 MB, solutions = 11)
+*   251+    7                            0.0992        0.0979             1.25%
+                                                  Impl Bds: 1                  
+Found incumbent of value 0.099171 after 3.75 sec. (1162.67 ticks)
+    251     9        0.0979    12        0.0992        0.0979       59    1.25%
+    523    13        cutoff              0.0992        0.0983      959    0.88%
+
+Implied bound cuts applied:  1
+Mixed integer rounding cuts applied:  1
+
+Root node processing (before b&c):
+  Real time             =    3.08 sec. (834.47 ticks)
+Parallel b&c, 8 threads:
+  Real time             =    1.08 sec. (794.43 ticks)
+  Sync time (average)   =    0.37 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    4.16 sec. (1628.90 ticks)
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 4.19sec (det. 1628.90 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Number of nonzeros in lower triangle of Q = 61075
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.06 sec. (1.19 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 350
+  Integer space required    = 350
+  Total non-zeros in factor = 61425
+  Total FP ops to factor    = 14352975
+Tried aggregator 1 time.
+QP Presolve eliminated 351 rows and 691 columns.
+Number of nonzeros in lower triangle of Q = 45
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.00 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 10
+  Integer space required    = 10
+  Total non-zeros in factor = 55
+  Total FP ops to factor    = 385
+Reduced QP has 2 rows, 10 columns, and 20 nonzeros.
+Reduced QP objective Q matrix has 100 nonzeros.
+Presolve time = 0.09 sec. (61.88 ticks)
+
+Iteration log . . .
+Iteration:     1    Objective     =             0.000000
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.11sec (det. 64.98 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.099171    (1588 iterations, 559 nodes)
+Final Solve:             0.099171    (12 iterations)
+
+Best possible:           0.099171
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m1mip
+--- Executing after solve: elapsed 0:00:25.507
+--- portfolio.gms(183) 10 Mb
+--- Generating MIQCP model m3mip
+--- portfolio.gms(184) 14 Mb
+---   354 rows  701 columns  2,101 non-zeroes
+---   490,001 nl-code  350 nl-non-zeroes
+---   350 discrete-columns
+--- portfolio.gms(184) 10 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:26.130
+
+IBM ILOG CPLEX   34.3.0 rac355f3 Released Feb 25, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 5.82 Mb (peak 6.76 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.0 link memory 0.02 Mb (peak 0.96 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.0 | 2020-11-10 | 9bedb6d68
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIQCP Presolve eliminated 0 rows and 1 columns.
+MIQCP Presolve modified 700 coefficients.
+Aggregator did 1 substitutions.
+Reduced MIQCP has 703 rows, 1400 columns, and 63523 nonzeros.
+Reduced MIQCP has 350 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.19 sec. (57.46 ticks)
+Probing time = 0.03 sec. (10.21 ticks)
+Cover probing fixed 0 vars, tightened 468 bounds.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Tried aggregator 1 time.
+LP Presolve eliminated 87 rows and 496 columns.
+Reduced LP has 616 rows, 904 columns, and 59254 nonzeros.
+Presolve time = 0.00 sec. (4.78 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             1.735118
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.03 sec. (8.59 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        1.7351     0                     31.3789        7         
+      0     0        1.3726     2                     Cone: 1       10         
+      0     0        1.2095     3                     Cone: 2       28         
+      0     0        1.1180     0                     Cone: 3       33         
+      0     0        1.0558     0                     Cone: 4       35         
+      0     0        0.9835     0                     Cone: 5       39         
+      0     0        0.8978     0                     Cone: 6       47         
+      0     0        0.5251     0                   Cone: 213      305         
+      0     0        0.5249     7                   Cone: 273      330         
+      0     0        0.5247    11                   Cone: 288      349         
+      0     0        0.5247    11                   Cone: 295      360         
+      0     0        0.5247    11                   Cone: 300      366         
+      0     0        0.5247    11                   Cone: 303      370         
+      0     0        0.5247    11                   Cone: 304      371         
+      0     0        0.5247    11                      0.5247      371         
+      0     0        0.5247    10                 LiftProj: 1      372         
+      0     2        0.5247    10                      0.5247      372         
+Elapsed time = 4.33 sec. (1651.63 ticks, tree = 0.02 MB, solutions = 0)
+*    11+    3                            0.4598        0.5247            14.10%
+                                                    Cone: 197                  
+Found incumbent of value 0.459817 after 5.00 sec. (1844.17 ticks)
+*    12+   10                            0.4909        0.5247             6.88%
+Found incumbent of value 0.490888 after 5.00 sec. (1862.84 ticks)
+*    12+    5                            0.4930        0.5247             6.41%
+                                                     Cone: 22                  
+Found incumbent of value 0.493044 after 5.13 sec. (1896.67 ticks)
+     12     4        0.5156    10        0.4930        0.5247      501    6.41%
+*    18+    7                            0.4953        0.5247             5.94%
+                                                     Cone: 32                  
+Found incumbent of value 0.495253 after 5.50 sec. (1949.46 ticks)
+*    91    30      integral     0        0.4963        0.5246     1446    5.71%
+                                                     Cone: 27                  
+Found incumbent of value 0.496283 after 6.02 sec. (2076.90 ticks)
+    130    49        cutoff              0.4963        0.5246     2060    5.71%
+                                                      Cone: 9                  
+    281   101        cutoff              0.4963        0.5216     7513    5.10%
+                                                     Cone: 11                  
+    590   190        0.5176     8        0.4963        0.5202    11268    4.81%
+*   857   255      integral     0        0.5000        0.5175    14416    3.51%
+                                                      Cone: 2                  
+Found incumbent of value 0.500000 after 7.94 sec. (2824.65 ticks)
+    912   277        cutoff              0.5000        0.5172    16005    3.44%
+   1287   391        0.5022     6        0.5000        0.5158    23221    3.15%
+                                                      Cone: 2                  
+   1693   445        0.5022     4        0.5000        0.5143    27267    2.87%
+                                                      Cone: 7                  
+   2153   570        0.5111    10        0.5000        0.5125    35718    2.50%
+   2579   645        0.5010     6        0.5000        0.5110    39991    2.20%
+   4626   835        cutoff              0.5000        0.5070    64985    1.39%
+Elapsed time = 11.44 sec. (4774.12 ticks, tree = 0.63 MB, solutions = 12)
+
+Lift and project cuts applied:  1
+Cone linearizations applied:  687
+
+Root node processing (before b&c):
+  Real time             =    4.22 sec. (1649.60 ticks)
+Parallel b&c, 8 threads:
+  Real time             =    8.98 sec. (4075.59 ticks)
+  Sync time (average)   =    1.69 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =   13.20 sec. (5725.19 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 13.22sec (det. 5725.19 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            0.500000    (84589 iterations, 6845 nodes)
+
+Best possible:           0.500000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m3mip
+***
+*** Solver did not provide marginals for model m3mip
+***
+--- Executing after solve: elapsed 0:00:39.646
+--- portfolio.gms(188) 10 Mb
+*** Status: Normal completion
+--- Job portfolio.gms Stop 06/15/21 07:13:30 elapsed 0:00:39.649
