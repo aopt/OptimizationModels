@@ -2,11 +2,11 @@ $ontext
 
    Maximum Area in Histogram
 
-   Three formulations
-     - Nonconvex MIQP model A
-     - Nonconvex MIQP model A + ordering constraint
-     - Nonconvex MIQP model B
-     - MIP
+   Four formulations
+     1. Nonconvex MIQP model A
+     2. Nonconvex MIQP model A + ordering constraint
+     3. Nonconvex MIQP model B
+     4. Linear    MIP  model B
 
    Reference:
    https://yetanothermathprogrammingconsultant.blogspot.com/2020/08/largest-rectangular-area-in-histogram.html
