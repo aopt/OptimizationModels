@@ -192,7 +192,7 @@ objective.. z =e= sum(objs, objw(objs)*obj(objs));
 *-----------------------------------------------------------
 
 model sched1 /all/;
-option threads=8,optcr=0,reslim=1000;
+option threads=8,optcr=0,reslim=1800;
 solve sched1 minimizing z using mip;
 
 * if not calculated in model, do it here

@@ -1,4 +1,4 @@
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 1
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -195,7 +195,7 @@ C o m p i l a t i o n
  192  *-----------------------------------------------------------
  193   
  194  model sched1 /all/;
- 195  option threads=8,optcr=0,reslim=1000;
+ 195  option threads=8,optcr=0,reslim=1800;
  196  solve sched1 minimizing z using mip;
  197   
  198  * if not calculated in model, do it here
@@ -267,8 +267,8 @@ C o m p i l a t i o n
       100*abs(sched1.objest - sched1.objval)/abs(sched1.objest); display results;
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 2
+COMPILATION TIME     =        0.016 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -349,7 +349,7 @@ job30                                                                           
 job33         YES         YES
 job40                                 YES
 
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 3
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE sched1 Using MIP From line 196
 
@@ -14566,7 +14566,7 @@ objNumTardy..  - x(job1,machine1,t67) - x(job1,machine1,t68) - x(job1,machine1,t
 
 objective..  - 0.001*obj(completion) - obj(sumtardy) + z =E= 0 ; (LHS = 0)
      
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 4
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE sched1 Using MIP From line 196
 
@@ -14712,7 +14712,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 5
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE sched1 Using MIP From line 196
 
@@ -14724,8 +14724,8 @@ BLOCKS OF VARIABLES           7     SINGLE VARIABLES       20,158  26 projected
 NON ZERO ELEMENTS       191,024     DISCRETE VARIABLES     20,000
 
 
-GENERATION TIME      =        0.406 SECONDS     18 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 6
+GENERATION TIME      =        0.922 SECONDS     18 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE sched1 Using MIP From line 196
 
@@ -14740,7 +14740,7 @@ Solution Report     SOLVE sched1 Using MIP From line 196
 **** MODEL STATUS      1 Optimal                   
 **** OBJECTIVE VALUE              324.0960
 
- RESOURCE USAGE, LIMIT         17.438      1000.000
+ RESOURCE USAGE, LIMIT         17.735      1800.000
  ITERATION COUNT, LIMIT     28553    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- Space for names approximately 0.59 Mb
@@ -14752,13 +14752,13 @@ Solution Report     SOLVE sched1 Using MIP From line 196
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 17.16sec (det. 5083.32 ticks)
+--- Cplex Time: 17.48sec (det. 5083.32 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.08sec (det. 20.62 ticks)
+--- Cplex Time: 0.11sec (det. 20.62 ticks)
 
 
 Proven optimal solution
@@ -35652,7 +35652,7 @@ machine4          .            12.0000        +INF             .
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/14/21 19:04:06 Page 7
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/15/21 00:19:46 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -35759,13 +35759,13 @@ vars         20158.000
 equs           626.000
 status         Optimal
 obj            324.096
-time            17.438
+time            17.735
 nodes          529.000
 iterations   28553.000
 
 
 
-EXECUTION TIME       =       18.875 SECONDS     18 MB  35.2.0 r33388c4 WEX-WEI
+EXECUTION TIME       =       19.906 SECONDS     18 MB  35.2.0 r33388c4 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN

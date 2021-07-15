@@ -2,6 +2,8 @@ $ontext
 
    Continuous time formulation M2
 
+   This formulation is not as goof as M1
+
    due date, release date and completion time are measured
    at beginning of period t
 
@@ -97,6 +99,7 @@ positive variable
    completion(j)   'completion of job'
    tardy(j)        'amount job is tardy'
    obj(objs)       'objectives'
+   count(m)        'number of jobs on machine'
 ;
 
 variable z        'total objective';
@@ -117,6 +120,10 @@ equations
   objNumTardy
   objMakespan(j)
   objective          'composite objective'
+
+* extra to reduce symmetry
+  ecount(m)
+  order(m)
 ;
 
 assign(j)..
@@ -162,13 +169,16 @@ objMaxTardy(j)$objw('maxtardy')..
 objMakespan(j)$objw('makespan')..
     obj('makespan') =g= completion(j);
 
-
-
 * composite objective
 objective.. z =e= sum(objs, objw(objs)*obj(objs));
 
+* extra: order machines by count
+ecount(m).. count(m) =e= sum(j,x(j,m));
+
+order(m+1).. count(m) =g= count(m+1);
+
 model sched2 /all/;
-option threads=8,optcr=0,reslim=1000;
+option threads=8,optcr=0,reslim=1800;
 solve sched2 minimizing z using mip;
 
 
