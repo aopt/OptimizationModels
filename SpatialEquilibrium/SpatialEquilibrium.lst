@@ -1,4 +1,4 @@
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 1
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -202,8 +202,8 @@ C o m p i l a t i o n
  199   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 2
+COMPILATION TIME     =        0.016 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -283,34 +283,52 @@ Beef      .UKIreland                   144.000    1112.000                1256.0
 Beef      .Other           584.000                                         584.000     727.590
 Beef      .consumption    8438.000    4347.000    1112.000
 
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 3
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE lcp Using MCP From line 178
 
 
 ---- supply  =E=  supply function
 
-supply(Wheat,US)..  Qs(Wheat,US) - 427*P(Wheat,US) + 190*P(FeedGrains,US) =E= 18520 ; (LHS = 18517.78, INFES = 2.22000000000116 ****)
+supply(Wheat,US)..  Qs(Wheat,US) - 427*P(Wheat,US) + 190*P(FeedGrains,US) =E= 18520 ;
      
-supply(Wheat,EEC)..  Qs(Wheat,EEC) - 213*P(Wheat,EEC) + 74*P(FeedGrains,EEC) =E= 12655 ; (LHS = 12653.9, INFES = 1.09999999999854 ****)
+      (LHS = 18517.78, INFES = 2.22000000000116 ****)
      
-supply(Wheat,UKIreland)..  Qs(Wheat,UKIreland) - 30*P(Wheat,UKIreland) + 8*P(FeedGrains,UKIreland) =E= 1441 ; (LHS = 1441.28, INFES = 0.2800000000002 ****)
+supply(Wheat,EEC)..  Qs(Wheat,EEC) - 213*P(Wheat,EEC) + 74*P(FeedGrains,EEC) =E= 12655 ;
+     
+      (LHS = 12653.9, INFES = 1.09999999999854 ****)
+     
+supply(Wheat,UKIreland)..  Qs(Wheat,UKIreland) - 30*P(Wheat,UKIreland) + 8*P(FeedGrains,UKIreland) =E= 1441 ;
+     
+      (LHS = 1441.28, INFES = 0.2800000000002 ****)
      
 supply(Wheat,Other)..  Qs(Wheat,Other) =E= 0 ; (LHS = 0)
      
-supply(FeedGrains,US)..  Qs(FeedGrains,US) + 694*P(Wheat,US) - 2163*P(FeedGrains,US) =E= 98438 ; (LHS = 98451.15, INFES = 13.1499999999942 ****)
+supply(FeedGrains,US)..  Qs(FeedGrains,US) + 694*P(Wheat,US) - 2163*P(FeedGrains,US) =E= 98438 ;
      
-supply(FeedGrains,EEC)..  Qs(FeedGrains,EEC) + 85*P(Wheat,EEC) - 207*P(FeedGrains,EEC) =E= 16531 ; (LHS = 16531.51, INFES = 0.509999999998399 ****)
+      (LHS = 98451.15, INFES = 13.1499999999942 ****)
      
-supply(FeedGrains,UKIreland)..  Qs(FeedGrains,UKIreland) + 35*P(Wheat,UKIreland) - 68*P(FeedGrains,UKIreland) =E= 5446 ; (LHS = 5446.02, INFES = 0.0199999999995271 ****)
+supply(FeedGrains,EEC)..  Qs(FeedGrains,EEC) + 85*P(Wheat,EEC) - 207*P(FeedGrains,EEC) =E= 16531 ;
+     
+      (LHS = 16531.51, INFES = 0.509999999998399 ****)
+     
+supply(FeedGrains,UKIreland)..  Qs(FeedGrains,UKIreland) + 35*P(Wheat,UKIreland) - 68*P(FeedGrains,UKIreland) =E= 5446 ;
+     
+      (LHS = 5446.02, INFES = 0.0199999999995271 ****)
      
 supply(FeedGrains,Other)..  Qs(FeedGrains,Other) =E= 2479 ; (LHS = 2479)
      
-supply(Beef,US)..  Qs(Beef,US) + 84*P(FeedGrains,US) - 5.9*P(Beef,US) =E= 6536 ; (LHS = 6535.339, INFES = 0.661000000000968 ****)
+supply(Beef,US)..  Qs(Beef,US) + 84*P(FeedGrains,US) - 5.9*P(Beef,US) =E= 6536 ;
      
-supply(Beef,EEC)..  Qs(Beef,EEC) + 24*P(FeedGrains,EEC) - 2.9*P(Beef,EEC) =E= 3235 ; (LHS = 3234.931, INFES = 0.0689999999995052 ****)
+      (LHS = 6535.339, INFES = 0.661000000000968 ****)
      
-supply(Beef,UKIreland)..  Qs(Beef,UKIreland) + 6*P(FeedGrains,UKIreland) - P(Beef,UKIreland) =E= 808 ; (LHS = 808.17, INFES = 0.170000000000073 ****)
+supply(Beef,EEC)..  Qs(Beef,EEC) + 24*P(FeedGrains,EEC) - 2.9*P(Beef,EEC) =E= 3235 ;
+     
+      (LHS = 3234.931, INFES = 0.0689999999995052 ****)
+     
+supply(Beef,UKIreland)..  Qs(Beef,UKIreland) + 6*P(FeedGrains,UKIreland) - P(Beef,UKIreland) =E= 808 ;
+     
+      (LHS = 808.17, INFES = 0.170000000000073 ****)
      
 supply(Beef,Other)..  Qs(Beef,Other) =E= 584 ; (LHS = 584)
      
@@ -321,15 +339,22 @@ demand(Wheat,US)..  - Qd(Wheat,US) - 4.96*P(Wheat,US) =E= -15364 ; (LHS = -15364
      
 demand(Wheat,EEC)..  - Qd(Wheat,EEC) - 3.4*P(Wheat,EEC) =E= -14383 ; (LHS = -14382.664, INFES = 0.335999999999331 ****)
      
-demand(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) - 1.29*P(Wheat,UKIreland) =E= -4427 ; (LHS = -4427.9202, INFES = 0.920199999999568 ****)
+demand(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) - 1.29*P(Wheat,UKIreland) =E= -4427 ;
+     
+      (LHS = -4427.9202, INFES = 0.920199999999568 ****)
      
 demand(Wheat,Other)..  - Qd(Wheat,Other) =E= -31731 ; (LHS = -31731)
      
-demand(FeedGrains,US)..  - Qd(FeedGrains,US) - 1224*P(FeedGrains,US) + 48.13*P(Beef,US) =E= -140556 ; (LHS = -140550.4133, INFES = 5.58670000001439 ****)
+demand(FeedGrains,US)..  - Qd(FeedGrains,US) - 1224*P(FeedGrains,US) + 48.13*P(Beef,US) =E= -140556 ;
      
-demand(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) - 157*P(FeedGrains,EEC) + 10.68*P(Beef,EEC) =E= -31694 ; (LHS = -31693.2192, INFES = 0.780800000000454 ****)
+      (LHS = -140550.4133, INFES = 5.58670000001439 ****)
      
-demand(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) - 63*P(FeedGrains,UKIreland) + 5.82*P(Beef,UKIreland) =E= -12720 ; (LHS = -12719.5462, INFES = 0.453800000001138 ****)
+demand(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) - 157*P(FeedGrains,EEC) + 10.68*P(Beef,EEC) =E= -31694 ;
+     
+      (LHS = -31693.2192, INFES = 0.780800000000454 ****)
+     
+demand(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) - 63*P(FeedGrains,UKIreland) + 5.82*P(Beef,UKIreland) =E= 
+     -12720 ; (LHS = -12719.5462, INFES = 0.453800000001138 ****)
      
 demand(FeedGrains,Other)..  - Qd(FeedGrains,Other) =E= 0 ; (LHS = 0)
      
@@ -337,36 +362,73 @@ demand(Beef,US)..  - Qd(Beef,US) - 6.95*P(Beef,US) =E= -14190 ; (LHS = -14189.75
      
 demand(Beef,EEC)..  - Qd(Beef,EEC) - 3.29*P(Beef,EEC) =E= -6830 ; (LHS = -6830.3249, INFES = 0.324899999999616 ****)
      
-demand(Beef,UKIreland)..  - Qd(Beef,UKIreland) - 1.42*P(Beef,UKIreland) =E= -2178 ; (LHS = -2177.8378, INFES = 0.162199999999984 ****)
+demand(Beef,UKIreland)..  - Qd(Beef,UKIreland) - 1.42*P(Beef,UKIreland) =E= -2178 ;
+     
+      (LHS = -2177.8378, INFES = 0.162199999999984 ****)
      
 demand(Beef,Other)..  - Qd(Beef,Other) =E= 0 ; (LHS = 0)
      
 
 ---- flows  =E=  trade flows
 
-flows(Wheat,US)..  - Qd(Wheat,US) + Qs(Wheat,US) - X(Wheat,US,EEC) - X(Wheat,US,UKIreland) - X(Wheat,US,Other) + X(Wheat,EEC,US) + X(Wheat,UKIreland,US) + X(Wheat,Other,US) =E= 0 ; (LHS = 0)
+flows(Wheat,US)..  - Qd(Wheat,US) + Qs(Wheat,US) - X(Wheat,US,EEC) - X(Wheat,US,UKIreland) - X(Wheat,US,Other)
      
-flows(Wheat,EEC)..  - Qd(Wheat,EEC) + Qs(Wheat,EEC) + X(Wheat,US,EEC) - X(Wheat,EEC,US) - X(Wheat,EEC,UKIreland) - X(Wheat,EEC,Other) + X(Wheat,UKIreland,EEC) + X(Wheat,Other,EEC) =E= 0 ; (LHS = 0)
+      + X(Wheat,EEC,US) + X(Wheat,UKIreland,US) + X(Wheat,Other,US) =E= 0 ; (LHS = 0)
      
-flows(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) + Qs(Wheat,UKIreland) + X(Wheat,US,UKIreland) + X(Wheat,EEC,UKIreland) - X(Wheat,UKIreland,US) - X(Wheat,UKIreland,EEC) - X(Wheat,UKIreland,Other) + X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
+flows(Wheat,EEC)..  - Qd(Wheat,EEC) + Qs(Wheat,EEC) + X(Wheat,US,EEC) - X(Wheat,EEC,US) - X(Wheat,EEC,UKIreland)
      
-flows(Wheat,Other)..  - Qd(Wheat,Other) + Qs(Wheat,Other) + X(Wheat,US,Other) + X(Wheat,EEC,Other) + X(Wheat,UKIreland,Other) - X(Wheat,Other,US) - X(Wheat,Other,EEC) - X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
+      - X(Wheat,EEC,Other) + X(Wheat,UKIreland,EEC) + X(Wheat,Other,EEC) =E= 0 ; (LHS = 0)
      
-flows(FeedGrains,US)..  - Qd(FeedGrains,US) + Qs(FeedGrains,US) - X(FeedGrains,US,EEC) - X(FeedGrains,US,UKIreland) - X(FeedGrains,US,Other) + X(FeedGrains,EEC,US) + X(FeedGrains,UKIreland,US) + X(FeedGrains,Other,US) =E= 0 ; (LHS = 0)
+flows(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) + Qs(Wheat,UKIreland) + X(Wheat,US,UKIreland) + X(Wheat,EEC,UKIreland)
      
-flows(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) + Qs(FeedGrains,EEC) + X(FeedGrains,US,EEC) - X(FeedGrains,EEC,US) - X(FeedGrains,EEC,UKIreland) - X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,EEC) + X(FeedGrains,Other,EEC) =E= 0 ; (LHS = 0)
+      - X(Wheat,UKIreland,US) - X(Wheat,UKIreland,EEC) - X(Wheat,UKIreland,Other) + X(Wheat,Other,UKIreland) =E= 0 ;
      
-flows(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) + Qs(FeedGrains,UKIreland) + X(FeedGrains,US,UKIreland) + X(FeedGrains,EEC,UKIreland) - X(FeedGrains,UKIreland,US) - X(FeedGrains,UKIreland,EEC) - X(FeedGrains,UKIreland,Other) + X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+      (LHS = 0)
      
-flows(FeedGrains,Other)..  - Qd(FeedGrains,Other) + Qs(FeedGrains,Other) + X(FeedGrains,US,Other) + X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,Other) - X(FeedGrains,Other,US) - X(FeedGrains,Other,EEC) - X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+flows(Wheat,Other)..  - Qd(Wheat,Other) + Qs(Wheat,Other) + X(Wheat,US,Other) + X(Wheat,EEC,Other)
      
-flows(Beef,US)..  - Qd(Beef,US) + Qs(Beef,US) - X(Beef,US,EEC) - X(Beef,US,UKIreland) - X(Beef,US,Other) + X(Beef,EEC,US) + X(Beef,UKIreland,US) + X(Beef,Other,US) =E= 0 ; (LHS = 0)
+      + X(Wheat,UKIreland,Other) - X(Wheat,Other,US) - X(Wheat,Other,EEC) - X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
      
-flows(Beef,EEC)..  - Qd(Beef,EEC) + Qs(Beef,EEC) + X(Beef,US,EEC) - X(Beef,EEC,US) - X(Beef,EEC,UKIreland) - X(Beef,EEC,Other) + X(Beef,UKIreland,EEC) + X(Beef,Other,EEC) =E= 0 ; (LHS = 0)
+flows(FeedGrains,US)..  - Qd(FeedGrains,US) + Qs(FeedGrains,US) - X(FeedGrains,US,EEC) - X(FeedGrains,US,UKIreland)
      
-flows(Beef,UKIreland)..  - Qd(Beef,UKIreland) + Qs(Beef,UKIreland) + X(Beef,US,UKIreland) + X(Beef,EEC,UKIreland) - X(Beef,UKIreland,US) - X(Beef,UKIreland,EEC) - X(Beef,UKIreland,Other) + X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
+      - X(FeedGrains,US,Other) + X(FeedGrains,EEC,US) + X(FeedGrains,UKIreland,US) + X(FeedGrains,Other,US) =E= 0 ;
      
-flows(Beef,Other)..  - Qd(Beef,Other) + Qs(Beef,Other) + X(Beef,US,Other) + X(Beef,EEC,Other) + X(Beef,UKIreland,Other) - X(Beef,Other,US) - X(Beef,Other,EEC) - X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
+      (LHS = 0)
+     
+flows(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) + Qs(FeedGrains,EEC) + X(FeedGrains,US,EEC) - X(FeedGrains,EEC,US)
+     
+      - X(FeedGrains,EEC,UKIreland) - X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,EEC) + X(FeedGrains,Other,EEC)
+      =E= 0 ; (LHS = 0)
+     
+flows(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) + Qs(FeedGrains,UKIreland) + X(FeedGrains,US,UKIreland)
+     
+      + X(FeedGrains,EEC,UKIreland) - X(FeedGrains,UKIreland,US) - X(FeedGrains,UKIreland,EEC)
+     
+      - X(FeedGrains,UKIreland,Other) + X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+     
+flows(FeedGrains,Other)..  - Qd(FeedGrains,Other) + Qs(FeedGrains,Other) + X(FeedGrains,US,Other)
+     
+      + X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,Other) - X(FeedGrains,Other,US) - X(FeedGrains,Other,EEC)
+     
+      - X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+     
+flows(Beef,US)..  - Qd(Beef,US) + Qs(Beef,US) - X(Beef,US,EEC) - X(Beef,US,UKIreland) - X(Beef,US,Other)
+     
+      + X(Beef,EEC,US) + X(Beef,UKIreland,US) + X(Beef,Other,US) =E= 0 ; (LHS = 0)
+     
+flows(Beef,EEC)..  - Qd(Beef,EEC) + Qs(Beef,EEC) + X(Beef,US,EEC) - X(Beef,EEC,US) - X(Beef,EEC,UKIreland)
+     
+      - X(Beef,EEC,Other) + X(Beef,UKIreland,EEC) + X(Beef,Other,EEC) =E= 0 ; (LHS = 0)
+     
+flows(Beef,UKIreland)..  - Qd(Beef,UKIreland) + Qs(Beef,UKIreland) + X(Beef,US,UKIreland) + X(Beef,EEC,UKIreland)
+     
+      - X(Beef,UKIreland,US) - X(Beef,UKIreland,EEC) - X(Beef,UKIreland,Other) + X(Beef,Other,UKIreland) =E= 0 ;
+     
+      (LHS = 0)
+     
+flows(Beef,Other)..  - Qd(Beef,Other) + Qs(Beef,Other) + X(Beef,US,Other) + X(Beef,EEC,Other) + X(Beef,UKIreland,Other)
+     
+      - X(Beef,Other,US) - X(Beef,Other,EEC) - X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
      
 
 ---- trade  =G=  prices
@@ -395,7 +457,9 @@ trade(Wheat,Other,EEC)..  - P(Wheat,EEC) + P(Wheat,Other) =G= -15 ; (LHS = 15)
      
 trade(Wheat,Other,UKIreland)..  - P(Wheat,UKIreland) + P(Wheat,Other) =G= -15 ; (LHS = 14.58)
      
-trade(FeedGrains,US,EEC)..  P(FeedGrains,US) - P(FeedGrains,EEC) =G= -8.438 ; (LHS = -8.44, INFES = 0.00199999999999534 ****)
+trade(FeedGrains,US,EEC)..  P(FeedGrains,US) - P(FeedGrains,EEC) =G= -8.438 ;
+     
+      (LHS = -8.44, INFES = 0.00199999999999534 ****)
      
 trade(FeedGrains,US,UKIreland)..  P(FeedGrains,US) - P(FeedGrains,UKIreland) =G= -8.03 ; (LHS = -8.03)
      
@@ -443,7 +507,7 @@ trade(Beef,Other,EEC)..  - P(Beef,EEC) + P(Beef,Other) =G= -100 ; (LHS = -27.219
      
 trade(Beef,Other,UKIreland)..  - P(Beef,UKIreland) + P(Beef,Other) =G= -100 ; (LHS = -23)
      
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 4
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE lcp Using MCP From line 178
 
@@ -544,7 +608,7 @@ X(Wheat,US,Other)
         1       flows(Wheat,Other)
 
 REMAINING 33 ENTRIES SKIPPED
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 5
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE lcp Using MCP From line 178
 
@@ -557,8 +621,8 @@ NON ZERO ELEMENTS           222     NON LINEAR N-Z              0
 CODE LENGTH                   0     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.359 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 6
+GENERATION TIME      =        0.047 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE lcp Using MCP From line 178
 
@@ -572,7 +636,7 @@ Solution Report     SOLVE lcp Using MCP From line 178
 **** SOLVER STATUS     2 Iteration Interrupt       
 **** MODEL STATUS      6 Intermediate Infeasible   
 
- RESOURCE USAGE, LIMIT          0.157 10000000000.000
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
  ITERATION COUNT, LIMIT         0             0
  EVALUATION ERRORS              0             0
 72 row/cols, 222 non-zeros, 4.28% dense.
@@ -783,34 +847,52 @@ Beef      .Other    .UKIreland          .              .            +INF        
                              0  REDEFINED
                              0     ERRORS
                              2  PROJECTED
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 7
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE lcp Using MCP From line 185
 
 
 ---- supply  =E=  supply function
 
-supply(Wheat,US)..  Qs(Wheat,US) - 427*P(Wheat,US) + 190*P(FeedGrains,US) =E= 18520 ; (LHS = 18517.78, INFES = 2.22000000000116 ****)
+supply(Wheat,US)..  Qs(Wheat,US) - 427*P(Wheat,US) + 190*P(FeedGrains,US) =E= 18520 ;
      
-supply(Wheat,EEC)..  Qs(Wheat,EEC) - 213*P(Wheat,EEC) + 74*P(FeedGrains,EEC) =E= 12655 ; (LHS = 12653.9, INFES = 1.09999999999854 ****)
+      (LHS = 18517.78, INFES = 2.22000000000116 ****)
      
-supply(Wheat,UKIreland)..  Qs(Wheat,UKIreland) - 30*P(Wheat,UKIreland) + 8*P(FeedGrains,UKIreland) =E= 1441 ; (LHS = 1441.28, INFES = 0.2800000000002 ****)
+supply(Wheat,EEC)..  Qs(Wheat,EEC) - 213*P(Wheat,EEC) + 74*P(FeedGrains,EEC) =E= 12655 ;
+     
+      (LHS = 12653.9, INFES = 1.09999999999854 ****)
+     
+supply(Wheat,UKIreland)..  Qs(Wheat,UKIreland) - 30*P(Wheat,UKIreland) + 8*P(FeedGrains,UKIreland) =E= 1441 ;
+     
+      (LHS = 1441.28, INFES = 0.2800000000002 ****)
      
 supply(Wheat,Other)..  Qs(Wheat,Other) =E= 0 ; (LHS = 0)
      
-supply(FeedGrains,US)..  Qs(FeedGrains,US) + 694*P(Wheat,US) - 2163*P(FeedGrains,US) =E= 98438 ; (LHS = 98451.15, INFES = 13.1499999999942 ****)
+supply(FeedGrains,US)..  Qs(FeedGrains,US) + 694*P(Wheat,US) - 2163*P(FeedGrains,US) =E= 98438 ;
      
-supply(FeedGrains,EEC)..  Qs(FeedGrains,EEC) + 85*P(Wheat,EEC) - 207*P(FeedGrains,EEC) =E= 16531 ; (LHS = 16531.51, INFES = 0.509999999998399 ****)
+      (LHS = 98451.15, INFES = 13.1499999999942 ****)
      
-supply(FeedGrains,UKIreland)..  Qs(FeedGrains,UKIreland) + 35*P(Wheat,UKIreland) - 68*P(FeedGrains,UKIreland) =E= 5446 ; (LHS = 5446.02, INFES = 0.0199999999995271 ****)
+supply(FeedGrains,EEC)..  Qs(FeedGrains,EEC) + 85*P(Wheat,EEC) - 207*P(FeedGrains,EEC) =E= 16531 ;
+     
+      (LHS = 16531.51, INFES = 0.509999999998399 ****)
+     
+supply(FeedGrains,UKIreland)..  Qs(FeedGrains,UKIreland) + 35*P(Wheat,UKIreland) - 68*P(FeedGrains,UKIreland) =E= 5446 ;
+     
+      (LHS = 5446.02, INFES = 0.0199999999995271 ****)
      
 supply(FeedGrains,Other)..  Qs(FeedGrains,Other) =E= 2479 ; (LHS = 2479)
      
-supply(Beef,US)..  Qs(Beef,US) + 84*P(FeedGrains,US) - 5.9*P(Beef,US) =E= 6536 ; (LHS = 6535.339, INFES = 0.661000000000968 ****)
+supply(Beef,US)..  Qs(Beef,US) + 84*P(FeedGrains,US) - 5.9*P(Beef,US) =E= 6536 ;
      
-supply(Beef,EEC)..  Qs(Beef,EEC) + 24*P(FeedGrains,EEC) - 2.9*P(Beef,EEC) =E= 3235 ; (LHS = 3234.931, INFES = 0.0689999999995052 ****)
+      (LHS = 6535.339, INFES = 0.661000000000968 ****)
      
-supply(Beef,UKIreland)..  Qs(Beef,UKIreland) + 6*P(FeedGrains,UKIreland) - P(Beef,UKIreland) =E= 808 ; (LHS = 808.17, INFES = 0.170000000000073 ****)
+supply(Beef,EEC)..  Qs(Beef,EEC) + 24*P(FeedGrains,EEC) - 2.9*P(Beef,EEC) =E= 3235 ;
+     
+      (LHS = 3234.931, INFES = 0.0689999999995052 ****)
+     
+supply(Beef,UKIreland)..  Qs(Beef,UKIreland) + 6*P(FeedGrains,UKIreland) - P(Beef,UKIreland) =E= 808 ;
+     
+      (LHS = 808.17, INFES = 0.170000000000073 ****)
      
 supply(Beef,Other)..  Qs(Beef,Other) =E= 584 ; (LHS = 584)
      
@@ -821,15 +903,22 @@ demand(Wheat,US)..  - Qd(Wheat,US) - 4.96*P(Wheat,US) =E= -15364 ; (LHS = -15364
      
 demand(Wheat,EEC)..  - Qd(Wheat,EEC) - 3.4*P(Wheat,EEC) =E= -14383 ; (LHS = -14382.664, INFES = 0.335999999999331 ****)
      
-demand(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) - 1.29*P(Wheat,UKIreland) =E= -4427 ; (LHS = -4427.9202, INFES = 0.920199999999568 ****)
+demand(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) - 1.29*P(Wheat,UKIreland) =E= -4427 ;
+     
+      (LHS = -4427.9202, INFES = 0.920199999999568 ****)
      
 demand(Wheat,Other)..  - Qd(Wheat,Other) =E= -31731 ; (LHS = -31731)
      
-demand(FeedGrains,US)..  - Qd(FeedGrains,US) - 1224*P(FeedGrains,US) + 48.13*P(Beef,US) =E= -140556 ; (LHS = -140550.4133, INFES = 5.58670000001439 ****)
+demand(FeedGrains,US)..  - Qd(FeedGrains,US) - 1224*P(FeedGrains,US) + 48.13*P(Beef,US) =E= -140556 ;
      
-demand(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) - 157*P(FeedGrains,EEC) + 10.68*P(Beef,EEC) =E= -31694 ; (LHS = -31693.2192, INFES = 0.780800000000454 ****)
+      (LHS = -140550.4133, INFES = 5.58670000001439 ****)
      
-demand(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) - 63*P(FeedGrains,UKIreland) + 5.82*P(Beef,UKIreland) =E= -12720 ; (LHS = -12719.5462, INFES = 0.453800000001138 ****)
+demand(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) - 157*P(FeedGrains,EEC) + 10.68*P(Beef,EEC) =E= -31694 ;
+     
+      (LHS = -31693.2192, INFES = 0.780800000000454 ****)
+     
+demand(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) - 63*P(FeedGrains,UKIreland) + 5.82*P(Beef,UKIreland) =E= 
+     -12720 ; (LHS = -12719.5462, INFES = 0.453800000001138 ****)
      
 demand(FeedGrains,Other)..  - Qd(FeedGrains,Other) =E= 0 ; (LHS = 0)
      
@@ -837,36 +926,73 @@ demand(Beef,US)..  - Qd(Beef,US) - 6.95*P(Beef,US) =E= -14190 ; (LHS = -14189.75
      
 demand(Beef,EEC)..  - Qd(Beef,EEC) - 3.29*P(Beef,EEC) =E= -6830 ; (LHS = -6830.3249, INFES = 0.324899999999616 ****)
      
-demand(Beef,UKIreland)..  - Qd(Beef,UKIreland) - 1.42*P(Beef,UKIreland) =E= -2178 ; (LHS = -2177.8378, INFES = 0.162199999999984 ****)
+demand(Beef,UKIreland)..  - Qd(Beef,UKIreland) - 1.42*P(Beef,UKIreland) =E= -2178 ;
+     
+      (LHS = -2177.8378, INFES = 0.162199999999984 ****)
      
 demand(Beef,Other)..  - Qd(Beef,Other) =E= 0 ; (LHS = 0)
      
 
 ---- flows  =E=  trade flows
 
-flows(Wheat,US)..  - Qd(Wheat,US) + Qs(Wheat,US) - X(Wheat,US,EEC) - X(Wheat,US,UKIreland) - X(Wheat,US,Other) + X(Wheat,EEC,US) + X(Wheat,UKIreland,US) + X(Wheat,Other,US) =E= 0 ; (LHS = 0)
+flows(Wheat,US)..  - Qd(Wheat,US) + Qs(Wheat,US) - X(Wheat,US,EEC) - X(Wheat,US,UKIreland) - X(Wheat,US,Other)
      
-flows(Wheat,EEC)..  - Qd(Wheat,EEC) + Qs(Wheat,EEC) + X(Wheat,US,EEC) - X(Wheat,EEC,US) - X(Wheat,EEC,UKIreland) - X(Wheat,EEC,Other) + X(Wheat,UKIreland,EEC) + X(Wheat,Other,EEC) =E= 0 ; (LHS = 0)
+      + X(Wheat,EEC,US) + X(Wheat,UKIreland,US) + X(Wheat,Other,US) =E= 0 ; (LHS = 0)
      
-flows(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) + Qs(Wheat,UKIreland) + X(Wheat,US,UKIreland) + X(Wheat,EEC,UKIreland) - X(Wheat,UKIreland,US) - X(Wheat,UKIreland,EEC) - X(Wheat,UKIreland,Other) + X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
+flows(Wheat,EEC)..  - Qd(Wheat,EEC) + Qs(Wheat,EEC) + X(Wheat,US,EEC) - X(Wheat,EEC,US) - X(Wheat,EEC,UKIreland)
      
-flows(Wheat,Other)..  - Qd(Wheat,Other) + Qs(Wheat,Other) + X(Wheat,US,Other) + X(Wheat,EEC,Other) + X(Wheat,UKIreland,Other) - X(Wheat,Other,US) - X(Wheat,Other,EEC) - X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
+      - X(Wheat,EEC,Other) + X(Wheat,UKIreland,EEC) + X(Wheat,Other,EEC) =E= 0 ; (LHS = 0)
      
-flows(FeedGrains,US)..  - Qd(FeedGrains,US) + Qs(FeedGrains,US) - X(FeedGrains,US,EEC) - X(FeedGrains,US,UKIreland) - X(FeedGrains,US,Other) + X(FeedGrains,EEC,US) + X(FeedGrains,UKIreland,US) + X(FeedGrains,Other,US) =E= 0 ; (LHS = 0)
+flows(Wheat,UKIreland)..  - Qd(Wheat,UKIreland) + Qs(Wheat,UKIreland) + X(Wheat,US,UKIreland) + X(Wheat,EEC,UKIreland)
      
-flows(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) + Qs(FeedGrains,EEC) + X(FeedGrains,US,EEC) - X(FeedGrains,EEC,US) - X(FeedGrains,EEC,UKIreland) - X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,EEC) + X(FeedGrains,Other,EEC) =E= 0 ; (LHS = 0)
+      - X(Wheat,UKIreland,US) - X(Wheat,UKIreland,EEC) - X(Wheat,UKIreland,Other) + X(Wheat,Other,UKIreland) =E= 0 ;
      
-flows(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) + Qs(FeedGrains,UKIreland) + X(FeedGrains,US,UKIreland) + X(FeedGrains,EEC,UKIreland) - X(FeedGrains,UKIreland,US) - X(FeedGrains,UKIreland,EEC) - X(FeedGrains,UKIreland,Other) + X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+      (LHS = 0)
      
-flows(FeedGrains,Other)..  - Qd(FeedGrains,Other) + Qs(FeedGrains,Other) + X(FeedGrains,US,Other) + X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,Other) - X(FeedGrains,Other,US) - X(FeedGrains,Other,EEC) - X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+flows(Wheat,Other)..  - Qd(Wheat,Other) + Qs(Wheat,Other) + X(Wheat,US,Other) + X(Wheat,EEC,Other)
      
-flows(Beef,US)..  - Qd(Beef,US) + Qs(Beef,US) - X(Beef,US,EEC) - X(Beef,US,UKIreland) - X(Beef,US,Other) + X(Beef,EEC,US) + X(Beef,UKIreland,US) + X(Beef,Other,US) =E= 0 ; (LHS = 0)
+      + X(Wheat,UKIreland,Other) - X(Wheat,Other,US) - X(Wheat,Other,EEC) - X(Wheat,Other,UKIreland) =E= 0 ; (LHS = 0)
      
-flows(Beef,EEC)..  - Qd(Beef,EEC) + Qs(Beef,EEC) + X(Beef,US,EEC) - X(Beef,EEC,US) - X(Beef,EEC,UKIreland) - X(Beef,EEC,Other) + X(Beef,UKIreland,EEC) + X(Beef,Other,EEC) =E= 0 ; (LHS = 0)
+flows(FeedGrains,US)..  - Qd(FeedGrains,US) + Qs(FeedGrains,US) - X(FeedGrains,US,EEC) - X(FeedGrains,US,UKIreland)
      
-flows(Beef,UKIreland)..  - Qd(Beef,UKIreland) + Qs(Beef,UKIreland) + X(Beef,US,UKIreland) + X(Beef,EEC,UKIreland) - X(Beef,UKIreland,US) - X(Beef,UKIreland,EEC) - X(Beef,UKIreland,Other) + X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
+      - X(FeedGrains,US,Other) + X(FeedGrains,EEC,US) + X(FeedGrains,UKIreland,US) + X(FeedGrains,Other,US) =E= 0 ;
      
-flows(Beef,Other)..  - Qd(Beef,Other) + Qs(Beef,Other) + X(Beef,US,Other) + X(Beef,EEC,Other) + X(Beef,UKIreland,Other) - X(Beef,Other,US) - X(Beef,Other,EEC) - X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
+      (LHS = 0)
+     
+flows(FeedGrains,EEC)..  - Qd(FeedGrains,EEC) + Qs(FeedGrains,EEC) + X(FeedGrains,US,EEC) - X(FeedGrains,EEC,US)
+     
+      - X(FeedGrains,EEC,UKIreland) - X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,EEC) + X(FeedGrains,Other,EEC)
+      =E= 0 ; (LHS = 0)
+     
+flows(FeedGrains,UKIreland)..  - Qd(FeedGrains,UKIreland) + Qs(FeedGrains,UKIreland) + X(FeedGrains,US,UKIreland)
+     
+      + X(FeedGrains,EEC,UKIreland) - X(FeedGrains,UKIreland,US) - X(FeedGrains,UKIreland,EEC)
+     
+      - X(FeedGrains,UKIreland,Other) + X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+     
+flows(FeedGrains,Other)..  - Qd(FeedGrains,Other) + Qs(FeedGrains,Other) + X(FeedGrains,US,Other)
+     
+      + X(FeedGrains,EEC,Other) + X(FeedGrains,UKIreland,Other) - X(FeedGrains,Other,US) - X(FeedGrains,Other,EEC)
+     
+      - X(FeedGrains,Other,UKIreland) =E= 0 ; (LHS = 0)
+     
+flows(Beef,US)..  - Qd(Beef,US) + Qs(Beef,US) - X(Beef,US,EEC) - X(Beef,US,UKIreland) - X(Beef,US,Other)
+     
+      + X(Beef,EEC,US) + X(Beef,UKIreland,US) + X(Beef,Other,US) =E= 0 ; (LHS = 0)
+     
+flows(Beef,EEC)..  - Qd(Beef,EEC) + Qs(Beef,EEC) + X(Beef,US,EEC) - X(Beef,EEC,US) - X(Beef,EEC,UKIreland)
+     
+      - X(Beef,EEC,Other) + X(Beef,UKIreland,EEC) + X(Beef,Other,EEC) =E= 0 ; (LHS = 0)
+     
+flows(Beef,UKIreland)..  - Qd(Beef,UKIreland) + Qs(Beef,UKIreland) + X(Beef,US,UKIreland) + X(Beef,EEC,UKIreland)
+     
+      - X(Beef,UKIreland,US) - X(Beef,UKIreland,EEC) - X(Beef,UKIreland,Other) + X(Beef,Other,UKIreland) =E= 0 ;
+     
+      (LHS = 0)
+     
+flows(Beef,Other)..  - Qd(Beef,Other) + Qs(Beef,Other) + X(Beef,US,Other) + X(Beef,EEC,Other) + X(Beef,UKIreland,Other)
+     
+      - X(Beef,Other,US) - X(Beef,Other,EEC) - X(Beef,Other,UKIreland) =E= 0 ; (LHS = 0)
      
 
 ---- trade  =G=  prices
@@ -895,7 +1021,9 @@ trade(Wheat,Other,EEC)..  - P(Wheat,EEC) + P(Wheat,Other) =G= -15 ; (LHS = 15)
      
 trade(Wheat,Other,UKIreland)..  - P(Wheat,UKIreland) + P(Wheat,Other) =G= -15 ; (LHS = 14.58)
      
-trade(FeedGrains,US,EEC)..  P(FeedGrains,US) - P(FeedGrains,EEC) =G= -8.438 ; (LHS = -8.44, INFES = 0.00199999999999534 ****)
+trade(FeedGrains,US,EEC)..  P(FeedGrains,US) - P(FeedGrains,EEC) =G= -8.438 ;
+     
+      (LHS = -8.44, INFES = 0.00199999999999534 ****)
      
 trade(FeedGrains,US,UKIreland)..  P(FeedGrains,US) - P(FeedGrains,UKIreland) =G= -8.03 ; (LHS = -8.03)
      
@@ -943,7 +1071,7 @@ trade(Beef,Other,EEC)..  - P(Beef,EEC) + P(Beef,Other) =G= -100 ; (LHS = -27.219
      
 trade(Beef,Other,UKIreland)..  - P(Beef,UKIreland) + P(Beef,Other) =G= -100 ; (LHS = -23)
      
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 8
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE lcp Using MCP From line 185
 
@@ -1044,7 +1172,7 @@ X(Wheat,US,Other)
         1       flows(Wheat,Other)
 
 REMAINING 33 ENTRIES SKIPPED
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 9
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE lcp Using MCP From line 185
 
@@ -1057,8 +1185,8 @@ NON ZERO ELEMENTS           222     NON LINEAR N-Z              0
 CODE LENGTH                   0     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.031 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 10
+GENERATION TIME      =        0.063 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE lcp Using MCP From line 185
 
@@ -1072,7 +1200,7 @@ Solution Report     SOLVE lcp Using MCP From line 185
 **** SOLVER STATUS     1 Normal Completion         
 **** MODEL STATUS      1 Optimal                   
 
- RESOURCE USAGE, LIMIT          0.094 10000000000.000
+ RESOURCE USAGE, LIMIT          0.093 10000000000.000
  ITERATION COUNT, LIMIT         0         99999
  EVALUATION ERRORS              0             0
 72 row/cols, 222 non-zeros, 4.28% dense.
@@ -1298,7 +1426,7 @@ Beef      .Other    .UKIreland          .              .            +INF        
                              0  REDEFINED
                              0     ERRORS
                             17  PROJECTED
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:45:08 Page 11
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 07/20/21 22:51:53 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -1325,7 +1453,7 @@ Beef      .consumption    8438.261    4346.663    1112.158
 
 
 
-EXECUTION TIME       =        1.812 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
+EXECUTION TIME       =        1.078 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN
