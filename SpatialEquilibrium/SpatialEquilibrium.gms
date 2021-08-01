@@ -177,6 +177,11 @@ P.l(c,r) = sol(c,r,'price');
 option limrow=9999,iterlim=0;
 solve lcp using mcp;
 
+scalar obj;
+obj = lcp.objval;
+display obj;
+$stop
+
 *-----------------------------------------------------------------------
 * compute equilibrium
 *-----------------------------------------------------------------------

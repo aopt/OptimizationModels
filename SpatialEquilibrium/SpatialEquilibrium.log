@@ -1,5 +1,5 @@
 
---- Job SpatialEquilibrium.gms Start 07/20/21 22:51:53 35.2.0 r33388c4 WEX-WEI x86 64bit/MS Windows
+--- Job SpatialEquilibrium.gms Start 07/21/21 10:06:00 35.2.0 r33388c4 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\35\gmsprmNT.txt
     C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
@@ -23,15 +23,15 @@ Licensee: Eval License                                   S201210/0001CO-GEN
           Evaluation license: Not for commercial or production use
 GAMS 35.2.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
 --- Starting compilation
---- SpatialEquilibrium.gms(199) 3 Mb
---- Starting execution: elapsed 0:00:00.038
+--- SpatialEquilibrium.gms(183) 3 Mb
+--- Starting execution: elapsed 0:00:00.031
 --- SpatialEquilibrium.gms(177) 4 Mb
 --- Generating MCP model lcp
 --- SpatialEquilibrium.gms(178) 6 Mb
 ---   72 rows  72 columns  222 non-zeroes
 ---   0 nl-code  0 nl-non-zeroes
 --- SpatialEquilibrium.gms(178) 4 Mb
---- Executing PATH (Solvelink=2): elapsed 0:00:00.133
+--- Executing PATH (Solvelink=2): elapsed 0:00:00.120
 Reading dictionary...
 Reading row data...
 Evaluating functions...
@@ -67,86 +67,11 @@ Gradient Steps. . . . . 0
 Function Evaluations. . 1
 Gradient Evaluations. . 1
 Basis Time. . . . . . . 0.000000
-Total Time. . . . . . . 0.000000
+Total Time. . . . . . . 0.016000
 Residual. . . . . . . . 1.459620e+01
 
 --- Reading solution for model lcp
---- Executing after solve: elapsed 0:00:00.797
---- SpatialEquilibrium.gms(184) 4 Mb
---- Generating MCP model lcp
---- SpatialEquilibrium.gms(185) 6 Mb
----   72 rows  72 columns  222 non-zeroes
----   0 nl-code  0 nl-non-zeroes
---- SpatialEquilibrium.gms(185) 4 Mb
---- Executing PATH (Solvelink=2): elapsed 0:00:00.864
-Reading dictionary...
-Reading row data...
-Evaluating functions...
-Checking model...
-Calculating Jacobian...
-
-PATH             35.2.0 r33388c4 Released Jun 02, 2021 WEI x86 64bit/MS Window
-
-72 row/cols, 222 non-zeros, 4.28% dense.
-
-Path 5.0.02 (Wed Jun  2 14:31:08 2021)
-Written by Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
-
-MCPR: One:    0 Two:    0 Thr:    0 Qua:    0 WBd:    0 Fix:    6 IFx:    0
-Preprocessed size   : 67
-
-INITIAL POINT STATISTICS
-Maximum of X. . . . . . . . . .  1.4376e+05 var: (Qs(FeedGrains,US))
-Maximum of F. . . . . . . . . .  2.0000e+02 eqn: (trade(Beef,US,Other))
-Maximum of Grad F . . . . . . .  2.1630e+03 eqn: (supply(FeedGrains,US))
-                                            var: (P(FeedGrains,US))
-
-INITIAL JACOBIAN NORM STATISTICS
-Maximum Row Norm. . . . . . . .  2.8580e+03 eqn: (supply(FeedGrains,US))
-Minimum Row Norm. . . . . . . .  1.0000e+00 eqn: (demand(Wheat,Other))
-Maximum Column Norm . . . . . .  3.6670e+03 var: (P(FeedGrains,US))
-Minimum Column Norm . . . . . .  2.0000e+00 var: (Qs(Wheat,US))
-
-Crash Log
-major  func  diff  size  residual    step       prox   (label)
-    0     0             1.4596e+01             0.0e+00 (supply(FeedGrains,US))
-    1     1     0    38 1.6533e-11  1.0e+00    0.0e+00 (flows(FeedGrains,US))
-pn_search terminated: no basis change.
-
-Major Iteration Log
-major minor  func  grad  residual    step  type prox    inorm  (label)
-    0     0     2     2 1.6533e-11           I 0.0e+00 1.5e-11 (flows(FeedGrain)
-
-FINAL STATISTICS
-Inf-Norm of Complementarity . .  7.7745e-08 eqn: (supply(FeedGrains,EEC))
-Inf-Norm of Normal Map. . . . .  1.5461e-11 eqn: (flows(FeedGrains,US))
-Inf-Norm of Minimum Map . . . .  1.5461e-11 eqn: (flows(FeedGrains,US))
-Inf-Norm of Fischer Function. .  1.5461e-11 eqn: (flows(FeedGrains,US))
-Inf-Norm of Grad Fischer Fcn. .  7.6397e-10 eqn: (flows(FeedGrains,EEC))
-Two-Norm of Grad Fischer Fcn. .  8.3185e-10
-
-FINAL POINT STATISTICS
-Maximum of X. . . . . . . . . .  1.4376e+05 var: (Qs(FeedGrains,US))
-Maximum of F. . . . . . . . . .  2.0000e+02 eqn: (trade(Beef,US,Other))
-Maximum of Grad F . . . . . . .  2.1630e+03 eqn: (supply(FeedGrains,US))
-                                            var: (P(FeedGrains,US))
-
- ** EXIT - solution found.
-
-Major Iterations. . . . 0
-Minor Iterations. . . . 0
-Restarts. . . . . . . . 0
-Crash Iterations. . . . 1
-Gradient Steps. . . . . 0
-Function Evaluations. . 2
-Gradient Evaluations. . 2
-Basis Time. . . . . . . 0.000000
-Total Time. . . . . . . 0.031000
-Residual. . . . . . . . 1.653279e-11
-Postsolved residual: 1.6533e-11
-
---- Reading solution for model lcp
---- Executing after solve: elapsed 0:00:01.118
---- SpatialEquilibrium.gms(198) 4 Mb
+--- Executing after solve: elapsed 0:00:00.660
+--- SpatialEquilibrium.gms(182) 4 Mb
 *** Status: Normal completion
---- Job SpatialEquilibrium.gms Stop 07/20/21 22:51:54 elapsed 0:00:01.152
+--- Job SpatialEquilibrium.gms Stop 07/21/21 10:06:01 elapsed 0:00:00.673
