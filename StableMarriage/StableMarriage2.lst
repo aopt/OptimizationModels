@@ -1,0 +1,437 @@
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 08/16/21 08:40:30 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Stable Marriage Problem
+       
+        https://yetanothermathprogrammingconsultant.blogspot.com/2021/08/stable-marriage-problem.html
+       
+        Slightly optimized version for slightly larger data set.
+        For even larger data sets use the solution pool.
+       
+        For this example we get 9 stable solutions.
+       
+        erwin@amsterdamoptimization.com
+       
+  15   
+  16  *----------------------------------------------------------------
+  17  * data
+  18  *----------------------------------------------------------------
+  19   
+  20  set
+  21    m 'men'    /m1*m8/
+  22    w 'women'  /w1*w8/
+  23  ;
+  24  alias (m,mm),(w,ww);
+  25   
+  26  table mpref(m,w) 'preferences of men for women (ranking,1=best)'
+  27      w1 w2 w3 w4 w5 w6 w7 w8
+  28  m1   3  4  8  7  1  5  2  6
+  29  m2   6  1  2  5  4  8  3  7
+  30  m3   3  6  7  4  2  5  8  1
+  31  m4   5  2  1  4  8  6  3  7
+  32  m5   4  2  5  8  3  6  1  7
+  33  m6   1  7  8  6  4  2  3  5
+  34  m7   8  1  5  6  2  4  3  7
+  35  m8   8  6  1  3  4  7  5  2
+  36  ;
+  37   
+  38   
+  39  table wpref(w,m) 'preferences of women for men (ranking,1=best)'
+  40      m1 m2 m3 m4 m5 m6 m7 m8
+  41  w1   5  6  2  8  1  4  3  7
+  42  w2   7  6  3  8  4  2  5  1
+  43  w3   1  4  8  5  2  3  7  6
+  44  w4   6  4  3  5  7  8  2  1
+  45  w5   6  7  4  2  8  1  3  5
+  46  w6   8  1  6  4  3  5  7  2
+  47  w7   4  3  8  7  2  6  1  5
+  48  w8   3  5  6  2  4  7  1  8
+  49  ;
+  50   
+  51  abort$(card(m)<>card(w)) "Equal-sized sets expected",m,w;
+  52   
+  53  scalar n 'size of problem';
+  54  n = card(w);
+  55   
+  56  *----------------------------------------------------------------
+  57  * derived data
+  58  *----------------------------------------------------------------
+  59   
+  60  sets
+  61    worseMen(w,m,mm)      'worse men than m for w'
+  62    betterWomen(m,w,ww)   'better women than w for m'
+  63  ;
+  64  worseMen(w,m,mm) = wpref(w,mm)>wpref(w,m);
+  65  betterWomen(m,w,ww) = mpref(m,ww)<mpref(m,w);
+  66   
+  67  option mpref:0,wpref:0;
+  68  display m,w,mpref,wpref,worseMen,betterWomen;
+  69   
+  70  *----------------------------------------------------------------
+  71  * MIP enumeration model
+  72  *----------------------------------------------------------------
+  73   
+  74  sets
+  75     sol 'max number of solutions' /sol1*sol100/
+  76     s(sol) 'dynamic subset'
+  77  ;
+  78   
+  79  binary variable x(m,w) 'assignment';
+  80   
+  81  variable z;
+  82   
+  83  equations
+  84     obj            'dummy objective'
+  85     assign1(w)     'assignment constraint'
+  86     assign2(m)     'assignment constraint'
+  87     stability(m,w) 'stability constraint'
+  88     cut(sol)       'no good constraints'
+  89  ;
+  90   
+  91  parameter solutions(sol,m,w) 'enumerated solutions';
+  92   
+  93  obj.. z =e= 0;
+  94   
+  95  assign1(w).. sum(m, x(m,w)) =e= 1;
+  96  assign2(m).. sum(w, x(m,w)) =e= 1;
+  97   
+  98  stability(m,w)..
+  99    sum(betterWomen(m,w,ww),x(m,ww)) =g= sum(worseMen(w,m,mm),x(mm,w));
+ 100   
+ 101  cut(s).. sum((m,w), solutions(s,m,w)*x(m,w)) =l= n-1;
+ 102   
+ 103  model Enumerate /all/;
+ 104  Enumerate.solprint = 2;
+ 105  Enumerate.solvelink = 5;
+ 106   
+ 107  s(sol) = no;
+ 108  solutions(sol,m,w) = 0;
+ 109  loop(sol,
+ 110      solve Enumerate using mip minimizing z;
+ 111      break$(Enumerate.ModelStat <> 1 and
+ 112          Enumerate.ModelStat <> 8);
+ 113   
+ 114      solutions(sol,m,w) = round(x.l(m,w));
+ 115      s(sol) = yes;
+ 116  );
+ 117   
+ 118  option solutions:0:1:1;
+ 119  display solutions;
+ 120   
+ 121   
+
+
+COMPILATION TIME     =        0.015 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 08/16/21 08:40:30 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     68 SET m  men
+
+m1,    m2,    m3,    m4,    m5,    m6,    m7,    m8
+
+
+----     68 SET w  women
+
+w1,    w2,    w3,    w4,    w5,    w6,    w7,    w8
+
+
+----     68 PARAMETER mpref  preferences of men for women (ranking,1=best)
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1           3           4           8           7           1           5           2           6
+m2           6           1           2           5           4           8           3           7
+m3           3           6           7           4           2           5           8           1
+m4           5           2           1           4           8           6           3           7
+m5           4           2           5           8           3           6           1           7
+m6           1           7           8           6           4           2           3           5
+m7           8           1           5           6           2           4           3           7
+m8           8           6           1           3           4           7           5           2
+
+
+----     68 PARAMETER wpref  preferences of women for men (ranking,1=best)
+
+            m1          m2          m3          m4          m5          m6          m7          m8
+
+w1           5           6           2           8           1           4           3           7
+w2           7           6           3           8           4           2           5           1
+w3           1           4           8           5           2           3           7           6
+w4           6           4           3           5           7           8           2           1
+w5           6           7           4           2           8           1           3           5
+w6           8           1           6           4           3           5           7           2
+w7           4           3           8           7           2           6           1           5
+w8           3           5           6           2           4           7           1           8
+
+
+----     68 SET worseMen  worse men than m for w
+
+               m1          m2          m3          m4          m5          m6          m7          m8
+
+w1.m1                     YES                     YES                                             YES
+w1.m2                                             YES                                             YES
+w1.m3         YES         YES                     YES                     YES         YES         YES
+w1.m5         YES         YES         YES         YES                     YES         YES         YES
+w1.m6         YES         YES                     YES                                             YES
+w1.m7         YES         YES                     YES                     YES                     YES
+w1.m8                                             YES
+w2.m1                                             YES
+w2.m2         YES                                 YES
+w2.m3         YES         YES                     YES         YES                     YES
+w2.m5         YES         YES                     YES                                 YES
+w2.m6         YES         YES         YES         YES         YES                     YES
+w2.m7         YES         YES                     YES
+w2.m8         YES         YES         YES         YES         YES         YES         YES
+w3.m1                     YES         YES         YES         YES         YES         YES         YES
+w3.m2                                 YES         YES                                 YES         YES
+w3.m4                                 YES                                             YES         YES
+w3.m5                     YES         YES         YES                     YES         YES         YES
+w3.m6                     YES         YES         YES                                 YES         YES
+w3.m7                                 YES
+w3.m8                                 YES                                             YES
+w4.m1                                                         YES         YES
+w4.m2         YES                                 YES         YES         YES
+w4.m3         YES         YES                     YES         YES         YES
+w4.m4         YES                                             YES         YES
+w4.m5                                                                     YES
+w4.m7         YES         YES         YES         YES         YES         YES
+w4.m8         YES         YES         YES         YES         YES         YES         YES
+w5.m1                     YES                                 YES
+w5.m2                                                         YES
+w5.m3         YES         YES                                 YES                                 YES
+w5.m4         YES         YES         YES                     YES                     YES         YES
+w5.m6         YES         YES         YES         YES         YES                     YES         YES
+w5.m7         YES         YES         YES                     YES                                 YES
+w5.m8         YES         YES                                 YES
+w6.m2         YES                     YES         YES         YES         YES         YES         YES
+w6.m3         YES                                                                     YES
+w6.m4         YES                     YES                                 YES         YES
+w6.m5         YES                     YES         YES                     YES         YES
+w6.m6         YES                     YES                                             YES
+w6.m7         YES
+w6.m8         YES                     YES         YES         YES         YES         YES
+w7.m1                                 YES         YES                     YES                     YES
+w7.m2         YES                     YES         YES                     YES                     YES
+w7.m4                                 YES
+w7.m5         YES         YES         YES         YES                     YES                     YES
+w7.m6                                 YES         YES
+w7.m7         YES         YES         YES         YES         YES         YES                     YES
+w7.m8                                 YES         YES                     YES
+w8.m1                     YES         YES                     YES         YES                     YES
+w8.m2                                 YES                                 YES                     YES
+w8.m3                                                                     YES                     YES
+w8.m4         YES         YES         YES                     YES         YES                     YES
+w8.m5                     YES         YES                                 YES                     YES
+w8.m6                                                                                             YES
+w8.m7         YES         YES         YES         YES         YES         YES                     YES
+
+
+----     68 SET betterWomen  better women than w for m
+
+               w1          w2          w3          w4          w5          w6          w7          w8
+
+m1.w1                                                         YES                     YES
+m1.w2         YES                                             YES                     YES
+m1.w3         YES         YES                     YES         YES         YES         YES         YES
+m1.w4         YES         YES                                 YES         YES         YES         YES
+m1.w6         YES         YES                                 YES                     YES
+m1.w7                                                         YES
+m1.w8         YES         YES                                 YES         YES         YES
+m2.w1                     YES         YES         YES         YES                     YES
+m2.w3                     YES
+m2.w4                     YES         YES                     YES                     YES
+m2.w5                     YES         YES                                             YES
+m2.w6         YES         YES         YES         YES         YES                     YES         YES
+m2.w7                     YES         YES
+m2.w8         YES         YES         YES         YES         YES                     YES
+m3.w1                                                         YES                                 YES
+m3.w2         YES                                 YES         YES         YES                     YES
+m3.w3         YES         YES                     YES         YES         YES                     YES
+m3.w4         YES                                             YES                                 YES
+m3.w5                                                                                             YES
+m3.w6         YES                                 YES         YES                                 YES
+m3.w7         YES         YES         YES         YES         YES         YES                     YES
+m4.w1                     YES         YES         YES                                 YES
+m4.w2                                 YES
+m4.w4                     YES         YES                                             YES
+m4.w5         YES         YES         YES         YES                     YES         YES         YES
+m4.w6         YES         YES         YES         YES                                 YES
+m4.w7                     YES         YES
+m4.w8         YES         YES         YES         YES                     YES         YES
+m5.w1                     YES                                 YES                     YES
+m5.w2                                                                                 YES
+m5.w3         YES         YES                                 YES                     YES
+m5.w4         YES         YES         YES                     YES         YES         YES         YES
+m5.w5                     YES                                                         YES
+m5.w6         YES         YES         YES                     YES                     YES
+m5.w8         YES         YES         YES                     YES         YES         YES
+m6.w2         YES                                 YES         YES         YES         YES         YES
+m6.w3         YES         YES                     YES         YES         YES         YES         YES
+m6.w4         YES                                             YES         YES         YES         YES
+m6.w5         YES                                                         YES         YES
+m6.w6         YES
+m6.w7         YES                                                         YES
+m6.w8         YES                                             YES         YES         YES
+m7.w1                     YES         YES         YES         YES         YES         YES         YES
+m7.w3                     YES                                 YES         YES         YES
+m7.w4                     YES         YES                     YES         YES         YES
+m7.w5                     YES
+m7.w6                     YES                                 YES                     YES
+m7.w7                     YES                                 YES
+m7.w8                     YES         YES         YES         YES         YES         YES
+m8.w1                     YES         YES         YES         YES         YES         YES         YES
+m8.w2                                 YES         YES         YES                     YES         YES
+m8.w4                                 YES                                                         YES
+m8.w5                                 YES         YES                                             YES
+m8.w6                     YES         YES         YES         YES                     YES         YES
+m8.w7                                 YES         YES         YES                                 YES
+m8.w8                                 YES
+
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 08/16/21 08:40:30 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Analysis      SOLVE Enumerate Using MIP From line 110
+
+
+
+No solution returned
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 08/16/21 08:40:30 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    119 PARAMETER solutions  enumerated solutions
+
+INDEX 1 = sol1
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                   1
+m2                                                                       1
+m3           1
+m4                                                                                               1
+m5                       1
+m6                                                           1
+m7                                                                                   1
+m8                                               1
+
+INDEX 1 = sol2
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                                           1
+m2                                   1
+m3                                                                                               1
+m4                                                                       1
+m5                                                                                   1
+m6           1
+m7                       1
+m8                                               1
+
+INDEX 1 = sol3
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                                                                               1
+m2                                   1
+m3                                                           1
+m4                                                                       1
+m5                                                                                   1
+m6           1
+m7                       1
+m8                                               1
+
+INDEX 1 = sol4
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                                                                               1
+m2                                   1
+m3                       1
+m4                                                                       1
+m5           1
+m6                                                           1
+m7                                                                                   1
+m8                                               1
+
+INDEX 1 = sol5
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                   1
+m2                                                                       1
+m3                                                           1
+m4                                                                                               1
+m5                                                                                   1
+m6           1
+m7                       1
+m8                                               1
+
+INDEX 1 = sol6
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                                                                               1
+m2                                   1
+m3           1
+m4                                                                       1
+m5                       1
+m6                                                           1
+m7                                                                                   1
+m8                                               1
+
+INDEX 1 = sol7
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                   1
+m2                                                                       1
+m3                       1
+m4                                                                                               1
+m5           1
+m6                                                           1
+m7                                                                                   1
+m8                                               1
+
+INDEX 1 = sol8
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                   1
+m2                                                                       1
+m3           1
+m4                                                                                               1
+m5                                                                                   1
+m6                                                           1
+m7                       1
+m8                                               1
+
+INDEX 1 = sol9
+
+            w1          w2          w3          w4          w5          w6          w7          w8
+
+m1                                                                                               1
+m2                                   1
+m3           1
+m4                                                                       1
+m5                                                                                   1
+m6                                                           1
+m7                       1
+m8                                               1
+
+
+
+EXECUTION TIME       =        1.469 SECONDS      4 MB  35.2.0 r33388c4 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\StableMarriage\StableMarriage2.gms
+Output     D:\projects\OptimizationModels\StableMarriage\StableMarriage2.lst
