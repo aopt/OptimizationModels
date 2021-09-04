@@ -2,12 +2,12 @@ $ontext
 
    Invert a square, dense matrix.
 
-   This uses the Embedded Python API. We see that it is
-   very slow for larger instances.
+   Uses linalg (from GAMS 36.1). This is even slower than our own
+   batinclude.
 
 $offtext
 
-$version 37
+$version 361
 
 set i /i1*i1000/;
 alias(i,j,k);
