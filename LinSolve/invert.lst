@@ -1,4 +1,4 @@
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:09:44 Page 1
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 10:06:28 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -11,7 +11,7 @@ C o m p i l a t i o n
        
    9   
   10   
-  11  set i /i1*i500/;
+  11  set i /i1*i1000/;
   12  alias(i,j,k);
   13   
   14  parameters
@@ -46,7 +46,7 @@ BATINCLUDE D:\projects\OptimizationModels\LinSolve\invert.inc
  108     display maxerr;
  109  );
  110   
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:09:44 Page 2
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 10:06:28 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
@@ -57,18 +57,26 @@ Include File Summary
      2       22 BATINCLUDE     1      22  .D:\projects\OptimizationModels\LinSolve\invert.inc
 
 
-COMPILATION TIME     =        0.031 SECONDS      3 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:09:44 Page 3
+COMPILATION TIME     =        0.016 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+----      1 InitE                    0.000     0.000 SECS      3 MB 
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 10:06:28 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
+
+----      1 ExecInit                 0.000     0.000 SECS      3 MB 
+----     18 Assignment a             0.515     0.515 SECS     36 MB  1000000
+----     19 Assignment a             0.000     0.515 SECS     36 MB  1000000
+----     33 EmbeddedCode            46.125    46.640 SECS     68 MB 
+----     97 Display                  0.000    46.640 SECS     68 MB 
+----    105 IF-ELSE                  0.000    46.640 SECS     68 MB 
 
 **** REPORT FILE SUMMARY
 
  pyScript D:\projects\OptimizationModels\LinSolve\225a\myPy.dat
 
 
-EXECUTION TIME       =       10.797 SECONDS     20 MB  35.2.0 r33388c4 WEX-WEI
+EXECUTION TIME       =       46.640 SECONDS     68 MB  36.1.0 r2c0a44a WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN
@@ -79,3 +87,9 @@ USER: Eval License                                   S201210/0001CO-GEN
 
 Input      D:\projects\OptimizationModels\LinSolve\invert.gms
 Output     D:\projects\OptimizationModels\LinSolve\invert.lst
+----    105 GAMS Fini                0.672     0.672 SECS     68 MB 
+ 
+---- Profile Summary (8 records processed)
+    46.125   0.068GB        33 EmbeddedCode
+     0.672   0.068GB       105 GAMS Fini   
+     0.515   0.036GB        18 Assignment a (1000000)

@@ -8,7 +8,7 @@ $ontext
 $offtext
 
 
-set i /i1*i500/;
+set i /i1*i1000/;
 alias(i,j,k);
 
 parameters
