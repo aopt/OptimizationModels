@@ -7,7 +7,7 @@ $ontext
 
 $offtext
 
-*$ver
+$version 37
 
 set i /i1*i1000/;
 alias(i,j,k);
