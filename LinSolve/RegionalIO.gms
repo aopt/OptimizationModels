@@ -60,6 +60,7 @@ parameter counts(*) 'industries,regions,combinations';
 counts('i:sectors') = card(i);
 counts('r:regions') = card(r);
 counts('ir:combinations') = card(ir);
+counts('density') = sum((ir,ir2)$WIOT(ir,ir2),1)/sqr(card(ir));
 option counts:0;
 display counts;
 

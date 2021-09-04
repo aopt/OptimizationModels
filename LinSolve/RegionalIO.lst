@@ -1,4 +1,4 @@
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:28:05 Page 1
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 04:51:40 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -58,50 +58,51 @@ GDXIN   D:\projects\OptimizationModels\LinSolve\WIOT2014_Nov16_ROW.gdx
   60  counts('i:sectors') = card(i);
   61  counts('r:regions') = card(r);
   62  counts('ir:combinations') = card(ir);
-  63  option counts:0;
-  64  display counts;
-  65   
-  66  *----------------------------------------------------------------
-  67  * extract parameters
-  68  *----------------------------------------------------------------
-  69   
-  70  set
-  71    fd 'final demand'/
-  72            CONS_h  'Final consumption expenditure by households'
-  73            CONS_np 'Final consumption expenditure by non-profit organisations serving households (NPISH)'
-  74            CONS_g  'Final consumption expenditure by government'
-  75            GFCF    'Gross fixed capital formation'
-  76            INVEN   'Changes in inventories and valuables'
-  77         /
-  78  ;
-  79   
-  80  parameter
-  81     finalDemand(i,r) 'final demand f'
-  82     grossOutput(i,r) 'total'
-  83     A(i,r,i,r)       'technological coefficients'
-  84     Ident(i,r,i,r)   'Indentity matrix I'
-  85  ;
-  86  finalDemand(ir) = sum((fd,r),WIOT(ir,fd,r));
-  87  grossOutput(ir) = WIOT(ir,'GO','TOT');
-  88  A(ir,ir2)$grossOutput(ir2) = WIOT(ir,ir2)/grossOutput(ir2);
-  89  Ident(i,r,i,r) = 1;
-  90   
-  91  *----------------------------------------------------------------
-  92  * sanity check
-  93  *----------------------------------------------------------------
-  94   
-  95  * x = Z*1 + f
-  96   
-  97  parameter Xerr(i,r) 'error in identity x = Z*1 + f';
-  98  Xerr(ir) = grossOutput(ir) - sum(ir2,WIOT(ir,ir2)) - finalDemand(ir);
-  99  abort$(smax(ir,abs(Xerr(ir)))>1e-5) "Check Xerr";
- 100   
- 101  *----------------------------------------------------------------
- 102  * form Leontief inverse
- 103  *----------------------------------------------------------------
- 104   
- 105  parameter L(i,r,i,r) 'Leontief inverse';
- 106   
+  63  counts('density') = sum((ir,ir2)$WIOT(ir,ir2),1)/sqr(card(ir));
+  64  option counts:0;
+  65  display counts;
+  66   
+  67  *----------------------------------------------------------------
+  68  * extract parameters
+  69  *----------------------------------------------------------------
+  70   
+  71  set
+  72    fd 'final demand'/
+  73            CONS_h  'Final consumption expenditure by households'
+  74            CONS_np 'Final consumption expenditure by non-profit organisations serving households (NPISH)'
+  75            CONS_g  'Final consumption expenditure by government'
+  76            GFCF    'Gross fixed capital formation'
+  77            INVEN   'Changes in inventories and valuables'
+  78         /
+  79  ;
+  80   
+  81  parameter
+  82     finalDemand(i,r) 'final demand f'
+  83     grossOutput(i,r) 'total'
+  84     A(i,r,i,r)       'technological coefficients'
+  85     Ident(i,r,i,r)   'Indentity matrix I'
+  86  ;
+  87  finalDemand(ir) = sum((fd,r),WIOT(ir,fd,r));
+  88  grossOutput(ir) = WIOT(ir,'GO','TOT');
+  89  A(ir,ir2)$grossOutput(ir2) = WIOT(ir,ir2)/grossOutput(ir2);
+  90  Ident(i,r,i,r) = 1;
+  91   
+  92  *----------------------------------------------------------------
+  93  * sanity check
+  94  *----------------------------------------------------------------
+  95   
+  96  * x = Z*1 + f
+  97   
+  98  parameter Xerr(i,r) 'error in identity x = Z*1 + f';
+  99  Xerr(ir) = grossOutput(ir) - sum(ir2,WIOT(ir,ir2)) - finalDemand(ir);
+ 100  abort$(smax(ir,abs(Xerr(ir)))>1e-5) "Check Xerr";
+ 101   
+ 102  *----------------------------------------------------------------
+ 103  * form Leontief inverse
+ 104  *----------------------------------------------------------------
+ 105   
+ 106  parameter L(i,r,i,r) 'Leontief inverse';
+ 107   
 BATINCLUDE D:\projects\OptimizationModels\LinSolve\leontief.inc
        
        leontief.inc
@@ -114,28 +115,28 @@ BATINCLUDE D:\projects\OptimizationModels\LinSolve\leontief.inc
          %3 : sets defining A and L
               can have 1 or multiple dimensions
        
- 121   
- 231   
- 232  *----------------------------------------------------------------
- 233  * some checks
- 234  *----------------------------------------------------------------
- 235   
- 236  * check  (I-A) * inv(I-A) = I
- 237  * do a small subset of countries (a complete check would take a long time).
- 238  set rsub(r) /AUS,AUT/;
- 239  parameter InvErr(i,r,i,r) 'error in identity (I-A)*L=I';
- 240  InvErr(ir(i,r),ir2(i2,r2))$(rsub(r) and rsub(r2)) =
- 241      sum(ir3, (Ident(ir,ir3)-A(ir,ir3))*L(ir3,ir2)) - Ident(ir,ir2);
- 242  abort$(smax((ir,ir2),abs(InvErr(ir,ir2)))>1e-5) "Check InvErr";
- 243   
+ 122   
+ 232   
+ 233  *----------------------------------------------------------------
+ 234  * some checks
+ 235  *----------------------------------------------------------------
+ 236   
+ 237  * check  (I-A) * inv(I-A) = I
+ 238  * do a small subset of countries (a complete check would take a long time).
+ 239  set rsub(r) /AUS,AUT/;
+ 240  parameter InvErr(i,r,i,r) 'error in identity (I-A)*L=I';
+ 241  InvErr(ir(i,r),ir2(i2,r2))$(rsub(r) and rsub(r2)) =
+ 242      sum(ir3, (Ident(ir,ir3)-A(ir,ir3))*L(ir3,ir2)) - Ident(ir,ir2);
+ 243  abort$(smax((ir,ir2),abs(InvErr(ir,ir2)))>1e-5) "Check InvErr";
  244   
- 245  * check  x = inv(I-A)*f = L*f
- 246  parameter xInvErr(i,r) 'error in x = inv(I-A)*f';
- 247  xInvErr(ir) = sum(ir2, L(ir,ir2)*finalDemand(ir2)) - GrossOutput(ir);
- 248  abort$(smax(ir,abs(XInvErr(ir)))>1e-5) "Check XInvErr";
- 249   
+ 245   
+ 246  * check  x = inv(I-A)*f = L*f
+ 247  parameter xInvErr(i,r) 'error in x = inv(I-A)*f';
+ 248  xInvErr(ir) = sum(ir2, L(ir,ir2)*finalDemand(ir2)) - GrossOutput(ir);
+ 249  abort$(smax(ir,abs(XInvErr(ir)))>1e-5) "Check XInvErr";
+ 250   
 STOP D:\projects\OptimizationModels\LinSolve\RegionalIO.gms
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:28:05 Page 2
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 04:51:40 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
@@ -145,19 +146,20 @@ Include File Summary
      1        1 INPUT          0       0  D:\projects\OptimizationModels\LinSolve\RegionalIO.gms
      2       23 IF EXIST       1      23  D:\projects\OptimizationModels\LinSolve\WIOT2014_Nov16_ROW.gdx
      3       27 GDXIN          1      27  D:\projects\OptimizationModels\LinSolve\WIOT2014_Nov16_ROW.gdx
-     4      107 BATINCLUDE     1     107  .D:\projects\OptimizationModels\LinSolve\leontief.inc
-     5      250 STOP           1     127  D:\projects\OptimizationModels\LinSolve\RegionalIO.gms
+     4      108 BATINCLUDE     1     108  .D:\projects\OptimizationModels\LinSolve\leontief.inc
+     5      251 STOP           1     128  D:\projects\OptimizationModels\LinSolve\RegionalIO.gms
 
 
-COMPILATION TIME     =        4.640 SECONDS    182 MB  35.2.0 r33388c4 WEX-WEI
-GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/01/21 14:28:05 Page 3
+COMPILATION TIME     =        4.468 SECONDS    182 MB  35.2.0 r33388c4 WEX-WEI
+GAMS 35.2.0  r33388c4 Released Jun  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/03/21 04:51:40 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     64 PARAMETER counts  industries,regions,combinations
+----     65 PARAMETER counts  industries,regions,combinations
 
-i:sectors         56,    r:regions         44,    ir:combinations 2464
+i:sectors                56,    r:regions                44,    ir:combinations        2464
+density         8.323994E-1
 
 
 **** REPORT FILE SUMMARY
@@ -165,7 +167,7 @@ i:sectors         56,    r:regions         44,    ir:combinations 2464
  pyScript D:\projects\OptimizationModels\LinSolve\225a\myPy.dat
 
 
-EXECUTION TIME       =      399.641 SECONDS    657 MB  35.2.0 r33388c4 WEX-WEI
+EXECUTION TIME       =      339.907 SECONDS    657 MB  35.2.0 r33388c4 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN
