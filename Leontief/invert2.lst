@@ -1,0 +1,171 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/04/21 06:38:26 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Invert a square, dense matrix.
+       
+         Uses linalg (from GAMS 36.1). This is even slower than our own
+         batinclude.
+       
+   9   
+  11   
+  12  set i /i1*i1000/;
+  13  alias(i,j,k);
+  14   
+  15  parameters
+  16    a(i,j) 'square matrix A'
+  17    b(j,i) 'B=inv(A)'
+  18  ;
+  19  a(i,j) = 1/(ord(i)+ord(j)-1);
+  20  a(i,i) = 1;
+  21  * This is a Hilbert matrix with diagonal replaced by ones.
+  22   
+LIBINCLUDE C:\GAMS\36\inclib\linalg.gms
+  24  *
+  25  * LibInclude file to provide functionality of old matrix utilities cholesky via EmbeddedCode and numpy.linalg
+  26  * -c runs this at compile time, -e at execution time (default)
+  27  *
+  28  * Usage: $libInclude linalg [-c|-e] cholesky i A L
+  29  *        This calculates the Cholesky decomposition of a symmetric positive definite matrix A: A = LL^t
+  30  *        The matrix A is indexed over A(i,i)
+  31  *
+  32  * Usage: $libInclude linalg [-c|-e] eigenvalue i A AVal
+  33  *        This calculates the Eigenvalues of a symmetric positive definite matrix.
+  34  *        The matrix A is indexed over A(i,i). AVal(i) is indexed over i.
+  35  *
+  36  * Usage: $libInclude linalg [-c|-e] eigenvector i A AVal AVec
+  37  *        This calculates the Eigenvalues and Eigenvecors of a symmetric positive definite matrix.
+  38  *        The matrices A and AVec are indexed over (i,i). AVal(i) is indexed over i.
+  39  *
+  40  * Usage: $libInclude linalg [-c|-e] invert i A AInv
+  41  *        This calculates the inverse of a square matrix A: A*AInv = I
+  42  *        The matrices A and AInv are indexed over (i,i)
+  43  *
+  44  * Usage: $libInclude linalg [-c|-e] ols [-info=infoSym] [-cfival=val] [-intercept=0,1,2] [-CDFStudentT=fname] [-iC
+      DFStudentT=fname] [-rcond=val] i p A y estimate
+  45  *        This estimates  the unknown parameters in a linear regression model.
+  46  *        The set i are the observations, the set p are the estimates. The matrices
+  47  *        A(i,p) contains the explanatory variable and y(i) the dependent variable.
+  48  *        On return the symbol estimate(p) will contain the estimated statistical
+  49  *        coefficients. The following parameters are available:
+  50  *          -intercept=0,1,2      For 0 no constant term or intercept will be added to
+  51  *                                the problem. For 1 a constant term will always be added.
+  52  *                                For 2 (default) the algorithm will add a constant term
+  53  *                                only if there is no data column with all ones in the matrix A.
+  54  *          -cfival=val           The confidence interval value. Default is 0.95. This impacts
+  55  *                                the calculation of confint_lo and confint_up.
+  56  *          -CDFStudentT=fname    The name of the cumulative distribution function of the
+  57  *                                StudentT distribution. The GAMS extrinisc function library
+  58  *                                stodclib provides this function. The default is CDFStudentT.
+  59  *                                The CDFStudentT is required to calculate pval.
+  60  *          -iCDFStudentT=fname   The name of the inverse cumulative distribution function of the
+  61  *                                StudentT distribution. The GAMS extrinisc function library
+  62  *                                stodclib provides this function. The default is iCDFStudentT.
+  63  *                                The iCDFStudentT is required to calculate confint_lo/up.
+  64  *          -rcond=val            Cut-off ratio for small singular values of A used as argument
+  65  *                                rcond to np.linalg.lstsq. Default is -1.
+  66  *          -mergetype=val        Determines if the symbols will be merged or replaced when loading
+  67  *                                into GAMS. Possible values are DEFAULT, REPLACE, and MERGE.
+  68  *                                Capitalization of this argument is important.
+  69  *                                See https://www.gams.com/latest/docs/UG_EmbeddedCode.html#UG_EmbeddedCode_Python
+  70  *        Additonal regression statistics can be requested via -info=infoSym. -info without the
+  71  *        infoSym, the name of info is used as a symbol name, e.g. -df sets GAMS scalar df.
+  72  *        The following statistics are available:
+  73  *          info        domain description
+  74  *          confint_lo  p      confidence interval (lower bound)
+  75  *          confint_up  p      confidence interval (upper bound)
+  76  *          covar       p,p    variance-covariance matrix
+  77  *          df                 degrees of freedom
+  78  *          fitted      i      fitted values for dependent variable
+  79  *          pval        p      p values
+  80  *          r2                 R Squared
+  81  *          resid       i      residuals
+  82  *          resvar             residual variance
+  83  *          rss                residual sum of squares
+  84  *          se          p      standard errors
+  85  *          sigma              standard error
+  86  *          tval        p      t values
+  87   
+  88   
+  97  *
+ 106   
+ 107  $EmbeddedCode Python:
+ 108  import numpy as np
+ 109  n2u = np.array(list(gams.get('i', keyType=KeyType.INT, valueFormat=ValueFormat.SKIP)),dtype=int)
+ 110  u2n = np.zeros(n2u[-1]-n2u[0]+1, dtype=int)
+ 111  for n,u in enumerate(n2u):
+ 112    u2n[u-n2u[0]] = n+1
+ 113  a = np.zeros((len(n2u),len(n2u)))
+ 114  for r in gams.get('A', keyType=KeyType.INT, keyFormat=KeyFormat.FLAT):
+ 115    if r[0]>n2u[-1] or r[0]<n2u[0] or u2n[r[0]-n2u[0]] == 0: continue
+ 116    if r[1]>n2u[-1] or r[1]<n2u[0] or u2n[r[1]-n2u[0]] == 0: continue
+ 117    a[u2n[r[0]-n2u[0]]-1,u2n[r[1]-n2u[0]]-1] = r[2]
+ 118  l = np.linalg.inv(a)
+ 119  gams.set('B', [ (n2u[i],n2u[j],l[i,j]) for (i,j) in zip(*l.nonzero()) ], mapKeys=int)
+ 120  $endEmbeddedCode B
+EXIT C:\GAMS\36\inclib\linalg.gms
+ 122   
+ 123  display$(card(i)<50) B;
+ 124   
+ 125  * check solution for smaller instances
+ 126  parameters
+ 127     ident(i,j) 'identity matrix'
+ 128     maxerr     'maximum error'
+ 129  ;
+ 130   
+ 131  if (card(i)<=200,
+ 132     ident(i,i)=1;
+ 133     maxerr = smax((i,j),abs(sum(k,A(i,k)*B(j,k))-ident(i,j)));
+ 134     display maxerr;
+ 135  );
+ 136   
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/04/21 06:38:26 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\projects\OptimizationModels\LinSolve\invert2.gms
+     2       23 LIBINCLUDE     1      23  .C:\GAMS\36\inclib\linalg.gms
+     3      121 EXIT           2     168  .C:\GAMS\36\inclib\linalg.gms
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+----      1 InitE                    0.000     0.000 SECS      3 MB 
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/04/21 06:38:26 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----      1 ExecInit                 0.000     0.000 SECS      3 MB 
+----     19 Assignment a             0.750     0.750 SECS     36 MB  1000000
+----     20 Assignment a             0.000     0.750 SECS     36 MB  1000000
+----    107 EmbeddedCode            84.906    85.656 SECS     68 MB 
+----    123 Display                  0.000    85.656 SECS     68 MB 
+----    131 IF-ELSE                  0.000    85.656 SECS     68 MB 
+
+**** REPORT FILE SUMMARY
+
+ pyScript D:\projects\OptimizationModels\LinSolve\225a\myPy.dat
+
+
+EXECUTION TIME       =       85.656 SECONDS     68 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\LinSolve\invert2.gms
+Output     D:\projects\OptimizationModels\LinSolve\invert2.lst
+----    131 GAMS Fini                0.969     0.969 SECS     68 MB 
+ 
+---- Profile Summary (8 records processed)
+    84.906   0.068GB       107 EmbeddedCode
+     0.969   0.068GB       131 GAMS Fini   
+     0.750   0.036GB        19 Assignment a (1000000)
