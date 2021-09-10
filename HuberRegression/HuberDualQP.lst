@@ -1,0 +1,331 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Huber M regression by QP
+       
+         Erwin Kalvelagen
+       
+   8   
+   9  set i 'number of cases' /i1*i40/;
+  10  set j 'coefficient to estimate' /'constant','coeff1'/;
+  11   
+INCLUDE    D:\projects\OptimizationModels\HuberRegression\expdata.inc
+  13  * cross-section data: weekly household expenditure on food and
+  14  * weekly household income from Griffiths, Hill and Judge,
+  15  * 1993, Table 5.2, p. 182.
+  16   
+  17  table data(i, *)
+  18          expenditure income
+  19  i1        9.46       25.83
+  20  i2       10.56       34.31
+  21  i3       14.81       42.50
+  22  i4       21.71       46.75
+  23  i5       22.79       48.29
+  24  i6       18.19       48.77
+  25  i7       22.00       49.65
+  26  i8       18.12       51.94
+  27  i9       23.13       54.33
+  28  i10      19.00       54.87
+  29  i11      19.46       56.46
+  30  i12      17.83       58.83
+  31  i13      32.81       59.13
+  32  i14      22.13       60.73
+  33  i15      23.46       61.12
+  34  i16      16.81       63.10
+  35  i17      21.35       65.96
+  36  i18      14.87       66.40
+  37  i19      33.00       70.42
+  38  i20      25.19       70.48
+  39  i21      17.77       71.98
+  40  i22      22.44       72.00
+  41  i23      22.87       72.23
+  42  i24      26.52       72.23
+  43  i25      21.00       73.44
+  44  i26      37.52       74.25
+  45  i27      21.69       74.77
+  46  i28      27.40       76.33
+  47  i29      30.69       81.02
+  48  i30      19.56       81.85
+  49  i31      30.58       82.56
+  50  i32      41.12       83.33
+  51  i33      15.38       83.40
+  52  i34      17.87       91.81
+  53  i35      25.54       91.81
+  54  i36      39.00       92.96
+  55  i37      20.44       95.17
+  56  i38      30.10      101.40
+  57  i39      20.90      114.13
+  58  i40      48.71      115.46
+  59  ;
+  60   
+  61  parameter y(i);
+  62  y(i) = data(i,'expenditure');
+  63   
+  64  parameter X(i,j);
+  65  X(i,'constant') = 1;
+  66  X(i,'coeff1') = data(i,'income');
+  67   
+  68  scalar k /1.5/;
+  69   
+  70  variables
+  71     loss     'objective'
+  72     u(i)     'duals'
+  73  ;
+  74   
+  75  equations
+  76     obj
+  77     edual(j)
+  78  ;
+  79   
+  80  obj.. loss =e= (k/2)*sum(i,sqr(u(i))) + sum(i, y(i)*u(i));
+  81  edual(j).. sum(i, X(i,j)*u(i)) =e= 0;
+  82   
+  83  u.lo(i) = -1;
+  84  u.up(i) = 1;
+  85   
+  86  model m /all/;
+  87  solve m using qcp minimizing loss;
+  88   
+  89  display edual.m;
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\projects\OptimizationModels\HuberRegression\HuberDualQP.gms
+     2       12 INCLUDE        1      12  .D:\projects\OptimizationModels\HuberRegression\expdata.inc
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using QCP From line 87
+
+
+---- obj  =E=  
+
+obj..  loss - (9.46)*u(i1) - (10.56)*u(i2) - (14.81)*u(i3) - (21.71)*u(i4) - (22.79)*u(i5) - (18.19)*u(i6) - (22)*u(i7)
+     
+      - (18.12)*u(i8) - (23.13)*u(i9) - (19)*u(i10) - (19.46)*u(i11) - (17.83)*u(i12) - (32.81)*u(i13) - (22.13)*u(i14)
+     
+      - (23.46)*u(i15) - (16.81)*u(i16) - (21.35)*u(i17) - (14.87)*u(i18) - (33)*u(i19) - (25.19)*u(i20)
+     
+      - (17.77)*u(i21) - (22.44)*u(i22) - (22.87)*u(i23) - (26.52)*u(i24) - (21)*u(i25) - (37.52)*u(i26)
+     
+      - (21.69)*u(i27) - (27.4)*u(i28) - (30.69)*u(i29) - (19.56)*u(i30) - (30.58)*u(i31) - (41.12)*u(i32)
+     
+      - (15.38)*u(i33) - (17.87)*u(i34) - (25.54)*u(i35) - (39)*u(i36) - (20.44)*u(i37) - (30.1)*u(i38) - (20.9)*u(i39)
+     
+      - (48.71)*u(i40) =E= 0 ; (LHS = 0)
+     
+
+---- edual  =E=  
+
+edual(constant)..  u(i1) + u(i2) + u(i3) + u(i4) + u(i5) + u(i6) + u(i7) + u(i8) + u(i9) + u(i10) + u(i11) + u(i12)
+     
+      + u(i13) + u(i14) + u(i15) + u(i16) + u(i17) + u(i18) + u(i19) + u(i20) + u(i21) + u(i22) + u(i23) + u(i24)
+     
+      + u(i25) + u(i26) + u(i27) + u(i28) + u(i29) + u(i30) + u(i31) + u(i32) + u(i33) + u(i34) + u(i35) + u(i36)
+     
+      + u(i37) + u(i38) + u(i39) + u(i40) =E= 0 ; (LHS = 0)
+     
+edual(coeff1)..  25.83*u(i1) + 34.31*u(i2) + 42.5*u(i3) + 46.75*u(i4) + 48.29*u(i5) + 48.77*u(i6) + 49.65*u(i7)
+     
+      + 51.94*u(i8) + 54.33*u(i9) + 54.87*u(i10) + 56.46*u(i11) + 58.83*u(i12) + 59.13*u(i13) + 60.73*u(i14)
+     
+      + 61.12*u(i15) + 63.1*u(i16) + 65.96*u(i17) + 66.4*u(i18) + 70.42*u(i19) + 70.48*u(i20) + 71.98*u(i21) + 72*u(i22)
+     
+      + 72.23*u(i23) + 72.23*u(i24) + 73.44*u(i25) + 74.25*u(i26) + 74.77*u(i27) + 76.33*u(i28) + 81.02*u(i29)
+     
+      + 81.85*u(i30) + 82.56*u(i31) + 83.33*u(i32) + 83.4*u(i33) + 91.81*u(i34) + 91.81*u(i35) + 92.96*u(i36)
+     
+      + 95.17*u(i37) + 101.4*u(i38) + 114.13*u(i39) + 115.46*u(i40) =E= 0 ; (LHS = 0)
+     
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using QCP From line 87
+
+
+---- loss  objective
+
+loss
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- u  duals
+
+u(i1)
+                (.LO, .L, .UP, .M = -1, 0, 1, 0)
+      (-9.46)   obj
+        1       edual(constant)
+       25.83    edual(coeff1)
+
+u(i2)
+                (.LO, .L, .UP, .M = -1, 0, 1, 0)
+     (-10.56)   obj
+        1       edual(constant)
+       34.31    edual(coeff1)
+
+u(i3)
+                (.LO, .L, .UP, .M = -1, 0, 1, 0)
+     (-14.81)   obj
+        1       edual(constant)
+       42.5     edual(coeff1)
+
+REMAINING 37 ENTRIES SKIPPED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using QCP From line 87
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           41
+NON ZERO ELEMENTS           121     NON LINEAR N-Z             40
+CODE LENGTH                 203     CONSTANT POOL              57
+
+
+GENERATION TIME      =        0.032 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using QCP From line 87
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  loss
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  87
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE             -176.5796
+
+ RESOURCE USAGE, LIMIT          0.079 10000000000.000
+ ITERATION COUNT, LIMIT        17    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T 3   version 3.17K
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 41 variables and 3 constraints
+    with 121 Jacobian elements, 40 of which are nonlinear.
+    The Hessian of the Lagrangian has 40 elements on the diagonal,
+    0 elements below the diagonal, and 40 nonlinear variables.
+ 
+ ** Warning **  The value of LFITER is out of range.
+                LFITER is decreased from 2147483647 to 1000000000.
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.054 seconds
+   of which: Function evaluations             0.001 =  1.9%
+             1st Derivative evaluations       0.000 =  0.0%
+             Directional 2nd Derivative       0.000 =  0.0%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+---- EQU edual  
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+constant          .              .              .             6.7265      
+coeff1            .              .              .             0.2304      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR loss              -INF         -176.5796        +INF             .          
+
+  loss  objective
+
+---- VAR u  duals
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -1.0000         1.0000         1.0000        -1.7170      
+i2         -1.0000         1.0000         1.0000        -2.5706      
+i3         -1.0000         1.0000         1.0000        -0.2074      
+i4         -1.0000        -1.0000         1.0000         2.7135      
+i5         -1.0000        -1.0000         1.0000         3.4387      
+i6         -1.0000        -0.1521         1.0000          .          
+i7         -1.0000        -1.0000         1.0000         2.3354      
+i8         -1.0000         0.3814         1.0000         EPS         
+i9         -1.0000        -1.0000         1.0000         2.3873      
+i10        -1.0000         0.2448         1.0000         EPS         
+i11        -1.0000         0.1823         1.0000         EPS         
+i12        -1.0000         1.0000         1.0000        -0.9494      
+i13        -1.0000        -1.0000         1.0000        10.9615      
+i14        -1.0000        -0.9419         1.0000         EPS         
+i15        -1.0000        -1.0000         1.0000         1.1530      
+i16        -1.0000         1.0000         1.0000        -2.9531      
+i17        -1.0000         0.3813         1.0000         EPS         
+i18        -1.0000         1.0000         1.0000        -5.6534      
+i19        -1.0000        -1.0000         1.0000         8.5505      
+i20        -1.0000        -1.0000         1.0000         0.7267      
+i21        -1.0000         1.0000         1.0000        -4.0388      
+i22        -1.0000         0.5823         1.0000         EPS         
+i23        -1.0000         0.3310         1.0000         EPS         
+i24        -1.0000        -1.0000         1.0000         1.6536      
+i25        -1.0000         1.0000         1.0000        -1.1452      
+i26        -1.0000        -1.0000         1.0000        12.1882      
+i27        -1.0000         1.0000         1.0000        -0.7616      
+i28        -1.0000        -1.0000         1.0000         1.5890      
+i29        -1.0000        -1.0000         1.0000         3.7986      
+i30        -1.0000         1.0000         1.0000        -4.5226      
+i31        -1.0000        -1.0000         1.0000         3.3338      
+i32        -1.0000        -1.0000         1.0000        13.6964      
+i33        -1.0000         1.0000         1.0000        -9.0597      
+i34        -1.0000         1.0000         1.0000        -8.5072      
+i35        -1.0000         1.0000         1.0000        -0.8372      
+i36        -1.0000        -1.0000         1.0000         9.3579      
+i37        -1.0000         1.0000         1.0000        -6.7112      
+i38        -1.0000        -0.0090         1.0000          .          
+i39        -1.0000         1.0000         1.0000       -10.6191      
+i40        -1.0000        -1.0000         1.0000        13.8845      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 02:15:30 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     89 EQUATION edual.M  
+
+constant 6.726,    coeff1   0.230
+
+
+
+EXECUTION TIME       =        0.453 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\HuberRegression\HuberDualQP.gms
+Output     D:\projects\OptimizationModels\HuberRegression\HuberDualQP.lst

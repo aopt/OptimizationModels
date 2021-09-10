@@ -1,0 +1,446 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Huber M regression by NLP
+       
+         Erwin Kalvelagen
+       
+   8   
+   9  set i 'number of cases' /i1*i40/;
+  10  set j 'coefficient to estimate' /'constant','coeff1'/;
+  11   
+INCLUDE    D:\projects\OptimizationModels\HuberRegression\expdata.inc
+  13  * cross-section data: weekly household expenditure on food and
+  14  * weekly household income from Griffiths, Hill and Judge,
+  15  * 1993, Table 5.2, p. 182.
+  16   
+  17  table data(i, *)
+  18          expenditure income
+  19  i1        9.46       25.83
+  20  i2       10.56       34.31
+  21  i3       14.81       42.50
+  22  i4       21.71       46.75
+  23  i5       22.79       48.29
+  24  i6       18.19       48.77
+  25  i7       22.00       49.65
+  26  i8       18.12       51.94
+  27  i9       23.13       54.33
+  28  i10      19.00       54.87
+  29  i11      19.46       56.46
+  30  i12      17.83       58.83
+  31  i13      32.81       59.13
+  32  i14      22.13       60.73
+  33  i15      23.46       61.12
+  34  i16      16.81       63.10
+  35  i17      21.35       65.96
+  36  i18      14.87       66.40
+  37  i19      33.00       70.42
+  38  i20      25.19       70.48
+  39  i21      17.77       71.98
+  40  i22      22.44       72.00
+  41  i23      22.87       72.23
+  42  i24      26.52       72.23
+  43  i25      21.00       73.44
+  44  i26      37.52       74.25
+  45  i27      21.69       74.77
+  46  i28      27.40       76.33
+  47  i29      30.69       81.02
+  48  i30      19.56       81.85
+  49  i31      30.58       82.56
+  50  i32      41.12       83.33
+  51  i33      15.38       83.40
+  52  i34      17.87       91.81
+  53  i35      25.54       91.81
+  54  i36      39.00       92.96
+  55  i37      20.44       95.17
+  56  i38      30.10      101.40
+  57  i39      20.90      114.13
+  58  i40      48.71      115.46
+  59  ;
+  60   
+  61   
+  62  parameter y(i);
+  63  y(i) = data(i,'expenditure');
+  64   
+  65  parameter X(i,j);
+  66  X(i,'constant') = 1;
+  67  X(i,'coeff1') = data(i,'income');
+  68   
+  69  scalar k /1.5/;
+  70   
+  71  variables
+  72     loss   'objective'
+  73     e(i)   'deviations'
+  74     beta(j)   'parameters to estimate'
+  75  ;
+  76   
+  77  equations
+  78     obj
+  79     fit(i)
+  80  ;
+  81   
+  82  obj.. loss =e= sum(i,ifthen(abs(e(i))<=k, sqr(e(i)), 2*k*abs(e(i))-sqr(k)));
+  83  fit(i).. y(i) =e= sum(j, X(i,j)*beta(j)) + e(i);
+  84   
+  85  model m /all/;
+  86  solve m using dnlp minimizing loss;
+  87   
+  88  display beta.l;
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\projects\OptimizationModels\HuberRegression\HuberNLP.gms
+     2       12 INCLUDE        1      12  .D:\projects\OptimizationModels\HuberRegression\expdata.inc
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using DNLP From line 86
+
+
+---- obj  =E=  
+
+obj..  loss + (0)*e(i1) + (0)*e(i2) + (0)*e(i3) + (0)*e(i4) + (0)*e(i5) + (0)*e(i6) + (0)*e(i7) + (0)*e(i8) + (0)*e(i9)
+     
+      + (0)*e(i10) + (0)*e(i11) + (0)*e(i12) + (0)*e(i13) + (0)*e(i14) + (0)*e(i15) + (0)*e(i16) + (0)*e(i17)
+     
+      + (0)*e(i18) + (0)*e(i19) + (0)*e(i20) + (0)*e(i21) + (0)*e(i22) + (0)*e(i23) + (0)*e(i24) + (0)*e(i25)
+     
+      + (0)*e(i26) + (0)*e(i27) + (0)*e(i28) + (0)*e(i29) + (0)*e(i30) + (0)*e(i31) + (0)*e(i32) + (0)*e(i33)
+     
+      + (0)*e(i34) + (0)*e(i35) + (0)*e(i36) + (0)*e(i37) + (0)*e(i38) + (0)*e(i39) + (0)*e(i40) =E= 0 ; (LHS = 0)
+     
+
+---- fit  =E=  
+
+fit(i1)..  - e(i1) - beta(constant) - 25.83*beta(coeff1) =E= -9.46 ; (LHS = 0, INFES = 9.46 ****)
+     
+fit(i2)..  - e(i2) - beta(constant) - 34.31*beta(coeff1) =E= -10.56 ; (LHS = 0, INFES = 10.56 ****)
+     
+fit(i3)..  - e(i3) - beta(constant) - 42.5*beta(coeff1) =E= -14.81 ; (LHS = 0, INFES = 14.81 ****)
+     
+REMAINING 37 ENTRIES SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using DNLP From line 86
+
+
+---- loss  objective
+
+loss
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- e  deviations
+
+e(i1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+       -1       fit(i1)
+
+e(i2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+       -1       fit(i2)
+
+e(i3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+       -1       fit(i3)
+
+REMAINING 37 ENTRIES SKIPPED
+
+---- beta  parameters to estimate
+
+beta(constant)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       fit(i1)
+       -1       fit(i2)
+       -1       fit(i3)
+       -1       fit(i4)
+       -1       fit(i5)
+       -1       fit(i6)
+       -1       fit(i7)
+       -1       fit(i8)
+       -1       fit(i9)
+       -1       fit(i10)
+       -1       fit(i11)
+       -1       fit(i12)
+       -1       fit(i13)
+       -1       fit(i14)
+       -1       fit(i15)
+       -1       fit(i16)
+       -1       fit(i17)
+       -1       fit(i18)
+       -1       fit(i19)
+       -1       fit(i20)
+       -1       fit(i21)
+       -1       fit(i22)
+       -1       fit(i23)
+       -1       fit(i24)
+       -1       fit(i25)
+       -1       fit(i26)
+       -1       fit(i27)
+       -1       fit(i28)
+       -1       fit(i29)
+       -1       fit(i30)
+       -1       fit(i31)
+       -1       fit(i32)
+       -1       fit(i33)
+       -1       fit(i34)
+       -1       fit(i35)
+       -1       fit(i36)
+       -1       fit(i37)
+       -1       fit(i38)
+       -1       fit(i39)
+       -1       fit(i40)
+
+beta(coeff1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+      -25.83    fit(i1)
+      -34.31    fit(i2)
+      -42.5     fit(i3)
+      -46.75    fit(i4)
+      -48.29    fit(i5)
+      -48.77    fit(i6)
+      -49.65    fit(i7)
+      -51.94    fit(i8)
+      -54.33    fit(i9)
+      -54.87    fit(i10)
+      -56.46    fit(i11)
+      -58.83    fit(i12)
+      -59.13    fit(i13)
+      -60.73    fit(i14)
+      -61.12    fit(i15)
+      -63.1     fit(i16)
+      -65.96    fit(i17)
+      -66.4     fit(i18)
+      -70.42    fit(i19)
+      -70.48    fit(i20)
+      -71.98    fit(i21)
+      -72       fit(i22)
+      -72.23    fit(i23)
+      -72.23    fit(i24)
+      -73.44    fit(i25)
+      -74.25    fit(i26)
+      -74.77    fit(i27)
+      -76.33    fit(i28)
+      -81.02    fit(i29)
+      -81.85    fit(i30)
+      -82.56    fit(i31)
+      -83.33    fit(i32)
+      -83.4     fit(i33)
+      -91.81    fit(i34)
+      -91.81    fit(i35)
+      -92.96    fit(i36)
+      -95.17    fit(i37)
+     -101.4     fit(i38)
+     -114.13    fit(i39)
+     -115.46    fit(i40)
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using DNLP From line 86
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           41
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           161     NON LINEAR N-Z             40
+CODE LENGTH                 522     CONSTANT POOL              18
+
+
+GENERATION TIME      =        0.046 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using DNLP From line 86
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  loss
+     TYPE    DNLP                DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  86
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE              529.7387
+
+ RESOURCE USAGE, LIMIT          0.015 10000000000.000
+ ITERATION COUNT, LIMIT         8    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T 3   version 3.17K
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+ ** Warning **  The value of LFITER is out of range.
+                LFITER is decreased from 2147483647 to 1000000000.
+ 
+ ** Warning **  The number of nonlinear derivatives equal to zero
+                in the initial point is large (= 24 percent).
+                A better initial point will probably help the
+                optimization.
+ 
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  41
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.005 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+             Directional 2nd Derivative       0.000 =  0.0%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+---- EQU fit  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -9.4600        -9.4600        -9.4600         3.0000      
+i2        -10.5600       -10.5600       -10.5600         3.0000      
+i3        -14.8100       -14.8100       -14.8100         3.0000      
+i4        -21.7100       -21.7100       -21.7100        -3.0000      
+i5        -22.7900       -22.7900       -22.7900        -3.0000      
+i6        -18.1900       -18.1900       -18.1900        -0.4563      
+i7        -22.0000       -22.0000       -22.0000        -3.0000      
+i8        -18.1200       -18.1200       -18.1200         1.1443      
+i9        -23.1300       -23.1300       -23.1300        -3.0000      
+i10       -19.0000       -19.0000       -19.0000         0.7343      
+i11       -19.4600       -19.4600       -19.4600         0.5469      
+i12       -17.8300       -17.8300       -17.8300         3.0000      
+i13       -32.8100       -32.8100       -32.8100        -3.0000      
+i14       -22.1300       -22.1300       -22.1300        -2.8257      
+i15       -23.4600       -23.4600       -23.4600        -3.0000      
+i16       -16.8100       -16.8100       -16.8100         3.0000      
+i17       -21.3500       -21.3500       -21.3500         1.1440      
+i18       -14.8700       -14.8700       -14.8700         3.0000      
+i19       -33.0000       -33.0000       -33.0000        -3.0000      
+i20       -25.1900       -25.1900       -25.1900        -3.0000      
+i21       -17.7700       -17.7700       -17.7700         3.0000      
+i22       -22.4400       -22.4400       -22.4400         1.7469      
+i23       -22.8700       -22.8700       -22.8700         0.9929      
+i24       -26.5200       -26.5200       -26.5200        -3.0000      
+i25       -21.0000       -21.0000       -21.0000         3.0000      
+i26       -37.5200       -37.5200       -37.5200        -3.0000      
+i27       -21.6900       -21.6900       -21.6900         3.0000      
+i28       -27.4000       -27.4000       -27.4000        -3.0000      
+i29       -30.6900       -30.6900       -30.6900        -3.0000      
+i30       -19.5600       -19.5600       -19.5600         3.0000      
+i31       -30.5800       -30.5800       -30.5800        -3.0000      
+i32       -41.1200       -41.1200       -41.1200        -3.0000      
+i33       -15.3800       -15.3800       -15.3800         3.0000      
+i34       -17.8700       -17.8700       -17.8700         3.0000      
+i35       -25.5400       -25.5400       -25.5400         3.0000      
+i36       -39.0000       -39.0000       -39.0000        -3.0000      
+i37       -20.4400       -20.4400       -20.4400         3.0000      
+i38       -30.1000       -30.1000       -30.1000        -0.0271      
+i39       -20.9000       -20.9000       -20.9000         3.0000      
+i40       -48.7100       -48.7100       -48.7100        -3.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR loss              -INF          529.7387        +INF             .          
+
+  loss  objective
+
+---- VAR e  deviations
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF           -3.2170        +INF             .          
+i2         -INF           -4.0706        +INF             .          
+i3         -INF           -1.7074        +INF             .          
+i4         -INF            4.2135        +INF             .          
+i5         -INF            4.9387        +INF             .          
+i6         -INF            0.2282        +INF             .          
+i7         -INF            3.8354        +INF             .          
+i8         -INF           -0.5721        +INF             .          
+i9         -INF            3.8873        +INF             .          
+i10        -INF           -0.3671        +INF             .          
+i11        -INF           -0.2734        +INF             .          
+i12        -INF           -2.4494        +INF             .          
+i13        -INF           12.4615        +INF             .          
+i14        -INF            1.4129        +INF             .          
+i15        -INF            2.6530        +INF             .          
+i16        -INF           -4.4531        +INF             .          
+i17        -INF           -0.5720        +INF             .          
+i18        -INF           -7.1534        +INF             .          
+i19        -INF           10.0505        +INF             .          
+i20        -INF            2.2267        +INF             .          
+i21        -INF           -5.5388        +INF             .          
+i22        -INF           -0.8735        +INF             .          
+i23        -INF           -0.4964        +INF             .          
+i24        -INF            3.1536        +INF             .          
+i25        -INF           -2.6452        +INF             .          
+i26        -INF           13.6882        +INF             .          
+i27        -INF           -2.2616        +INF             .          
+i28        -INF            3.0890        +INF             .          
+i29        -INF            5.2986        +INF             .          
+i30        -INF           -6.0226        +INF             .          
+i31        -INF            4.8338        +INF             .          
+i32        -INF           15.1964        +INF             .          
+i33        -INF          -10.5597        +INF             .          
+i34        -INF          -10.0072        +INF             .          
+i35        -INF           -2.3372        +INF             .          
+i36        -INF           10.8579        +INF             .          
+i37        -INF           -8.2112        +INF             .          
+i38        -INF            0.0135        +INF             .          
+i39        -INF          -12.1191        +INF             .          
+i40        -INF           15.3845        +INF            EPS         
+
+---- VAR beta  parameters to estimate
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+constant        -INF            6.7265        +INF            EPS         
+coeff1          -INF            0.2304        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/09/21 18:55:13 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     88 VARIABLE beta.L  parameters to estimate
+
+constant 6.726,    coeff1   0.230
+
+
+
+EXECUTION TIME       =        0.390 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\HuberRegression\HuberNLP.gms
+Output     D:\projects\OptimizationModels\HuberRegression\HuberNLP.lst

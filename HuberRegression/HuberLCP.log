@@ -1,0 +1,108 @@
+
+--- Job HuberLCP.gms Start 09/10/21 00:55:07 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\36\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\OptimizationModels\HuberRegression\HuberLCP.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\OptimizationModels\HuberRegression\225a\
+    SysDir C:\GAMS\36\
+    WorkDir D:\projects\OptimizationModels\HuberRegression\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
+GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- HuberLCP.gms(12) 3 Mb
+--- . expdata.inc(47) 3 Mb
+--- HuberLCP.gms(46) 3 Mb
+--- Starting execution: elapsed 0:00:00.047
+--- HuberLCP.gms(67) 4 Mb
+--- Generating MCP model m
+--- HuberLCP.gms(92) 6 Mb
+---   122 rows  122 columns  360 non-zeroes
+---   0 nl-code  0 nl-non-zeroes
+--- HuberLCP.gms(92) 4 Mb
+--- Executing PATH (Solvelink=2): elapsed 0:00:00.076
+Reading dictionary...
+Reading row data...
+Evaluating functions...
+Checking model...
+Calculating Jacobian...
+
+PATH             36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+122 row/cols, 360 non-zeros, 2.42% dense.
+
+Path 5.0.04 (Mon Aug  2 17:32:12 2021)
+Written by Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
+
+Zero:     0 Single:    80 Double:     0
+Preprocessed size   : 42
+
+INITIAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  0.0000e+00 var: (w(i1))
+Maximum of F. . . . . . . . . .  4.8710e+01 eqn: (e1(i40))
+Maximum of Grad F . . . . . . .  1.1546e+02 eqn: (e2('coeff1'))
+                                            var: (w(i40))
+
+INITIAL JACOBIAN NORM STATISTICS
+Maximum Row Norm. . . . . . . .  2.7920e+03 eqn: (e2('coeff1'))
+Minimum Row Norm. . . . . . . .  2.7830e+01 eqn: (e1(i1))
+Maximum Column Norm . . . . . .  2.7920e+03 var: (beta('coeff1'))
+Minimum Column Norm . . . . . .  2.7830e+01 var: (w(i1))
+
+Crash Log
+major  func  diff  size  residual    step       prox   (label)
+    0     0             9.3119e+00             0.0e+00 (e1(i40))
+pn_search terminated: no progress.
+
+Major Iteration Log
+major minor  func  grad  residual    step  type prox    inorm  (label)
+    0     0    13     1 9.3119e+00           I 0.0e+00 1.5e+00 (e1(i40))
+    1    32    14     2 1.8329e-13  1.0e+00 SO 0.0e+00 1.3e-13 (e1(i38))
+
+FINAL STATISTICS
+Inf-Norm of Complementarity . .  1.0458e-13 eqn: (e2('constant'))
+Inf-Norm of Normal Map. . . . .  1.3145e-13 eqn: (e1(i38))
+Inf-Norm of Minimum Map . . . .  1.3145e-13 eqn: (e1(i38))
+Inf-Norm of Fischer Function. .  1.3145e-13 eqn: (e1(i38))
+Inf-Norm of Grad Fischer Fcn. .  1.0861e-11 eqn: (e2('coeff1'))
+Two-Norm of Grad Fischer Fcn. .  2.7670e-11
+
+FINAL POINT STATISTICS
+Maximum of X. . . . . . . . . .  6.7265e+00 var: (beta('constant'))
+Maximum of F. . . . . . . . . .  1.3884e+01 eqn: (e1(i40))
+Maximum of Grad F . . . . . . .  1.1546e+02 eqn: (e2('coeff1'))
+                                            var: (w(i40))
+
+ ** EXIT - solution found.
+
+Major Iterations. . . . 1
+Minor Iterations. . . . 32
+Restarts. . . . . . . . 0
+Crash Iterations. . . . 0
+Gradient Steps. . . . . 0
+Function Evaluations. . 14
+Gradient Evaluations. . 2
+Basis Time. . . . . . . 0.000000
+Total Time. . . . . . . 0.094000
+Residual. . . . . . . . 1.832858e-13
+Postsolved residual: 1.8329e-13
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:00.510
+--- HuberLCP.gms(93) 4 Mb
+*** Status: Normal completion
+--- Job HuberLCP.gms Stop 09/10/21 00:55:07 elapsed 0:00:00.514
