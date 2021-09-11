@@ -1,0 +1,610 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Huber M regression by QP
+       
+         Erwin Kalvelagen
+       
+   8   
+   9  set i 'number of cases' /i1*i40/;
+  10  set j 'coefficient to estimate' /'constant','coeff1'/;
+  11   
+INCLUDE    D:\projects\OptimizationModels\HuberRegression\expdata.inc
+  13  * cross-section data: weekly household expenditure on food and
+  14  * weekly household income from Griffiths, Hill and Judge,
+  15  * 1993, Table 5.2, p. 182.
+  16   
+  17  table data(i, *)
+  18          expenditure income
+  19  i1        9.46       25.83
+  20  i2       10.56       34.31
+  21  i3       14.81       42.50
+  22  i4       21.71       46.75
+  23  i5       22.79       48.29
+  24  i6       18.19       48.77
+  25  i7       22.00       49.65
+  26  i8       18.12       51.94
+  27  i9       23.13       54.33
+  28  i10      19.00       54.87
+  29  i11      19.46       56.46
+  30  i12      17.83       58.83
+  31  i13      32.81       59.13
+  32  i14      22.13       60.73
+  33  i15      23.46       61.12
+  34  i16      16.81       63.10
+  35  i17      21.35       65.96
+  36  i18      14.87       66.40
+  37  i19      33.00       70.42
+  38  i20      25.19       70.48
+  39  i21      17.77       71.98
+  40  i22      22.44       72.00
+  41  i23      22.87       72.23
+  42  i24      26.52       72.23
+  43  i25      21.00       73.44
+  44  i26      37.52       74.25
+  45  i27      21.69       74.77
+  46  i28      27.40       76.33
+  47  i29      30.69       81.02
+  48  i30      19.56       81.85
+  49  i31      30.58       82.56
+  50  i32      41.12       83.33
+  51  i33      15.38       83.40
+  52  i34      17.87       91.81
+  53  i35      25.54       91.81
+  54  i36      39.00       92.96
+  55  i37      20.44       95.17
+  56  i38      30.10      101.40
+  57  i39      20.90      114.13
+  58  i40      48.71      115.46
+  59  ;
+  60   
+  61  parameter y(i);
+  62  y(i) = data(i,'expenditure');
+  63   
+  64  parameter X(i,j);
+  65  X(i,'constant') = 1;
+  66  X(i,'coeff1') = data(i,'income');
+  67   
+  68  scalar k /1.5/;
+  69   
+  70  variables
+  71     loss     'objective'
+  72     e(i)     'deviations'
+  73     beta(j)  'parameters to estimate'
+  74     lambda1(i) 'slacks'
+  75     lambda2(i) 'slacks'
+  76  ;
+  77  positive variable lambda1,lambda2;
+  78   
+  79  equations
+  80     obj
+  81     con
+  82  ;
+  83   
+  84  obj.. loss =e= 0.5*sum(i,sqr(e(i))) + k*sum(i,lambda1(i)+lambda2(i));
+  85  con(i).. e(i) - sum(j, X(i,j)*beta(j)) + y(i) + lambda2(i) - lambda1(i) =e= 0;
+  86   
+  87  model m /all/;
+  88  solve m using qcp minimizing loss;
+  89   
+  90  display beta.l;
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  D:\projects\OptimizationModels\HuberRegression\HuberQP2.gms
+     2       12 INCLUDE        1      12  .D:\projects\OptimizationModels\HuberRegression\expdata.inc
+
+
+COMPILATION TIME     =        0.047 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using QCP From line 88
+
+
+---- obj  =E=  
+
+obj..  loss + (0)*e(i1) + (0)*e(i2) + (0)*e(i3) + (0)*e(i4) + (0)*e(i5) + (0)*e(i6) + (0)*e(i7) + (0)*e(i8) + (0)*e(i9)
+     
+      + (0)*e(i10) + (0)*e(i11) + (0)*e(i12) + (0)*e(i13) + (0)*e(i14) + (0)*e(i15) + (0)*e(i16) + (0)*e(i17)
+     
+      + (0)*e(i18) + (0)*e(i19) + (0)*e(i20) + (0)*e(i21) + (0)*e(i22) + (0)*e(i23) + (0)*e(i24) + (0)*e(i25)
+     
+      + (0)*e(i26) + (0)*e(i27) + (0)*e(i28) + (0)*e(i29) + (0)*e(i30) + (0)*e(i31) + (0)*e(i32) + (0)*e(i33)
+     
+      + (0)*e(i34) + (0)*e(i35) + (0)*e(i36) + (0)*e(i37) + (0)*e(i38) + (0)*e(i39) + (0)*e(i40) - 1.5*lambda1(i1)
+     
+      - 1.5*lambda1(i2) - 1.5*lambda1(i3) - 1.5*lambda1(i4) - 1.5*lambda1(i5) - 1.5*lambda1(i6) - 1.5*lambda1(i7)
+     
+      - 1.5*lambda1(i8) - 1.5*lambda1(i9) - 1.5*lambda1(i10) - 1.5*lambda1(i11) - 1.5*lambda1(i12) - 1.5*lambda1(i13)
+     
+      - 1.5*lambda1(i14) - 1.5*lambda1(i15) - 1.5*lambda1(i16) - 1.5*lambda1(i17) - 1.5*lambda1(i18) - 1.5*lambda1(i19)
+     
+      - 1.5*lambda1(i20) - 1.5*lambda1(i21) - 1.5*lambda1(i22) - 1.5*lambda1(i23) - 1.5*lambda1(i24) - 1.5*lambda1(i25)
+     
+      - 1.5*lambda1(i26) - 1.5*lambda1(i27) - 1.5*lambda1(i28) - 1.5*lambda1(i29) - 1.5*lambda1(i30) - 1.5*lambda1(i31)
+     
+      - 1.5*lambda1(i32) - 1.5*lambda1(i33) - 1.5*lambda1(i34) - 1.5*lambda1(i35) - 1.5*lambda1(i36) - 1.5*lambda1(i37)
+     
+      - 1.5*lambda1(i38) - 1.5*lambda1(i39) - 1.5*lambda1(i40) - 1.5*lambda2(i1) - 1.5*lambda2(i2) - 1.5*lambda2(i3)
+     
+      - 1.5*lambda2(i4) - 1.5*lambda2(i5) - 1.5*lambda2(i6) - 1.5*lambda2(i7) - 1.5*lambda2(i8) - 1.5*lambda2(i9)
+     
+      - 1.5*lambda2(i10) - 1.5*lambda2(i11) - 1.5*lambda2(i12) - 1.5*lambda2(i13) - 1.5*lambda2(i14) - 1.5*lambda2(i15)
+     
+      - 1.5*lambda2(i16) - 1.5*lambda2(i17) - 1.5*lambda2(i18) - 1.5*lambda2(i19) - 1.5*lambda2(i20) - 1.5*lambda2(i21)
+     
+      - 1.5*lambda2(i22) - 1.5*lambda2(i23) - 1.5*lambda2(i24) - 1.5*lambda2(i25) - 1.5*lambda2(i26) - 1.5*lambda2(i27)
+     
+      - 1.5*lambda2(i28) - 1.5*lambda2(i29) - 1.5*lambda2(i30) - 1.5*lambda2(i31) - 1.5*lambda2(i32) - 1.5*lambda2(i33)
+     
+      - 1.5*lambda2(i34) - 1.5*lambda2(i35) - 1.5*lambda2(i36) - 1.5*lambda2(i37) - 1.5*lambda2(i38) - 1.5*lambda2(i39)
+     
+      - 1.5*lambda2(i40) =E= 0 ; (LHS = 0)
+     
+
+---- con  =E=  
+
+con(i1)..  e(i1) - beta(constant) - 25.83*beta(coeff1) - lambda1(i1) + lambda2(i1) =E= -9.46 ;
+     
+      (LHS = 0, INFES = 9.46 ****)
+     
+con(i2)..  e(i2) - beta(constant) - 34.31*beta(coeff1) - lambda1(i2) + lambda2(i2) =E= -10.56 ;
+     
+      (LHS = 0, INFES = 10.56 ****)
+     
+con(i3)..  e(i3) - beta(constant) - 42.5*beta(coeff1) - lambda1(i3) + lambda2(i3) =E= -14.81 ;
+     
+      (LHS = 0, INFES = 14.81 ****)
+     
+REMAINING 37 ENTRIES SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using QCP From line 88
+
+
+---- loss  objective
+
+loss
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- e  deviations
+
+e(i1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+        1       con(i1)
+
+e(i2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+        1       con(i2)
+
+e(i3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      obj
+        1       con(i3)
+
+REMAINING 37 ENTRIES SKIPPED
+
+---- beta  parameters to estimate
+
+beta(constant)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       con(i1)
+       -1       con(i2)
+       -1       con(i3)
+       -1       con(i4)
+       -1       con(i5)
+       -1       con(i6)
+       -1       con(i7)
+       -1       con(i8)
+       -1       con(i9)
+       -1       con(i10)
+       -1       con(i11)
+       -1       con(i12)
+       -1       con(i13)
+       -1       con(i14)
+       -1       con(i15)
+       -1       con(i16)
+       -1       con(i17)
+       -1       con(i18)
+       -1       con(i19)
+       -1       con(i20)
+       -1       con(i21)
+       -1       con(i22)
+       -1       con(i23)
+       -1       con(i24)
+       -1       con(i25)
+       -1       con(i26)
+       -1       con(i27)
+       -1       con(i28)
+       -1       con(i29)
+       -1       con(i30)
+       -1       con(i31)
+       -1       con(i32)
+       -1       con(i33)
+       -1       con(i34)
+       -1       con(i35)
+       -1       con(i36)
+       -1       con(i37)
+       -1       con(i38)
+       -1       con(i39)
+       -1       con(i40)
+
+beta(coeff1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+      -25.83    con(i1)
+      -34.31    con(i2)
+      -42.5     con(i3)
+      -46.75    con(i4)
+      -48.29    con(i5)
+      -48.77    con(i6)
+      -49.65    con(i7)
+      -51.94    con(i8)
+      -54.33    con(i9)
+      -54.87    con(i10)
+      -56.46    con(i11)
+      -58.83    con(i12)
+      -59.13    con(i13)
+      -60.73    con(i14)
+      -61.12    con(i15)
+      -63.1     con(i16)
+      -65.96    con(i17)
+      -66.4     con(i18)
+      -70.42    con(i19)
+      -70.48    con(i20)
+      -71.98    con(i21)
+      -72       con(i22)
+      -72.23    con(i23)
+      -72.23    con(i24)
+      -73.44    con(i25)
+      -74.25    con(i26)
+      -74.77    con(i27)
+      -76.33    con(i28)
+      -81.02    con(i29)
+      -81.85    con(i30)
+      -82.56    con(i31)
+      -83.33    con(i32)
+      -83.4     con(i33)
+      -91.81    con(i34)
+      -91.81    con(i35)
+      -92.96    con(i36)
+      -95.17    con(i37)
+     -101.4     con(i38)
+     -114.13    con(i39)
+     -115.46    con(i40)
+
+
+---- lambda1  slacks
+
+lambda1(i1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+       -1       con(i1)
+
+lambda1(i2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+       -1       con(i2)
+
+lambda1(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+       -1       con(i3)
+
+REMAINING 37 ENTRIES SKIPPED
+
+---- lambda2  slacks
+
+lambda2(i1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+        1       con(i1)
+
+lambda2(i2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+        1       con(i2)
+
+lambda2(i3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1.5     obj
+        1       con(i3)
+
+REMAINING 37 ENTRIES SKIPPED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using QCP From line 88
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           41
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          123
+NON ZERO ELEMENTS           321     NON LINEAR N-Z             40
+CODE LENGTH                 123     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using QCP From line 88
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  loss
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  88
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE              264.8694
+
+ RESOURCE USAGE, LIMIT          0.250 10000000000.000
+ ITERATION COUNT, LIMIT        12    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T 3   version 3.17K
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 123 variables and 41 constraints
+    with 321 Jacobian elements, 40 of which are nonlinear.
+    The Hessian of the Lagrangian has 40 elements on the diagonal,
+    0 elements below the diagonal, and 40 nonlinear variables.
+ 
+ ** Warning **  The value of LFITER is out of range.
+                LFITER is decreased from 2147483647 to 1000000000.
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  41
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.009 seconds
+   of which: Function evaluations             0.001 = 11.1%
+             1st Derivative evaluations       0.000 =  0.0%
+             2nd Derivative evaluations       0.000 =  0.0%
+             Directional 2nd Derivative       0.001 = 11.1%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+---- EQU con  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -9.4600        -9.4600        -9.4600         1.5000      
+i2        -10.5600       -10.5600       -10.5600         1.5000      
+i3        -14.8100       -14.8100       -14.8100         1.5000      
+i4        -21.7100       -21.7100       -21.7100        -1.5000      
+i5        -22.7900       -22.7900       -22.7900        -1.5000      
+i6        -18.1900       -18.1900       -18.1900        -0.2282      
+i7        -22.0000       -22.0000       -22.0000        -1.5000      
+i8        -18.1200       -18.1200       -18.1200         0.5721      
+i9        -23.1300       -23.1300       -23.1300        -1.5000      
+i10       -19.0000       -19.0000       -19.0000         0.3671      
+i11       -19.4600       -19.4600       -19.4600         0.2734      
+i12       -17.8300       -17.8300       -17.8300         1.5000      
+i13       -32.8100       -32.8100       -32.8100        -1.5000      
+i14       -22.1300       -22.1300       -22.1300        -1.4129      
+i15       -23.4600       -23.4600       -23.4600        -1.5000      
+i16       -16.8100       -16.8100       -16.8100         1.5000      
+i17       -21.3500       -21.3500       -21.3500         0.5720      
+i18       -14.8700       -14.8700       -14.8700         1.5000      
+i19       -33.0000       -33.0000       -33.0000        -1.5000      
+i20       -25.1900       -25.1900       -25.1900        -1.5000      
+i21       -17.7700       -17.7700       -17.7700         1.5000      
+i22       -22.4400       -22.4400       -22.4400         0.8735      
+i23       -22.8700       -22.8700       -22.8700         0.4964      
+i24       -26.5200       -26.5200       -26.5200        -1.5000      
+i25       -21.0000       -21.0000       -21.0000         1.5000      
+i26       -37.5200       -37.5200       -37.5200        -1.5000      
+i27       -21.6900       -21.6900       -21.6900         1.5000      
+i28       -27.4000       -27.4000       -27.4000        -1.5000      
+i29       -30.6900       -30.6900       -30.6900        -1.5000      
+i30       -19.5600       -19.5600       -19.5600         1.5000      
+i31       -30.5800       -30.5800       -30.5800        -1.5000      
+i32       -41.1200       -41.1200       -41.1200        -1.5000      
+i33       -15.3800       -15.3800       -15.3800         1.5000      
+i34       -17.8700       -17.8700       -17.8700         1.5000      
+i35       -25.5400       -25.5400       -25.5400         1.5000      
+i36       -39.0000       -39.0000       -39.0000        -1.5000      
+i37       -20.4400       -20.4400       -20.4400         1.5000      
+i38       -30.1000       -30.1000       -30.1000        -0.0135      
+i39       -20.9000       -20.9000       -20.9000         1.5000      
+i40       -48.7100       -48.7100       -48.7100        -1.5000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR loss              -INF          264.8694        +INF             .          
+
+  loss  objective
+
+---- VAR e  deviations
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF            1.5000        +INF             .          
+i2         -INF            1.5000        +INF             .          
+i3         -INF            1.5000        +INF             .          
+i4         -INF           -1.5000        +INF             .          
+i5         -INF           -1.5000        +INF             .          
+i6         -INF           -0.2282        +INF             .          
+i7         -INF           -1.5000        +INF             .          
+i8         -INF            0.5721        +INF             .          
+i9         -INF           -1.5000        +INF             .          
+i10        -INF            0.3671        +INF             .          
+i11        -INF            0.2734        +INF             .          
+i12        -INF            1.5000        +INF             .          
+i13        -INF           -1.5000        +INF             .          
+i14        -INF           -1.4129        +INF             .          
+i15        -INF           -1.5000        +INF             .          
+i16        -INF            1.5000        +INF             .          
+i17        -INF            0.5720        +INF             .          
+i18        -INF            1.5000        +INF             .          
+i19        -INF           -1.5000        +INF             .          
+i20        -INF           -1.5000        +INF             .          
+i21        -INF            1.5000        +INF             .          
+i22        -INF            0.8735        +INF             .          
+i23        -INF            0.4964        +INF             .          
+i24        -INF           -1.5000        +INF             .          
+i25        -INF            1.5000        +INF             .          
+i26        -INF           -1.5000        +INF             .          
+i27        -INF            1.5000        +INF             .          
+i28        -INF           -1.5000        +INF             .          
+i29        -INF           -1.5000        +INF             .          
+i30        -INF            1.5000        +INF             .          
+i31        -INF           -1.5000        +INF             .          
+i32        -INF           -1.5000        +INF             .          
+i33        -INF            1.5000        +INF             .          
+i34        -INF            1.5000        +INF             .          
+i35        -INF            1.5000        +INF             .          
+i36        -INF           -1.5000        +INF             .          
+i37        -INF            1.5000        +INF             .          
+i38        -INF           -0.0135        +INF             .          
+i39        -INF            1.5000        +INF             .          
+i40        -INF           -1.5000        +INF            EPS         
+
+---- VAR beta  parameters to estimate
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+constant        -INF            6.7265        +INF            EPS         
+coeff1          -INF            0.2304        +INF             .          
+
+---- VAR lambda1  slacks
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .            +INF            3.0000      
+i2           .              .            +INF            3.0000      
+i3           .              .            +INF            3.0000      
+i4           .             2.7135        +INF            EPS         
+i5           .             3.4387        +INF            EPS         
+i6           .              .            +INF            1.2718      
+i7           .             2.3354        +INF            EPS         
+i8           .              .            +INF            2.0721      
+i9           .             2.3873        +INF            EPS         
+i10          .              .            +INF            1.8671      
+i11          .              .            +INF            1.7734      
+i12          .              .            +INF            3.0000      
+i13          .            10.9615        +INF            EPS         
+i14          .              .            +INF            0.0871      
+i15          .             1.1530        +INF            EPS         
+i16          .              .            +INF            3.0000      
+i17          .              .            +INF            2.0720      
+i18          .              .            +INF            3.0000      
+i19          .             8.5505        +INF            EPS         
+i20          .             0.7267        +INF            EPS         
+i21          .              .            +INF            3.0000      
+i22          .              .            +INF            2.3735      
+i23          .              .            +INF            1.9964      
+i24          .             1.6536        +INF            EPS         
+i25          .              .            +INF            3.0000      
+i26          .            12.1882        +INF            EPS         
+i27          .              .            +INF            3.0000      
+i28          .             1.5890        +INF            EPS         
+i29          .             3.7986        +INF            EPS         
+i30          .              .            +INF            3.0000      
+i31          .             3.3338        +INF            EPS         
+i32          .            13.6964        +INF            EPS         
+i33          .              .            +INF            3.0000      
+i34          .              .            +INF            3.0000      
+i35          .              .            +INF            3.0000      
+i36          .             9.3579        +INF            EPS         
+i37          .              .            +INF            3.0000      
+i38          .              .            +INF            1.4865      
+i39          .              .            +INF            3.0000      
+i40          .            13.8845        +INF            EPS         
+
+---- VAR lambda2  slacks
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             1.7170        +INF            EPS         
+i2           .             2.5706        +INF            EPS         
+i3           .             0.2074        +INF            EPS         
+i4           .              .            +INF            3.0000      
+i5           .              .            +INF            3.0000      
+i6           .              .            +INF            1.7282      
+i7           .              .            +INF            3.0000      
+i8           .              .            +INF            0.9279      
+i9           .              .            +INF            3.0000      
+i10          .              .            +INF            1.1329      
+i11          .              .            +INF            1.2266      
+i12          .             0.9494        +INF            EPS         
+i13          .              .            +INF            3.0000      
+i14          .              .            +INF            2.9129      
+i15          .              .            +INF            3.0000      
+i16          .             2.9531        +INF            EPS         
+i17          .              .            +INF            0.9280      
+i18          .             5.6534        +INF            EPS         
+i19          .              .            +INF            3.0000      
+i20          .              .            +INF            3.0000      
+i21          .             4.0388        +INF            EPS         
+i22          .              .            +INF            0.6265      
+i23          .              .            +INF            1.0036      
+i24          .              .            +INF            3.0000      
+i25          .             1.1452        +INF            EPS         
+i26          .              .            +INF            3.0000      
+i27          .             0.7616        +INF            EPS         
+i28          .              .            +INF            3.0000      
+i29          .              .            +INF            3.0000      
+i30          .             4.5226        +INF            EPS         
+i31          .              .            +INF            3.0000      
+i32          .              .            +INF            3.0000      
+i33          .             9.0597        +INF            EPS         
+i34          .             8.5072        +INF            EPS         
+i35          .             0.8372        +INF            EPS         
+i36          .              .            +INF            3.0000      
+i37          .             6.7112        +INF            EPS         
+i38          .              .            +INF            1.5135      
+i39          .            10.6191        +INF            EPS         
+i40          .              .            +INF            3.0000      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/11/21 01:35:09 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     90 VARIABLE beta.L  parameters to estimate
+
+constant 6.726,    coeff1   0.230
+
+
+
+EXECUTION TIME       =        1.281 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\HuberRegression\HuberQP2.gms
+Output     D:\projects\OptimizationModels\HuberRegression\HuberQP2.lst
