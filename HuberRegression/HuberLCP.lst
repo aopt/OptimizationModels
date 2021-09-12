@@ -1,4 +1,4 @@
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 1
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -6,7 +6,7 @@ C o m p i l a t i o n
        
          Huber M regression by LCP
        
-         Erwin Kalvelagen, november 2001
+         erwin@amsterdamoptimization.com
        
    8   
    9  set i 'number of cases' /i1*i40/;
@@ -61,40 +61,40 @@ INCLUDE    D:\projects\OptimizationModels\HuberRegression\expdata.inc
   58  i40      48.71      115.46
   59  ;
   60   
-  61   
-  62  parameter y(i);
-  63  y(i) = data(i,'expenditure');
-  64   
-  65  parameter X(i,j);
-  66  X(i,'constant') = 1;
-  67  X(i,'coeff1') = data(i,'income');
-  68   
-  69  scalar k /1.5/;
-  70   
-  71  variables
-  72     w(i)   'lagrange multipliers'
-  73     beta(j)   'parameters to estimate'
-  74     lambda1(i) 'slacks'
-  75     lambda2(i) 'slacks'
-  76  ;
-  77  positive variables lambda1, lambda2;
-  78   
-  79  equations
-  80     e1(i)
-  81     e2(j)
-  82     compl1(i)
-  83     compl2(i)
-  84  ;
-  85   
-  86  e1(i).. w(i) - sum(j, X(i,j)*beta(j)) + y(i) + lambda2(i) - lambda1(i) =e= 0;
-  87  e2(j).. sum(i, X(i,j)*w(i)) =e= 0;
-  88  compl1(i).. w(i) + k =g= 0;
-  89  compl2(i).. -w(i) + k =g= 0;
-  90   
-  91  model m /e1,e2,compl1.lambda1,compl2.lambda2/;
-  92  solve m using mcp;
+  61  parameter y(i);
+  62  y(i) = data(i,'expenditure');
+  63   
+  64  parameter X(i,j);
+  65  X(i,'constant') = 1;
+  66  X(i,'coeff1') = data(i,'income');
+  67   
+  68  scalar k /1.5/;
+  69   
+  70  variables
+  71     lambda(i)  'lagrange multipliers'
+  72     beta(j)    'parameters to estimate'
+  73     sp(i)      'slacks'
+  74     sm(i)      'slacks'
+  75  ;
+  76  positive variables sp,sm;
+  77   
+  78  equations
+  79     e1(i)
+  80     e2(j)
+  81     compl1(i)
+  82     compl2(i)
+  83  ;
+  84   
+  85  e1(i).. lambda(i)  + y(i) - sum(j, X(i,j)*beta(j)) =e=  sp(i) - sm(i);
+  86  e2(j).. sum(i, X(i,j)*lambda(i)) =e= 0;
+  87  compl1(i).. lambda(i) + k =g= 0;
+  88  compl2(i).. -lambda(i) + k =g= 0;
+  89   
+  90  model m /e1,e2,compl1.sp,compl2.sm/;
+  91  solve m using mcp;
+  92   
   93  display beta.l;
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 2
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Include File Summary
 
@@ -105,81 +105,84 @@ Include File Summary
      2       12 INCLUDE        1      12  .D:\projects\OptimizationModels\HuberRegression\expdata.inc
 
 
-COMPILATION TIME     =        0.015 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 3
+COMPILATION TIME     =        0.031 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MCP From line 92
+Equation Listing    SOLVE m Using MCP From line 91
 
 
 ---- e1  =E=  
 
-e1(i1)..  w(i1) - beta(constant) - 25.83*beta(coeff1) - lambda1(i1) + lambda2(i1) =E= -9.46 ;
+e1(i1)..  lambda(i1) - beta(constant) - 25.83*beta(coeff1) - sp(i1) + sm(i1) =E= -9.46 ; (LHS = 0, INFES = 9.46 ****)
      
-      (LHS = 0, INFES = 9.46 ****)
+e1(i2)..  lambda(i2) - beta(constant) - 34.31*beta(coeff1) - sp(i2) + sm(i2) =E= -10.56 ; (LHS = 0, INFES = 10.56 ****)
      
-e1(i2)..  w(i2) - beta(constant) - 34.31*beta(coeff1) - lambda1(i2) + lambda2(i2) =E= -10.56 ;
-     
-      (LHS = 0, INFES = 10.56 ****)
-     
-e1(i3)..  w(i3) - beta(constant) - 42.5*beta(coeff1) - lambda1(i3) + lambda2(i3) =E= -14.81 ;
-     
-      (LHS = 0, INFES = 14.81 ****)
+e1(i3)..  lambda(i3) - beta(constant) - 42.5*beta(coeff1) - sp(i3) + sm(i3) =E= -14.81 ; (LHS = 0, INFES = 14.81 ****)
      
 REMAINING 37 ENTRIES SKIPPED
 
 
 ---- e2  =E=  
 
-e2(constant)..  w(i1) + w(i2) + w(i3) + w(i4) + w(i5) + w(i6) + w(i7) + w(i8) + w(i9) + w(i10) + w(i11) + w(i12)
+e2(constant)..  lambda(i1) + lambda(i2) + lambda(i3) + lambda(i4) + lambda(i5) + lambda(i6) + lambda(i7) + lambda(i8)
      
-      + w(i13) + w(i14) + w(i15) + w(i16) + w(i17) + w(i18) + w(i19) + w(i20) + w(i21) + w(i22) + w(i23) + w(i24)
+      + lambda(i9) + lambda(i10) + lambda(i11) + lambda(i12) + lambda(i13) + lambda(i14) + lambda(i15) + lambda(i16)
      
-      + w(i25) + w(i26) + w(i27) + w(i28) + w(i29) + w(i30) + w(i31) + w(i32) + w(i33) + w(i34) + w(i35) + w(i36)
+      + lambda(i17) + lambda(i18) + lambda(i19) + lambda(i20) + lambda(i21) + lambda(i22) + lambda(i23) + lambda(i24)
      
-      + w(i37) + w(i38) + w(i39) + w(i40) =E= 0 ; (LHS = 0)
+      + lambda(i25) + lambda(i26) + lambda(i27) + lambda(i28) + lambda(i29) + lambda(i30) + lambda(i31) + lambda(i32)
      
-e2(coeff1)..  25.83*w(i1) + 34.31*w(i2) + 42.5*w(i3) + 46.75*w(i4) + 48.29*w(i5) + 48.77*w(i6) + 49.65*w(i7)
+      + lambda(i33) + lambda(i34) + lambda(i35) + lambda(i36) + lambda(i37) + lambda(i38) + lambda(i39) + lambda(i40)
+      =E= 0 ; (LHS = 0)
      
-      + 51.94*w(i8) + 54.33*w(i9) + 54.87*w(i10) + 56.46*w(i11) + 58.83*w(i12) + 59.13*w(i13) + 60.73*w(i14)
+e2(coeff1)..  25.83*lambda(i1) + 34.31*lambda(i2) + 42.5*lambda(i3) + 46.75*lambda(i4) + 48.29*lambda(i5)
      
-      + 61.12*w(i15) + 63.1*w(i16) + 65.96*w(i17) + 66.4*w(i18) + 70.42*w(i19) + 70.48*w(i20) + 71.98*w(i21) + 72*w(i22)
+      + 48.77*lambda(i6) + 49.65*lambda(i7) + 51.94*lambda(i8) + 54.33*lambda(i9) + 54.87*lambda(i10)
      
-      + 72.23*w(i23) + 72.23*w(i24) + 73.44*w(i25) + 74.25*w(i26) + 74.77*w(i27) + 76.33*w(i28) + 81.02*w(i29)
+      + 56.46*lambda(i11) + 58.83*lambda(i12) + 59.13*lambda(i13) + 60.73*lambda(i14) + 61.12*lambda(i15)
      
-      + 81.85*w(i30) + 82.56*w(i31) + 83.33*w(i32) + 83.4*w(i33) + 91.81*w(i34) + 91.81*w(i35) + 92.96*w(i36)
+      + 63.1*lambda(i16) + 65.96*lambda(i17) + 66.4*lambda(i18) + 70.42*lambda(i19) + 70.48*lambda(i20)
      
-      + 95.17*w(i37) + 101.4*w(i38) + 114.13*w(i39) + 115.46*w(i40) =E= 0 ; (LHS = 0)
+      + 71.98*lambda(i21) + 72*lambda(i22) + 72.23*lambda(i23) + 72.23*lambda(i24) + 73.44*lambda(i25)
+     
+      + 74.25*lambda(i26) + 74.77*lambda(i27) + 76.33*lambda(i28) + 81.02*lambda(i29) + 81.85*lambda(i30)
+     
+      + 82.56*lambda(i31) + 83.33*lambda(i32) + 83.4*lambda(i33) + 91.81*lambda(i34) + 91.81*lambda(i35)
+     
+      + 92.96*lambda(i36) + 95.17*lambda(i37) + 101.4*lambda(i38) + 114.13*lambda(i39) + 115.46*lambda(i40) =E= 0 ;
+     
+      (LHS = 0)
      
 
 ---- compl1  =G=  
 
-compl1(i1)..  w(i1) =G= -1.5 ; (LHS = 0)
+compl1(i1)..  lambda(i1) =G= -1.5 ; (LHS = 0)
      
-compl1(i2)..  w(i2) =G= -1.5 ; (LHS = 0)
+compl1(i2)..  lambda(i2) =G= -1.5 ; (LHS = 0)
      
-compl1(i3)..  w(i3) =G= -1.5 ; (LHS = 0)
+compl1(i3)..  lambda(i3) =G= -1.5 ; (LHS = 0)
      
 REMAINING 37 ENTRIES SKIPPED
 
 
 ---- compl2  =G=  
 
-compl2(i1)..  - w(i1) =G= -1.5 ; (LHS = 0)
+compl2(i1)..  - lambda(i1) =G= -1.5 ; (LHS = 0)
      
-compl2(i2)..  - w(i2) =G= -1.5 ; (LHS = 0)
+compl2(i2)..  - lambda(i2) =G= -1.5 ; (LHS = 0)
      
-compl2(i3)..  - w(i3) =G= -1.5 ; (LHS = 0)
+compl2(i3)..  - lambda(i3) =G= -1.5 ; (LHS = 0)
      
 REMAINING 37 ENTRIES SKIPPED
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 4
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MCP From line 92
+Column Listing      SOLVE m Using MCP From line 91
 
 
----- w  lagrange multipliers
+---- lambda  lagrange multipliers
 
-w(i1)
+lambda(i1)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       e1(i1)
         1       e2(constant)
@@ -187,7 +190,7 @@ w(i1)
         1       compl1(i1)
        -1       compl2(i1)
 
-w(i2)
+lambda(i2)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       e1(i2)
         1       e2(constant)
@@ -195,7 +198,7 @@ w(i2)
         1       compl1(i2)
        -1       compl2(i2)
 
-w(i3)
+lambda(i3)
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       e1(i3)
         1       e2(constant)
@@ -294,40 +297,40 @@ beta(coeff1)
      -115.46    e1(i40)
 
 
----- lambda1  slacks
+---- sp  slacks
 
-lambda1(i1)
+sp(i1)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
        -1       e1(i1)
 
-lambda1(i2)
+sp(i2)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
        -1       e1(i2)
 
-lambda1(i3)
+sp(i3)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
        -1       e1(i3)
 
 REMAINING 37 ENTRIES SKIPPED
 
----- lambda2  slacks
+---- sm  slacks
 
-lambda2(i1)
+sm(i1)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
         1       e1(i1)
 
-lambda2(i2)
+sm(i2)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
         1       e1(i2)
 
-lambda2(i3)
+sm(i3)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
         1       e1(i3)
 
 REMAINING 37 ENTRIES SKIPPED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 5
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MCP From line 92
+Model Statistics    SOLVE m Using MCP From line 91
 
 
 MODEL STATISTICS
@@ -338,22 +341,22 @@ NON ZERO ELEMENTS           360     NON LINEAR N-Z              0
 CODE LENGTH                   0     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.032 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 6
+GENERATION TIME      =        0.031 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MCP From line 92
+Solution Report     SOLVE m Using MCP From line 91
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   
      TYPE    MCP                 
-     SOLVER  PATH                FROM LINE  92
+     SOLVER  PATH                FROM LINE  91
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 
- RESOURCE USAGE, LIMIT          0.109 10000000000.000
+ RESOURCE USAGE, LIMIT          0.031 10000000000.000
  ITERATION COUNT, LIMIT        32    2147483647
  EVALUATION ERRORS              0             0
 122 row/cols, 360 non-zeros, 2.42% dense.
@@ -362,16 +365,16 @@ Path 5.0.04 (Mon Aug  2 17:32:12 2021)
 Written by Todd Munson, Steven Dirkse, Youngdae Kim, and Michael Ferris
 
 INITIAL POINT STATISTICS
-Maximum of X. . . . . . . . . .  0.0000e+00 var: (w(i1))
+Maximum of X. . . . . . . . . .  0.0000e+00 var: (lambda(i1))
 Maximum of F. . . . . . . . . .  4.8710e+01 eqn: (e1(i40))
 Maximum of Grad F . . . . . . .  1.1546e+02 eqn: (e2('coeff1'))
-                                            var: (w(i40))
+                                            var: (lambda(i40))
 
 INITIAL JACOBIAN NORM STATISTICS
 Maximum Row Norm. . . . . . . .  2.7920e+03 eqn: (e2('coeff1'))
 Minimum Row Norm. . . . . . . .  2.7830e+01 eqn: (e1(i1))
 Maximum Column Norm . . . . . .  2.7920e+03 var: (beta('coeff1'))
-Minimum Column Norm . . . . . .  2.7830e+01 var: (w(i1))
+Minimum Column Norm . . . . . .  2.7830e+01 var: (lambda(i1))
 
 FINAL STATISTICS
 Inf-Norm of Complementarity . .  1.0458e-13 eqn: (e2('constant'))
@@ -385,7 +388,7 @@ FINAL POINT STATISTICS
 Maximum of X. . . . . . . . . .  6.7265e+00 var: (beta('constant'))
 Maximum of F. . . . . . . . . .  1.3884e+01 eqn: (e1(i40))
 Maximum of Grad F . . . . . . .  1.1546e+02 eqn: (e2('coeff1'))
-                                            var: (w(i40))
+                                            var: (lambda(i40))
 
 
 ---- EQU e1  
@@ -530,7 +533,7 @@ i38        -1.5000         0.0135        +INF             .
 i39        -1.5000        -1.5000        +INF           10.6191      
 i40        -1.5000         1.5000        +INF             .          
 
----- VAR w  lagrange multipliers
+---- VAR lambda  lagrange multipliers
 
            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -582,7 +585,7 @@ i40        -INF           -1.5000        +INF             .
 constant        -INF            6.7265        +INF             .          
 coeff1          -INF            0.2304        +INF             .          
 
----- VAR lambda1  slacks
+---- VAR sp  slacks
 
            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -627,7 +630,7 @@ i38          .              .            +INF            1.4865
 i39          .              .            +INF            3.0000      
 i40          .            13.8845        +INF             .          
 
----- VAR lambda2  slacks
+---- VAR sm  slacks
 
            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -679,7 +682,7 @@ i40          .              .            +INF            3.0000
                              0  REDEFINED
                              0     ERRORS
                              5  PROJECTED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/10/21 00:55:07 Page 7
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/12/21 08:20:19 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -690,7 +693,7 @@ constant 6.726,    coeff1   0.230
 
 
 
-EXECUTION TIME       =        0.469 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+EXECUTION TIME       =        0.375 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN
