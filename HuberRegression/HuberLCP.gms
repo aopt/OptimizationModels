@@ -35,7 +35,7 @@ equations
    compl2(i)
 ;
 
-e1(i).. lambda(i)  + y(i) - sum(j, X(i,j)*beta(j)) =e=  sp(i) - sm(i);
+e1(i).. lambda(i)  + y(i) - sum(j, X(i,j)*beta(j)) =e= sp(i) - sm(i);
 e2(j).. sum(i, X(i,j)*lambda(i)) =e= 0;
 compl1(i).. lambda(i) + k =g= 0;
 compl2(i).. -lambda(i) + k =g= 0;
