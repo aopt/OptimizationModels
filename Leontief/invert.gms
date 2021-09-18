@@ -1,7 +1,6 @@
 $ontext
 
    Invert a square, dense matrix.
-   With an edit
 
    This uses the Embedded Python API. We see that it is
    very slow for larger instances.
