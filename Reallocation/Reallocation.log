@@ -1,0 +1,156 @@
+
+--- Job Reallocation.gms Start 09/18/21 09:29:15 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\36\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\OptimizationModels\Reallocation\Reallocation.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\OptimizationModels\Reallocation\225a\
+    SysDir C:\GAMS\36\
+    WorkDir D:\projects\OptimizationModels\Reallocation\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
+GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- Reallocation.gms(172) 3 Mb
+--- Starting execution: elapsed 0:00:00.199
+--- Reallocation.gms(125) 4 Mb
+--- Generating LP model m
+--- Reallocation.gms(128) 4 Mb
+---   21 rows  81 columns  193 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.556
+
+IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 17 columns.
+Reduced LP has 20 rows, 64 columns, and 128 nonzeros.
+Presolve time = 0.00 sec. (0.05 ticks)
+Initializing dual steep norms . . .
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1              11.800000 move(catA,zone4,zone1)      ecap(zone4) slack
+     2              11.800000 move(catA,zone4,zone2)      ecap(zone1) slack
+     3              11.800000 move(catA,zone4,zone3)      ecap(zone2) slack
+     4              11.800000 move(catC,zone4,zone1)      alloc(catA,zone4)
+     5              12.400000 move(catA,zone1,zone2) move(catA,zone4,zone1)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 0.08 ticks)
+
+
+Optimal solution found
+Objective:           12.400000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:01.582
+--- Reallocation.gms(135) 4 Mb
+--- Generating LP model m2
+--- Reallocation.gms(148) 4 Mb
+---   5 rows  65 columns  161 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.612
+
+IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 53 columns.
+Reduced LP has 4 rows, 12 columns, and 24 nonzeros.
+Presolve time = 0.00 sec. (0.03 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1              11.800000 move(catA,zone4,zone2)     ecap2(zone4) slack
+     2              11.800000 move(catA,zone4,zone3)     ecap2(zone2) slack
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.04 ticks)
+
+
+Optimal solution found
+Objective:           11.800000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:01.809
+--- Reallocation.gms(162) 4 Mb
+--- Generating LP model m
+--- Reallocation.gms(164) 4 Mb
+---   21 rows  81 columns  193 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.836
+
+IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 17 columns.
+Reduced LP has 20 rows, 64 columns, and 128 nonzeros.
+Presolve time = 0.00 sec. (0.05 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1  I            0.000000 move(catC,zone4,zone1)      ecap(zone4) slack
+     2             144.800000 move(catB,zone4,zone3)      alloc(catC,zone4)
+     3             380.400000 move(catD,zone4,zone2)      alloc(catB,zone4)
+     4             380.700000 move(catA,zone2,zone1)      ecap(zone2) slack
+     5             380.700000 move(catA,zone2,zone3)      ecap(zone1) slack
+     6             380.700000 move(catA,zone4,zone3) move(catA,zone2,zone1)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.08sec (det. 0.12 ticks)
+
+
+Optimal solution found
+Objective:          380.700000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:02.094
+--- Reallocation.gms(171) 4 Mb
+*** Status: Normal completion
+--- Job Reallocation.gms Stop 09/18/21 09:29:17 elapsed 0:00:02.126

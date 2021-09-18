@@ -1,0 +1,1241 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Small LP about reallocating persons
+       
+         https://yetanothermathprogrammingconsultant.blogspot.com/2021/09/reallocate-people-very-small-but.html
+       
+         erwin@amsterdamoptimization.com
+       
+       
+  11   
+  12   
+  13  set
+  14     dummy 'for ordering (printing)' /initial,added,final/
+  15     c 'category' /catA*catD/
+  16     z 'zone'     /zone1*zone4/
+  17  ;
+  18   
+  19  *----------------------------------------------------------------
+  20  * data
+  21  *----------------------------------------------------------------
+  22   
+  23  table popdata(c,z,*) 'population data'
+  24                      initial   final
+  25      catA.zone1         115     138
+  26      catA.zone2         121     145
+  27      catA.zone3         112     134
+  28      catA.zone4          76      91
+  29      catB.zone1          70      99
+  30      catB.zone2          59      83
+  31      catB.zone3          86     121
+  32      catB.zone4         139     196
+  33      catC.zone1         142     160
+  34      catC.zone2          72      81
+  35      catC.zone3          29      33
+  36      catC.zone4          58      66
+  37      catD.zone1          22      47
+  38      catD.zone2          23      49
+  39      catD.zone3          16      34
+  40      catD.zone4          45      96
+  41  ;
+  42  popdata(c,z,'added') = popdata(c,z,'final')-popdata(c,z,'initial');
+  43  option popdata:0;
+  44  display popdata;
+  45   
+  46  parameter capacity(z) 'total capacity per zone' /
+  47      zone1   465
+  48      zone2   393
+  49      zone3   500
+  50      zone4   331
+  51  /;
+  52  option capacity:0;
+  53  display capacity;
+  54   
+  55   
+  56  parameter cost(c,z) 'cost moving to target zone' /
+  57          catA.zone1   0.1
+  58          catA.zone2   0.1
+  59          catA.zone3   0.1
+  60          catA.zone4   1.3
+  61          catB.zone1  16.2
+  62          catB.zone2  38.1
+  63          catB.zone3   1.5
+  64          catB.zone4   0.1
+  65          catC.zone1   0.1
+  66          catC.zone2  12.7
+  67          catC.zone3  97.7
+  68          catC.zone4  46.3
+  69          catD.zone1  25.3
+  70          catD.zone2   7.7
+  71          catD.zone3  67.3
+  72          catD.zone4   0.1
+  73  /;
+  74  option cost:1;
+  75  display cost;
+  76   
+  77  *----------------------------------------------------------------
+  78  * summary data
+  79  *----------------------------------------------------------------
+  80   
+  81  parameter counts(*,*) 'summary data';
+  82  counts('initial',z) = sum(c,popdata(c,z,'initial'));
+  83  counts('initial','total') = sum(z,counts('initial',z));
+  84  counts('final',z) = sum(c,popdata(c,z,'final'));
+  85  counts('final','total') = sum(z,counts('final',z));
+  86  counts('capacity',z) = capacity(z);
+  87  counts('capacity','total') = sum(z,capacity(z));
+  88  option counts:0;
+  89  display counts;
+  90   
+  91   
+  92  *----------------------------------------------------------------
+  93  * optimal reallocation
+  94  *----------------------------------------------------------------
+  95   
+  96   
+  97  alias(z,z1,z2);
+  98   
+  99  parameter
+ 100     demand(c,z) 'current demand'
+ 101     cap(z)      'capacity (net)'
+ 102  ;
+ 103   
+ 104  demand(c,z) = popdata(c,z,'final');
+ 105  cap(z) = capacity(z);
+ 106   
+ 107   
+ 108  positive variable move(c,z1,z2) 'moves needed to meet capacity';
+ 109  positive variable alloc(c,z)  'new allocation';
+ 110  variable totcost 'total cost';
+ 111   
+ 112  equations
+ 113   eobj             'objective'
+ 114   ealloc(c,z)      'allocation bookkeeping'
+ 115   ecap             'capacity limits'
+ 116  ;
+ 117   
+ 118   
+ 119   
+ 120  eobj.. totcost =e= sum((c,z1,z2),move(c,z1,z2)*cost(c,z2));
+ 121  ealloc(c,z).. alloc(c,z) =e= demand(c,z) + sum(z1,move(c,z1,z)) - sum(z2,move(c,z,z2));
+ 122  ecap(z).. sum(c,alloc(c,z)) =l= cap(z);
+ 123   
+ 124  * not needed
+ 125  move.fx(c,z,z) = 0;
+ 126   
+ 127  model m /all/;
+ 128  solve m minimizing totcost using lp;
+ 129   
+ 130  option move:0, alloc:0;
+ 131  display move.l,alloc.l,totcost.l;
+ 132   
+ 133  counts('newalloc',z) = sum(c,alloc.l(c,z));
+ 134  counts('newalloc','total') = sum(z,counts('newalloc',z));
+ 135  display counts;
+ 136   
+ 137  *----------------------------------------------------------------
+ 138  * this is wrong: substitute out alloc
+ 139  *----------------------------------------------------------------
+ 140   
+ 141  equations
+ 142    ecap2(z)      'capacity constraint (WRONG!)'
+ 143  ;
+ 144   
+ 145  ecap2(z).. sum(c, demand(c,z) + sum(z1,move(c,z1,z)) - sum(z2,move(c,z,z2))) =l= cap(z);
+ 146   
+ 147  model m2 /eobj,ecap2/;
+ 148  solve m2 minimizing totcost using lp;
+ 149   
+ 150  parameter alloc2(c,z) 'recalculate allocations';
+ 151  alloc2(c,z) = demand(c,z) + sum(z1,move.l(c,z1,z)) - sum(z2,move.l(c,z,z2))
+ 152   
+ 153  display move.l,totcost.l,alloc2;
+ 154   
+ 155   
+ 156  *----------------------------------------------------------------
+ 157  * optimal reallocation while keeping initial population where
+ 158  * they were.
+ 159  *----------------------------------------------------------------
+ 160   
+ 161  demand(c,z) = popdata(c,z,'added');
+ 162  cap(z) = capacity(z) - sum(c,popdata(c,z,'initial'));
+ 163   
+ 164  solve m minimizing totcost using lp;
+ 165   
+ 166  option move:0, alloc:0;
+ 167  display move.l,alloc.l,totcost.l;
+ 168   
+ 169  counts('newalloc',z) = counts('initial',z) + sum(c,alloc.l(c,z));
+ 170  counts('newalloc','total') = sum(z,counts('newalloc',z));
+ 171  display counts;
+ 172   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     44 PARAMETER popdata  population data
+
+               initial       added       final
+
+catA.zone1         115          23         138
+catA.zone2         121          24         145
+catA.zone3         112          22         134
+catA.zone4          76          15          91
+catB.zone1          70          29          99
+catB.zone2          59          24          83
+catB.zone3          86          35         121
+catB.zone4         139          57         196
+catC.zone1         142          18         160
+catC.zone2          72           9          81
+catC.zone3          29           4          33
+catC.zone4          58           8          66
+catD.zone1          22          25          47
+catD.zone2          23          26          49
+catD.zone3          16          18          34
+catD.zone4          45          51          96
+
+
+----     53 PARAMETER capacity  total capacity per zone
+
+zone1 465,    zone2 393,    zone3 500,    zone4 331
+
+
+----     75 PARAMETER cost  cost moving to target zone
+
+           zone1       zone2       zone3       zone4
+
+catA         0.1         0.1         0.1         1.3
+catB        16.2        38.1         1.5         0.1
+catC         0.1        12.7        97.7        46.3
+catD        25.3         7.7        67.3         0.1
+
+
+----     89 PARAMETER counts  summary data
+
+               zone1       zone2       zone3       zone4       total
+
+initial          349         275         243         318        1185
+final            444         358         322         449        1573
+capacity         465         393         500         331        1689
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using LP From line 128
+
+
+---- eobj  =E=  objective
+
+eobj..  - 0.1*move(catA,zone1,zone1) - 0.1*move(catA,zone1,zone2) - 0.1*move(catA,zone1,zone3)
+     
+      - 1.3*move(catA,zone1,zone4) - 0.1*move(catA,zone2,zone1) - 0.1*move(catA,zone2,zone2)
+     
+      - 0.1*move(catA,zone2,zone3) - 1.3*move(catA,zone2,zone4) - 0.1*move(catA,zone3,zone1)
+     
+      - 0.1*move(catA,zone3,zone2) - 0.1*move(catA,zone3,zone3) - 1.3*move(catA,zone3,zone4)
+     
+      - 0.1*move(catA,zone4,zone1) - 0.1*move(catA,zone4,zone2) - 0.1*move(catA,zone4,zone3)
+     
+      - 1.3*move(catA,zone4,zone4) - 16.2*move(catB,zone1,zone1) - 38.1*move(catB,zone1,zone2)
+     
+      - 1.5*move(catB,zone1,zone3) - 0.1*move(catB,zone1,zone4) - 16.2*move(catB,zone2,zone1)
+     
+      - 38.1*move(catB,zone2,zone2) - 1.5*move(catB,zone2,zone3) - 0.1*move(catB,zone2,zone4)
+     
+      - 16.2*move(catB,zone3,zone1) - 38.1*move(catB,zone3,zone2) - 1.5*move(catB,zone3,zone3)
+     
+      - 0.1*move(catB,zone3,zone4) - 16.2*move(catB,zone4,zone1) - 38.1*move(catB,zone4,zone2)
+     
+      - 1.5*move(catB,zone4,zone3) - 0.1*move(catB,zone4,zone4) - 0.1*move(catC,zone1,zone1)
+     
+      - 12.7*move(catC,zone1,zone2) - 97.7*move(catC,zone1,zone3) - 46.3*move(catC,zone1,zone4)
+     
+      - 0.1*move(catC,zone2,zone1) - 12.7*move(catC,zone2,zone2) - 97.7*move(catC,zone2,zone3)
+     
+      - 46.3*move(catC,zone2,zone4) - 0.1*move(catC,zone3,zone1) - 12.7*move(catC,zone3,zone2)
+     
+      - 97.7*move(catC,zone3,zone3) - 46.3*move(catC,zone3,zone4) - 0.1*move(catC,zone4,zone1)
+     
+      - 12.7*move(catC,zone4,zone2) - 97.7*move(catC,zone4,zone3) - 46.3*move(catC,zone4,zone4)
+     
+      - 25.3*move(catD,zone1,zone1) - 7.7*move(catD,zone1,zone2) - 67.3*move(catD,zone1,zone3)
+     
+      - 0.1*move(catD,zone1,zone4) - 25.3*move(catD,zone2,zone1) - 7.7*move(catD,zone2,zone2)
+     
+      - 67.3*move(catD,zone2,zone3) - 0.1*move(catD,zone2,zone4) - 25.3*move(catD,zone3,zone1)
+     
+      - 7.7*move(catD,zone3,zone2) - 67.3*move(catD,zone3,zone3) - 0.1*move(catD,zone3,zone4)
+     
+      - 25.3*move(catD,zone4,zone1) - 7.7*move(catD,zone4,zone2) - 67.3*move(catD,zone4,zone3)
+     
+      - 0.1*move(catD,zone4,zone4) + totcost =E= 0 ; (LHS = 0)
+     
+
+---- ealloc  =E=  allocation bookkeeping
+
+ealloc(catA,zone1)..  move(catA,zone1,zone2) + move(catA,zone1,zone3) + move(catA,zone1,zone4) - move(catA,zone2,zone1)
+     
+      - move(catA,zone3,zone1) - move(catA,zone4,zone1) + alloc(catA,zone1) =E= 138 ; (LHS = 0, INFES = 138 ****)
+     
+ealloc(catA,zone2)..  - move(catA,zone1,zone2) + move(catA,zone2,zone1) + move(catA,zone2,zone3)
+     
+      + move(catA,zone2,zone4) - move(catA,zone3,zone2) - move(catA,zone4,zone2) + alloc(catA,zone2) =E= 145 ;
+     
+      (LHS = 0, INFES = 145 ****)
+     
+ealloc(catA,zone3)..  - move(catA,zone1,zone3) - move(catA,zone2,zone3) + move(catA,zone3,zone1)
+     
+      + move(catA,zone3,zone2) + move(catA,zone3,zone4) - move(catA,zone4,zone3) + alloc(catA,zone3) =E= 134 ;
+     
+      (LHS = 0, INFES = 134 ****)
+     
+REMAINING 13 ENTRIES SKIPPED
+
+
+---- ecap  =L=  capacity limits
+
+ecap(zone1)..  alloc(catA,zone1) + alloc(catB,zone1) + alloc(catC,zone1) + alloc(catD,zone1) =L= 465 ; (LHS = 0)
+     
+ecap(zone2)..  alloc(catA,zone2) + alloc(catB,zone2) + alloc(catC,zone2) + alloc(catD,zone2) =L= 393 ; (LHS = 0)
+     
+ecap(zone3)..  alloc(catA,zone3) + alloc(catB,zone3) + alloc(catC,zone3) + alloc(catD,zone3) =L= 500 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using LP From line 128
+
+
+---- move  moves needed to meet capacity
+
+move(catA,zone1,zone1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -0.1     eobj
+
+move(catA,zone1,zone2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     eobj
+        1       ealloc(catA,zone1)
+       -1       ealloc(catA,zone2)
+
+move(catA,zone1,zone3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.1     eobj
+        1       ealloc(catA,zone1)
+       -1       ealloc(catA,zone3)
+
+REMAINING 61 ENTRIES SKIPPED
+
+---- alloc  new allocation
+
+alloc(catA,zone1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       ealloc(catA,zone1)
+        1       ecap(zone1)
+
+alloc(catA,zone2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       ealloc(catA,zone2)
+        1       ecap(zone2)
+
+alloc(catA,zone3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       ealloc(catA,zone3)
+        1       ecap(zone3)
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- totcost  total cost
+
+totcost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       eobj
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using LP From line 128
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           21
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           81
+NON ZERO ELEMENTS           193
+
+
+GENERATION TIME      =        0.359 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using LP From line 128
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  totcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  128
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               12.4000
+
+ RESOURCE USAGE, LIMIT          0.203 10000000000.000
+ ITERATION COUNT, LIMIT         5    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 0.08 ticks)
+
+
+Optimal solution found
+Objective:           12.400000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU eobj                .              .              .             1.0000      
+
+  eobj  objective
+
+---- EQU ealloc  allocation bookkeeping
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1       138.0000       138.0000       138.0000         0.1000      
+catA.zone2       145.0000       145.0000       145.0000         EPS         
+catA.zone3       134.0000       134.0000       134.0000         EPS         
+catA.zone4        91.0000        91.0000        91.0000         0.1000      
+catB.zone1        99.0000        99.0000        99.0000         0.1000      
+catB.zone2        83.0000        83.0000        83.0000         EPS         
+catB.zone3       121.0000       121.0000       121.0000         EPS         
+catB.zone4       196.0000       196.0000       196.0000         0.2000      
+catC.zone1       160.0000       160.0000       160.0000         0.1000      
+catC.zone2        81.0000        81.0000        81.0000         EPS         
+catC.zone3        33.0000        33.0000        33.0000         EPS         
+catC.zone4        66.0000        66.0000        66.0000         0.2000      
+catD.zone1        47.0000        47.0000        47.0000         0.1000      
+catD.zone2        49.0000        49.0000        49.0000         EPS         
+catD.zone3        34.0000        34.0000        34.0000         EPS         
+catD.zone4        96.0000        96.0000        96.0000         0.2000      
+
+---- EQU ecap  capacity limits
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+zone1        -INF          465.0000       465.0000        -0.1000      
+zone2        -INF          393.0000       393.0000         EPS         
+zone3        -INF          384.0000       500.0000          .          
+zone4        -INF          331.0000       331.0000        -0.2000      
+
+---- VAR move  moves needed to meet capacity
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1.zone1          .              .              .             0.1000      
+catA.zone1.zone2          .             6.0000        +INF             .          
+catA.zone1.zone3          .              .            +INF            EPS         
+catA.zone1.zone4          .              .            +INF            1.3000      
+catA.zone2.zone1          .              .            +INF            0.2000      
+catA.zone2.zone2          .              .              .             0.1000      
+catA.zone2.zone3          .              .            +INF            0.1000      
+catA.zone2.zone4          .              .            +INF            1.4000      
+catA.zone3.zone1          .              .            +INF            0.2000      
+catA.zone3.zone2          .              .            +INF            0.1000      
+catA.zone3.zone3          .              .              .             0.1000      
+catA.zone3.zone4          .              .            +INF            1.4000      
+catA.zone4.zone1          .              .            +INF            0.1000      
+catA.zone4.zone2          .            29.0000        +INF             .          
+catA.zone4.zone3          .            62.0000        +INF             .          
+catA.zone4.zone4          .              .              .             1.3000      
+catB.zone1.zone1          .              .              .            16.2000      
+catB.zone1.zone2          .              .            +INF           38.0000      
+catB.zone1.zone3          .              .            +INF            1.4000      
+catB.zone1.zone4          .              .            +INF            0.2000      
+catB.zone2.zone1          .              .            +INF           16.3000      
+catB.zone2.zone2          .              .              .            38.1000      
+catB.zone2.zone3          .              .            +INF            1.5000      
+catB.zone2.zone4          .              .            +INF            0.3000      
+catB.zone3.zone1          .              .            +INF           16.3000      
+catB.zone3.zone2          .              .            +INF           38.1000      
+catB.zone3.zone3          .              .              .             1.5000      
+catB.zone3.zone4          .              .            +INF            0.3000      
+catB.zone4.zone1          .              .            +INF           16.1000      
+catB.zone4.zone2          .              .            +INF           37.9000      
+catB.zone4.zone3          .              .            +INF            1.3000      
+catB.zone4.zone4          .              .              .             0.1000      
+catC.zone1.zone1          .              .              .             0.1000      
+catC.zone1.zone2          .              .            +INF           12.6000      
+catC.zone1.zone3          .              .            +INF           97.6000      
+catC.zone1.zone4          .              .            +INF           46.4000      
+catC.zone2.zone1          .              .            +INF            0.2000      
+catC.zone2.zone2          .              .              .            12.7000      
+catC.zone2.zone3          .              .            +INF           97.7000      
+catC.zone2.zone4          .              .            +INF           46.5000      
+catC.zone3.zone1          .              .            +INF            0.2000      
+catC.zone3.zone2          .              .            +INF           12.7000      
+catC.zone3.zone3          .              .              .            97.7000      
+catC.zone3.zone4          .              .            +INF           46.5000      
+catC.zone4.zone1          .            27.0000        +INF             .          
+catC.zone4.zone2          .              .            +INF           12.5000      
+catC.zone4.zone3          .              .            +INF           97.5000      
+catC.zone4.zone4          .              .              .            46.3000      
+catD.zone1.zone1          .              .              .            25.3000      
+catD.zone1.zone2          .              .            +INF            7.6000      
+catD.zone1.zone3          .              .            +INF           67.2000      
+catD.zone1.zone4          .              .            +INF            0.2000      
+catD.zone2.zone1          .              .            +INF           25.4000      
+catD.zone2.zone2          .              .              .             7.7000      
+catD.zone2.zone3          .              .            +INF           67.3000      
+catD.zone2.zone4          .              .            +INF            0.3000      
+catD.zone3.zone1          .              .            +INF           25.4000      
+catD.zone3.zone2          .              .            +INF            7.7000      
+catD.zone3.zone3          .              .              .            67.3000      
+catD.zone3.zone4          .              .            +INF            0.3000      
+catD.zone4.zone1          .              .            +INF           25.2000      
+catD.zone4.zone2          .              .            +INF            7.5000      
+catD.zone4.zone3          .              .            +INF           67.1000      
+catD.zone4.zone4          .              .              .             0.1000      
+
+---- VAR alloc  new allocation
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1          .           132.0000        +INF             .          
+catA.zone2          .           180.0000        +INF             .          
+catA.zone3          .           196.0000        +INF             .          
+catA.zone4          .              .            +INF            0.1000      
+catB.zone1          .            99.0000        +INF             .          
+catB.zone2          .            83.0000        +INF             .          
+catB.zone3          .           121.0000        +INF             .          
+catB.zone4          .           196.0000        +INF             .          
+catC.zone1          .           187.0000        +INF             .          
+catC.zone2          .            81.0000        +INF             .          
+catC.zone3          .            33.0000        +INF             .          
+catC.zone4          .            39.0000        +INF             .          
+catD.zone1          .            47.0000        +INF             .          
+catD.zone2          .            49.0000        +INF             .          
+catD.zone3          .            34.0000        +INF             .          
+catD.zone4          .            96.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totcost           -INF           12.4000        +INF             .          
+
+  totcost  total cost
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    131 VARIABLE move.L  moves needed to meet capacity
+
+                 zone1       zone2       zone3
+
+catA.zone1                       6
+catA.zone4                      29          62
+catC.zone4          27
+
+
+----    131 VARIABLE alloc.L  new allocation
+
+           zone1       zone2       zone3       zone4
+
+catA         132         180         196
+catB          99          83         121         196
+catC         187          81          33          39
+catD          47          49          34          96
+
+
+----    131 VARIABLE totcost.L             =       12.400  total cost
+
+----    135 PARAMETER counts  summary data
+
+               zone1       zone2       zone3       zone4       total
+
+initial          349         275         243         318        1185
+final            444         358         322         449        1573
+capacity         465         393         500         331        1689
+newalloc         465         393         384         331        1573
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using LP From line 148
+
+
+---- eobj  =E=  objective
+
+eobj..  - 0.1*move(catA,zone1,zone1) - 0.1*move(catA,zone1,zone2) - 0.1*move(catA,zone1,zone3)
+     
+      - 1.3*move(catA,zone1,zone4) - 0.1*move(catA,zone2,zone1) - 0.1*move(catA,zone2,zone2)
+     
+      - 0.1*move(catA,zone2,zone3) - 1.3*move(catA,zone2,zone4) - 0.1*move(catA,zone3,zone1)
+     
+      - 0.1*move(catA,zone3,zone2) - 0.1*move(catA,zone3,zone3) - 1.3*move(catA,zone3,zone4)
+     
+      - 0.1*move(catA,zone4,zone1) - 0.1*move(catA,zone4,zone2) - 0.1*move(catA,zone4,zone3)
+     
+      - 1.3*move(catA,zone4,zone4) - 16.2*move(catB,zone1,zone1) - 38.1*move(catB,zone1,zone2)
+     
+      - 1.5*move(catB,zone1,zone3) - 0.1*move(catB,zone1,zone4) - 16.2*move(catB,zone2,zone1)
+     
+      - 38.1*move(catB,zone2,zone2) - 1.5*move(catB,zone2,zone3) - 0.1*move(catB,zone2,zone4)
+     
+      - 16.2*move(catB,zone3,zone1) - 38.1*move(catB,zone3,zone2) - 1.5*move(catB,zone3,zone3)
+     
+      - 0.1*move(catB,zone3,zone4) - 16.2*move(catB,zone4,zone1) - 38.1*move(catB,zone4,zone2)
+     
+      - 1.5*move(catB,zone4,zone3) - 0.1*move(catB,zone4,zone4) - 0.1*move(catC,zone1,zone1)
+     
+      - 12.7*move(catC,zone1,zone2) - 97.7*move(catC,zone1,zone3) - 46.3*move(catC,zone1,zone4)
+     
+      - 0.1*move(catC,zone2,zone1) - 12.7*move(catC,zone2,zone2) - 97.7*move(catC,zone2,zone3)
+     
+      - 46.3*move(catC,zone2,zone4) - 0.1*move(catC,zone3,zone1) - 12.7*move(catC,zone3,zone2)
+     
+      - 97.7*move(catC,zone3,zone3) - 46.3*move(catC,zone3,zone4) - 0.1*move(catC,zone4,zone1)
+     
+      - 12.7*move(catC,zone4,zone2) - 97.7*move(catC,zone4,zone3) - 46.3*move(catC,zone4,zone4)
+     
+      - 25.3*move(catD,zone1,zone1) - 7.7*move(catD,zone1,zone2) - 67.3*move(catD,zone1,zone3)
+     
+      - 0.1*move(catD,zone1,zone4) - 25.3*move(catD,zone2,zone1) - 7.7*move(catD,zone2,zone2)
+     
+      - 67.3*move(catD,zone2,zone3) - 0.1*move(catD,zone2,zone4) - 25.3*move(catD,zone3,zone1)
+     
+      - 7.7*move(catD,zone3,zone2) - 67.3*move(catD,zone3,zone3) - 0.1*move(catD,zone3,zone4)
+     
+      - 25.3*move(catD,zone4,zone1) - 7.7*move(catD,zone4,zone2) - 67.3*move(catD,zone4,zone3)
+     
+      - 0.1*move(catD,zone4,zone4) + totcost =E= 0 ; (LHS = 0)
+     
+
+---- ecap2  =L=  capacity constraint (WRONG!)
+
+ecap2(zone1)..  - move(catA,zone1,zone2) - move(catA,zone1,zone3) - move(catA,zone1,zone4) + move(catA,zone2,zone1)
+     
+      + move(catA,zone3,zone1) + move(catA,zone4,zone1) - move(catB,zone1,zone2) - move(catB,zone1,zone3)
+     
+      - move(catB,zone1,zone4) + move(catB,zone2,zone1) + move(catB,zone3,zone1) + move(catB,zone4,zone1)
+     
+      - move(catC,zone1,zone2) - move(catC,zone1,zone3) - move(catC,zone1,zone4) + move(catC,zone2,zone1)
+     
+      + move(catC,zone3,zone1) + move(catC,zone4,zone1) - move(catD,zone1,zone2) - move(catD,zone1,zone3)
+     
+      - move(catD,zone1,zone4) + move(catD,zone2,zone1) + move(catD,zone3,zone1) + move(catD,zone4,zone1) =L= 21 ;
+     
+      (LHS = 21)
+     
+ecap2(zone2)..  move(catA,zone1,zone2) - move(catA,zone2,zone1) - move(catA,zone2,zone3) - move(catA,zone2,zone4)
+     
+      + move(catA,zone3,zone2) + move(catA,zone4,zone2) + move(catB,zone1,zone2) - move(catB,zone2,zone1)
+     
+      - move(catB,zone2,zone3) - move(catB,zone2,zone4) + move(catB,zone3,zone2) + move(catB,zone4,zone2)
+     
+      + move(catC,zone1,zone2) - move(catC,zone2,zone1) - move(catC,zone2,zone3) - move(catC,zone2,zone4)
+     
+      + move(catC,zone3,zone2) + move(catC,zone4,zone2) + move(catD,zone1,zone2) - move(catD,zone2,zone1)
+     
+      - move(catD,zone2,zone3) - move(catD,zone2,zone4) + move(catD,zone3,zone2) + move(catD,zone4,zone2) =L= 35 ;
+     
+      (LHS = 35)
+     
+ecap2(zone3)..  move(catA,zone1,zone3) + move(catA,zone2,zone3) - move(catA,zone3,zone1) - move(catA,zone3,zone2)
+     
+      - move(catA,zone3,zone4) + move(catA,zone4,zone3) + move(catB,zone1,zone3) + move(catB,zone2,zone3)
+     
+      - move(catB,zone3,zone1) - move(catB,zone3,zone2) - move(catB,zone3,zone4) + move(catB,zone4,zone3)
+     
+      + move(catC,zone1,zone3) + move(catC,zone2,zone3) - move(catC,zone3,zone1) - move(catC,zone3,zone2)
+     
+      - move(catC,zone3,zone4) + move(catC,zone4,zone3) + move(catD,zone1,zone3) + move(catD,zone2,zone3)
+     
+      - move(catD,zone3,zone1) - move(catD,zone3,zone2) - move(catD,zone3,zone4) + move(catD,zone4,zone3) =L= 178 ;
+     
+      (LHS = 62)
+     
+REMAINING ENTRY SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using LP From line 148
+
+
+---- move  moves needed to meet capacity
+
+move(catA,zone1,zone1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0.1)
+       -0.1     eobj
+
+move(catA,zone1,zone2)
+                (.LO, .L, .UP, .M = 0, 6, +INF, 0)
+       -0.1     eobj
+       -1       ecap2(zone1)
+        1       ecap2(zone2)
+
+move(catA,zone1,zone3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, EPS)
+       -0.1     eobj
+       -1       ecap2(zone1)
+        1       ecap2(zone3)
+
+REMAINING 61 ENTRIES SKIPPED
+
+---- totcost  total cost
+
+totcost
+                (.LO, .L, .UP, .M = -INF, 12.4, +INF, 0)
+        1       eobj
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using LP From line 148
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS            5
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           65
+NON ZERO ELEMENTS           161
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using LP From line 148
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  totcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  148
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               11.8000
+
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
+ ITERATION COUNT, LIMIT         2    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.04 ticks)
+
+
+Optimal solution found
+Objective:           11.800000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU eobj                .              .              .             1.0000      
+
+  eobj  objective
+
+---- EQU ecap2  capacity constraint (WRONG!)
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+zone1        -INF             .            21.0000          .          
+zone2        -INF           35.0000        35.0000         EPS         
+zone3        -INF           83.0000       178.0000          .          
+zone4        -INF         -118.0000      -118.0000        -0.1000      
+
+---- VAR move  moves needed to meet capacity
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1.zone1          .              .              .             0.1000      
+catA.zone1.zone2          .              .            +INF            0.1000      
+catA.zone1.zone3          .              .            +INF            0.1000      
+catA.zone1.zone4          .              .            +INF            1.4000      
+catA.zone2.zone1          .              .            +INF            0.1000      
+catA.zone2.zone2          .              .              .             0.1000      
+catA.zone2.zone3          .              .            +INF            0.1000      
+catA.zone2.zone4          .              .            +INF            1.4000      
+catA.zone3.zone1          .              .            +INF            0.1000      
+catA.zone3.zone2          .              .            +INF            0.1000      
+catA.zone3.zone3          .              .              .             0.1000      
+catA.zone3.zone4          .              .            +INF            1.4000      
+catA.zone4.zone1          .              .            +INF            EPS         
+catA.zone4.zone2          .            35.0000        +INF             .          
+catA.zone4.zone3          .            83.0000        +INF             .          
+catA.zone4.zone4          .              .              .             1.3000      
+catB.zone1.zone1          .              .              .            16.2000      
+catB.zone1.zone2          .              .            +INF           38.1000      
+catB.zone1.zone3          .              .            +INF            1.5000      
+catB.zone1.zone4          .              .            +INF            0.2000      
+catB.zone2.zone1          .              .            +INF           16.2000      
+catB.zone2.zone2          .              .              .            38.1000      
+catB.zone2.zone3          .              .            +INF            1.5000      
+catB.zone2.zone4          .              .            +INF            0.2000      
+catB.zone3.zone1          .              .            +INF           16.2000      
+catB.zone3.zone2          .              .            +INF           38.1000      
+catB.zone3.zone3          .              .              .             1.5000      
+catB.zone3.zone4          .              .            +INF            0.2000      
+catB.zone4.zone1          .              .            +INF           16.1000      
+catB.zone4.zone2          .              .            +INF           38.0000      
+catB.zone4.zone3          .              .            +INF            1.4000      
+catB.zone4.zone4          .              .              .             0.1000      
+catC.zone1.zone1          .              .              .             0.1000      
+catC.zone1.zone2          .              .            +INF           12.7000      
+catC.zone1.zone3          .              .            +INF           97.7000      
+catC.zone1.zone4          .              .            +INF           46.4000      
+catC.zone2.zone1          .              .            +INF            0.1000      
+catC.zone2.zone2          .              .              .            12.7000      
+catC.zone2.zone3          .              .            +INF           97.7000      
+catC.zone2.zone4          .              .            +INF           46.4000      
+catC.zone3.zone1          .              .            +INF            0.1000      
+catC.zone3.zone2          .              .            +INF           12.7000      
+catC.zone3.zone3          .              .              .            97.7000      
+catC.zone3.zone4          .              .            +INF           46.4000      
+catC.zone4.zone1          .              .            +INF            EPS         
+catC.zone4.zone2          .              .            +INF           12.6000      
+catC.zone4.zone3          .              .            +INF           97.6000      
+catC.zone4.zone4          .              .              .            46.3000      
+catD.zone1.zone1          .              .              .            25.3000      
+catD.zone1.zone2          .              .            +INF            7.7000      
+catD.zone1.zone3          .              .            +INF           67.3000      
+catD.zone1.zone4          .              .            +INF            0.2000      
+catD.zone2.zone1          .              .            +INF           25.3000      
+catD.zone2.zone2          .              .              .             7.7000      
+catD.zone2.zone3          .              .            +INF           67.3000      
+catD.zone2.zone4          .              .            +INF            0.2000      
+catD.zone3.zone1          .              .            +INF           25.3000      
+catD.zone3.zone2          .              .            +INF            7.7000      
+catD.zone3.zone3          .              .              .            67.3000      
+catD.zone3.zone4          .              .            +INF            0.2000      
+catD.zone4.zone1          .              .            +INF           25.2000      
+catD.zone4.zone2          .              .            +INF            7.6000      
+catD.zone4.zone3          .              .            +INF           67.2000      
+catD.zone4.zone4          .              .              .             0.1000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totcost           -INF           11.8000        +INF             .          
+
+  totcost  total cost
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    153 VARIABLE move.L  moves needed to meet capacity
+
+                 zone2       zone3
+
+catA.zone4          35          83
+
+
+----    153 VARIABLE totcost.L             =       11.800  total cost
+
+----    153 PARAMETER alloc2  recalculate allocations
+
+           zone1       zone2       zone3       zone4
+
+catA     138.000     180.000     217.000     -27.000
+catB      99.000      83.000     121.000     196.000
+catC     160.000      81.000      33.000      66.000
+catD      47.000      49.000      34.000      96.000
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using LP From line 164
+
+
+---- eobj  =E=  objective
+
+eobj..  - 0.1*move(catA,zone1,zone1) - 0.1*move(catA,zone1,zone2) - 0.1*move(catA,zone1,zone3)
+     
+      - 1.3*move(catA,zone1,zone4) - 0.1*move(catA,zone2,zone1) - 0.1*move(catA,zone2,zone2)
+     
+      - 0.1*move(catA,zone2,zone3) - 1.3*move(catA,zone2,zone4) - 0.1*move(catA,zone3,zone1)
+     
+      - 0.1*move(catA,zone3,zone2) - 0.1*move(catA,zone3,zone3) - 1.3*move(catA,zone3,zone4)
+     
+      - 0.1*move(catA,zone4,zone1) - 0.1*move(catA,zone4,zone2) - 0.1*move(catA,zone4,zone3)
+     
+      - 1.3*move(catA,zone4,zone4) - 16.2*move(catB,zone1,zone1) - 38.1*move(catB,zone1,zone2)
+     
+      - 1.5*move(catB,zone1,zone3) - 0.1*move(catB,zone1,zone4) - 16.2*move(catB,zone2,zone1)
+     
+      - 38.1*move(catB,zone2,zone2) - 1.5*move(catB,zone2,zone3) - 0.1*move(catB,zone2,zone4)
+     
+      - 16.2*move(catB,zone3,zone1) - 38.1*move(catB,zone3,zone2) - 1.5*move(catB,zone3,zone3)
+     
+      - 0.1*move(catB,zone3,zone4) - 16.2*move(catB,zone4,zone1) - 38.1*move(catB,zone4,zone2)
+     
+      - 1.5*move(catB,zone4,zone3) - 0.1*move(catB,zone4,zone4) - 0.1*move(catC,zone1,zone1)
+     
+      - 12.7*move(catC,zone1,zone2) - 97.7*move(catC,zone1,zone3) - 46.3*move(catC,zone1,zone4)
+     
+      - 0.1*move(catC,zone2,zone1) - 12.7*move(catC,zone2,zone2) - 97.7*move(catC,zone2,zone3)
+     
+      - 46.3*move(catC,zone2,zone4) - 0.1*move(catC,zone3,zone1) - 12.7*move(catC,zone3,zone2)
+     
+      - 97.7*move(catC,zone3,zone3) - 46.3*move(catC,zone3,zone4) - 0.1*move(catC,zone4,zone1)
+     
+      - 12.7*move(catC,zone4,zone2) - 97.7*move(catC,zone4,zone3) - 46.3*move(catC,zone4,zone4)
+     
+      - 25.3*move(catD,zone1,zone1) - 7.7*move(catD,zone1,zone2) - 67.3*move(catD,zone1,zone3)
+     
+      - 0.1*move(catD,zone1,zone4) - 25.3*move(catD,zone2,zone1) - 7.7*move(catD,zone2,zone2)
+     
+      - 67.3*move(catD,zone2,zone3) - 0.1*move(catD,zone2,zone4) - 25.3*move(catD,zone3,zone1)
+     
+      - 7.7*move(catD,zone3,zone2) - 67.3*move(catD,zone3,zone3) - 0.1*move(catD,zone3,zone4)
+     
+      - 25.3*move(catD,zone4,zone1) - 7.7*move(catD,zone4,zone2) - 67.3*move(catD,zone4,zone3)
+     
+      - 0.1*move(catD,zone4,zone4) + totcost =E= 0 ; (LHS = 0)
+     
+
+---- ealloc  =E=  allocation bookkeeping
+
+ealloc(catA,zone1)..  move(catA,zone1,zone2) + move(catA,zone1,zone3) + move(catA,zone1,zone4) - move(catA,zone2,zone1)
+     
+      - move(catA,zone3,zone1) - move(catA,zone4,zone1) + alloc(catA,zone1) =E= 23 ; (LHS = 132, INFES = 109 ****)
+     
+ealloc(catA,zone2)..  - move(catA,zone1,zone2) + move(catA,zone2,zone1) + move(catA,zone2,zone3)
+     
+      + move(catA,zone2,zone4) - move(catA,zone3,zone2) - move(catA,zone4,zone2) + alloc(catA,zone2) =E= 24 ;
+     
+      (LHS = 145, INFES = 121 ****)
+     
+ealloc(catA,zone3)..  - move(catA,zone1,zone3) - move(catA,zone2,zone3) + move(catA,zone3,zone1)
+     
+      + move(catA,zone3,zone2) + move(catA,zone3,zone4) - move(catA,zone4,zone3) + alloc(catA,zone3) =E= 22 ;
+     
+      (LHS = 113, INFES = 91 ****)
+     
+REMAINING 13 ENTRIES SKIPPED
+
+
+---- ecap  =L=  capacity limits
+
+ecap(zone1)..  alloc(catA,zone1) + alloc(catB,zone1) + alloc(catC,zone1) + alloc(catD,zone1) =L= 116 ;
+     
+      (LHS = 465, INFES = 349 ****)
+     
+ecap(zone2)..  alloc(catA,zone2) + alloc(catB,zone2) + alloc(catC,zone2) + alloc(catD,zone2) =L= 118 ;
+     
+      (LHS = 393, INFES = 275 ****)
+     
+ecap(zone3)..  alloc(catA,zone3) + alloc(catB,zone3) + alloc(catC,zone3) + alloc(catD,zone3) =L= 257 ;
+     
+      (LHS = 384, INFES = 127 ****)
+     
+REMAINING ENTRY SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using LP From line 164
+
+
+---- move  moves needed to meet capacity
+
+move(catA,zone1,zone1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0.1)
+       -0.1     eobj
+
+move(catA,zone1,zone2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.1)
+       -0.1     eobj
+        1       ealloc(catA,zone1)
+       -1       ealloc(catA,zone2)
+
+move(catA,zone1,zone3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0.1)
+       -0.1     eobj
+        1       ealloc(catA,zone1)
+       -1       ealloc(catA,zone3)
+
+REMAINING 61 ENTRIES SKIPPED
+
+---- alloc  new allocation
+
+alloc(catA,zone1)
+                (.LO, .L, .UP, .M = 0, 132, +INF, 0)
+        1       ealloc(catA,zone1)
+        1       ecap(zone1)
+
+alloc(catA,zone2)
+                (.LO, .L, .UP, .M = 0, 180, +INF, 0)
+        1       ealloc(catA,zone2)
+        1       ecap(zone2)
+
+alloc(catA,zone3)
+                (.LO, .L, .UP, .M = 0, 196, +INF, 0)
+        1       ealloc(catA,zone3)
+        1       ecap(zone3)
+
+REMAINING 13 ENTRIES SKIPPED
+
+---- totcost  total cost
+
+totcost
+                (.LO, .L, .UP, .M = -INF, 11.8, +INF, 0)
+        1       eobj
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using LP From line 164
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           21
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           81
+NON ZERO ELEMENTS           193
+
+
+GENERATION TIME      =        0.032 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using LP From line 164
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  totcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  164
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              380.7000
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT         6    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.08sec (det. 0.12 ticks)
+
+
+Optimal solution found
+Objective:          380.700000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU eobj                .              .              .             1.0000      
+
+  eobj  objective
+
+---- EQU ealloc  allocation bookkeeping
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1        23.0000        23.0000        23.0000         EPS         
+catA.zone2        24.0000        24.0000        24.0000         0.1000      
+catA.zone3        22.0000        22.0000        22.0000         EPS         
+catA.zone4        15.0000        15.0000        15.0000         0.1000      
+catB.zone1        29.0000        29.0000        29.0000         EPS         
+catB.zone2        24.0000        24.0000        24.0000         0.1000      
+catB.zone3        35.0000        35.0000        35.0000         EPS         
+catB.zone4        57.0000        57.0000        57.0000         1.5000      
+catC.zone1        18.0000        18.0000        18.0000         EPS         
+catC.zone2         9.0000         9.0000         9.0000         0.1000      
+catC.zone3         4.0000         4.0000         4.0000         EPS         
+catC.zone4         8.0000         8.0000         8.0000         0.1000      
+catD.zone1        25.0000        25.0000        25.0000         EPS         
+catD.zone2        26.0000        26.0000        26.0000         0.1000      
+catD.zone3        18.0000        18.0000        18.0000         EPS         
+catD.zone4        51.0000        51.0000        51.0000         7.8000      
+
+---- EQU ecap  capacity limits
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+zone1        -INF          116.0000       116.0000         EPS         
+zone2        -INF          118.0000       118.0000        -0.1000      
+zone3        -INF          141.0000       257.0000          .          
+zone4        -INF           13.0000        13.0000        -7.8000      
+
+---- VAR move  moves needed to meet capacity
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1.zone1          .              .              .             0.1000      
+catA.zone1.zone2          .              .            +INF            0.2000      
+catA.zone1.zone3          .              .            +INF            0.1000      
+catA.zone1.zone4          .              .            +INF            1.4000      
+catA.zone2.zone1          .              .            +INF            EPS         
+catA.zone2.zone2          .              .              .             0.1000      
+catA.zone2.zone3          .             3.0000        +INF             .          
+catA.zone2.zone4          .              .            +INF            1.3000      
+catA.zone3.zone1          .              .            +INF            0.1000      
+catA.zone3.zone2          .              .            +INF            0.2000      
+catA.zone3.zone3          .              .              .             0.1000      
+catA.zone3.zone4          .              .            +INF            1.4000      
+catA.zone4.zone1          .            13.0000        +INF             .          
+catA.zone4.zone2          .              .            +INF            0.1000      
+catA.zone4.zone3          .             2.0000        +INF             .          
+catA.zone4.zone4          .              .              .             1.3000      
+catB.zone1.zone1          .              .              .            16.2000      
+catB.zone1.zone2          .              .            +INF           38.2000      
+catB.zone1.zone3          .              .            +INF            1.5000      
+catB.zone1.zone4          .              .            +INF            1.6000      
+catB.zone2.zone1          .              .            +INF           16.1000      
+catB.zone2.zone2          .              .              .            38.1000      
+catB.zone2.zone3          .              .            +INF            1.4000      
+catB.zone2.zone4          .              .            +INF            1.5000      
+catB.zone3.zone1          .              .            +INF           16.2000      
+catB.zone3.zone2          .              .            +INF           38.2000      
+catB.zone3.zone3          .              .              .             1.5000      
+catB.zone3.zone4          .              .            +INF            1.6000      
+catB.zone4.zone1          .              .            +INF           14.7000      
+catB.zone4.zone2          .              .            +INF           36.7000      
+catB.zone4.zone3          .            57.0000        +INF             .          
+catB.zone4.zone4          .              .              .             0.1000      
+catC.zone1.zone1          .              .              .             0.1000      
+catC.zone1.zone2          .              .            +INF           12.8000      
+catC.zone1.zone3          .              .            +INF           97.7000      
+catC.zone1.zone4          .              .            +INF           46.4000      
+catC.zone2.zone1          .              .            +INF            EPS         
+catC.zone2.zone2          .              .              .            12.7000      
+catC.zone2.zone3          .              .            +INF           97.6000      
+catC.zone2.zone4          .              .            +INF           46.3000      
+catC.zone3.zone1          .              .            +INF            0.1000      
+catC.zone3.zone2          .              .            +INF           12.8000      
+catC.zone3.zone3          .              .              .            97.7000      
+catC.zone3.zone4          .              .            +INF           46.4000      
+catC.zone4.zone1          .             8.0000        +INF             .          
+catC.zone4.zone2          .              .            +INF           12.7000      
+catC.zone4.zone3          .              .            +INF           97.6000      
+catC.zone4.zone4          .              .              .            46.3000      
+catD.zone1.zone1          .              .              .            25.3000      
+catD.zone1.zone2          .              .            +INF            7.8000      
+catD.zone1.zone3          .              .            +INF           67.3000      
+catD.zone1.zone4          .              .            +INF            7.9000      
+catD.zone2.zone1          .              .            +INF           25.2000      
+catD.zone2.zone2          .              .              .             7.7000      
+catD.zone2.zone3          .              .            +INF           67.2000      
+catD.zone2.zone4          .              .            +INF            7.8000      
+catD.zone3.zone1          .              .            +INF           25.3000      
+catD.zone3.zone2          .              .            +INF            7.8000      
+catD.zone3.zone3          .              .              .            67.3000      
+catD.zone3.zone4          .              .            +INF            7.9000      
+catD.zone4.zone1          .              .            +INF           17.5000      
+catD.zone4.zone2          .            38.0000        +INF             .          
+catD.zone4.zone3          .              .            +INF           59.5000      
+catD.zone4.zone4          .              .              .             0.1000      
+
+---- VAR alloc  new allocation
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+catA.zone1          .            36.0000        +INF             .          
+catA.zone2          .            21.0000        +INF             .          
+catA.zone3          .            27.0000        +INF             .          
+catA.zone4          .              .            +INF            7.7000      
+catB.zone1          .            29.0000        +INF             .          
+catB.zone2          .            24.0000        +INF             .          
+catB.zone3          .            92.0000        +INF             .          
+catB.zone4          .              .            +INF            6.3000      
+catC.zone1          .            26.0000        +INF             .          
+catC.zone2          .             9.0000        +INF             .          
+catC.zone3          .             4.0000        +INF             .          
+catC.zone4          .              .            +INF            7.7000      
+catD.zone1          .            25.0000        +INF             .          
+catD.zone2          .            64.0000        +INF             .          
+catD.zone3          .            18.0000        +INF             .          
+catD.zone4          .            13.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totcost           -INF          380.7000        +INF             .          
+
+  totcost  total cost
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 09:29:15 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    167 VARIABLE move.L  moves needed to meet capacity
+
+                 zone1       zone2       zone3
+
+catA.zone2                                   3
+catA.zone4          13                       2
+catB.zone4                                  57
+catC.zone4           8
+catD.zone4                      38
+
+
+----    167 VARIABLE alloc.L  new allocation
+
+           zone1       zone2       zone3       zone4
+
+catA          36          21          27
+catB          29          24          92
+catC          26           9           4
+catD          25          64          18          13
+
+
+----    167 VARIABLE totcost.L             =      380.700  total cost
+
+----    171 PARAMETER counts  summary data
+
+               zone1       zone2       zone3       zone4       total
+
+initial          349         275         243         318        1185
+final            444         358         322         449        1573
+capacity         465         393         500         331        1689
+newalloc         465         393         384         331        1573
+
+
+
+EXECUTION TIME       =        1.891 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\Reallocation\Reallocation.gms
+Output     D:\projects\OptimizationModels\Reallocation\Reallocation.lst
