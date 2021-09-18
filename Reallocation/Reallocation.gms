@@ -156,6 +156,8 @@ display move.l,totcost.l,alloc2;
 *----------------------------------------------------------------
 * optimal reallocation while keeping initial population where
 * they were.
+*
+* method 1
 *----------------------------------------------------------------
 
 demand(c,z) = popdata(c,z,'added');
@@ -170,3 +172,24 @@ counts('newalloc',z) = counts('initial',z) + sum(c,alloc.l(c,z));
 counts('newalloc','total') = sum(z,counts('newalloc',z));
 display counts;
 
+*----------------------------------------------------------------
+* optimal reallocation while keeping initial population where
+* they were.
+*
+* method 2
+*----------------------------------------------------------------
+
+* back to what they were before
+demand(c,z) = popdata(c,z,'final');
+cap(z) = capacity(z);
+
+alloc.lo(c,z) = popdata(c,z,'initial');
+
+solve m minimizing totcost using lp;
+
+option move:0, alloc:0;
+display move.l,alloc.l,totcost.l;
+
+counts('newalloc',z) = sum(c,alloc.l(c,z));
+counts('newalloc','total') = sum(z,counts('newalloc',z));
+display counts;
