@@ -1,7 +1,7 @@
 $ontext
 
    Small LP about reallocating persons
-   Formulated as a transshipment network model
+   Formulated as a network model
 
    https://yetanothermathprogrammingconsultant.blogspot.com/2021/09/reallocate-people-very-small-but.html
 
@@ -13,9 +13,9 @@ $offtext
 
 set
    dummy  'for ordering (printing)' /initial,added,final/
-   c0     'category superset'       /catA*catD,'-'/
+   c0     'category superset'       /catA*catD, all/
    c(c0)  'category'                /catA*catD/
-   z0     'zone superset'           /zone1*zone4,'-'/
+   z0     'zone superset'           /zone1*zone4, sink/
    z(z0)  'zone'                    /zone1*zone4/
 ;
 
@@ -84,35 +84,31 @@ display cost;
 alias (z,z1,z2),(c,c1,c2);
 
 set
-  L 'layers' /before,after,zone,sink/
-  n(L,c0,z0) 'nodes' /
-       'before'.(catA*catD).(zone1*zone4)
-       'after'.(catA*catD).(zone1*zone4)
-       'zone'.'-'.(zone1*zone4)
-       'sink'.'-'.'-'
+  n(c0,z0) 'nodes' /
+       (catA*catD,all).(zone1*zone4)
+       all.sink
    /
-   a(L,c0,z0,L,c0,z0) 'arcs'
+   a(c0,z0,c0,z0) 'arcs'
 ;
 
-a('before',c,z1,'after',c,z2) = yes;
-a('after',c,z,'zone','-',z) = yes;
-a('zone','-',z,'sink','-','-') = yes;
+a(c,z1,'all',z2) = yes;
+a('all',z,'all','sink') = yes;
 
-option a:0:3:3;
+option a:0:2:2;
 display n,a;
 
 parameter
-   acost(L,c0,z0,L,c0,z0)     'cost of an arc'
-   inflow(L,c0,z0)            'exogenous in- or outflow'
-   cap(L,c0,z0,L,c0,z0)       'capacity of an arc'
+   acost(c0,z0,c0,z0)     'cost of an arc'
+   inflow(c0,z0)          'exogenous in- or outflow'
+   cap(c0,z0,c0,z0)       'capacity of an arc'
 ;
 
-acost('before',c,z1,'after',c,z2)$(not sameas(z1,z2)) = cost(c,z2);
-inflow('before',c,z) = popdata(c,z,'final');
-inflow('sink','-','-') = -sum((c,z),popdata(c,z,'final'));
-cap('zone','-',z,'sink','-','-') = capacity(z);
+acost(c,z1,'all',z2)$(not sameas(z1,z2)) = cost(c,z2);
+inflow(c,z) = popdata(c,z,'final');
+inflow('all','sink') = -sum((c,z),popdata(c,z,'final'));
+cap('all',z,'all','sink') = capacity(z);
 
-option acost:1:3:3,cap:0:3:3;
+option acost:1:2:2,inflow:0,cap:0:2:2;
 display acost,inflow,cap;
 
 
@@ -120,11 +116,11 @@ display acost,inflow,cap;
 * min cost flow network model
 *----------------------------------------------------------------
 
-positive variable flow(L,c0,z0,L,c0,z0) 'flows along arcs';
+positive variable flow(c0,z0,c0,z0) 'flows along arcs';
 variable totcost 'total cost';
 
 equations
-   nodbal(L,c0,z0) 'node balance'
+   nodbal(c0,z0) 'node balance'
    objective
 ;
 
@@ -141,11 +137,11 @@ model mincostflow /all/;
 solve mincostflow minimizing totcost using lp;
 
 
-option flow:0:3:3;
+option flow:0:2:2;
 display flow.l, totcost.l;
 
 parameter moves(c,z,z) 'computed from flows';
-moves(c,z1,z2)$(not sameas(z1,z2)) = flow.l('before',c,z1,'after',c,z2);
+moves(c,z1,z2)$(not sameas(z1,z2)) = flow.l(c,z1,'all',z2);
 option moves:0;
 display moves;
 

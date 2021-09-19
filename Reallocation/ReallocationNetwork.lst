@@ -1,11 +1,11 @@
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 1
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
        
          Small LP about reallocating persons
-         Formulated as a transshipment network model
+         Formulated as a network model
        
          https://yetanothermathprogrammingconsultant.blogspot.com/2021/09/reallocate-people-very-small-but.html
        
@@ -16,9 +16,9 @@ C o m p i l a t i o n
   13   
   14  set
   15     dummy  'for ordering (printing)' /initial,added,final/
-  16     c0     'category superset'       /catA*catD,'-'/
+  16     c0     'category superset'       /catA*catD, all/
   17     c(c0)  'category'                /catA*catD/
-  18     z0     'zone superset'           /zone1*zone4,'-'/
+  18     z0     'zone superset'           /zone1*zone4, sink/
   19     z(z0)  'zone'                    /zone1*zone4/
   20  ;
   21   
@@ -87,75 +87,71 @@ C o m p i l a t i o n
   84  alias (z,z1,z2),(c,c1,c2);
   85   
   86  set
-  87    L 'layers' /before,after,zone,sink/
-  88    n(L,c0,z0) 'nodes' /
-  89         'before'.(catA*catD).(zone1*zone4)
-  90         'after'.(catA*catD).(zone1*zone4)
-  91         'zone'.'-'.(zone1*zone4)
-  92         'sink'.'-'.'-'
-  93     /
-  94     a(L,c0,z0,L,c0,z0) 'arcs'
-  95  ;
+  87    n(c0,z0) 'nodes' /
+  88         (catA*catD,all).(zone1*zone4)
+  89         all.sink
+  90     /
+  91     a(c0,z0,c0,z0) 'arcs'
+  92  ;
+  93   
+  94  a(c,z1,'all',z2) = yes;
+  95  a('all',z,'all','sink') = yes;
   96   
-  97  a('before',c,z1,'after',c,z2) = yes;
-  98  a('after',c,z,'zone','-',z) = yes;
-  99  a('zone','-',z,'sink','-','-') = yes;
- 100   
- 101  option a:0:3:3;
- 102  display n,a;
- 103   
- 104  parameter
- 105     acost(L,c0,z0,L,c0,z0)     'cost of an arc'
- 106     inflow(L,c0,z0)            'exogenous in- or outflow'
- 107     cap(L,c0,z0,L,c0,z0)       'capacity of an arc'
- 108  ;
- 109   
- 110  acost('before',c,z1,'after',c,z2)$(not sameas(z1,z2)) = cost(c,z2);
- 111  inflow('before',c,z) = popdata(c,z,'final');
- 112  inflow('sink','-','-') = -sum((c,z),popdata(c,z,'final'));
- 113  cap('zone','-',z,'sink','-','-') = capacity(z);
+  97  option a:0:2:2;
+  98  display n,a;
+  99   
+ 100  parameter
+ 101     acost(c0,z0,c0,z0)     'cost of an arc'
+ 102     inflow(c0,z0)          'exogenous in- or outflow'
+ 103     cap(c0,z0,c0,z0)       'capacity of an arc'
+ 104  ;
+ 105   
+ 106  acost(c,z1,'all',z2)$(not sameas(z1,z2)) = cost(c,z2);
+ 107  inflow(c,z) = popdata(c,z,'final');
+ 108  inflow('all','sink') = -sum((c,z),popdata(c,z,'final'));
+ 109  cap('all',z,'all','sink') = capacity(z);
+ 110   
+ 111  option acost:1:2:2,inflow:0,cap:0:2:2;
+ 112  display acost,inflow,cap;
+ 113   
  114   
- 115  option acost:1:3:3,cap:0:3:3;
- 116  display acost,inflow,cap;
- 117   
+ 115  *----------------------------------------------------------------
+ 116  * min cost flow network model
+ 117  *----------------------------------------------------------------
  118   
- 119  *----------------------------------------------------------------
- 120  * min cost flow network model
- 121  *----------------------------------------------------------------
- 122   
- 123  positive variable flow(L,c0,z0,L,c0,z0) 'flows along arcs';
- 124  variable totcost 'total cost';
- 125   
- 126  equations
- 127     nodbal(L,c0,z0) 'node balance'
- 128     objective
- 129  ;
+ 119  positive variable flow(c0,z0,c0,z0) 'flows along arcs';
+ 120  variable totcost 'total cost';
+ 121   
+ 122  equations
+ 123     nodbal(c0,z0) 'node balance'
+ 124     objective
+ 125  ;
+ 126   
+ 127  alias(n,n1,n2);
+ 128   
+ 129  objective.. totcost =e= sum(a,acost(a)*flow(a));
  130   
- 131  alias(n,n1,n2);
+ 131  nodbal(n1)..  sum(a(n2,n1),flow(a)) + inflow(n1) =e= sum(a(n1,n2),flow(a));
  132   
- 133  objective.. totcost =e= sum(a,acost(a)*flow(a));
+ 133  flow.up(a)$cap(a) = cap(a);
  134   
- 135  nodbal(n1)..  sum(a(n2,n1),flow(a)) + inflow(n1) =e= sum(a(n1,n2),flow(a));
- 136   
- 137  flow.up(a)$cap(a) = cap(a);
+ 135   
+ 136  model mincostflow /all/;
+ 137  solve mincostflow minimizing totcost using lp;
  138   
  139   
- 140  model mincostflow /all/;
- 141  solve mincostflow minimizing totcost using lp;
+ 140  option flow:0:2:2;
+ 141  display flow.l, totcost.l;
  142   
- 143   
- 144  option flow:0:3:3;
- 145  display flow.l, totcost.l;
- 146   
- 147  parameter moves(c,z,z) 'computed from flows';
- 148  moves(c,z1,z2)$(not sameas(z1,z2)) = flow.l('before',c,z1,'after',c,z2);
- 149  option moves:0;
- 150  display moves;
- 151   
+ 143  parameter moves(c,z,z) 'computed from flows';
+ 144  moves(c,z1,z2)$(not sameas(z1,z2)) = flow.l(c,z1,'all',z2);
+ 145  option moves:0;
+ 146  display moves;
+ 147   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 2
+COMPILATION TIME     =        0.031 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -197,230 +193,167 @@ catC         0.1        12.7        97.7        46.3
 catD        25.3         7.7        67.3         0.1
 
 
-----    102 SET n  nodes
+----     98 SET n  nodes
 
-                      -       zone1       zone2       zone3       zone4
+           zone1       zone2       zone3       zone4        sink
 
-before.catA                     YES         YES         YES         YES
-before.catB                     YES         YES         YES         YES
-before.catC                     YES         YES         YES         YES
-before.catD                     YES         YES         YES         YES
-after .catA                     YES         YES         YES         YES
-after .catB                     YES         YES         YES         YES
-after .catC                     YES         YES         YES         YES
-after .catD                     YES         YES         YES         YES
-zone  .-                        YES         YES         YES         YES
-sink  .-            YES
+catA         YES         YES         YES         YES
+catB         YES         YES         YES         YES
+catC         YES         YES         YES         YES
+catD         YES         YES         YES         YES
+all          YES         YES         YES         YES         YES
 
 
-----    102 SET a  arcs
+----     98 SET a  arcs
 
-                        after       after       after       after       after       after       after       after
-                         catA        catA        catA        catA        catB        catB        catB        catB
-                        zone1       zone2       zone3       zone4       zone1       zone2       zone3       zone4
+             all.zone1   all.zone2   all.zone3   all.zone4    all.sink
 
-before.catA.zone1         YES         YES         YES         YES
-before.catA.zone2         YES         YES         YES         YES
-before.catA.zone3         YES         YES         YES         YES
-before.catA.zone4         YES         YES         YES         YES
-before.catB.zone1                                                         YES         YES         YES         YES
-before.catB.zone2                                                         YES         YES         YES         YES
-before.catB.zone3                                                         YES         YES         YES         YES
-before.catB.zone4                                                         YES         YES         YES         YES
-
-                +       after       after       after       after       after       after       after       after
-                         catC        catC        catC        catC        catD        catD        catD        catD
-                        zone1       zone2       zone3       zone4       zone1       zone2       zone3       zone4
-
-before.catC.zone1         YES         YES         YES         YES
-before.catC.zone2         YES         YES         YES         YES
-before.catC.zone3         YES         YES         YES         YES
-before.catC.zone4         YES         YES         YES         YES
-before.catD.zone1                                                         YES         YES         YES         YES
-before.catD.zone2                                                         YES         YES         YES         YES
-before.catD.zone3                                                         YES         YES         YES         YES
-before.catD.zone4                                                         YES         YES         YES         YES
-
-                +        zone        zone        zone        zone        sink
-                            -           -           -           -           -
-                        zone1       zone2       zone3       zone4           -
-
-after .catA.zone1         YES
-after .catA.zone2                     YES
-after .catA.zone3                                 YES
-after .catA.zone4                                             YES
-after .catB.zone1         YES
-after .catB.zone2                     YES
-after .catB.zone3                                 YES
-after .catB.zone4                                             YES
-after .catC.zone1         YES
-after .catC.zone2                     YES
-after .catC.zone3                                 YES
-after .catC.zone4                                             YES
-after .catD.zone1         YES
-after .catD.zone2                     YES
-after .catD.zone3                                 YES
-after .catD.zone4                                             YES
-zone  .-   .zone1                                                         YES
-zone  .-   .zone2                                                         YES
-zone  .-   .zone3                                                         YES
-zone  .-   .zone4                                                         YES
+catA.zone1         YES         YES         YES         YES
+catA.zone2         YES         YES         YES         YES
+catA.zone3         YES         YES         YES         YES
+catA.zone4         YES         YES         YES         YES
+catB.zone1         YES         YES         YES         YES
+catB.zone2         YES         YES         YES         YES
+catB.zone3         YES         YES         YES         YES
+catB.zone4         YES         YES         YES         YES
+catC.zone1         YES         YES         YES         YES
+catC.zone2         YES         YES         YES         YES
+catC.zone3         YES         YES         YES         YES
+catC.zone4         YES         YES         YES         YES
+catD.zone1         YES         YES         YES         YES
+catD.zone2         YES         YES         YES         YES
+catD.zone3         YES         YES         YES         YES
+catD.zone4         YES         YES         YES         YES
+all .zone1                                                         YES
+all .zone2                                                         YES
+all .zone3                                                         YES
+all .zone4                                                         YES
 
 
-----    116 PARAMETER acost  cost of an arc
+----    112 PARAMETER acost  cost of an arc
 
-                        after       after       after       after       after       after       after       after
-                         catA        catA        catA        catA        catB        catB        catB        catB
-                        zone1       zone2       zone3       zone4       zone1       zone2       zone3       zone4
+             all.zone1   all.zone2   all.zone3   all.zone4
 
-before.catA.zone1                     0.1         0.1         1.3
-before.catA.zone2         0.1                     0.1         1.3
-before.catA.zone3         0.1         0.1                     1.3
-before.catA.zone4         0.1         0.1         0.1
-before.catB.zone1                                                                    38.1         1.5         0.1
-before.catB.zone2                                                        16.2                     1.5         0.1
-before.catB.zone3                                                        16.2        38.1                     0.1
-before.catB.zone4                                                        16.2        38.1         1.5
-
-                +       after       after       after       after       after       after       after       after
-                         catC        catC        catC        catC        catD        catD        catD        catD
-                        zone1       zone2       zone3       zone4       zone1       zone2       zone3       zone4
-
-before.catC.zone1                    12.7        97.7        46.3
-before.catC.zone2         0.1                    97.7        46.3
-before.catC.zone3         0.1        12.7                    46.3
-before.catC.zone4         0.1        12.7        97.7
-before.catD.zone1                                                                     7.7        67.3         0.1
-before.catD.zone2                                                        25.3                    67.3         0.1
-before.catD.zone3                                                        25.3         7.7                     0.1
-before.catD.zone4                                                        25.3         7.7        67.3
+catA.zone1                     0.1         0.1         1.3
+catA.zone2         0.1                     0.1         1.3
+catA.zone3         0.1         0.1                     1.3
+catA.zone4         0.1         0.1         0.1
+catB.zone1                    38.1         1.5         0.1
+catB.zone2        16.2                     1.5         0.1
+catB.zone3        16.2        38.1                     0.1
+catB.zone4        16.2        38.1         1.5
+catC.zone1                    12.7        97.7        46.3
+catC.zone2         0.1                    97.7        46.3
+catC.zone3         0.1        12.7                    46.3
+catC.zone4         0.1        12.7        97.7
+catD.zone1                     7.7        67.3         0.1
+catD.zone2        25.3                    67.3         0.1
+catD.zone3        25.3         7.7                     0.1
+catD.zone4        25.3         7.7        67.3
 
 
-----    116 PARAMETER inflow  exogenous in- or outflow
+----    112 PARAMETER inflow  exogenous in- or outflow
 
-                      -       zone1       zone2       zone3       zone4
+           zone1       zone2       zone3       zone4        sink
 
-before.catA                 138.000     145.000     134.000      91.000
-before.catB                  99.000      83.000     121.000     196.000
-before.catC                 160.000      81.000      33.000      66.000
-before.catD                  47.000      49.000      34.000      96.000
-sink  .-      -1573.000
+catA         138         145         134          91
+catB          99          83         121         196
+catC         160          81          33          66
+catD          47          49          34          96
+all                                                        -1573
 
 
-----    116 PARAMETER cap  capacity of an arc
+----    112 PARAMETER cap  capacity of an arc
 
-                sink.-.-
+             all.sink
 
-zone.-.zone1         465
-zone.-.zone2         393
-zone.-.zone3         500
-zone.-.zone4         331
+all.zone1         465
+all.zone2         393
+all.zone3         500
+all.zone4         331
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 3
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE mincostflow Using LP From line 141
+Equation Listing    SOLVE mincostflow Using LP From line 137
 
 
 ---- nodbal  =E=  node balance
 
-nodbal(before,catA,zone1)..  - flow(before,catA,zone1,after,catA,zone1) - flow(before,catA,zone1,after,catA,zone2)
+nodbal(catA,zone1)..  - flow(catA,zone1,all,zone1) - flow(catA,zone1,all,zone2) - flow(catA,zone1,all,zone3)
      
-      - flow(before,catA,zone1,after,catA,zone3) - flow(before,catA,zone1,after,catA,zone4) =E= -138 ;
+      - flow(catA,zone1,all,zone4) =E= -138 ; (LHS = 0, INFES = 138 ****)
      
-      (LHS = 0, INFES = 138 ****)
+nodbal(catA,zone2)..  - flow(catA,zone2,all,zone1) - flow(catA,zone2,all,zone2) - flow(catA,zone2,all,zone3)
      
-nodbal(before,catA,zone2)..  - flow(before,catA,zone2,after,catA,zone1) - flow(before,catA,zone2,after,catA,zone2)
+      - flow(catA,zone2,all,zone4) =E= -145 ; (LHS = 0, INFES = 145 ****)
      
-      - flow(before,catA,zone2,after,catA,zone3) - flow(before,catA,zone2,after,catA,zone4) =E= -145 ;
+nodbal(catA,zone3)..  - flow(catA,zone3,all,zone1) - flow(catA,zone3,all,zone2) - flow(catA,zone3,all,zone3)
      
-      (LHS = 0, INFES = 145 ****)
+      - flow(catA,zone3,all,zone4) =E= -134 ; (LHS = 0, INFES = 134 ****)
      
-nodbal(before,catA,zone3)..  - flow(before,catA,zone3,after,catA,zone1) - flow(before,catA,zone3,after,catA,zone2)
-     
-      - flow(before,catA,zone3,after,catA,zone3) - flow(before,catA,zone3,after,catA,zone4) =E= -134 ;
-     
-      (LHS = 0, INFES = 134 ****)
-     
-REMAINING 34 ENTRIES SKIPPED
+REMAINING 18 ENTRIES SKIPPED
 
 
 ---- objective  =E=  
 
-objective..  - 0.1*flow(before,catA,zone1,after,catA,zone2) - 0.1*flow(before,catA,zone1,after,catA,zone3)
+objective..  - 0.1*flow(catA,zone1,all,zone2) - 0.1*flow(catA,zone1,all,zone3) - 1.3*flow(catA,zone1,all,zone4)
      
-      - 1.3*flow(before,catA,zone1,after,catA,zone4) - 0.1*flow(before,catA,zone2,after,catA,zone1)
+      - 0.1*flow(catA,zone2,all,zone1) - 0.1*flow(catA,zone2,all,zone3) - 1.3*flow(catA,zone2,all,zone4)
      
-      - 0.1*flow(before,catA,zone2,after,catA,zone3) - 1.3*flow(before,catA,zone2,after,catA,zone4)
+      - 0.1*flow(catA,zone3,all,zone1) - 0.1*flow(catA,zone3,all,zone2) - 1.3*flow(catA,zone3,all,zone4)
      
-      - 0.1*flow(before,catA,zone3,after,catA,zone1) - 0.1*flow(before,catA,zone3,after,catA,zone2)
+      - 0.1*flow(catA,zone4,all,zone1) - 0.1*flow(catA,zone4,all,zone2) - 0.1*flow(catA,zone4,all,zone3)
      
-      - 1.3*flow(before,catA,zone3,after,catA,zone4) - 0.1*flow(before,catA,zone4,after,catA,zone1)
+      - 38.1*flow(catB,zone1,all,zone2) - 1.5*flow(catB,zone1,all,zone3) - 0.1*flow(catB,zone1,all,zone4)
      
-      - 0.1*flow(before,catA,zone4,after,catA,zone2) - 0.1*flow(before,catA,zone4,after,catA,zone3)
+      - 16.2*flow(catB,zone2,all,zone1) - 1.5*flow(catB,zone2,all,zone3) - 0.1*flow(catB,zone2,all,zone4)
      
-      - 38.1*flow(before,catB,zone1,after,catB,zone2) - 1.5*flow(before,catB,zone1,after,catB,zone3)
+      - 16.2*flow(catB,zone3,all,zone1) - 38.1*flow(catB,zone3,all,zone2) - 0.1*flow(catB,zone3,all,zone4)
      
-      - 0.1*flow(before,catB,zone1,after,catB,zone4) - 16.2*flow(before,catB,zone2,after,catB,zone1)
+      - 16.2*flow(catB,zone4,all,zone1) - 38.1*flow(catB,zone4,all,zone2) - 1.5*flow(catB,zone4,all,zone3)
      
-      - 1.5*flow(before,catB,zone2,after,catB,zone3) - 0.1*flow(before,catB,zone2,after,catB,zone4)
+      - 12.7*flow(catC,zone1,all,zone2) - 97.7*flow(catC,zone1,all,zone3) - 46.3*flow(catC,zone1,all,zone4)
      
-      - 16.2*flow(before,catB,zone3,after,catB,zone1) - 38.1*flow(before,catB,zone3,after,catB,zone2)
+      - 0.1*flow(catC,zone2,all,zone1) - 97.7*flow(catC,zone2,all,zone3) - 46.3*flow(catC,zone2,all,zone4)
      
-      - 0.1*flow(before,catB,zone3,after,catB,zone4) - 16.2*flow(before,catB,zone4,after,catB,zone1)
+      - 0.1*flow(catC,zone3,all,zone1) - 12.7*flow(catC,zone3,all,zone2) - 46.3*flow(catC,zone3,all,zone4)
      
-      - 38.1*flow(before,catB,zone4,after,catB,zone2) - 1.5*flow(before,catB,zone4,after,catB,zone3)
+      - 0.1*flow(catC,zone4,all,zone1) - 12.7*flow(catC,zone4,all,zone2) - 97.7*flow(catC,zone4,all,zone3)
      
-      - 12.7*flow(before,catC,zone1,after,catC,zone2) - 97.7*flow(before,catC,zone1,after,catC,zone3)
+      - 7.7*flow(catD,zone1,all,zone2) - 67.3*flow(catD,zone1,all,zone3) - 0.1*flow(catD,zone1,all,zone4)
      
-      - 46.3*flow(before,catC,zone1,after,catC,zone4) - 0.1*flow(before,catC,zone2,after,catC,zone1)
+      - 25.3*flow(catD,zone2,all,zone1) - 67.3*flow(catD,zone2,all,zone3) - 0.1*flow(catD,zone2,all,zone4)
      
-      - 97.7*flow(before,catC,zone2,after,catC,zone3) - 46.3*flow(before,catC,zone2,after,catC,zone4)
+      - 25.3*flow(catD,zone3,all,zone1) - 7.7*flow(catD,zone3,all,zone2) - 0.1*flow(catD,zone3,all,zone4)
      
-      - 0.1*flow(before,catC,zone3,after,catC,zone1) - 12.7*flow(before,catC,zone3,after,catC,zone2)
+      - 25.3*flow(catD,zone4,all,zone1) - 7.7*flow(catD,zone4,all,zone2) - 67.3*flow(catD,zone4,all,zone3) + totcost
+      =E= 0 ; (LHS = 0)
      
-      - 46.3*flow(before,catC,zone3,after,catC,zone4) - 0.1*flow(before,catC,zone4,after,catC,zone1)
-     
-      - 12.7*flow(before,catC,zone4,after,catC,zone2) - 97.7*flow(before,catC,zone4,after,catC,zone3)
-     
-      - 7.7*flow(before,catD,zone1,after,catD,zone2) - 67.3*flow(before,catD,zone1,after,catD,zone3)
-     
-      - 0.1*flow(before,catD,zone1,after,catD,zone4) - 25.3*flow(before,catD,zone2,after,catD,zone1)
-     
-      - 67.3*flow(before,catD,zone2,after,catD,zone3) - 0.1*flow(before,catD,zone2,after,catD,zone4)
-     
-      - 25.3*flow(before,catD,zone3,after,catD,zone1) - 7.7*flow(before,catD,zone3,after,catD,zone2)
-     
-      - 0.1*flow(before,catD,zone3,after,catD,zone4) - 25.3*flow(before,catD,zone4,after,catD,zone1)
-     
-      - 7.7*flow(before,catD,zone4,after,catD,zone2) - 67.3*flow(before,catD,zone4,after,catD,zone3) + totcost =E= 0 ;
-     
-      (LHS = 0)
-     
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 4
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE mincostflow Using LP From line 141
+Column Listing      SOLVE mincostflow Using LP From line 137
 
 
 ---- flow  flows along arcs
 
-flow(before,catA,zone1,after,catA,zone1)
+flow(catA,zone1,all,zone1)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       -1       nodbal(before,catA,zone1)
-        1       nodbal(after,catA,zone1)
+       -1       nodbal(catA,zone1)
+        1       nodbal(all,zone1)
 
-flow(before,catA,zone1,after,catA,zone2)
+flow(catA,zone1,all,zone2)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       -1       nodbal(before,catA,zone1)
-        1       nodbal(after,catA,zone2)
+       -1       nodbal(catA,zone1)
+        1       nodbal(all,zone2)
        -0.1     objective
 
-flow(before,catA,zone1,after,catA,zone3)
+flow(catA,zone1,all,zone3)
                 (.LO, .L, .UP, .M = 0, 0, +INF, 0)
-       -1       nodbal(before,catA,zone1)
-        1       nodbal(after,catA,zone3)
+       -1       nodbal(catA,zone1)
+        1       nodbal(all,zone3)
        -0.1     objective
 
-REMAINING 81 ENTRIES SKIPPED
+REMAINING 65 ENTRIES SKIPPED
 
 ---- totcost  total cost
 
@@ -428,35 +361,35 @@ totcost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 5
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE mincostflow Using LP From line 141
+Model Statistics    SOLVE mincostflow Using LP From line 137
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           38
-BLOCKS OF VARIABLES           2     SINGLE VARIABLES           85
-NON ZERO ELEMENTS           217
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           22
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           69
+NON ZERO ELEMENTS           185
 
 
-GENERATION TIME      =        0.047 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 6
+GENERATION TIME      =        0.031 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE mincostflow Using LP From line 141
+Solution Report     SOLVE mincostflow Using LP From line 137
 
 
                S O L V E      S U M M A R Y
 
      MODEL   mincostflow         OBJECTIVE  totcost
      TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  141
+     SOLVER  CPLEX               FROM LINE  137
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               12.4000
 
- RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ RESOURCE USAGE, LIMIT          0.109 10000000000.000
  ITERATION COUNT, LIMIT         5    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -467,7 +400,7 @@ Solution Report     SOLVE mincostflow Using LP From line 141
 
 
 --- LP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.10 ticks)
+--- Cplex Time: 0.06sec (det. 0.07 ticks)
 
 
 Optimal solution found
@@ -476,45 +409,29 @@ Objective:           12.400000
 
 ---- EQU nodbal  node balance
 
-                         LOWER          LEVEL          UPPER         MARGINAL
+                  LOWER          LEVEL          UPPER         MARGINAL
 
-before.catA.zone1      -138.0000      -138.0000      -138.0000         0.1000      
-before.catA.zone2      -145.0000      -145.0000      -145.0000         0.2000      
-before.catA.zone3      -134.0000      -134.0000      -134.0000         0.2000      
-before.catA.zone4       -91.0000       -91.0000       -91.0000         0.1000      
-before.catB.zone1       -99.0000       -99.0000       -99.0000         0.1000      
-before.catB.zone2       -83.0000       -83.0000       -83.0000         0.2000      
-before.catB.zone3      -121.0000      -121.0000      -121.0000         0.2000      
-before.catB.zone4      -196.0000      -196.0000      -196.0000         EPS         
-before.catC.zone1      -160.0000      -160.0000      -160.0000         0.1000      
-before.catC.zone2       -81.0000       -81.0000       -81.0000         0.2000      
-before.catC.zone3       -33.0000       -33.0000       -33.0000         0.2000      
-before.catC.zone4       -66.0000       -66.0000       -66.0000         EPS         
-before.catD.zone1       -47.0000       -47.0000       -47.0000         0.1000      
-before.catD.zone2       -49.0000       -49.0000       -49.0000         0.2000      
-before.catD.zone3       -34.0000       -34.0000       -34.0000         0.2000      
-before.catD.zone4       -96.0000       -96.0000       -96.0000         EPS         
-after .catA.zone1          .              .              .             0.1000      
-after .catA.zone2          .              .              .             0.2000      
-after .catA.zone3          .              .              .             0.2000      
-after .catA.zone4          .              .              .             EPS         
-after .catB.zone1          .              .              .             0.1000      
-after .catB.zone2          .              .              .             0.2000      
-after .catB.zone3          .              .              .             0.2000      
-after .catB.zone4          .              .              .             EPS         
-after .catC.zone1          .              .              .             0.1000      
-after .catC.zone2          .              .              .             0.2000      
-after .catC.zone3          .              .              .             0.2000      
-after .catC.zone4          .              .              .             EPS         
-after .catD.zone1          .              .              .             0.1000      
-after .catD.zone2          .              .              .             0.2000      
-after .catD.zone3          .              .              .             0.2000      
-after .catD.zone4          .              .              .             EPS         
-zone  .-   .zone1          .              .              .             0.1000      
-zone  .-   .zone2          .              .              .             0.2000      
-zone  .-   .zone3          .              .              .             0.2000      
-zone  .-   .zone4          .              .              .              .          
-sink  .-   .-          1573.0000      1573.0000      1573.0000         0.2000      
+catA.zone1      -138.0000      -138.0000      -138.0000         0.1000      
+catA.zone2      -145.0000      -145.0000      -145.0000         0.2000      
+catA.zone3      -134.0000      -134.0000      -134.0000         0.2000      
+catA.zone4       -91.0000       -91.0000       -91.0000         0.1000      
+catB.zone1       -99.0000       -99.0000       -99.0000         0.1000      
+catB.zone2       -83.0000       -83.0000       -83.0000         0.2000      
+catB.zone3      -121.0000      -121.0000      -121.0000         0.2000      
+catB.zone4      -196.0000      -196.0000      -196.0000         EPS         
+catC.zone1      -160.0000      -160.0000      -160.0000         0.1000      
+catC.zone2       -81.0000       -81.0000       -81.0000         0.2000      
+catC.zone3       -33.0000       -33.0000       -33.0000         0.2000      
+catC.zone4       -66.0000       -66.0000       -66.0000         EPS         
+catD.zone1       -47.0000       -47.0000       -47.0000         0.1000      
+catD.zone2       -49.0000       -49.0000       -49.0000         0.2000      
+catD.zone3       -34.0000       -34.0000       -34.0000         0.2000      
+catD.zone4       -96.0000       -96.0000       -96.0000         EPS         
+all .zone1          .              .              .             0.1000      
+all .zone2          .              .              .             0.2000      
+all .zone3          .              .              .             0.2000      
+all .zone4          .              .              .              .          
+all .sink       1573.0000      1573.0000      1573.0000         0.2000      
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -522,92 +439,76 @@ sink  .-   .-          1573.0000      1573.0000      1573.0000         0.2000
 
 ---- VAR flow  flows along arcs
 
-                                          LOWER          LEVEL          UPPER         MARGINAL
+                            LOWER          LEVEL          UPPER         MARGINAL
 
-before.catA.zone1.after.catA.zone1          .           132.0000        +INF             .          
-before.catA.zone1.after.catA.zone2          .             6.0000        +INF             .          
-before.catA.zone1.after.catA.zone3          .              .            +INF            EPS         
-before.catA.zone1.after.catA.zone4          .              .            +INF            1.4000      
-before.catA.zone2.after.catA.zone1          .              .            +INF            0.2000      
-before.catA.zone2.after.catA.zone2          .           145.0000        +INF             .          
-before.catA.zone2.after.catA.zone3          .              .            +INF            0.1000      
-before.catA.zone2.after.catA.zone4          .              .            +INF            1.5000      
-before.catA.zone3.after.catA.zone1          .              .            +INF            0.2000      
-before.catA.zone3.after.catA.zone2          .              .            +INF            0.1000      
-before.catA.zone3.after.catA.zone3          .           134.0000        +INF             .          
-before.catA.zone3.after.catA.zone4          .              .            +INF            1.5000      
-before.catA.zone4.after.catA.zone1          .              .            +INF            0.1000      
-before.catA.zone4.after.catA.zone2          .            29.0000        +INF             .          
-before.catA.zone4.after.catA.zone3          .            62.0000        +INF             .          
-before.catA.zone4.after.catA.zone4          .              .            +INF            0.1000      
-before.catB.zone1.after.catB.zone1          .            99.0000        +INF             .          
-before.catB.zone1.after.catB.zone2          .              .            +INF           38.0000      
-before.catB.zone1.after.catB.zone3          .              .            +INF            1.4000      
-before.catB.zone1.after.catB.zone4          .              .            +INF            0.2000      
-before.catB.zone2.after.catB.zone1          .              .            +INF           16.3000      
-before.catB.zone2.after.catB.zone2          .            83.0000        +INF             .          
-before.catB.zone2.after.catB.zone3          .              .            +INF            1.5000      
-before.catB.zone2.after.catB.zone4          .              .            +INF            0.3000      
-before.catB.zone3.after.catB.zone1          .              .            +INF           16.3000      
-before.catB.zone3.after.catB.zone2          .              .            +INF           38.1000      
-before.catB.zone3.after.catB.zone3          .           121.0000        +INF             .          
-before.catB.zone3.after.catB.zone4          .              .            +INF            0.3000      
-before.catB.zone4.after.catB.zone1          .              .            +INF           16.1000      
-before.catB.zone4.after.catB.zone2          .              .            +INF           37.9000      
-before.catB.zone4.after.catB.zone3          .              .            +INF            1.3000      
-before.catB.zone4.after.catB.zone4          .           196.0000        +INF             .          
-before.catC.zone1.after.catC.zone1          .           160.0000        +INF             .          
-before.catC.zone1.after.catC.zone2          .              .            +INF           12.6000      
-before.catC.zone1.after.catC.zone3          .              .            +INF           97.6000      
-before.catC.zone1.after.catC.zone4          .              .            +INF           46.4000      
-before.catC.zone2.after.catC.zone1          .              .            +INF            0.2000      
-before.catC.zone2.after.catC.zone2          .            81.0000        +INF             .          
-before.catC.zone2.after.catC.zone3          .              .            +INF           97.7000      
-before.catC.zone2.after.catC.zone4          .              .            +INF           46.5000      
-before.catC.zone3.after.catC.zone1          .              .            +INF            0.2000      
-before.catC.zone3.after.catC.zone2          .              .            +INF           12.7000      
-before.catC.zone3.after.catC.zone3          .            33.0000        +INF             .          
-before.catC.zone3.after.catC.zone4          .              .            +INF           46.5000      
-before.catC.zone4.after.catC.zone1          .            27.0000        +INF             .          
-before.catC.zone4.after.catC.zone2          .              .            +INF           12.5000      
-before.catC.zone4.after.catC.zone3          .              .            +INF           97.5000      
-before.catC.zone4.after.catC.zone4          .            39.0000        +INF             .          
-before.catD.zone1.after.catD.zone1          .            47.0000        +INF             .          
-before.catD.zone1.after.catD.zone2          .              .            +INF            7.6000      
-before.catD.zone1.after.catD.zone3          .              .            +INF           67.2000      
-before.catD.zone1.after.catD.zone4          .              .            +INF            0.2000      
-before.catD.zone2.after.catD.zone1          .              .            +INF           25.4000      
-before.catD.zone2.after.catD.zone2          .            49.0000        +INF             .          
-before.catD.zone2.after.catD.zone3          .              .            +INF           67.3000      
-before.catD.zone2.after.catD.zone4          .              .            +INF            0.3000      
-before.catD.zone3.after.catD.zone1          .              .            +INF           25.4000      
-before.catD.zone3.after.catD.zone2          .              .            +INF            7.7000      
-before.catD.zone3.after.catD.zone3          .            34.0000        +INF             .          
-before.catD.zone3.after.catD.zone4          .              .            +INF            0.3000      
-before.catD.zone4.after.catD.zone1          .              .            +INF           25.2000      
-before.catD.zone4.after.catD.zone2          .              .            +INF            7.5000      
-before.catD.zone4.after.catD.zone3          .              .            +INF           67.1000      
-before.catD.zone4.after.catD.zone4          .            96.0000        +INF             .          
-after .catA.zone1.zone .-   .zone1          .           132.0000        +INF             .          
-after .catA.zone2.zone .-   .zone2          .           180.0000        +INF             .          
-after .catA.zone3.zone .-   .zone3          .           196.0000        +INF             .          
-after .catA.zone4.zone .-   .zone4          .              .            +INF             .          
-after .catB.zone1.zone .-   .zone1          .            99.0000        +INF             .          
-after .catB.zone2.zone .-   .zone2          .            83.0000        +INF             .          
-after .catB.zone3.zone .-   .zone3          .           121.0000        +INF             .          
-after .catB.zone4.zone .-   .zone4          .           196.0000        +INF             .          
-after .catC.zone1.zone .-   .zone1          .           187.0000        +INF             .          
-after .catC.zone2.zone .-   .zone2          .            81.0000        +INF             .          
-after .catC.zone3.zone .-   .zone3          .            33.0000        +INF             .          
-after .catC.zone4.zone .-   .zone4          .            39.0000        +INF             .          
-after .catD.zone1.zone .-   .zone1          .            47.0000        +INF             .          
-after .catD.zone2.zone .-   .zone2          .            49.0000        +INF             .          
-after .catD.zone3.zone .-   .zone3          .            34.0000        +INF             .          
-after .catD.zone4.zone .-   .zone4          .            96.0000        +INF             .          
-zone  .-   .zone1.sink .-   .-              .           465.0000       465.0000        -0.1000      
-zone  .-   .zone2.sink .-   .-              .           393.0000       393.0000         EPS         
-zone  .-   .zone3.sink .-   .-              .           384.0000       500.0000          .          
-zone  .-   .zone4.sink .-   .-              .           331.0000       331.0000        -0.2000      
+catA.zone1.all.zone1          .           132.0000        +INF             .          
+catA.zone1.all.zone2          .             6.0000        +INF             .          
+catA.zone1.all.zone3          .              .            +INF            EPS         
+catA.zone1.all.zone4          .              .            +INF            1.4000      
+catA.zone2.all.zone1          .              .            +INF            0.2000      
+catA.zone2.all.zone2          .           145.0000        +INF             .          
+catA.zone2.all.zone3          .              .            +INF            0.1000      
+catA.zone2.all.zone4          .              .            +INF            1.5000      
+catA.zone3.all.zone1          .              .            +INF            0.2000      
+catA.zone3.all.zone2          .              .            +INF            0.1000      
+catA.zone3.all.zone3          .           134.0000        +INF             .          
+catA.zone3.all.zone4          .              .            +INF            1.5000      
+catA.zone4.all.zone1          .              .            +INF            0.1000      
+catA.zone4.all.zone2          .            29.0000        +INF             .          
+catA.zone4.all.zone3          .            62.0000        +INF             .          
+catA.zone4.all.zone4          .              .            +INF            0.1000      
+catB.zone1.all.zone1          .            99.0000        +INF             .          
+catB.zone1.all.zone2          .              .            +INF           38.0000      
+catB.zone1.all.zone3          .              .            +INF            1.4000      
+catB.zone1.all.zone4          .              .            +INF            0.2000      
+catB.zone2.all.zone1          .              .            +INF           16.3000      
+catB.zone2.all.zone2          .            83.0000        +INF             .          
+catB.zone2.all.zone3          .              .            +INF            1.5000      
+catB.zone2.all.zone4          .              .            +INF            0.3000      
+catB.zone3.all.zone1          .              .            +INF           16.3000      
+catB.zone3.all.zone2          .              .            +INF           38.1000      
+catB.zone3.all.zone3          .           121.0000        +INF             .          
+catB.zone3.all.zone4          .              .            +INF            0.3000      
+catB.zone4.all.zone1          .              .            +INF           16.1000      
+catB.zone4.all.zone2          .              .            +INF           37.9000      
+catB.zone4.all.zone3          .              .            +INF            1.3000      
+catB.zone4.all.zone4          .           196.0000        +INF             .          
+catC.zone1.all.zone1          .           160.0000        +INF             .          
+catC.zone1.all.zone2          .              .            +INF           12.6000      
+catC.zone1.all.zone3          .              .            +INF           97.6000      
+catC.zone1.all.zone4          .              .            +INF           46.4000      
+catC.zone2.all.zone1          .              .            +INF            0.2000      
+catC.zone2.all.zone2          .            81.0000        +INF             .          
+catC.zone2.all.zone3          .              .            +INF           97.7000      
+catC.zone2.all.zone4          .              .            +INF           46.5000      
+catC.zone3.all.zone1          .              .            +INF            0.2000      
+catC.zone3.all.zone2          .              .            +INF           12.7000      
+catC.zone3.all.zone3          .            33.0000        +INF             .          
+catC.zone3.all.zone4          .              .            +INF           46.5000      
+catC.zone4.all.zone1          .            27.0000        +INF             .          
+catC.zone4.all.zone2          .              .            +INF           12.5000      
+catC.zone4.all.zone3          .              .            +INF           97.5000      
+catC.zone4.all.zone4          .            39.0000        +INF             .          
+catD.zone1.all.zone1          .            47.0000        +INF             .          
+catD.zone1.all.zone2          .              .            +INF            7.6000      
+catD.zone1.all.zone3          .              .            +INF           67.2000      
+catD.zone1.all.zone4          .              .            +INF            0.2000      
+catD.zone2.all.zone1          .              .            +INF           25.4000      
+catD.zone2.all.zone2          .            49.0000        +INF             .          
+catD.zone2.all.zone3          .              .            +INF           67.3000      
+catD.zone2.all.zone4          .              .            +INF            0.3000      
+catD.zone3.all.zone1          .              .            +INF           25.4000      
+catD.zone3.all.zone2          .              .            +INF            7.7000      
+catD.zone3.all.zone3          .            34.0000        +INF             .          
+catD.zone3.all.zone4          .              .            +INF            0.3000      
+catD.zone4.all.zone1          .              .            +INF           25.2000      
+catD.zone4.all.zone2          .              .            +INF            7.5000      
+catD.zone4.all.zone3          .              .            +INF           67.1000      
+catD.zone4.all.zone4          .            96.0000        +INF             .          
+all .zone1.all.sink           .           465.0000       465.0000        -0.1000      
+all .zone2.all.sink           .           393.0000       393.0000         EPS         
+all .zone3.all.sink           .           384.0000       500.0000          .          
+all .zone4.all.sink           .           331.0000       331.0000        -0.2000      
 
                            LOWER          LEVEL          UPPER         MARGINAL
 
@@ -619,68 +520,40 @@ zone  .-   .zone4.sink .-   .-              .           331.0000       331.0000 
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/18/21 23:30:13 Page 7
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/19/21 11:15:59 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    145 VARIABLE flow.L  flows along arcs
+----    141 VARIABLE flow.L  flows along arcs
 
-                        after       after       after       after       after       after       after       after
-                         catA        catA        catA        catB        catB        catB        catB        catC
-                        zone1       zone2       zone3       zone1       zone2       zone3       zone4       zone1
+             all.zone1   all.zone2   all.zone3   all.zone4    all.sink
 
-before.catA.zone1         132           6
-before.catA.zone2                     145
-before.catA.zone3                                 134
-before.catA.zone4                      29          62
-before.catB.zone1                                              99
-before.catB.zone2                                                          83
-before.catB.zone3                                                                     121
-before.catB.zone4                                                                                 196
-before.catC.zone1                                                                                             160
-before.catC.zone4                                                                                              27
-
-                +       after       after       after       after       after       after       after        zone
-                         catC        catC        catC        catD        catD        catD        catD           -
-                        zone2       zone3       zone4       zone1       zone2       zone3       zone4       zone1
-
-before.catC.zone2          81
-before.catC.zone3                      33
-before.catC.zone4                                  39
-before.catD.zone1                                              47
-before.catD.zone2                                                          49
-before.catD.zone3                                                                      34
-before.catD.zone4                                                                                  96
-after .catA.zone1                                                                                             132
-after .catB.zone1                                                                                              99
-after .catC.zone1                                                                                             187
-after .catD.zone1                                                                                              47
-
-                +        zone        zone        zone        sink
-                            -           -           -           -
-                        zone2       zone3       zone4           -
-
-after .catA.zone2         180
-after .catA.zone3                     196
-after .catB.zone2          83
-after .catB.zone3                     121
-after .catB.zone4                                 196
-after .catC.zone2          81
-after .catC.zone3                      33
-after .catC.zone4                                  39
-after .catD.zone2          49
-after .catD.zone3                      34
-after .catD.zone4                                  96
-zone  .-   .zone1                                             465
-zone  .-   .zone2                                             393
-zone  .-   .zone3                                             384
-zone  .-   .zone4                                             331
+catA.zone1         132           6
+catA.zone2                     145
+catA.zone3                                 134
+catA.zone4                      29          62
+catB.zone1          99
+catB.zone2                      83
+catB.zone3                                 121
+catB.zone4                                             196
+catC.zone1         160
+catC.zone2                      81
+catC.zone3                                  33
+catC.zone4          27                                  39
+catD.zone1          47
+catD.zone2                      49
+catD.zone3                                  34
+catD.zone4                                              96
+all .zone1                                                         465
+all .zone2                                                         393
+all .zone3                                                         384
+all .zone4                                                         331
 
 
-----    145 VARIABLE totcost.L             =       12.400  total cost
+----    141 VARIABLE totcost.L             =       12.400  total cost
 
-----    150 PARAMETER moves  computed from flows
+----    146 PARAMETER moves  computed from flows
 
                  zone1       zone2       zone3
 
@@ -690,7 +563,7 @@ catC.zone4          27
 
 
 
-EXECUTION TIME       =        0.485 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+EXECUTION TIME       =        0.516 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN

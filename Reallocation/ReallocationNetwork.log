@@ -1,5 +1,5 @@
 
---- Job ReallocationNetwork.gms Start 09/18/21 23:30:13 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Job ReallocationNetwork.gms Start 09/19/21 11:15:59 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\36\gmsprmNT.txt
     C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
@@ -17,7 +17,6 @@
     TFormat 0
     ErrorLog 99
     IDE 1
-    GDX D:\projects\OptimizationModels\Reallocation\x.gdx
 Licensee: Eval License                                   S201210/0001CO-GEN
           Amsterdam Optimization Modeling Group,                     DCE378
           C:\Users\Erwin\Documents\GAMS\gamslice.txt
@@ -25,13 +24,13 @@ Licensee: Eval License                                   S201210/0001CO-GEN
 Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
 GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
 --- Starting compilation
---- ReallocationNetwork.gms(151) 3 Mb
---- Starting execution: elapsed 0:00:00.062
---- ReallocationNetwork.gms(137) 4 Mb
+--- ReallocationNetwork.gms(147) 3 Mb
+--- Starting execution: elapsed 0:00:00.076
+--- ReallocationNetwork.gms(133) 4 Mb
 --- Generating LP model mincostflow
---- ReallocationNetwork.gms(141) 4 Mb
----   38 rows  85 columns  217 non-zeroes
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.103
+--- ReallocationNetwork.gms(137) 4 Mb
+---   22 rows  69 columns  185 non-zeroes
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.115
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -44,29 +43,32 @@ IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
 Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
 CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
 CPXPARAM_Threads                                 1
 CPXPARAM_MIP_Display                             4
 CPXPARAM_MIP_Tolerances_AbsMIPGap                0
 Tried aggregator 1 time.
 LP Presolve eliminated 0 rows and 1 columns.
-Aggregator did 16 substitutions.
 Reduced LP has 21 rows, 68 columns, and 136 nonzeros.
-Presolve time = 0.00 sec. (0.06 ticks)
+Presolve time = 0.00 sec. (0.04 ticks)
 Initializing dual steep norms . . .
 
-Iteration log . . .
-Iteration:     1   Dual objective     =            11.800000
+Iteration      Dual Objective            In Variable           Out Variable
+     1              11.800000flow(catA,zone4,all,zonflow(all,zone4,all,sink
+     2              11.800000flow(catA,zone4,all,zonflow(all,zone1,all,sink
+     3              11.800000flow(catA,zone4,all,zonflow(all,zone2,all,sink
+     4              11.800000flow(catC,zone4,all,zonflow(catA,zone4,all,zon
+     5              12.400000flow(catA,zone1,all,zonflow(catA,zone4,all,zon
 
 --- LP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.10 ticks)
+--- Cplex Time: 0.06sec (det. 0.07 ticks)
 
 
 Optimal solution found
 Objective:           12.400000
 
 --- Reading solution for model mincostflow
---- Executing after solve: elapsed 0:00:00.538
---- ReallocationNetwork.gms(150) 4 Mb
---- GDX File D:\projects\OptimizationModels\Reallocation\x.gdx
+--- Executing after solve: elapsed 0:00:00.596
+--- ReallocationNetwork.gms(146) 4 Mb
 *** Status: Normal completion
---- Job ReallocationNetwork.gms Stop 09/18/21 23:30:14 elapsed 0:00:00.547
+--- Job ReallocationNetwork.gms Stop 09/19/21 11:16:00 elapsed 0:00:00.602
