@@ -1,0 +1,717 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+          Ragnar Relay Race
+       
+   6   
+   7   
+   8  * choose small or large
+  11   
+  12  set i 'legs' /leg1*leg36/;
+  13  parameter legLen(i) /
+  14         leg1 3.3,  leg2  4.2, leg3  5.2, leg4  3,   leg5  2.7, leg6  4,
+  15         leg7 5.3,  leg8  4.5, leg9  3,   leg10 5.8, leg11 3.3, leg12 4.9,
+  16         leg13 3.1, leg14 3.2, leg15 4,   leg16 3.5, leg17 4.9, leg18 2.3,
+  17         leg19 3.2, leg20 4.6, leg21 4.5, leg22 4,   leg23 5.3, leg24 5.9,
+  18         leg25 2.8, leg26 1.9, leg27 2.1, leg28 3,   leg29 2.5, leg30 5.6,
+  19         leg31 1.3, leg32 4.6, leg33 1.5, leg34 1.2, leg35 4.1, leg36 8.1
+  20         /;
+  21   
+  23  set j 'runs' /run1*run6/;
+  24  parameter runLen(j) /
+  25      run1  3.2, run2 12.3, run3 5.2, run4  2.9, run5 2.9, run6 5.5
+  26  /;
+  28   
+  30   
+  31  binary variable
+  32     assign(i,j) 'assign leg to runner'
+  33     covered(i)  'leg is covered'
+  34  ;
+  35  variable numLegs 'number of covered legs';
+  36   
+  37  equations
+  38      objective  'maximize covered legs'
+  39      eassign    'assignment'
+  40      isCovered  'leg is covered'
+  41      order      'ordering of legs'
+  42  ;
+  43   
+  44  objective..     numLegs =e= sum(i, covered(i));
+  45   
+  46  eassign(j)..    sum(i, legLen(i)*assign(i,j)) =l= runLen(j);
+  47   
+  48  isCovered(i)..  covered(i) =l= sum(j,assign(i,j));
+  49   
+  50  order(i-1)..    covered(i-1) =g= covered(i);
+  51   
+  52  model m /all/;
+  53  option optcr=0;
+  54  solve m maximizing numLegs using mip;
+  55   
+  56  option assign:0,covered:0;
+  57  display assign.l, covered.l, numLegs.l;
+  58   
+  59  parameter report(*,*)  'results';
+  60  report(i,j) = assign.L(i,j)*covered.l(i)*legLen(i);
+  61  report('total',j) = sum(i,report(i,j));
+  62  report('runLen',j) = runLen(j);
+  63  option report:1;
+  64  display report;
+  65   
+  66   
+  67   
+  68   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using MIP From line 54
+
+
+---- objective  =E=  maximize covered legs
+
+objective..  - covered(leg1) - covered(leg2) - covered(leg3) - covered(leg4) - covered(leg5) - covered(leg6)
+     
+      - covered(leg7) - covered(leg8) - covered(leg9) - covered(leg10) - covered(leg11) - covered(leg12)
+     
+      - covered(leg13) - covered(leg14) - covered(leg15) - covered(leg16) - covered(leg17) - covered(leg18)
+     
+      - covered(leg19) - covered(leg20) - covered(leg21) - covered(leg22) - covered(leg23) - covered(leg24)
+     
+      - covered(leg25) - covered(leg26) - covered(leg27) - covered(leg28) - covered(leg29) - covered(leg30)
+     
+      - covered(leg31) - covered(leg32) - covered(leg33) - covered(leg34) - covered(leg35) - covered(leg36) + numLegs
+      =E= 0 ; (LHS = 0)
+     
+
+---- eassign  =L=  assignment
+
+eassign(run1)..  3.3*assign(leg1,run1) + 4.2*assign(leg2,run1) + 5.2*assign(leg3,run1) + 3*assign(leg4,run1)
+     
+      + 2.7*assign(leg5,run1) + 4*assign(leg6,run1) + 5.3*assign(leg7,run1) + 4.5*assign(leg8,run1)
+     
+      + 3*assign(leg9,run1) + 5.8*assign(leg10,run1) + 3.3*assign(leg11,run1) + 4.9*assign(leg12,run1)
+     
+      + 3.1*assign(leg13,run1) + 3.2*assign(leg14,run1) + 4*assign(leg15,run1) + 3.5*assign(leg16,run1)
+     
+      + 4.9*assign(leg17,run1) + 2.3*assign(leg18,run1) + 3.2*assign(leg19,run1) + 4.6*assign(leg20,run1)
+     
+      + 4.5*assign(leg21,run1) + 4*assign(leg22,run1) + 5.3*assign(leg23,run1) + 5.9*assign(leg24,run1)
+     
+      + 2.8*assign(leg25,run1) + 1.9*assign(leg26,run1) + 2.1*assign(leg27,run1) + 3*assign(leg28,run1)
+     
+      + 2.5*assign(leg29,run1) + 5.6*assign(leg30,run1) + 1.3*assign(leg31,run1) + 4.6*assign(leg32,run1)
+     
+      + 1.5*assign(leg33,run1) + 1.2*assign(leg34,run1) + 4.1*assign(leg35,run1) + 8.1*assign(leg36,run1) =L= 3.2 ;
+     
+      (LHS = 0)
+     
+eassign(run2)..  3.3*assign(leg1,run2) + 4.2*assign(leg2,run2) + 5.2*assign(leg3,run2) + 3*assign(leg4,run2)
+     
+      + 2.7*assign(leg5,run2) + 4*assign(leg6,run2) + 5.3*assign(leg7,run2) + 4.5*assign(leg8,run2)
+     
+      + 3*assign(leg9,run2) + 5.8*assign(leg10,run2) + 3.3*assign(leg11,run2) + 4.9*assign(leg12,run2)
+     
+      + 3.1*assign(leg13,run2) + 3.2*assign(leg14,run2) + 4*assign(leg15,run2) + 3.5*assign(leg16,run2)
+     
+      + 4.9*assign(leg17,run2) + 2.3*assign(leg18,run2) + 3.2*assign(leg19,run2) + 4.6*assign(leg20,run2)
+     
+      + 4.5*assign(leg21,run2) + 4*assign(leg22,run2) + 5.3*assign(leg23,run2) + 5.9*assign(leg24,run2)
+     
+      + 2.8*assign(leg25,run2) + 1.9*assign(leg26,run2) + 2.1*assign(leg27,run2) + 3*assign(leg28,run2)
+     
+      + 2.5*assign(leg29,run2) + 5.6*assign(leg30,run2) + 1.3*assign(leg31,run2) + 4.6*assign(leg32,run2)
+     
+      + 1.5*assign(leg33,run2) + 1.2*assign(leg34,run2) + 4.1*assign(leg35,run2) + 8.1*assign(leg36,run2) =L= 12.3 ;
+     
+      (LHS = 0)
+     
+eassign(run3)..  3.3*assign(leg1,run3) + 4.2*assign(leg2,run3) + 5.2*assign(leg3,run3) + 3*assign(leg4,run3)
+     
+      + 2.7*assign(leg5,run3) + 4*assign(leg6,run3) + 5.3*assign(leg7,run3) + 4.5*assign(leg8,run3)
+     
+      + 3*assign(leg9,run3) + 5.8*assign(leg10,run3) + 3.3*assign(leg11,run3) + 4.9*assign(leg12,run3)
+     
+      + 3.1*assign(leg13,run3) + 3.2*assign(leg14,run3) + 4*assign(leg15,run3) + 3.5*assign(leg16,run3)
+     
+      + 4.9*assign(leg17,run3) + 2.3*assign(leg18,run3) + 3.2*assign(leg19,run3) + 4.6*assign(leg20,run3)
+     
+      + 4.5*assign(leg21,run3) + 4*assign(leg22,run3) + 5.3*assign(leg23,run3) + 5.9*assign(leg24,run3)
+     
+      + 2.8*assign(leg25,run3) + 1.9*assign(leg26,run3) + 2.1*assign(leg27,run3) + 3*assign(leg28,run3)
+     
+      + 2.5*assign(leg29,run3) + 5.6*assign(leg30,run3) + 1.3*assign(leg31,run3) + 4.6*assign(leg32,run3)
+     
+      + 1.5*assign(leg33,run3) + 1.2*assign(leg34,run3) + 4.1*assign(leg35,run3) + 8.1*assign(leg36,run3) =L= 5.2 ;
+     
+      (LHS = 0)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- isCovered  =L=  leg is covered
+
+isCovered(leg1)..  - assign(leg1,run1) - assign(leg1,run2) - assign(leg1,run3) - assign(leg1,run4) - assign(leg1,run5)
+     
+      - assign(leg1,run6) + covered(leg1) =L= 0 ; (LHS = 0)
+     
+isCovered(leg2)..  - assign(leg2,run1) - assign(leg2,run2) - assign(leg2,run3) - assign(leg2,run4) - assign(leg2,run5)
+     
+      - assign(leg2,run6) + covered(leg2) =L= 0 ; (LHS = 0)
+     
+isCovered(leg3)..  - assign(leg3,run1) - assign(leg3,run2) - assign(leg3,run3) - assign(leg3,run4) - assign(leg3,run5)
+     
+      - assign(leg3,run6) + covered(leg3) =L= 0 ; (LHS = 0)
+     
+REMAINING 33 ENTRIES SKIPPED
+
+
+---- order  =G=  ordering of legs
+
+order(leg1)..  covered(leg1) - covered(leg2) =G= 0 ; (LHS = 0)
+     
+order(leg2)..  covered(leg2) - covered(leg3) =G= 0 ; (LHS = 0)
+     
+order(leg3)..  covered(leg3) - covered(leg4) =G= 0 ; (LHS = 0)
+     
+REMAINING 32 ENTRIES SKIPPED
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using MIP From line 54
+
+
+---- assign  assign leg to runner
+
+assign(leg1,run1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        3.3     eassign(run1)
+       -1       isCovered(leg1)
+
+assign(leg1,run2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        3.3     eassign(run2)
+       -1       isCovered(leg1)
+
+assign(leg1,run3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        3.3     eassign(run3)
+       -1       isCovered(leg1)
+
+REMAINING 213 ENTRIES SKIPPED
+
+---- covered  leg is covered
+
+covered(leg1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+        1       isCovered(leg1)
+        1       order(leg1)
+
+covered(leg2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+        1       isCovered(leg2)
+       -1       order(leg1)
+        1       order(leg2)
+
+covered(leg3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+        1       isCovered(leg3)
+       -1       order(leg2)
+        1       order(leg3)
+
+REMAINING 33 ENTRIES SKIPPED
+
+---- numLegs  number of covered legs
+
+numLegs
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using MIP From line 54
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           78
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          253
+NON ZERO ELEMENTS           575     DISCRETE VARIABLES        252
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using MIP From line 54
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  numLegs
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  54
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                7.0000
+
+ RESOURCE USAGE, LIMIT          0.187 10000000000.000
+ ITERATION COUNT, LIMIT        68    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.54 Mb (peak 0.54 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.01 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.12sec (det. 4.57 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.11 ticks)
+
+
+Proven optimal solution
+MIP Solution:            7.000000    (68 iterations, 0 nodes)
+Final Solve:             7.000000    (0 iterations)
+
+Best possible:           7.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  maximize covered legs
+
+---- EQU eassign  assignment
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+run1        -INF            3.0000         3.2000          .          
+run2        -INF           11.5000        12.3000          .          
+run3        -INF            5.2000         5.2000          .          
+run4        -INF            2.7000         2.9000          .          
+run5        -INF            2.3000         2.9000          .          
+run6        -INF            5.3000         5.5000          .          
+
+---- EQU isCovered  leg is covered
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+leg1         -INF             .              .              .          
+leg2         -INF             .              .              .          
+leg3         -INF             .              .              .          
+leg4         -INF             .              .              .          
+leg5         -INF             .              .              .          
+leg6         -INF             .              .              .          
+leg7         -INF             .              .              .          
+leg8         -INF             .              .              .          
+leg9         -INF             .              .              .          
+leg10        -INF             .              .              .          
+leg11        -INF             .              .              .          
+leg12        -INF             .              .              .          
+leg13        -INF             .              .              .          
+leg14        -INF             .              .              .          
+leg15        -INF             .              .              .          
+leg16        -INF             .              .              .          
+leg17        -INF             .              .              .          
+leg18        -INF           -1.0000          .              .          
+leg19        -INF             .              .              .          
+leg20        -INF             .              .              .          
+leg21        -INF             .              .              .          
+leg22        -INF             .              .              .          
+leg23        -INF             .              .              .          
+leg24        -INF             .              .              .          
+leg25        -INF             .              .              .          
+leg26        -INF             .              .              .          
+leg27        -INF             .              .              .          
+leg28        -INF             .              .              .          
+leg29        -INF             .              .              .          
+leg30        -INF             .              .              .          
+leg31        -INF             .              .              .          
+leg32        -INF             .              .              .          
+leg33        -INF             .              .              .          
+leg34        -INF             .              .              .          
+leg35        -INF             .              .              .          
+leg36        -INF             .              .              .          
+
+---- EQU order  ordering of legs
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+leg1           .              .            +INF             .          
+leg2           .              .            +INF             .          
+leg3           .              .            +INF             .          
+leg4           .              .            +INF             .          
+leg5           .              .            +INF             .          
+leg6           .              .            +INF             .          
+leg7           .             1.0000        +INF             .          
+leg8           .              .            +INF             .          
+leg9           .              .            +INF             .          
+leg10          .              .            +INF             .          
+leg11          .              .            +INF             .          
+leg12          .              .            +INF             .          
+leg13          .              .            +INF             .          
+leg14          .              .            +INF             .          
+leg15          .              .            +INF             .          
+leg16          .              .            +INF             .          
+leg17          .              .            +INF             .          
+leg18          .              .            +INF             .          
+leg19          .              .            +INF             .          
+leg20          .              .            +INF             .          
+leg21          .              .            +INF             .          
+leg22          .              .            +INF             .          
+leg23          .              .            +INF             .          
+leg24          .              .            +INF             .          
+leg25          .              .            +INF             .          
+leg26          .              .            +INF             .          
+leg27          .              .            +INF             .          
+leg28          .              .            +INF             .          
+leg29          .              .            +INF             .          
+leg30          .              .            +INF             .          
+leg31          .              .            +INF             .          
+leg32          .              .            +INF             .          
+leg33          .              .            +INF             .          
+leg34          .              .            +INF             .          
+leg35          .              .            +INF             .          
+
+---- VAR assign  assign leg to runner
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+leg1 .run1          .              .             1.0000         EPS         
+leg1 .run2          .             1.0000         1.0000         EPS         
+leg1 .run3          .              .             1.0000         EPS         
+leg1 .run4          .              .             1.0000         EPS         
+leg1 .run5          .              .             1.0000         EPS         
+leg1 .run6          .              .             1.0000         EPS         
+leg2 .run1          .              .             1.0000         EPS         
+leg2 .run2          .             1.0000         1.0000         EPS         
+leg2 .run3          .              .             1.0000         EPS         
+leg2 .run4          .              .             1.0000         EPS         
+leg2 .run5          .              .             1.0000         EPS         
+leg2 .run6          .              .             1.0000         EPS         
+leg3 .run1          .              .             1.0000         EPS         
+leg3 .run2          .              .             1.0000         EPS         
+leg3 .run3          .             1.0000         1.0000         EPS         
+leg3 .run4          .              .             1.0000         EPS         
+leg3 .run5          .              .             1.0000         EPS         
+leg3 .run6          .              .             1.0000         EPS         
+leg4 .run1          .             1.0000         1.0000         EPS         
+leg4 .run2          .              .             1.0000         EPS         
+leg4 .run3          .              .             1.0000         EPS         
+leg4 .run4          .              .             1.0000         EPS         
+leg4 .run5          .              .             1.0000         EPS         
+leg4 .run6          .              .             1.0000         EPS         
+leg5 .run1          .              .             1.0000         EPS         
+leg5 .run2          .              .             1.0000         EPS         
+leg5 .run3          .              .             1.0000         EPS         
+leg5 .run4          .             1.0000         1.0000         EPS         
+leg5 .run5          .              .             1.0000         EPS         
+leg5 .run6          .              .             1.0000         EPS         
+leg6 .run1          .              .             1.0000         EPS         
+leg6 .run2          .             1.0000         1.0000         EPS         
+leg6 .run3          .              .             1.0000         EPS         
+leg6 .run4          .              .             1.0000         EPS         
+leg6 .run5          .              .             1.0000         EPS         
+leg6 .run6          .              .             1.0000         EPS         
+leg7 .run1          .              .             1.0000         EPS         
+leg7 .run2          .              .             1.0000         EPS         
+leg7 .run3          .              .             1.0000         EPS         
+leg7 .run4          .              .             1.0000         EPS         
+leg7 .run5          .              .             1.0000         EPS         
+leg7 .run6          .             1.0000         1.0000         EPS         
+leg8 .run1          .              .             1.0000         EPS         
+leg8 .run2          .              .             1.0000         EPS         
+leg8 .run3          .              .             1.0000         EPS         
+leg8 .run4          .              .             1.0000         EPS         
+leg8 .run5          .              .             1.0000         EPS         
+leg8 .run6          .              .             1.0000         EPS         
+leg9 .run1          .              .             1.0000         EPS         
+leg9 .run2          .              .             1.0000         EPS         
+leg9 .run3          .              .             1.0000         EPS         
+leg9 .run4          .              .             1.0000         EPS         
+leg9 .run5          .              .             1.0000         EPS         
+leg9 .run6          .              .             1.0000         EPS         
+leg10.run1          .              .             1.0000         EPS         
+leg10.run2          .              .             1.0000         EPS         
+leg10.run3          .              .             1.0000         EPS         
+leg10.run4          .              .             1.0000         EPS         
+leg10.run5          .              .             1.0000         EPS         
+leg10.run6          .              .             1.0000         EPS         
+leg11.run1          .              .             1.0000         EPS         
+leg11.run2          .              .             1.0000         EPS         
+leg11.run3          .              .             1.0000         EPS         
+leg11.run4          .              .             1.0000         EPS         
+leg11.run5          .              .             1.0000         EPS         
+leg11.run6          .              .             1.0000         EPS         
+leg12.run1          .              .             1.0000         EPS         
+leg12.run2          .              .             1.0000         EPS         
+leg12.run3          .              .             1.0000         EPS         
+leg12.run4          .              .             1.0000         EPS         
+leg12.run5          .              .             1.0000         EPS         
+leg12.run6          .              .             1.0000         EPS         
+leg13.run1          .              .             1.0000         EPS         
+leg13.run2          .              .             1.0000         EPS         
+leg13.run3          .              .             1.0000         EPS         
+leg13.run4          .              .             1.0000         EPS         
+leg13.run5          .              .             1.0000         EPS         
+leg13.run6          .              .             1.0000         EPS         
+leg14.run1          .              .             1.0000         EPS         
+leg14.run2          .              .             1.0000         EPS         
+leg14.run3          .              .             1.0000         EPS         
+leg14.run4          .              .             1.0000         EPS         
+leg14.run5          .              .             1.0000         EPS         
+leg14.run6          .              .             1.0000         EPS         
+leg15.run1          .              .             1.0000         EPS         
+leg15.run2          .              .             1.0000         EPS         
+leg15.run3          .              .             1.0000         EPS         
+leg15.run4          .              .             1.0000         EPS         
+leg15.run5          .              .             1.0000         EPS         
+leg15.run6          .              .             1.0000         EPS         
+leg16.run1          .              .             1.0000         EPS         
+leg16.run2          .              .             1.0000         EPS         
+leg16.run3          .              .             1.0000         EPS         
+leg16.run4          .              .             1.0000         EPS         
+leg16.run5          .              .             1.0000         EPS         
+leg16.run6          .              .             1.0000         EPS         
+leg17.run1          .              .             1.0000         EPS         
+leg17.run2          .              .             1.0000         EPS         
+leg17.run3          .              .             1.0000         EPS         
+leg17.run4          .              .             1.0000         EPS         
+leg17.run5          .              .             1.0000         EPS         
+leg17.run6          .              .             1.0000         EPS         
+leg18.run1          .              .             1.0000         EPS         
+leg18.run2          .              .             1.0000         EPS         
+leg18.run3          .              .             1.0000         EPS         
+leg18.run4          .              .             1.0000         EPS         
+leg18.run5          .             1.0000         1.0000         EPS         
+leg18.run6          .              .             1.0000         EPS         
+leg19.run1          .              .             1.0000         EPS         
+leg19.run2          .              .             1.0000         EPS         
+leg19.run3          .              .             1.0000         EPS         
+leg19.run4          .              .             1.0000         EPS         
+leg19.run5          .              .             1.0000         EPS         
+leg19.run6          .              .             1.0000         EPS         
+leg20.run1          .              .             1.0000         EPS         
+leg20.run2          .              .             1.0000         EPS         
+leg20.run3          .              .             1.0000         EPS         
+leg20.run4          .              .             1.0000         EPS         
+leg20.run5          .              .             1.0000         EPS         
+leg20.run6          .              .             1.0000         EPS         
+leg21.run1          .              .             1.0000         EPS         
+leg21.run2          .              .             1.0000         EPS         
+leg21.run3          .              .             1.0000         EPS         
+leg21.run4          .              .             1.0000         EPS         
+leg21.run5          .              .             1.0000         EPS         
+leg21.run6          .              .             1.0000         EPS         
+leg22.run1          .              .             1.0000         EPS         
+leg22.run2          .              .             1.0000         EPS         
+leg22.run3          .              .             1.0000         EPS         
+leg22.run4          .              .             1.0000         EPS         
+leg22.run5          .              .             1.0000         EPS         
+leg22.run6          .              .             1.0000         EPS         
+leg23.run1          .              .             1.0000         EPS         
+leg23.run2          .              .             1.0000         EPS         
+leg23.run3          .              .             1.0000         EPS         
+leg23.run4          .              .             1.0000         EPS         
+leg23.run5          .              .             1.0000         EPS         
+leg23.run6          .              .             1.0000         EPS         
+leg24.run1          .              .             1.0000         EPS         
+leg24.run2          .              .             1.0000         EPS         
+leg24.run3          .              .             1.0000         EPS         
+leg24.run4          .              .             1.0000         EPS         
+leg24.run5          .              .             1.0000         EPS         
+leg24.run6          .              .             1.0000         EPS         
+leg25.run1          .              .             1.0000         EPS         
+leg25.run2          .              .             1.0000         EPS         
+leg25.run3          .              .             1.0000         EPS         
+leg25.run4          .              .             1.0000         EPS         
+leg25.run5          .              .             1.0000         EPS         
+leg25.run6          .              .             1.0000         EPS         
+leg26.run1          .              .             1.0000         EPS         
+leg26.run2          .              .             1.0000         EPS         
+leg26.run3          .              .             1.0000         EPS         
+leg26.run4          .              .             1.0000         EPS         
+leg26.run5          .              .             1.0000         EPS         
+leg26.run6          .              .             1.0000         EPS         
+leg27.run1          .              .             1.0000         EPS         
+leg27.run2          .              .             1.0000         EPS         
+leg27.run3          .              .             1.0000         EPS         
+leg27.run4          .              .             1.0000         EPS         
+leg27.run5          .              .             1.0000         EPS         
+leg27.run6          .              .             1.0000         EPS         
+leg28.run1          .              .             1.0000         EPS         
+leg28.run2          .              .             1.0000         EPS         
+leg28.run3          .              .             1.0000         EPS         
+leg28.run4          .              .             1.0000         EPS         
+leg28.run5          .              .             1.0000         EPS         
+leg28.run6          .              .             1.0000         EPS         
+leg29.run1          .              .             1.0000         EPS         
+leg29.run2          .              .             1.0000         EPS         
+leg29.run3          .              .             1.0000         EPS         
+leg29.run4          .              .             1.0000         EPS         
+leg29.run5          .              .             1.0000         EPS         
+leg29.run6          .              .             1.0000         EPS         
+leg30.run1          .              .             1.0000         EPS         
+leg30.run2          .              .             1.0000         EPS         
+leg30.run3          .              .             1.0000         EPS         
+leg30.run4          .              .             1.0000         EPS         
+leg30.run5          .              .             1.0000         EPS         
+leg30.run6          .              .             1.0000         EPS         
+leg31.run1          .              .             1.0000         EPS         
+leg31.run2          .              .             1.0000         EPS         
+leg31.run3          .              .             1.0000         EPS         
+leg31.run4          .              .             1.0000         EPS         
+leg31.run5          .              .             1.0000         EPS         
+leg31.run6          .              .             1.0000         EPS         
+leg32.run1          .              .             1.0000         EPS         
+leg32.run2          .              .             1.0000         EPS         
+leg32.run3          .              .             1.0000         EPS         
+leg32.run4          .              .             1.0000         EPS         
+leg32.run5          .              .             1.0000         EPS         
+leg32.run6          .              .             1.0000         EPS         
+leg33.run1          .              .             1.0000         EPS         
+leg33.run2          .              .             1.0000         EPS         
+leg33.run3          .              .             1.0000         EPS         
+leg33.run4          .              .             1.0000         EPS         
+leg33.run5          .              .             1.0000         EPS         
+leg33.run6          .              .             1.0000         EPS         
+leg34.run1          .              .             1.0000         EPS         
+leg34.run2          .              .             1.0000         EPS         
+leg34.run3          .              .             1.0000         EPS         
+leg34.run4          .              .             1.0000         EPS         
+leg34.run5          .              .             1.0000         EPS         
+leg34.run6          .              .             1.0000         EPS         
+leg35.run1          .              .             1.0000         EPS         
+leg35.run2          .              .             1.0000         EPS         
+leg35.run3          .              .             1.0000         EPS         
+leg35.run4          .              .             1.0000         EPS         
+leg35.run5          .              .             1.0000         EPS         
+leg35.run6          .              .             1.0000         EPS         
+leg36.run1          .              .             1.0000         EPS         
+leg36.run2          .              .             1.0000         EPS         
+leg36.run3          .              .             1.0000         EPS         
+leg36.run4          .              .             1.0000         EPS         
+leg36.run5          .              .             1.0000         EPS         
+leg36.run6          .              .             1.0000         EPS         
+
+---- VAR covered  leg is covered
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+leg1           .             1.0000         1.0000         1.0000      
+leg2           .             1.0000         1.0000         1.0000      
+leg3           .             1.0000         1.0000         1.0000      
+leg4           .             1.0000         1.0000         1.0000      
+leg5           .             1.0000         1.0000         1.0000      
+leg6           .             1.0000         1.0000         1.0000      
+leg7           .             1.0000         1.0000         1.0000      
+leg8           .              .             1.0000         1.0000      
+leg9           .              .             1.0000         1.0000      
+leg10          .              .             1.0000         1.0000      
+leg11          .              .             1.0000         1.0000      
+leg12          .              .             1.0000         1.0000      
+leg13          .              .             1.0000         1.0000      
+leg14          .              .             1.0000         1.0000      
+leg15          .              .             1.0000         1.0000      
+leg16          .              .             1.0000         1.0000      
+leg17          .              .             1.0000         1.0000      
+leg18          .              .             1.0000         1.0000      
+leg19          .              .             1.0000         1.0000      
+leg20          .              .             1.0000         1.0000      
+leg21          .              .             1.0000         1.0000      
+leg22          .              .             1.0000         1.0000      
+leg23          .              .             1.0000         1.0000      
+leg24          .              .             1.0000         1.0000      
+leg25          .              .             1.0000         1.0000      
+leg26          .              .             1.0000         1.0000      
+leg27          .              .             1.0000         1.0000      
+leg28          .              .             1.0000         1.0000      
+leg29          .              .             1.0000         1.0000      
+leg30          .              .             1.0000         1.0000      
+leg31          .              .             1.0000         1.0000      
+leg32          .              .             1.0000         1.0000      
+leg33          .              .             1.0000         1.0000      
+leg34          .              .             1.0000         1.0000      
+leg35          .              .             1.0000         1.0000      
+leg36          .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR numLegs           -INF            7.0000        +INF             .          
+
+  numLegs  number of covered legs
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             2  PROJECTED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/28/21 23:39:27 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     57 VARIABLE assign.L  assign leg to runner
+
+             run1        run2        run3        run4        run5        run6
+
+leg1                        1
+leg2                        1
+leg3                                    1
+leg4            1
+leg5                                                1
+leg6                        1
+leg7                                                                        1
+leg18                                                           1
+
+
+----     57 VARIABLE covered.L  leg is covered
+
+leg1 1,    leg2 1,    leg3 1,    leg4 1,    leg5 1,    leg6 1,    leg7 1
+
+
+----     57 VARIABLE numLegs.L             =        7.000  number of covered legs
+
+----     64 PARAMETER report  results
+
+              run1        run2        run3        run4        run5        run6
+
+leg1                       3.3
+leg2                       4.2
+leg3                                   5.2
+leg4           3.0
+leg5                                               2.7
+leg6                       4.0
+leg7                                                                       5.3
+total          3.0        11.5         5.2         2.7                     5.3
+runLen         3.2        12.3         5.2         2.9         2.9         5.5
+
+
+
+EXECUTION TIME       =        0.703 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\RelayRuns\RelayRuns.gms
+Output     D:\projects\OptimizationModels\RelayRuns\RelayRuns.lst
