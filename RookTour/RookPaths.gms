@@ -8,7 +8,7 @@ $ontext
          below, left, right, or above.
       2. certain cells need to contain a prime number
 
-   Find all tours (and prove there is only one)
+   Find all possible Hamiltonian paths.
 
    https://puzzling.stackexchange.com/questions/111818/another-rooks-tour-of-the-chessboard
 
@@ -69,14 +69,14 @@ obj.. dummy =e= 0;
 onevalue(i,j).. sum(k, x(i,j,k)) =e= 1;
 unique(k)..     sum((i,j),x(i,j,k)) =e= 1;
 
-next(i,j,k)..
-    x(i-1,j,k++1)+x(i+1,j,k++1)+x(i,j-1,k++1)+x(i,j+1,k++1) =g= x(i,j,k);
+next(i,j,k+1)..
+   x(i-1,j,k+1)+x(i+1,j,k+1)+x(i,j-1,k+1)+x(i,j+1,k+1) =g= x(i,j,k);
 
 isprime(i,j)$(board(i,j)=p)..
-    sum(kprime, x(i,j,kprime)) =e= 1;
+   sum(kprime, x(i,j,kprime)) =e= 1;
 
 cut(solfound)..
-    sum((i,j,k),solution(solfound,i,j,k)*x(i,j,k)) =l= card(k)-1;
+   sum((i,j,k),solution(solfound,i,j,k)*x(i,j,k)) =l= card(k)-1;
 
 model m /all/;
 option mip=cplex,threads=8;
