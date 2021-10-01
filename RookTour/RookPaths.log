@@ -1,5 +1,5 @@
 
---- Job RookPaths.gms Start 09/29/21 01:16:05 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Job RookPaths.gms Start 09/30/21 21:01:38 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\36\gmsprmNT.txt
     C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
@@ -24,15 +24,15 @@ Licensee: Eval License                                   S201210/0001CO-GEN
 Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
 GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
 --- Starting compilation
---- RookPaths.gms(106) 3 Mb
---- Starting execution: elapsed 0:00:00.098
+--- RookPaths.gms(114) 3 Mb
+--- Starting execution: elapsed 0:00:00.086
 --- RookPaths.gms(89) 4 Mb
 --- Generating MIP model m
 --- RookPaths.gms(90) 7 Mb
 --- LOOPS sol = solution1
 ---   4,179 rows  4,097 columns  26,661 non-zeroes
 ---   4,096 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.241
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.239
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -57,19 +57,19 @@ MIP Presolve eliminated 1070 rows and 1009 columns.
 MIP Presolve modified 386 coefficients.
 Reduced MIP has 3108 rows, 3088 columns, and 17713 nonzeros.
 Reduced MIP has 3088 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.13 sec. (19.20 ticks)
+Presolve time = 0.06 sec. (19.20 ticks)
 Probing fixed 1618 vars, tightened 0 bounds.
 Probing changed sense of 65 constraints.
-Probing time = 1.69 sec. (97.09 ticks)
+Probing time = 0.56 sec. (97.09 ticks)
 Cover probing fixed 16 vars, tightened 0 bounds.
 Tried aggregator 1 time.
 MIP Presolve eliminated 1566 rows and 1634 columns.
 Reduced MIP has 1542 rows, 1454 columns, and 8527 nonzeros.
 Reduced MIP has 1454 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.06 sec. (8.55 ticks)
+Presolve time = 0.02 sec. (8.55 ticks)
 Probing fixed 37 vars, tightened 0 bounds.
 Probing changed sense of 4 constraints.
-Probing time = 0.30 sec. (32.65 ticks)
+Probing time = 0.11 sec. (32.65 ticks)
 Tried aggregator 1 time.
 Detecting symmetries...
 MIP Presolve eliminated 41 rows and 41 columns.
@@ -123,7 +123,7 @@ Removing perturbation.
 
 Barrier solved model.
 
-Root relaxation solution time = 0.61 sec. (164.97 ticks)
+Root relaxation solution time = 0.69 sec. (164.97 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
@@ -135,7 +135,7 @@ Root relaxation solution time = 0.61 sec. (164.97 ticks)
       0     0        0.0000   422                    Cuts: 41     2618         
 Detecting symmetries...
       0     2        0.0000   342                      0.0000     2618         
-Elapsed time = 9.58 sec. (4017.40 ticks, tree = 0.02 MB, solutions = 0)
+Elapsed time = 8.14 sec. (4017.40 ticks, tree = 0.02 MB, solutions = 0)
       1     3        0.0000   344                      0.0000     6587         
       3     5        0.0000   322                      0.0000     9140         
      11     8    infeasible                            0.0000    15044         
@@ -149,7 +149,7 @@ Elapsed time = 9.58 sec. (4017.40 ticks, tree = 0.02 MB, solutions = 0)
      86     7    infeasible                            0.0000    69381         
                                                  Impl Bds: 17                  
 *    96     9      integral     0        0.0000        0.0000    73263    0.00%
-Found incumbent of value 0.000000 after 16.23 sec. (6078.16 ticks)
+Found incumbent of value 0.000000 after 12.00 sec. (6078.16 ticks)
      99     7    infeasible              0.0000        0.0000    69192    0.00%
                                                   Impl Bds: 1                  
     102    12        0.0000   351        0.0000        0.0000    74387    0.00%
@@ -160,16 +160,16 @@ Implied bound cuts applied:  132
 Zero-half cuts applied:  3
 
 Root node processing (before b&c):
-  Real time             =    9.53 sec. (3993.40 ticks)
+  Real time             =    8.08 sec. (3993.40 ticks)
 Parallel b&c, 8 threads:
-  Real time             =    7.22 sec. (2494.60 ticks)
-  Sync time (average)   =    2.18 sec.
+  Real time             =    4.55 sec. (2494.60 ticks)
+  Sync time (average)   =    1.52 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =   16.75 sec. (6488.01 ticks)
+Total (root+branch&cut) =   12.63 sec. (6488.01 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 16.75sec (det. 6488.02 ticks)
+--- Cplex Time: 12.62sec (det. 6488.02 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -192,7 +192,7 @@ Dual simplex solved model.
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.03sec (det. 4.17 ticks)
+--- Cplex Time: 0.11sec (det. 4.17 ticks)
 
 
 Proven optimal solution
@@ -204,14 +204,14 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m
---- Executing after solve: elapsed 0:00:17.492
+--- Executing after solve: elapsed 0:00:13.512
 --- RookPaths.gms(89) 7 Mb
 --- Generating MIP model m
 --- RookPaths.gms(90) 7 Mb
 --- LOOPS sol = solution2
 ---   4,180 rows  4,097 columns  26,725 non-zeroes
 ---   4,096 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:17.589
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:13.552
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -239,24 +239,24 @@ Reduced MIP has 3088 binaries, 0 generals, 0 SOSs, and 0 indicators.
 Presolve time = 0.08 sec. (19.22 ticks)
 Probing fixed 1655 vars, tightened 0 bounds.
 Probing changed sense of 74 constraints.
-Probing time = 0.86 sec. (93.55 ticks)
+Probing time = 0.33 sec. (93.55 ticks)
 Cover probing fixed 1 vars, tightened 0 bounds.
 Tried aggregator 1 time.
 MIP Presolve eliminated 1588 rows and 1656 columns.
 MIP Presolve modified 1 coefficients.
 Reduced MIP has 1521 rows, 1432 columns, and 8466 nonzeros.
 Reduced MIP has 1432 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.03 sec. (8.49 ticks)
+Presolve time = 0.02 sec. (8.49 ticks)
 Probing fixed 15 vars, tightened 0 bounds.
 Probing changed sense of 4 constraints.
-Probing time = 0.17 sec. (32.30 ticks)
+Probing time = 0.08 sec. (32.30 ticks)
 Tried aggregator 1 time.
 Detecting symmetries...
 MIP Presolve eliminated 19 rows and 19 columns.
 MIP Presolve modified 2 coefficients.
 Reduced MIP has 1502 rows, 1413 columns, and 8375 nonzeros.
 Reduced MIP has 1413 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.03 sec. (8.29 ticks)
+Presolve time = 0.02 sec. (8.29 ticks)
 Probing time = 0.02 sec. (3.45 ticks)
 Clique table members: 8062.
 MIP emphasis: balance optimality and feasibility.
@@ -303,7 +303,7 @@ Removing perturbation.
 
 Dual simplex solved model.
 
-Root relaxation solution time = 0.97 sec. (160.22 ticks)
+Root relaxation solution time = 0.34 sec. (160.22 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
@@ -317,24 +317,24 @@ Root relaxation solution time = 0.97 sec. (160.22 ticks)
 Detecting symmetries...
       0     0        0.0000   420                    Cuts: 22     4466         
 *     0+    0                            0.0000        0.0000             0.00%
-Found incumbent of value 0.000000 after 9.92 sec. (2861.10 ticks)
+Found incumbent of value 0.000000 after 5.86 sec. (2861.10 ticks)
       0     0        cutoff              0.0000        0.0000     4466    0.00%
-Elapsed time = 10.09 sec. (2861.17 ticks, tree = 0.01 MB, solutions = 1)
+Elapsed time = 6.34 sec. (2861.17 ticks, tree = 0.01 MB, solutions = 1)
 
 Implied bound cuts applied:  21
 Zero-half cuts applied:  5
 
 Root node processing (before b&c):
-  Real time             =   10.09 sec. (2861.29 ticks)
+  Real time             =    6.34 sec. (2861.29 ticks)
 Parallel b&c, 8 threads:
   Real time             =    0.00 sec. (0.00 ticks)
   Sync time (average)   =    0.00 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =   10.09 sec. (2861.29 ticks)
+Total (root+branch&cut) =    6.34 sec. (2861.29 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 10.09sec (det. 2861.30 ticks)
+--- Cplex Time: 6.34sec (det. 2861.30 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -351,13 +351,13 @@ Parallel mode: deterministic, using up to 8 threads for concurrent optimization:
 Tried aggregator 1 time.
 LP Presolve eliminated 4179 rows and 4097 columns.
 All rows and columns eliminated.
-Presolve time = 0.02 sec. (2.46 ticks)
+Presolve time = 0.00 sec. (2.46 ticks)
 
 Dual simplex solved model.
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.03sec (det. 4.17 ticks)
+--- Cplex Time: 0.14sec (det. 4.17 ticks)
 
 
 Proven optimal solution
@@ -369,14 +369,14 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m
---- Executing after solve: elapsed 0:00:27.901
+--- Executing after solve: elapsed 0:00:20.234
 --- RookPaths.gms(89) 7 Mb
 --- Generating MIP model m
 --- RookPaths.gms(90) 7 Mb
 --- LOOPS sol = solution3
 ---   4,181 rows  4,097 columns  26,789 non-zeroes
 ---   4,096 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:27.948
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:20.345
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -401,26 +401,26 @@ MIP Presolve eliminated 1070 rows and 1009 columns.
 MIP Presolve modified 386 coefficients.
 Reduced MIP has 3110 rows, 3088 columns, and 17841 nonzeros.
 Reduced MIP has 3088 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.08 sec. (19.25 ticks)
+Presolve time = 0.14 sec. (19.25 ticks)
 Probing fixed 1665 vars, tightened 0 bounds.
 Probing changed sense of 84 constraints.
-Probing time = 0.23 sec. (94.98 ticks)
+Probing time = 1.63 sec. (94.98 ticks)
 Tried aggregator 1 time.
 MIP Presolve eliminated 1597 rows and 1665 columns.
 MIP Presolve modified 2 coefficients.
 Reduced MIP has 1513 rows, 1423 columns, and 8480 nonzeros.
 Reduced MIP has 1423 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.02 sec. (8.48 ticks)
+Presolve time = 0.05 sec. (8.48 ticks)
 Probing fixed 6 vars, tightened 0 bounds.
-Probing time = 0.05 sec. (27.39 ticks)
+Probing time = 0.17 sec. (27.39 ticks)
 Tried aggregator 1 time.
 Detecting symmetries...
 MIP Presolve eliminated 10 rows and 10 columns.
 MIP Presolve modified 2 coefficients.
 Reduced MIP has 1503 rows, 1413 columns, and 8436 nonzeros.
 Reduced MIP has 1413 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.00 sec. (8.29 ticks)
-Probing time = 0.00 sec. (3.49 ticks)
+Presolve time = 0.03 sec. (8.29 ticks)
+Probing time = 0.03 sec. (3.49 ticks)
 Clique table members: 8099.
 MIP emphasis: balance optimality and feasibility.
 MIP search method: dynamic search.
@@ -432,7 +432,7 @@ Parallel mode: deterministic, using up to 6 threads for concurrent optimization:
  * Starting primal Simplex on 1 thread...
 Tried aggregator 1 time.
 No LP presolve or aggregator reductions.
-Presolve time = 0.00 sec. (0.81 ticks)
+Presolve time = 0.02 sec. (0.81 ticks)
 
 Iteration log . . .
 Iteration:     1   Dual objective     =             0.000000
@@ -467,7 +467,7 @@ Removing perturbation.
 
 Barrier solved model.
 
-Root relaxation solution time = 0.30 sec. (162.39 ticks)
+Root relaxation solution time = 1.14 sec. (162.39 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
@@ -478,24 +478,24 @@ Root relaxation solution time = 0.30 sec. (162.39 ticks)
       0     0        0.0000   404                     Cuts: 7     1480         
       0     0        0.0000   439                    Cuts: 29     1974         
 *     0+    0                            0.0000        0.0000             0.00%
-Found incumbent of value 0.000000 after 12.09 sec. (5655.44 ticks)
+Found incumbent of value 0.000000 after 14.44 sec. (5655.44 ticks)
       0     0        cutoff              0.0000        0.0000     1974    0.00%
-Elapsed time = 12.11 sec. (5655.48 ticks, tree = 0.01 MB, solutions = 1)
+Elapsed time = 14.45 sec. (5655.48 ticks, tree = 0.01 MB, solutions = 1)
 
 Implied bound cuts applied:  23
 Zero-half cuts applied:  2
 
 Root node processing (before b&c):
-  Real time             =   12.11 sec. (5655.60 ticks)
+  Real time             =   14.45 sec. (5655.60 ticks)
 Parallel b&c, 8 threads:
   Real time             =    0.00 sec. (0.00 ticks)
   Sync time (average)   =    0.00 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =   12.11 sec. (5655.60 ticks)
+Total (root+branch&cut) =   14.45 sec. (5655.60 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 12.11sec (det. 5655.61 ticks)
+--- Cplex Time: 14.61sec (det. 5655.61 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -518,7 +518,7 @@ Dual simplex solved model.
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.05sec (det. 4.18 ticks)
+--- Cplex Time: 0.02sec (det. 4.18 ticks)
 
 
 Proven optimal solution
@@ -530,15 +530,14 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m
---- RookPaths.gms(90) 7 Mb  12 secs
---- Executing after solve: elapsed 0:00:40.301
+--- Executing after solve: elapsed 0:00:35.232
 --- RookPaths.gms(89) 7 Mb
 --- Generating MIP model m
 --- RookPaths.gms(90) 7 Mb
 --- LOOPS sol = solution4
 ---   4,182 rows  4,097 columns  26,853 non-zeroes
 ---   4,096 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:40.411
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:35.271
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -563,28 +562,28 @@ MIP Presolve eliminated 1070 rows and 1009 columns.
 MIP Presolve modified 386 coefficients.
 Reduced MIP has 3111 rows, 3088 columns, and 17905 nonzeros.
 Reduced MIP has 3088 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.09 sec. (19.29 ticks)
+Presolve time = 0.03 sec. (19.29 ticks)
 Probing fixed 1654 vars, tightened 0 bounds.
 Probing changed sense of 78 constraints.
-Probing time = 0.75 sec. (94.52 ticks)
+Probing time = 0.27 sec. (94.52 ticks)
 Cover probing fixed 3 vars, tightened 0 bounds.
 Tried aggregator 1 time.
 MIP Presolve eliminated 1589 rows and 1657 columns.
 MIP Presolve modified 3 coefficients.
 Reduced MIP has 1522 rows, 1431 columns, and 8580 nonzeros.
 Reduced MIP has 1431 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.03 sec. (8.54 ticks)
+Presolve time = 0.02 sec. (8.54 ticks)
 Probing fixed 14 vars, tightened 0 bounds.
 Probing changed sense of 4 constraints.
-Probing time = 0.14 sec. (32.95 ticks)
+Probing time = 0.06 sec. (32.95 ticks)
 Tried aggregator 1 time.
 Detecting symmetries...
 MIP Presolve eliminated 18 rows and 18 columns.
 MIP Presolve modified 2 coefficients.
 Reduced MIP has 1504 rows, 1413 columns, and 8497 nonzeros.
 Reduced MIP has 1413 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.03 sec. (8.31 ticks)
-Probing time = 0.02 sec. (3.50 ticks)
+Presolve time = 0.02 sec. (8.31 ticks)
+Probing time = 0.00 sec. (3.50 ticks)
 Clique table members: 7880.
 MIP emphasis: balance optimality and feasibility.
 MIP search method: dynamic search.
@@ -631,7 +630,7 @@ Removing perturbation.
 
 Barrier solved model.
 
-Root relaxation solution time = 1.03 sec. (163.50 ticks)
+Root relaxation solution time = 0.30 sec. (163.50 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
@@ -641,7 +640,7 @@ Root relaxation solution time = 1.03 sec. (163.50 ticks)
       0     0        0.0000   428                    Cuts: 45      684         
 Detecting symmetries...
       0     2        0.0000   270                      0.0000      684         
-Elapsed time = 9.83 sec. (3127.27 ticks, tree = 0.02 MB, solutions = 0)
+Elapsed time = 5.45 sec. (3127.27 ticks, tree = 0.02 MB, solutions = 0)
       1     3        0.0000   384                      0.0000     3867         
       4     4        0.0000   274                      0.0000     6477         
      20     5    infeasible                            0.0000    14431         
@@ -654,7 +653,7 @@ Elapsed time = 9.83 sec. (3127.27 ticks, tree = 0.02 MB, solutions = 0)
                                                   Impl Bds: 3                  
 *    75    13      integral     0        0.0000        0.0000    58922    0.00%
                                                   Impl Bds: 8                  
-Found incumbent of value 0.000000 after 13.00 sec. (4833.89 ticks)
+Found incumbent of value 0.000000 after 8.69 sec. (4833.89 ticks)
      79    15        0.0000   306        0.0000        0.0000    56189    0.00%
 
 Clique cuts applied:  3
@@ -662,16 +661,16 @@ Implied bound cuts applied:  106
 Zero-half cuts applied:  4
 
 Root node processing (before b&c):
-  Real time             =    9.80 sec. (3113.97 ticks)
+  Real time             =    5.42 sec. (3113.97 ticks)
 Parallel b&c, 8 threads:
-  Real time             =    3.92 sec. (2254.79 ticks)
-  Sync time (average)   =    1.01 sec.
+  Real time             =    3.94 sec. (2254.79 ticks)
+  Sync time (average)   =    1.00 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =   13.72 sec. (5368.76 ticks)
+Total (root+branch&cut) =    9.36 sec. (5368.76 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 13.75sec (det. 5368.77 ticks)
+--- Cplex Time: 9.38sec (det. 5368.77 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -694,7 +693,7 @@ Dual simplex solved model.
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.09sec (det. 4.18 ticks)
+--- Cplex Time: 0.02sec (det. 4.18 ticks)
 
 
 Proven optimal solution
@@ -706,14 +705,14 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m
---- Executing after solve: elapsed 0:00:54.431
+--- Executing after solve: elapsed 0:00:44.751
 --- RookPaths.gms(89) 7 Mb
 --- Generating MIP model m
 --- RookPaths.gms(90) 7 Mb
 --- LOOPS sol = solution5
 ---   4,183 rows  4,097 columns  26,917 non-zeroes
 ---   4,096 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:54.477
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:44.791
 
 IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
 
@@ -738,10 +737,10 @@ MIP Presolve eliminated 1070 rows and 1009 columns.
 MIP Presolve modified 386 coefficients.
 Reduced MIP has 3112 rows, 3088 columns, and 17969 nonzeros.
 Reduced MIP has 3088 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.03 sec. (19.30 ticks)
+Presolve time = 0.05 sec. (19.30 ticks)
 Probing fixed 1665 vars, tightened 0 bounds.
 Probing changed sense of 87 constraints.
-Probing time = 0.66 sec. (96.23 ticks)
+Probing time = 1.17 sec. (96.23 ticks)
 Tried aggregator 1 time.
 MIP Presolve eliminated 1597 rows and 1665 columns.
 MIP Presolve modified 4 coefficients.
@@ -749,15 +748,15 @@ Reduced MIP has 1515 rows, 1423 columns, and 8602 nonzeros.
 Reduced MIP has 1423 binaries, 0 generals, 0 SOSs, and 0 indicators.
 Presolve time = 0.05 sec. (8.53 ticks)
 Probing fixed 6 vars, tightened 0 bounds.
-Probing time = 0.28 sec. (27.86 ticks)
+Probing time = 0.14 sec. (27.86 ticks)
 Tried aggregator 1 time.
 Detecting symmetries...
 MIP Presolve eliminated 10 rows and 10 columns.
 MIP Presolve modified 2 coefficients.
 Reduced MIP has 1505 rows, 1413 columns, and 8558 nonzeros.
 Reduced MIP has 1413 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.06 sec. (8.29 ticks)
-Probing time = 0.03 sec. (3.54 ticks)
+Presolve time = 0.03 sec. (8.29 ticks)
+Probing time = 0.08 sec. (3.54 ticks)
 Clique table members: 8404.
 MIP emphasis: balance optimality and feasibility.
 MIP search method: dynamic search.
@@ -803,7 +802,7 @@ Removing perturbation.
 
 Barrier solved model.
 
-Root relaxation solution time = 1.20 sec. (162.75 ticks)
+Root relaxation solution time = 1.64 sec. (162.75 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
@@ -815,7 +814,7 @@ Root relaxation solution time = 1.20 sec. (162.75 ticks)
       0     0        0.0000   418                    Cuts: 63     2191         
 Detecting symmetries...
       0     2        0.0000   246                      0.0000     2191         
-Elapsed time = 13.08 sec. (4781.39 ticks, tree = 0.02 MB, solutions = 0)
+Elapsed time = 15.20 sec. (4781.39 ticks, tree = 0.02 MB, solutions = 0)
       1     3        0.0000   354                      0.0000     5751         
       3     4        0.0000   389                      0.0000     7578         
       7     7        0.0000   439                      0.0000    18208         
@@ -834,7 +833,7 @@ Elapsed time = 13.08 sec. (4781.39 ticks, tree = 0.02 MB, solutions = 0)
                                                   Impl Bds: 2                  
     196     8        0.0000   372                      0.0000   161063         
                                                      Cuts: 21                  
-Elapsed time = 24.03 sec. (8819.39 ticks, tree = 0.03 MB, solutions = 0)
+Elapsed time = 23.33 sec. (8819.39 ticks, tree = 0.03 MB, solutions = 0)
     268     7    infeasible                            0.0000   212329         
                                                   Impl Bds: 4                  
     306     7    infeasible                            0.0000   271202         
@@ -852,21 +851,21 @@ Implied bound cuts applied:  194
 Zero-half cuts applied:  11
 
 Root node processing (before b&c):
-  Real time             =   13.00 sec. (4758.95 ticks)
+  Real time             =   15.14 sec. (4758.95 ticks)
 Parallel b&c, 8 threads:
-  Real time             =   31.13 sec. (10877.47 ticks)
-  Sync time (average)   =   14.41 sec.
+  Real time             =   23.34 sec. (10877.47 ticks)
+  Sync time (average)   =   10.49 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =   44.13 sec. (15636.42 ticks)
+Total (root+branch&cut) =   38.48 sec. (15636.42 ticks)
 
 --- MIP status (103): integer infeasible.
---- Cplex Time: 44.14sec (det. 15636.44 ticks)
+--- Cplex Time: 38.50sec (det. 15636.44 ticks)
 
 CPLEX Error  1217: No solution exists.
 --- Problem is integer infeasible
 --- Reading solution for model m
---- Executing after solve: elapsed 0:01:39.025
---- RookPaths.gms(106) 7 Mb
+--- Executing after solve: elapsed 0:01:24.040
+--- RookPaths.gms(114) 7 Mb
 *** Status: Normal completion
---- Job RookPaths.gms Stop 09/29/21 01:17:44 elapsed 0:01:39.031
+--- Job RookPaths.gms Stop 09/30/21 21:03:02 elapsed 0:01:24.070

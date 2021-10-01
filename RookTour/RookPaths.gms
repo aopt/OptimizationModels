@@ -104,3 +104,11 @@ result(sol,i,j) = sum(k, k.val*solution(sol,i,j,k));
 result(sol,i,j)$(board(i,j)=p) = -result(sol,i,j);
 option result:0:1:1;
 display result;
+
+acronym np;
+parameter plotdata(sol,i,j,*) 'to be copy/pasted into R code';
+plotdata(sol,i,j,"value") = sum(k, k.val*solution(sol,i,j,k));
+plotdata(solfound,i,j,"prime")$(board(i,j)=p) = p;
+plotdata(solfound,i,j,"prime")$(board(i,j)<>p) = np;
+option plotdata:0:3:1;
+display plotdata;
