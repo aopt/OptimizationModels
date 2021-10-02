@@ -3,6 +3,10 @@
 These are models related to 
 https://yetanothermathprogrammingconsultant.blogspot.com/2021/09/huber-regression-different-formulations.html
 
+The idea is that the Huber loss-function is less sensitive to outliers than the more traditional least-squares objective.
+
+![](image.png)
+
 The models are:
 
   1. HuberNLP.gms: solve as NLP
