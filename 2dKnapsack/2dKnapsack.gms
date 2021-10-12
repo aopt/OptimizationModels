@@ -40,8 +40,8 @@ parameters
    h(k,r) 'item height'
 ;
 
-w(k,r) = data(k,'width')$r('nr') + data(k,'height')$r('r');
-h(k,r) = data(k,'height')$r('nr') + data(k,'width')$r('r');
+w(k,r) = data(k,'width')$sameas(r,'nr')+ data(k,'height')$sameas(r,'r');
+h(k,r) = data(k,'height')$sameas(r,'nr') + data(k,'width')$sameas(r,'r');
 
 sets
   ok(k,r,i,j) 'item (k,r) can be placed at (i,j)'
