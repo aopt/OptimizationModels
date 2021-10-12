@@ -1,3 +1,12 @@
+$ontext
+
+   2d knapsack problem
+
+   Fill a container with most valuable rectangles.
+
+   Continuous size formulation: pairwise no-overlap constraints.
+
+$offtext
 
 *---------------------------------------------------------------
 * data
@@ -61,9 +70,9 @@ set compare(k,n,kk,nn) 'we need no-overlap between these';
 compare(kn,kn2) = num(kn) < num(kn2);
 
 
-*-----------------------------------------------------------------------
+*---------------------------------------------------------------
 * model
-*-----------------------------------------------------------------------
+*---------------------------------------------------------------
 
 binary variables
    x(k,n) 'item (k,n) is placed (rotated/non-rotated)'
@@ -116,6 +125,10 @@ option optcr=0, threads=8;
 solve m maximizing totalValue using mip;
 
 
+*---------------------------------------------------------------
+* reporting
+*---------------------------------------------------------------
+
 parameter positions(k,n,*) 'rectangles (x1,y1)-(x2,y2)';
 positions(kn,'x1')$(x.l(kn)>0.5) = pos.l(kn,'x');
 positions(kn,'y1')$(x.l(kn)>0.5) = pos.l(kn,'y');
@@ -136,6 +149,3 @@ loop(kn(k,n)$(x.l(kn)>0.5),
 );
 option plotdata:2:2:1;
 display plotdata;
-
-
-

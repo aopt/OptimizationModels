@@ -1,4 +1,4 @@
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 1
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -8,105 +8,107 @@ C o m p i l a t i o n
        
          Fill a container with most valuable rectangles.
        
-   8   
-   9  set
-  10    dummy 'for display' /xmin,xmax,ymin,ymax,width,height,available,value/
-  11   
-  12    i 'rows in container' /r1*r20/
-  13    j 'columns in container' /c1*c30/
-  14    k 'rectangular items to place in container' /k1*k10/
-  15    r 'rotate' /nr,r/
-  16  ;
-  17   
-  18  *---------------------------------------------------------------------
-  19  * data
+         Covering formulation.
+       
+  10   
+  11  set
+  12    dummy 'for display' /xmin,xmax,ymin,ymax,width,height,available,value/
+  13   
+  14    i 'rows in container' /r1*r20/
+  15    j 'columns in container' /c1*c30/
+  16    k 'rectangular items to place in container' /k1*k10/
+  17    r 'rotate' /nr,r/
+  18  ;
+  19   
   20  *---------------------------------------------------------------------
-  21   
-  22  parameter data(*,*) 'problem data';
-  23  data('container','height') = card(i);
-  24  data('container','width') = card(j);
-  25  data(k,'height') = uniformint(1,20);
-  26  data(k,'width') = uniformint(1,20);
-  27  data(k,'value/size') = uniform(1,10);
-  28  data(k,'value') = data(k,'value/size')*data(k,'height')*data(k,'width');
-  29  data(k,'available') = uniformint(1,10);
-  30  display data;
-  31   
-  32  *---------------------------------------------------------------------
-  33  * derived data
+  21  * data
+  22  *---------------------------------------------------------------------
+  23   
+  24  parameter data(*,*) 'problem data';
+  25  data('container','height') = card(i);
+  26  data('container','width') = card(j);
+  27  data(k,'height') = uniformint(1,20);
+  28  data(k,'width') = uniformint(1,20);
+  29  data(k,'value/size') = uniform(1,10);
+  30  data(k,'value') = data(k,'value/size')*data(k,'height')*data(k,'width');
+  31  data(k,'available') = uniformint(1,10);
+  32  display data;
+  33   
   34  *---------------------------------------------------------------------
-  35   
-  36  alias (i,ii),(j,jj);
+  35  * derived data
+  36  *---------------------------------------------------------------------
   37   
-  38  parameters
-  39     w(k,r) 'item width'
-  40     h(k,r) 'item height'
-  41  ;
-  42   
-  43  w(k,r) = data(k,'width')$sameas(r,'nr')+ data(k,'height')$sameas(r,'r');
-  44  h(k,r) = data(k,'height')$sameas(r,'nr') + data(k,'width')$sameas(r,'r');
-  45   
-  46  sets
-  47    ok(k,r,i,j) 'item (k,r) can be placed at (i,j)'
-  48    cover(k,r,i,j,ii,jj) '(ii,jj) is covered when item (k,r) is placed at (i,j)'
-  49  ;
-  50  ok(k,r,i,j) = ord(i)+h(k,r)-1 <= card(i)
-  51                and ord(j)+w(k,r)-1 <= card(j);
-  52   
-  53  cover(ok(k,r,i,j),ii,jj) =
-  54             ord(ii)>=ord(i) and ord(ii)<ord(i)+h(k,r) and
-  55             ord(jj)>=ord(j) and ord(jj)<ord(j)+w(k,r);
-  56   
-  57   
-  58  *-----------------------------------------------------------------------
-  59  * model
+  38  alias (i,ii),(j,jj);
+  39   
+  40  parameters
+  41     w(k,r) 'item width'
+  42     h(k,r) 'item height'
+  43  ;
+  44   
+  45  w(k,r) = data(k,'width')$sameas(r,'nr')+ data(k,'height')$sameas(r,'r');
+  46  h(k,r) = data(k,'height')$sameas(r,'nr') + data(k,'width')$sameas(r,'r');
+  47   
+  48  sets
+  49    ok(k,r,i,j) 'item (k,r) can be placed at (i,j)'
+  50    cover(k,r,i,j,ii,jj) '(ii,jj) is covered when item (k,r) is placed at (i,j)'
+  51  ;
+  52  ok(k,r,i,j) = ord(i)+h(k,r)-1 <= card(i)
+  53                and ord(j)+w(k,r)-1 <= card(j);
+  54   
+  55  cover(ok(k,r,i,j),ii,jj) =
+  56             ord(ii)>=ord(i) and ord(ii)<ord(i)+h(k,r) and
+  57             ord(jj)>=ord(j) and ord(jj)<ord(j)+w(k,r);
+  58   
+  59   
   60  *-----------------------------------------------------------------------
-  61   
-  62  binary variable x(k,r,i,j) 'item k is placed at (i,j)';
-  63  variable totalValue 'objective (maximized)';
-  64   
-  65  equations
-  66     noOverlap(i,j) 'only one item can cover (i,j)'
-  67     count(k)       'limit number of each item'
-  68     objective      'maximize total value'
-  69  ;
-  70   
-  71  noOverlap(ii,jj).. sum(cover(k,r,i,j,ii,jj),x(k,r,i,j)) =l= 1;
+  61  * model
+  62  *-----------------------------------------------------------------------
+  63   
+  64  binary variable x(k,r,i,j) 'item k is placed at (i,j)';
+  65  variable totalValue 'objective (maximized)';
+  66   
+  67  equations
+  68     noOverlap(i,j) 'only one item can cover (i,j)'
+  69     count(k)       'limit number of each item'
+  70     objective      'maximize total value'
+  71  ;
   72   
-  73  count(k).. sum(ok(k,r,i,j), x(k,r,i,j)) =l= data(k,'available');
+  73  noOverlap(ii,jj).. sum(cover(k,r,i,j,ii,jj),x(k,r,i,j)) =l= 1;
   74   
-  75  objective.. totalValue =e= sum(ok(k,r,i,j),x(k,r,i,j)*data(k,'value'));
+  75  count(k).. sum(ok(k,r,i,j), x(k,r,i,j)) =l= data(k,'available');
   76   
-  77  model m /all/;
-  78  option optcr=0,threads=8;
-  79  solve m maximizing totalValue using mip;
-  80   
-  81  *-----------------------------------------------------------------------
-  82  * reporting
+  77  objective.. totalValue =e= sum(ok(k,r,i,j),x(k,r,i,j)*data(k,'value'));
+  78   
+  79  model m /all/;
+  80  option optcr=0,threads=8;
+  81  solve m maximizing totalValue using mip;
+  82   
   83  *-----------------------------------------------------------------------
-  84   
-  85  option x:0:2:2;
-  86  display x.l,totalValue.l;
-  87   
-  88  parameter plotdata(k,r,i,j,*);
-  89  loop((k,r,i,j)$(x.l(k,r,i,j)>0.5),
-  90      plotdata(k,r,i,j,'xmin') = ord(j) - 1 + EPS;
-  91      plotdata(k,r,i,j,'xmax') = plotdata(k,r,i,j,'xmin') + w(k,r);
-  92      plotdata(k,r,i,j,'ymin') = ord(i) - 1 + EPS;
-  93      plotdata(k,r,i,j,'ymax') = plotdata(k,r,i,j,'ymin') + h(k,r);
-  94      plotdata(k,r,i,j,'value') = data(k,'value');
-  95  );
-  96  options plotdata:2:4:1;
-  97  display plotdata;
+  84  * reporting
+  85  *-----------------------------------------------------------------------
+  86   
+  87  option x:0:2:2;
+  88  display x.l,totalValue.l;
+  89   
+  90  parameter plotdata(k,r,i,j,*);
+  91  loop((k,r,i,j)$(x.l(k,r,i,j)>0.5),
+  92      plotdata(k,r,i,j,'xmin') = ord(j) - 1 + EPS;
+  93      plotdata(k,r,i,j,'xmax') = plotdata(k,r,i,j,'xmin') + w(k,r);
+  94      plotdata(k,r,i,j,'ymin') = ord(i) - 1 + EPS;
+  95      plotdata(k,r,i,j,'ymax') = plotdata(k,r,i,j,'ymin') + h(k,r);
+  96      plotdata(k,r,i,j,'value') = data(k,'value');
+  97  );
+  98  options plotdata:2:4:1;
+  99  display plotdata;
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 2
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     30 PARAMETER data  problem data
+----     32 PARAMETER data  problem data
 
                 width      height   available       value  value/size
 
@@ -122,9 +124,9 @@ k9             14.000       2.000       7.000     223.516       7.983
 k10             9.000      11.000       5.000     369.560       3.733
 container      30.000      20.000
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 3
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MIP From line 79
+Equation Listing    SOLVE m Using MIP From line 81
 
 
 ---- noOverlap  =L=  only one item can cover (i,j)
@@ -3187,9 +3189,9 @@ objective..  - 338.98419152*x(k1,nr,r1,c1) - 338.98419152*x(k1,nr,r1,c2) - 338.9
      
       - 369.559703007*x(k10,r,r12,c20) + totalValue =E= 0 ; (LHS = 0)
      
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 4
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MIP From line 79
+Column Listing      SOLVE m Using MIP From line 81
 
 
 ---- x  item k is placed at (i,j)
@@ -3457,9 +3459,9 @@ totalValue
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 5
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MIP From line 79
+Model Statistics    SOLVE m Using MIP From line 81
 
 
 MODEL STATISTICS
@@ -3469,23 +3471,23 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES        4,273
 NON ZERO ELEMENTS       291,489     DISCRETE VARIABLES      4,272
 
 
-GENERATION TIME      =        1.531 SECONDS     40 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 6
+GENERATION TIME      =        0.781 SECONDS     40 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MIP From line 79
+Solution Report     SOLVE m Using MIP From line 81
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  totalValue
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  79
+     SOLVER  CPLEX               FROM LINE  81
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE             4617.9378
 
- RESOURCE USAGE, LIMIT         51.219 10000000000.000
+ RESOURCE USAGE, LIMIT         41.344 10000000000.000
  ITERATION COUNT, LIMIT     26066    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -3498,13 +3500,13 @@ Solution Report     SOLVE m Using MIP From line 79
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 50.83sec (det. 16069.16 ticks)
+--- Cplex Time: 41.09sec (det. 16069.16 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.28sec (det. 17.47 ticks)
+--- Cplex Time: 0.06sec (det. 17.47 ticks)
 
 
 Proven optimal solution
@@ -8429,12 +8431,12 @@ k10.r .r12.c20          .              .             1.0000       369.5597
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/11/21 23:39:08 Page 7
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/12/21 09:02:10 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     86 VARIABLE x.L  item k is placed at (i,j)
+----     88 VARIABLE x.L  item k is placed at (i,j)
 
              r1.c1      r1.c14      r1.c28      r3.c14      r5.c14       r6.c1       r6.c6      r7.c11      r7.c29
 
@@ -8451,9 +8453,9 @@ k8 .r            1
 k9 .nr                       1           1
 
 
-----     86 VARIABLE totalValue.L          =     4617.938  objective (maximized)
+----     88 VARIABLE totalValue.L          =     4617.938  objective (maximized)
 
-----     97 PARAMETER plotdata  
+----     99 PARAMETER plotdata  
 
                      xmin        xmax        ymin        ymax       value
 
@@ -8472,7 +8474,7 @@ k9.r .r7 .c29       28.00       30.00        6.00       20.00      223.52
 
 
 
-EXECUTION TIME       =       55.110 SECONDS     40 MB  36.1.0 r2c0a44a WEX-WEI
+EXECUTION TIME       =       46.828 SECONDS     40 MB  36.1.0 r2c0a44a WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN

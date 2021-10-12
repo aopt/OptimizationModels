@@ -4,6 +4,8 @@ $ontext
 
    Fill a container with most valuable rectangles.
 
+   Covering formulation.
+
 $offtext
 
 set
