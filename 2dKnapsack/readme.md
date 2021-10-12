@@ -1,4 +1,4 @@
-# 2d Knapack problem
+# 2d Knapsack problem
 
 Fill a container with rectangles, maximizing the total value. We allow rotation.
 
