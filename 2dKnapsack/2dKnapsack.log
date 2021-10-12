@@ -1,0 +1,140 @@
+
+--- Job 2dKnapsack.gms Start 10/11/21 23:03:02 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\36\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\OptimizationModels\2dKnapsack\2dKnapsack.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\OptimizationModels\2dKnapsack\225a\
+    SysDir C:\GAMS\36\
+    WorkDir D:\projects\OptimizationModels\2dKnapsack\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
+GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- 2dKnapsack.gms(97) 3 Mb
+--- Starting execution: elapsed 0:00:00.032
+--- 2dKnapsack.gms(78) 8 Mb
+--- Generating MIP model m
+--- 2dKnapsack.gms(79) 24 Mb
+---   606 rows  1,179 columns  165,997 non-zeroes
+---   1,178 discrete-columns
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.381
+
+IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.04 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 8.21 Mb (peak 8.22 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.03 Mb (peak 1.98 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 548 rows and 1155 columns.
+Reduced MIP has 57 rows, 24 columns, and 400 nonzeros.
+Reduced MIP has 24 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.20 sec. (91.83 ticks)
+Probing time = 0.00 sec. (0.04 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 43 rows and 8 columns.
+Reduced MIP has 14 rows, 16 columns, and 60 nonzeros.
+Reduced MIP has 16 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.15 ticks)
+Probing time = 0.00 sec. (0.01 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 14 rows, 16 columns, and 60 nonzeros.
+Reduced MIP has 16 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.05 ticks)
+Probing time = 0.00 sec. (0.01 ticks)
+Clique table members: 13.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Parallel mode: deterministic, using up to 2 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.01 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =          1959.447220
+Root relaxation solution time = 0.02 sec. (0.03 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000     2526.6293              --- 
+Found incumbent of value 0.000000 after 0.30 sec. (92.91 ticks)
+*     0+    0                          426.4748     2526.6293           492.45%
+Found incumbent of value 426.474800 after 0.30 sec. (92.93 ticks)
+*     0     0      integral     0      777.9451      777.9451       15    0.00%
+Elapsed time = 0.30 sec. (92.94 ticks, tree = 0.00 MB, solutions = 3)
+Found incumbent of value 777.945118 after 0.30 sec. (92.94 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.30 sec. (92.99 ticks)
+Parallel b&c, 8 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.30 sec. (92.99 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.33sec (det. 93.00 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Tried aggregator 1 time.
+LP Presolve eliminated 605 rows and 1179 columns.
+All rows and columns eliminated.
+Presolve time = 0.01 sec. (7.67 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.01sec (det. 9.14 ticks)
+
+
+Proven optimal solution
+MIP Solution:          777.945118    (15 iterations, 0 nodes)
+Final Solve:           777.945118    (0 iterations)
+
+Best possible:         777.945118
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:02.212
+--- 2dKnapsack.gms(97) 24 Mb
+*** Status: Normal completion
+--- Job 2dKnapsack.gms Stop 10/11/21 23:03:04 elapsed 0:00:02.226
