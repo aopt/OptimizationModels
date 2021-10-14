@@ -1,5 +1,7 @@
 #---------------------------------------------------
-# 2d knapsak proble,
+# 2d knapsak problem
+#---------------------------------------------------
+
 
 
 from ortools.sat.python import cp_model
