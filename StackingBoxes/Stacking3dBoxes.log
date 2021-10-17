@@ -1,0 +1,147 @@
+
+--- Job Stacking3dBoxes.gms Start 10/17/21 05:02:08 36.1.0 r2c0a44a WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\36\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\OptimizationModels\StackingBoxes\Stacking3dBoxes.gms
+    PageWidth 80
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\OptimizationModels\StackingBoxes\225a\
+    SysDir C:\GAMS\36\
+    WorkDir D:\projects\OptimizationModels\StackingBoxes\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   S201210/0001CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
+GAMS 36.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- Stacking3dBoxes.gms(107) 3 Mb
+--- Starting execution: elapsed 0:00:00.125
+--- Stacking3dBoxes.gms(89) 4 Mb
+--- Generating MIP model stackboxes
+--- Stacking3dBoxes.gms(96) 4 Mb
+---   69 rows  162 columns  614 non-zeroes
+---   130 discrete-columns
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.432
+
+IBM ILOG CPLEX   36.1.0 r2c0a44a Released Aug 02, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.01 ticks)
+Tried aggregator 2 times.
+MIP Presolve eliminated 23 rows and 101 columns.
+MIP Presolve modified 675 coefficients.
+Aggregator did 20 substitutions.
+Reduced MIP has 25 rows, 41 columns, and 168 nonzeros.
+Reduced MIP has 41 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.05 sec. (1.50 ticks)
+Probing time = 0.00 sec. (0.08 ticks)
+Tried aggregator 2 times.
+MIP Presolve eliminated 3 rows and 5 columns.
+MIP Presolve modified 11 coefficients.
+Aggregator did 1 substitutions.
+Reduced MIP has 21 rows, 35 columns, and 143 nonzeros.
+Reduced MIP has 35 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.27 ticks)
+Probing time = 0.00 sec. (0.06 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 21 rows, 35 columns, and 143 nonzeros.
+Reduced MIP has 35 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.10 ticks)
+Probing time = 0.00 sec. (0.06 ticks)
+Clique table members: 118.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.02 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           154.000000
+Root relaxation solution time = 0.02 sec. (0.07 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      180.0000              --- 
+Found incumbent of value 0.000000 after 0.08 sec. (2.34 ticks)
+      0     0       77.9851    14        0.0000       77.9851       21     --- 
+*     0+    0                           52.0000       77.9851            49.97%
+Found incumbent of value 52.000000 after 0.08 sec. (2.44 ticks)
+*     0     0      integral     0       60.0000      Cuts: 19       27    0.00%
+Found incumbent of value 60.000000 after 0.09 sec. (2.86 ticks)
+      0     0        cutoff             60.0000       60.0000       27    0.00%
+Elapsed time = 0.09 sec. (2.86 ticks, tree = 0.01 MB, solutions = 3)
+
+GUB cover cuts applied:  5
+Clique cuts applied:  4
+Implied bound cuts applied:  1
+Flow cuts applied:  3
+Mixed integer rounding cuts applied:  1
+Zero-half cuts applied:  2
+
+Root node processing (before b&c):
+  Real time             =    0.09 sec. (2.87 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.09 sec. (2.87 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.09sec (det. 2.87 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Tried aggregator 1 time.
+LP Presolve eliminated 68 rows and 162 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.07 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.11 ticks)
+
+
+Proven optimal solution
+MIP Solution:           60.000000    (27 iterations, 0 nodes)
+Final Solve:            60.000000    (0 iterations)
+
+Best possible:          60.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model stackboxes
+--- Executing after solve: elapsed 0:00:01.540
+--- Stacking3dBoxes.gms(105) 4 Mb
+*** Status: Normal completion
+--- Job Stacking3dBoxes.gms Stop 10/17/21 05:02:10 elapsed 0:00:01.546

@@ -9,6 +9,8 @@ from io import StringIO
 import pandas as pd
 import numpy as np
 
+
+
 #---------------------------------------------------
 # data 
 #---------------------------------------------------
@@ -133,6 +135,7 @@ model.Maximize(sum([u[i]*vr[i] for i in range(nr)]))
 #---------------------------------------------------
 
 solver = cp_model.CpSolver()
+solver.parameters.random_seed = 12345
 # log does not work inside a Jupyter notebook
 solver.parameters.log_search_progress = True
 solver.parameters.num_search_workers = 8
@@ -141,6 +144,7 @@ print(f"return code:{rc}")
 print(f"status:{solver.StatusName()}")
 if rc != 4:
     raise
+
 
 
 #---------------------------------------------------

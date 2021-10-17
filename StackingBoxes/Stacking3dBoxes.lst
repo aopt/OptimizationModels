@@ -1,0 +1,767 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         stack boxes under rotation
+       
+       
+         1. Boxes on top should have a strictly smaller x/y base than the one
+            underneath
+         2. Assume always: size x < size y
+         3. In size comparison I assume integer sizes, so we want to be at least
+            0.5 smaller.
+       
+       
+  14   
+  15  *--------------------------------------------------------------
+  16  * data
+  17  *--------------------------------------------------------------
+  18   
+  19  sets
+  20     s 'size' /size-x,size-y,size-z/
+  21     xy(s) /size-x,size-y/
+  22     r 'rotation' /rot1*rot3/
+  23     k 'box' /box1*box4/
+  24     i 'stack level' /level1*level10/
+  25  ;
+  26   
+  27  table boxes(k,s) 'available box sizes'
+  28          size-x   size-y   size-z
+  29  box1       4        6        7
+  30  box2       1        2        3
+  31  box3       4        5        6
+  32  box4      10       12       32
+  33  ;
+  34  option boxes:0;
+  35  display boxes;
+  36   
+  37  scalar delta 'shrinkage in x,y directions' /0.5/;
+  38   
+  39  alias(s,s1,s2);
+  40   
+  41  *--------------------------------------------------------------
+  42  * derived data
+  43  *--------------------------------------------------------------
+  44   
+  45  set rot(r,s1,s2) 'rotate s1->s2' /
+  46     rot1.(size-x.size-x, size-y.size-y, size-z.size-z)
+  47     rot2.(size-x.size-x, size-y.size-z, size-z.size-y)
+  48     rot3.(size-x.size-z, size-y.size-x, size-z.size-y)
+  49  /;
+  50  display rot;
+  51   
+  52  parameter sizes(k,r,s) 'sizes under rotation';
+  53  sizes(k,r,s2) = sum(rot(r,s1,s2),boxes(k,s1));
+  54  option sizes:0;
+  55  display sizes;
+  56   
+  57  *--------------------------------------------------------------
+  58  * model
+  59  *--------------------------------------------------------------
+  60   
+  61   
+  62  binary variable
+  63     assign(i,k,r)  'assign (k,r) to level i'
+  64     b(i)           'level i has a box'
+  65  ;
+  66  variables
+  67     size(i,s) 'size of box at level i'
+  68     numboxes  'number of stacked boxes'
+  69     height    'total height of stack'
+  70  ;
+  71   
+  72  equations
+  73     level(i)      'box per level'
+  74     order(i)      'below a box should be another box (optional: covered by 
+      eq. smaller)'
+  75     esize(i,s)    'size of box at level i'
+  76     smaller(i,xy) 'smaller boxes on top of large ones (xy only)'
+  77     countboxes    'number of boxes we can stack'
+  78     totalheight   'total height of the tower'
+  79  ;
+  80   
+  81  level(i)..   b(i) =e= sum((k,r),assign(i,k,r));
+  82  order(i-1).. b(i) =l= b(i-1);
+  83  esize(i,s).. size(i,s) =e= sum((k,r),assign(i,k,r)*sizes(k,r,s));
+  84  smaller(i-1,xy).. size(i,xy) =l= size(i-1,xy)-delta*b(i);
+  85  countboxes.. numboxes =e= sum(i,b(i));
+  86  totalheight.. height =e= sum(i,size(i,'size-z'));
+  87   
+  88  model stackboxes /all/;
+  89  option optcr=0;
+  90   
+  91  *--------------------------------------------------------------
+  92  * solve
+  93  *--------------------------------------------------------------
+  94   
+  95  *solve stackboxes maximizing numboxes using mip;
+  96  solve stackboxes maximizing height using mip;
+  97   
+  98  *--------------------------------------------------------------
+  99  * reporting
+ 100  *--------------------------------------------------------------
+ 101   
+ 102  parameter results(i,k,r,*) 'optimal stack';
+ 103  results(i,k,r,s)$(assign.l(i,k,r)>0.5) = size.l(i,s);
+ 104  option results:0:3:1;
+ 105  display results;
+ 106   
+ 107   
+
+
+COMPILATION TIME     =        0.047 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     35 PARAMETER boxes  available box sizes
+
+          size-x      size-y      size-z
+
+box1           4           6           7
+box2           1           2           3
+box3           4           5           6
+box4          10          12          32
+
+
+----     50 SET rot  rotate s1->s2
+
+                 size-x      size-y      size-z
+
+rot1.size-x         YES
+rot1.size-y                     YES
+rot1.size-z                                 YES
+rot2.size-x         YES
+rot2.size-y                                 YES
+rot2.size-z                     YES
+rot3.size-x                                 YES
+rot3.size-y         YES
+rot3.size-z                     YES
+
+
+----     55 PARAMETER sizes  sizes under rotation
+
+               size-x      size-y      size-z
+
+box1.rot1           4           6           7
+box1.rot2           4           7           6
+box1.rot3           6           7           4
+box2.rot1           1           2           3
+box2.rot2           1           3           2
+box2.rot3           2           3           1
+box3.rot1           4           5           6
+box3.rot2           4           6           5
+box3.rot3           5           6           4
+box4.rot1          10          12          32
+box4.rot2          10          32          12
+box4.rot3          12          32          10
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE stackboxes Using MIP From line 96
+
+
+---- level  =E=  box per level
+
+level(level1)..  - assign(level1,box1,rot1) - assign(level1,box1,rot2)
+     
+      - assign(level1,box1,rot3) - assign(level1,box2,rot1)
+     
+      - assign(level1,box2,rot2) - assign(level1,box2,rot3)
+     
+      - assign(level1,box3,rot1) - assign(level1,box3,rot2)
+     
+      - assign(level1,box3,rot3) - assign(level1,box4,rot1)
+     
+      - assign(level1,box4,rot2) - assign(level1,box4,rot3) + b(level1) =E= 0 ;
+     
+      (LHS = 0)
+     
+level(level2)..  - assign(level2,box1,rot1) - assign(level2,box1,rot2)
+     
+      - assign(level2,box1,rot3) - assign(level2,box2,rot1)
+     
+      - assign(level2,box2,rot2) - assign(level2,box2,rot3)
+     
+      - assign(level2,box3,rot1) - assign(level2,box3,rot2)
+     
+      - assign(level2,box3,rot3) - assign(level2,box4,rot1)
+     
+      - assign(level2,box4,rot2) - assign(level2,box4,rot3) + b(level2) =E= 0 ;
+     
+      (LHS = 0)
+     
+level(level3)..  - assign(level3,box1,rot1) - assign(level3,box1,rot2)
+     
+      - assign(level3,box1,rot3) - assign(level3,box2,rot1)
+     
+      - assign(level3,box2,rot2) - assign(level3,box2,rot3)
+     
+      - assign(level3,box3,rot1) - assign(level3,box3,rot2)
+     
+      - assign(level3,box3,rot3) - assign(level3,box4,rot1)
+     
+      - assign(level3,box4,rot2) - assign(level3,box4,rot3) + b(level3) =E= 0 ;
+     
+      (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- order  =L=  below a box should be another box (optional: covered by eq. sma
+                 ller)
+
+order(level1)..  - b(level1) + b(level2) =L= 0 ; (LHS = 0)
+     
+order(level2)..  - b(level2) + b(level3) =L= 0 ; (LHS = 0)
+     
+order(level3)..  - b(level3) + b(level4) =L= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- esize  =E=  size of box at level i
+
+esize(level1,size-x)..  - 4*assign(level1,box1,rot1)
+     
+      - 4*assign(level1,box1,rot2) - 6*assign(level1,box1,rot3)
+     
+      - assign(level1,box2,rot1) - assign(level1,box2,rot2)
+     
+      - 2*assign(level1,box2,rot3) - 4*assign(level1,box3,rot1)
+     
+      - 4*assign(level1,box3,rot2) - 5*assign(level1,box3,rot3)
+     
+      - 10*assign(level1,box4,rot1) - 10*assign(level1,box4,rot2)
+     
+      - 12*assign(level1,box4,rot3) + size(level1,size-x) =E= 0 ; (LHS = 0)
+     
+esize(level1,size-y)..  - 6*assign(level1,box1,rot1)
+     
+      - 7*assign(level1,box1,rot2) - 7*assign(level1,box1,rot3)
+     
+      - 2*assign(level1,box2,rot1) - 3*assign(level1,box2,rot2)
+     
+      - 3*assign(level1,box2,rot3) - 5*assign(level1,box3,rot1)
+     
+      - 6*assign(level1,box3,rot2) - 6*assign(level1,box3,rot3)
+     
+      - 12*assign(level1,box4,rot1) - 32*assign(level1,box4,rot2)
+     
+      - 32*assign(level1,box4,rot3) + size(level1,size-y) =E= 0 ; (LHS = 0)
+     
+esize(level1,size-z)..  - 7*assign(level1,box1,rot1)
+     
+      - 6*assign(level1,box1,rot2) - 4*assign(level1,box1,rot3)
+     
+      - 3*assign(level1,box2,rot1) - 2*assign(level1,box2,rot2)
+     
+      - assign(level1,box2,rot3) - 6*assign(level1,box3,rot1)
+     
+      - 5*assign(level1,box3,rot2) - 4*assign(level1,box3,rot3)
+     
+      - 32*assign(level1,box4,rot1) - 12*assign(level1,box4,rot2)
+     
+      - 10*assign(level1,box4,rot3) + size(level1,size-z) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- smaller  =L=  smaller boxes on top of large ones (xy only)
+
+smaller(level1,size-x)..  0.5*b(level2) - size(level1,size-x)
+     
+      + size(level2,size-x) =L= 0 ; (LHS = 0)
+     
+smaller(level1,size-y)..  0.5*b(level2) - size(level1,size-y)
+     
+      + size(level2,size-y) =L= 0 ; (LHS = 0)
+     
+smaller(level2,size-x)..  0.5*b(level3) - size(level2,size-x)
+     
+      + size(level3,size-x) =L= 0 ; (LHS = 0)
+     
+REMAINING 15 ENTRIES SKIPPED
+
+
+---- countboxes  =E=  number of boxes we can stack
+
+countboxes..  - b(level1) - b(level2) - b(level3) - b(level4) - b(level5)
+     
+      - b(level6) - b(level7) - b(level8) - b(level9) - b(level10) + numboxes
+      =E= 0 ; (LHS = 0)
+     
+
+---- totalheight  =E=  total height of the tower
+
+totalheight..  - size(level1,size-z) - size(level2,size-z) - size(level3,size-z)
+     
+      - size(level4,size-z) - size(level5,size-z) - size(level6,size-z)
+     
+      - size(level7,size-z) - size(level8,size-z) - size(level9,size-z)
+     
+      - size(level10,size-z) + height =E= 0 ; (LHS = 0)
+     
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE stackboxes Using MIP From line 96
+
+
+---- assign  assign (k,r) to level i
+
+assign(level1,box1,rot1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       level(level1)
+       -4       esize(level1,size-x)
+       -6       esize(level1,size-y)
+       -7       esize(level1,size-z)
+
+assign(level1,box1,rot2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       level(level1)
+       -4       esize(level1,size-x)
+       -7       esize(level1,size-y)
+       -6       esize(level1,size-z)
+
+assign(level1,box1,rot3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       level(level1)
+       -6       esize(level1,size-x)
+       -7       esize(level1,size-y)
+       -4       esize(level1,size-z)
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- b  level i has a box
+
+b(level1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       level(level1)
+       -1       order(level1)
+       -1       countboxes
+
+b(level2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       level(level2)
+        1       order(level1)
+       -1       order(level2)
+        0.5     smaller(level1,size-x)
+        0.5     smaller(level1,size-y)
+       -1       countboxes
+
+b(level3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       level(level3)
+        1       order(level2)
+       -1       order(level3)
+        0.5     smaller(level2,size-x)
+        0.5     smaller(level2,size-y)
+       -1       countboxes
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- size  size of box at level i
+
+size(level1,size-x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       esize(level1,size-x)
+       -1       smaller(level1,size-x)
+
+size(level1,size-y)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       esize(level1,size-y)
+       -1       smaller(level1,size-y)
+
+size(level1,size-z)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       esize(level1,size-z)
+       -1       totalheight
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- numboxes  number of stacked boxes
+
+numboxes
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       countboxes
+
+
+---- height  total height of stack
+
+height
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       totalheight
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE stackboxes Using MIP From line 96
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS           69
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          162
+NON ZERO ELEMENTS           614     DISCRETE VARIABLES        130
+
+
+GENERATION TIME      =        0.312 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE stackboxes Using MIP From line 96
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   stackboxes          OBJECTIVE  height
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  96
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               60.0000
+
+ RESOURCE USAGE, LIMIT          0.219 10000000000.000
+ ITERATION COUNT, LIMIT        27    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.09sec (det. 2.87 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.11 ticks)
+
+
+Proven optimal solution
+MIP Solution:           60.000000    (27 iterations, 0 nodes)
+Final Solve:            60.000000    (0 iterations)
+
+Best possible:          60.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU level  box per level
+
+           LOWER     LEVEL     UPPER    MARGINAL
+
+level1       .         .         .         .         
+level2       .         .         .         .         
+level3       .         .         .         .         
+level4       .         .         .         .         
+level5       .         .         .         .         
+level6       .         .         .         .         
+level7       .         .         .         .         
+level8       .         .         .         .         
+level9       .         .         .         .         
+level10      .         .         .         .         
+
+---- EQU order  below a box should be another box (optional: covered by eq. smal
+                ler)
+
+          LOWER     LEVEL     UPPER    MARGINAL
+
+level1     -INF       .         .         .         
+level2     -INF       .         .         .         
+level3     -INF       .         .         .         
+level4     -INF       .         .         .         
+level5     -INF       .         .         .         
+level6     -INF       .         .         .         
+level7     -INF     -1.000      .         .         
+level8     -INF       .         .         .         
+level9     -INF       .         .         .         
+
+---- EQU esize  size of box at level i
+
+                  LOWER     LEVEL     UPPER    MARGINAL
+
+level1 .size-x      .         .         .         EPS       
+level1 .size-y      .         .         .         EPS       
+level1 .size-z      .         .         .        1.000      
+level2 .size-x      .         .         .         EPS       
+level2 .size-y      .         .         .         EPS       
+level2 .size-z      .         .         .        1.000      
+level3 .size-x      .         .         .         EPS       
+level3 .size-y      .         .         .         EPS       
+level3 .size-z      .         .         .        1.000      
+level4 .size-x      .         .         .         EPS       
+level4 .size-y      .         .         .         EPS       
+level4 .size-z      .         .         .        1.000      
+level5 .size-x      .         .         .         EPS       
+level5 .size-y      .         .         .         EPS       
+level5 .size-z      .         .         .        1.000      
+level6 .size-x      .         .         .         EPS       
+level6 .size-y      .         .         .         EPS       
+level6 .size-z      .         .         .        1.000      
+level7 .size-x      .         .         .         EPS       
+level7 .size-y      .         .         .         EPS       
+level7 .size-z      .         .         .        1.000      
+level8 .size-x      .         .         .         EPS       
+level8 .size-y      .         .         .         EPS       
+level8 .size-z      .         .         .        1.000      
+level9 .size-x      .         .         .         EPS       
+level9 .size-y      .         .         .         EPS       
+level9 .size-z      .         .         .        1.000      
+level10.size-x      .         .         .         EPS       
+level10.size-y      .         .         .         EPS       
+level10.size-z      .         .         .        1.000      
+
+---- EQU smaller  smaller boxes on top of large ones (xy only)
+
+                 LOWER     LEVEL     UPPER    MARGINAL
+
+level1.size-x     -INF     -1.500      .         .         
+level1.size-y     -INF    -19.500      .         .         
+level2.size-x     -INF     -3.500      .         .         
+level2.size-y     -INF     -4.500      .         .         
+level3.size-x     -INF     -0.500      .         .         
+level3.size-y     -INF     -0.500      .         .         
+level4.size-x     -INF     -0.500      .         .         
+level4.size-y     -INF     -0.500      .         .         
+level5.size-x     -INF     -1.500      .         .         
+level5.size-y     -INF     -1.500      .         .         
+level6.size-x     -INF     -0.500      .         .         
+level6.size-y     -INF     -0.500      .         .         
+level7.size-x     -INF     -1.000      .         .         
+level7.size-y     -INF     -2.000      .         .         
+level8.size-x     -INF       .         .         .         
+level8.size-y     -INF       .         .         .         
+level9.size-x     -INF       .         .         .         
+level9.size-y     -INF       .         .         .         
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- EQU countboxes      .         .         .         EPS       
+---- EQU totalheig~      .         .         .        1.000      
+
+  countboxes  number of boxes we can stack
+  totalheight  total height of the tower
+
+---- VAR assign  assign (k,r) to level i
+
+                     LOWER     LEVEL     UPPER    MARGINAL
+
+level1 .box1.rot1      .         .        1.000     7.000      
+level1 .box1.rot2      .         .        1.000     6.000      
+level1 .box1.rot3      .         .        1.000     4.000      
+level1 .box2.rot1      .         .        1.000     3.000      
+level1 .box2.rot2      .         .        1.000     2.000      
+level1 .box2.rot3      .         .        1.000     1.000      
+level1 .box3.rot1      .         .        1.000     6.000      
+level1 .box3.rot2      .         .        1.000     5.000      
+level1 .box3.rot3      .         .        1.000     4.000      
+level1 .box4.rot1      .         .        1.000    32.000      
+level1 .box4.rot2      .         .        1.000    12.000      
+level1 .box4.rot3      .        1.000     1.000    10.000      
+level2 .box1.rot1      .         .        1.000     7.000      
+level2 .box1.rot2      .         .        1.000     6.000      
+level2 .box1.rot3      .         .        1.000     4.000      
+level2 .box2.rot1      .         .        1.000     3.000      
+level2 .box2.rot2      .         .        1.000     2.000      
+level2 .box2.rot3      .         .        1.000     1.000      
+level2 .box3.rot1      .         .        1.000     6.000      
+level2 .box3.rot2      .         .        1.000     5.000      
+level2 .box3.rot3      .         .        1.000     4.000      
+level2 .box4.rot1      .        1.000     1.000    32.000      
+level2 .box4.rot2      .         .        1.000    12.000      
+level2 .box4.rot3      .         .        1.000    10.000      
+level3 .box1.rot1      .         .        1.000     7.000      
+level3 .box1.rot2      .         .        1.000     6.000      
+level3 .box1.rot3      .        1.000     1.000     4.000      
+level3 .box2.rot1      .         .        1.000     3.000      
+level3 .box2.rot2      .         .        1.000     2.000      
+level3 .box2.rot3      .         .        1.000     1.000      
+level3 .box3.rot1      .         .        1.000     6.000      
+level3 .box3.rot2      .         .        1.000     5.000      
+level3 .box3.rot3      .         .        1.000     4.000      
+level3 .box4.rot1      .         .        1.000    32.000      
+level3 .box4.rot2      .         .        1.000    12.000      
+level3 .box4.rot3      .         .        1.000    10.000      
+level4 .box1.rot1      .         .        1.000     7.000      
+level4 .box1.rot2      .         .        1.000     6.000      
+level4 .box1.rot3      .         .        1.000     4.000      
+level4 .box2.rot1      .         .        1.000     3.000      
+level4 .box2.rot2      .         .        1.000     2.000      
+level4 .box2.rot3      .         .        1.000     1.000      
+level4 .box3.rot1      .         .        1.000     6.000      
+level4 .box3.rot2      .         .        1.000     5.000      
+level4 .box3.rot3      .        1.000     1.000     4.000      
+level4 .box4.rot1      .         .        1.000    32.000      
+level4 .box4.rot2      .         .        1.000    12.000      
+level4 .box4.rot3      .         .        1.000    10.000      
+level5 .box1.rot1      .         .        1.000     7.000      
+level5 .box1.rot2      .         .        1.000     6.000      
+level5 .box1.rot3      .         .        1.000     4.000      
+level5 .box2.rot1      .         .        1.000     3.000      
+level5 .box2.rot2      .         .        1.000     2.000      
+level5 .box2.rot3      .         .        1.000     1.000      
+level5 .box3.rot1      .        1.000     1.000     6.000      
+level5 .box3.rot2      .         .        1.000     5.000      
+level5 .box3.rot3      .         .        1.000     4.000      
+level5 .box4.rot1      .         .        1.000    32.000      
+level5 .box4.rot2      .         .        1.000    12.000      
+level5 .box4.rot3      .         .        1.000    10.000      
+level6 .box1.rot1      .         .        1.000     7.000      
+level6 .box1.rot2      .         .        1.000     6.000      
+level6 .box1.rot3      .         .        1.000     4.000      
+level6 .box2.rot1      .         .        1.000     3.000      
+level6 .box2.rot2      .         .        1.000     2.000      
+level6 .box2.rot3      .        1.000     1.000     1.000      
+level6 .box3.rot1      .         .        1.000     6.000      
+level6 .box3.rot2      .         .        1.000     5.000      
+level6 .box3.rot3      .         .        1.000     4.000      
+level6 .box4.rot1      .         .        1.000    32.000      
+level6 .box4.rot2      .         .        1.000    12.000      
+level6 .box4.rot3      .         .        1.000    10.000      
+level7 .box1.rot1      .         .        1.000     7.000      
+level7 .box1.rot2      .         .        1.000     6.000      
+level7 .box1.rot3      .         .        1.000     4.000      
+level7 .box2.rot1      .        1.000     1.000     3.000      
+level7 .box2.rot2      .         .        1.000     2.000      
+level7 .box2.rot3      .         .        1.000     1.000      
+level7 .box3.rot1      .         .        1.000     6.000      
+level7 .box3.rot2      .         .        1.000     5.000      
+level7 .box3.rot3      .         .        1.000     4.000      
+level7 .box4.rot1      .         .        1.000    32.000      
+level7 .box4.rot2      .         .        1.000    12.000      
+level7 .box4.rot3      .         .        1.000    10.000      
+level8 .box1.rot1      .         .        1.000     7.000      
+level8 .box1.rot2      .         .        1.000     6.000      
+level8 .box1.rot3      .         .        1.000     4.000      
+level8 .box2.rot1      .         .        1.000     3.000      
+level8 .box2.rot2      .         .        1.000     2.000      
+level8 .box2.rot3      .         .        1.000     1.000      
+level8 .box3.rot1      .         .        1.000     6.000      
+level8 .box3.rot2      .         .        1.000     5.000      
+level8 .box3.rot3      .         .        1.000     4.000      
+level8 .box4.rot1      .         .        1.000    32.000      
+level8 .box4.rot2      .         .        1.000    12.000      
+level8 .box4.rot3      .         .        1.000    10.000      
+level9 .box1.rot1      .         .        1.000     7.000      
+level9 .box1.rot2      .         .        1.000     6.000      
+level9 .box1.rot3      .         .        1.000     4.000      
+level9 .box2.rot1      .         .        1.000     3.000      
+level9 .box2.rot2      .         .        1.000     2.000      
+level9 .box2.rot3      .         .        1.000     1.000      
+level9 .box3.rot1      .         .        1.000     6.000      
+level9 .box3.rot2      .         .        1.000     5.000      
+level9 .box3.rot3      .         .        1.000     4.000      
+level9 .box4.rot1      .         .        1.000    32.000      
+level9 .box4.rot2      .         .        1.000    12.000      
+level9 .box4.rot3      .         .        1.000    10.000      
+level10.box1.rot1      .         .        1.000     7.000      
+level10.box1.rot2      .         .        1.000     6.000      
+level10.box1.rot3      .         .        1.000     4.000      
+level10.box2.rot1      .         .        1.000     3.000      
+level10.box2.rot2      .         .        1.000     2.000      
+level10.box2.rot3      .         .        1.000     1.000      
+level10.box3.rot1      .         .        1.000     6.000      
+level10.box3.rot2      .         .        1.000     5.000      
+level10.box3.rot3      .         .        1.000     4.000      
+level10.box4.rot1      .         .        1.000    32.000      
+level10.box4.rot2      .         .        1.000    12.000      
+level10.box4.rot3      .         .        1.000    10.000      
+
+---- VAR b  level i has a box
+
+           LOWER     LEVEL     UPPER    MARGINAL
+
+level1       .        1.000     1.000      EPS       
+level2       .        1.000     1.000      EPS       
+level3       .        1.000     1.000      EPS       
+level4       .        1.000     1.000      EPS       
+level5       .        1.000     1.000      EPS       
+level6       .        1.000     1.000      EPS       
+level7       .        1.000     1.000      EPS       
+level8       .         .        1.000      EPS       
+level9       .         .        1.000      EPS       
+level10      .         .        1.000      EPS       
+
+---- VAR size  size of box at level i
+
+                  LOWER     LEVEL     UPPER    MARGINAL
+
+level1 .size-x     -INF     12.000     +INF       .         
+level1 .size-y     -INF     32.000     +INF       .         
+level1 .size-z     -INF     10.000     +INF       .         
+level2 .size-x     -INF     10.000     +INF       .         
+level2 .size-y     -INF     12.000     +INF       .         
+level2 .size-z     -INF     32.000     +INF       .         
+level3 .size-x     -INF      6.000     +INF       .         
+level3 .size-y     -INF      7.000     +INF       .         
+level3 .size-z     -INF      4.000     +INF       .         
+level4 .size-x     -INF      5.000     +INF       .         
+level4 .size-y     -INF      6.000     +INF       .         
+level4 .size-z     -INF      4.000     +INF       .         
+level5 .size-x     -INF      4.000     +INF       .         
+level5 .size-y     -INF      5.000     +INF       .         
+level5 .size-z     -INF      6.000     +INF       .         
+level6 .size-x     -INF      2.000     +INF       .         
+level6 .size-y     -INF      3.000     +INF       .         
+level6 .size-z     -INF      1.000     +INF       .         
+level7 .size-x     -INF      1.000     +INF       .         
+level7 .size-y     -INF      2.000     +INF       .         
+level7 .size-z     -INF      3.000     +INF       .         
+level8 .size-x     -INF       .        +INF       .         
+level8 .size-y     -INF       .        +INF       .         
+level8 .size-z     -INF       .        +INF       .         
+level9 .size-x     -INF       .        +INF       .         
+level9 .size-y     -INF       .        +INF       .         
+level9 .size-z     -INF       .        +INF       .         
+level10.size-x     -INF       .        +INF       .         
+level10.size-y     -INF       .        +INF       .         
+level10.size-z     -INF       .        +INF       .         
+
+                       LOWER     LEVEL     UPPER    MARGINAL
+
+---- VAR numboxes       -INF      7.000     +INF       .         
+---- VAR height         -INF     60.000     +INF       .         
+
+  numboxes  number of stacked boxes
+  height  total height of stack
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/17/21 05:02:08 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    105 PARAMETER results  optimal stack
+
+                      size-x      size-y      size-z
+
+level1.box4.rot3          12          32          10
+level2.box4.rot1          10          12          32
+level3.box1.rot3           6           7           4
+level4.box3.rot3           5           6           4
+level5.box3.rot1           4           5           6
+level6.box2.rot3           2           3           1
+level7.box2.rot1           1           2           3
+
+
+
+EXECUTION TIME       =        1.422 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\StackingBoxes\Stacking3dBoxes.gms
+Output     D:\projects\OptimizationModels\StackingBoxes\Stacking3dBoxes.lst
