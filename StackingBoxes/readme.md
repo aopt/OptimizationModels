@@ -2,7 +2,7 @@
 
 # Stacking 3d boxes
 
-Stack 3b boxes such that the base of each layer is strictly shrinking.
+Stack 3d boxes (rotation allowed) such that the base of each layer is strictly shrinking.
 Maximize the total height.
 
 ![](image.png)
