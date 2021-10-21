@@ -1,0 +1,256 @@
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/21/21 13:27:55 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        https://or.stackexchange.com/questions/7013/how-to-linearize-a-non-convex-optimization-objective-function
+       
+        find efficient frontier point by point
+       
+   8   
+   9   
+  10  *------------------------------------------------------------------------------
+  11  * data
+  12  *------------------------------------------------------------------------------
+  13   
+  14  scalars
+  15    c0  / 1.4 /
+  16    c1  / 1 /
+  17    c2  / 2 /
+  18    c3  / 3 /
+  19    c4  / 4 /
+  20    c5  / 5 /
+  21    d1  / 1 /
+  22    d2  / 2 /
+  23    d3  / 3 /
+  24    d4  / 4 /
+  25    d5  / 5 /
+  26    e1  / 1 /
+  27    a1  / 12 /
+  28    a2  / 8 /
+  29    a3  / 15 /
+  30  ;
+  31   
+  32  set dummy /x1,x2/;
+  33   
+  34  *------------------------------------------------------------------------------
+  35  * base model
+  36  *------------------------------------------------------------------------------
+  37   
+  38  integer variables x1,x2;
+  39   
+  40  set k /obj1*obj3/;
+  41  alias (k,k2);
+  42   
+  43  parameter w(k) 'weights';
+  44   
+  45  variables
+  46     f(k)   'objectives'
+  47     f0     'weighted sum'
+  48  ;
+  49   
+  50  equations
+  51     obj1
+  52     obj2
+  53     obj3
+  54     xsum
+  55     fsum
+  56  ;
+  57   
+  58  x1.lo = 1;
+  59  x1.up = a1;
+  60  x2.up = a2;
+  61   
+  62   
+  63  obj1..  f('obj1') =e= c0 + (c1+c2*x2+c5*sqr(x2))/x1 + c3*x1 + c4*x2;
+  64  obj2..  f('obj2') =e= d1*x1 + d2*x2 + d3*sqr(x1) + d4*sqr(x2) + d5*x1*x2;
+  65  obj3..  f('obj3') =e= -e1*x2;
+  66   
+  67  xsum.. x1+x2 =l= a3;
+  68   
+  69  fsum.. f0 =e= sum(k2,w(k2)*f(k2));
+  70   
+  71  option optcr=0, minlp=baron, threads=4;
+  72   
+  73  model base /all/;
+  74   
+  75  *------------------------------------------------------------------------------
+  76  * determine fbox: min and max f(k)
+  77  *------------------------------------------------------------------------------
+  78  base.solprint = 2;
+  79   
+  80  parameters
+  81     fbox(k,*) 'objective box'
+  82     M(k)      'big-M'
+  83  ;
+  84   
+  85  loop(k,
+  86     w(k) = 1;
+  87     solve base minimizing f0 using minlp;
+  88     fbox(k,'lo') = f.l(k);
+  89     solve base maximizing f0 using minlp;
+  90     fbox(k,'up') = f.l(k);
+  91     w(k) = 0;
+  92  );
+  93  display fbox;
+  94   
+  95  M(k) = fbox(k,'up')-fbox(k,'lo');
+  96  display M;
+  97   
+  98   
+  99  *------------------------------------------------------------------------------
+ 100  * non-dominated constraints
+ 101  *------------------------------------------------------------------------------
+ 102  sets
+ 103     p 'points' /point1*point1000/
+ 104     pf(p) 'found points'
+ 105  ;
+ 106  pf(p) = no;
+ 107   
+ 108  parameter solutions(p,*) 'non-dominated solutions';
+ 109  solutions(p,k) = 0;
+ 110   
+ 111  binary variable
+ 112    df(p,k) 'non-dominated check'
+ 113  ;
+ 114   
+ 115  equations
+ 116      fbetter1(k,p) 'obj(k) is better compared to point p'
+ 117      fbetter2(p)
+ 118  ;
+ 119   
+ 120  fbetter1(k,pf).. f(k) =l= solutions(pf,k) - 0.01 + (M(k)+0.01)*(1-df(pf,k));
+ 121  fbetter2(pf).. sum(k,df(pf,k)) =g= 1;
+ 122   
+ 123  model ndom /all/;
+ 124   
+ 125  *------------------------------------------------------------------------------
+ 126  * big loop
+ 127  *------------------------------------------------------------------------------
+ 128   
+ 129   
+ 130  ndom.solprint = 2;
+ 131  w(k) = 1;
+ 132   
+ 133  loop(p,
+ 134   
+ 135     solve ndom minimizing f0 using minlp;
+ 136     break$(ndom.modelstat <> 1);
+ 137   
+ 138   
+ 139     solutions(p,'x1') = x1.l;
+ 140     solutions(p,'x2') = x2.l;
+ 141     solutions(p,k) = f.l(k);
+ 142   
+ 143     pf(p) = yes;
+ 144   
+ 145  );
+ 146   
+ 147  display solutions;
+ 148   
+ 149  parameter sums(*) 'checksum';
+ 150  set c /x1,x2,obj1, obj2, obj3/;
+ 151  sums(c) = sum(pf,solutions(pf,c));
+ 152  display sums;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/21/21 13:27:55 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     93 PARAMETER fbox  objective box
+
+              lo          up
+
+obj1       5.400     373.400
+obj2       4.000     706.000
+obj3      -8.000
+
+
+----     96 PARAMETER M  big-M
+
+obj1 368.000,    obj2 702.000,    obj3   8.000
+
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/21/21 13:27:55 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Analysis      SOLVE ndom Using MINLP From line 135
+
+
+
+No solution returned
+GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 10/21/21 13:27:55 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    147 PARAMETER solutions  non-dominated solutions
+
+                 x1          x2        obj1        obj2        obj3
+
+point1        1.000                   5.400       4.000
+point2        1.000       1.000      16.400      15.000      -1.000
+point3        2.000       1.000      15.400      30.000      -1.000
+point4        1.000       2.000      37.400      34.000      -2.000
+point5        2.000       2.000      27.900      54.000      -2.000
+point6        3.000       2.000      26.733      80.000      -2.000
+point7        1.000       3.000      68.400      61.000      -3.000
+point8        2.000       3.000      45.400      86.000      -3.000
+point9        3.000       3.000      39.733     117.000      -3.000
+point10       4.000       3.000      38.400     154.000      -3.000
+point11       2.000       4.000      67.900     126.000      -4.000
+point12       1.000       4.000     109.400      96.000      -4.000
+point13       3.000       4.000      56.067     162.000      -4.000
+point14       4.000       4.000      51.650     204.000      -4.000
+point15       2.000       5.000      95.400     174.000      -5.000
+point16       3.000       5.000      75.733     215.000      -5.000
+point17       1.000       5.000     160.400     139.000      -5.000
+point18       5.000       4.000      50.200     252.000      -4.000
+point19       4.000       5.000      67.400     262.000      -5.000
+point20       2.000       6.000     127.900     230.000      -6.000
+point21       3.000       6.000      98.733     276.000      -6.000
+point22       5.000       5.000      63.600     315.000      -5.000
+point23       1.000       6.000     221.400     190.000      -6.000
+point24       4.000       6.000      85.650     328.000      -6.000
+point25       6.000       5.000      62.067     374.000      -5.000
+point26       2.000       7.000     165.400     294.000      -7.000
+point27       5.000       6.000      79.000     386.000      -6.000
+point28       3.000       7.000     125.067     345.000      -7.000
+point29       7.000       5.000      61.829     439.000      -5.000
+point30       4.000       7.000     106.400     402.000      -7.000
+point31       6.000       6.000      75.567     450.000      -6.000
+point32       1.000       7.000     292.400     249.000      -7.000
+point33       5.000       7.000      96.400     465.000      -7.000
+point34       2.000       8.000     207.900     366.000      -8.000
+point35       3.000       8.000     154.733     422.000      -8.000
+point36       7.000       6.000      73.971     520.000      -6.000
+point37       4.000       8.000     129.650     484.000      -8.000
+point38       6.000       7.000      90.733     534.000      -7.000
+point39       5.000       8.000     115.800     552.000      -8.000
+point40       8.000       6.000      73.525     596.000      -6.000
+point41       1.000       8.000     373.400     316.000      -8.000
+point42       7.000       7.000      87.543     609.000      -7.000
+point43       6.000       8.000     107.567     626.000      -8.000
+point44       8.000       7.000      85.900     690.000      -7.000
+point45       7.000       8.000     102.543     706.000      -8.000
+
+
+----    152 PARAMETER sums  checksum
+
+x1     163.000,    x2     235.000,    obj1  4319.994,    obj2 13429.000,    obj3  -235.000
+
+
+
+EXECUTION TIME       =      158.500 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\NonConvexMultiObj\NonConvexMultiObj.gms
+Output     D:\projects\OptimizationModels\NonConvexMultiObj\NonConvexMultiObj.lst
