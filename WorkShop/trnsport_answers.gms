@@ -274,7 +274,7 @@ $ontext
 
    exercise
 
-   let's solve some larger models by duplicating the model k times.
+   3.   let's solve some larger models by duplicating the model k times.
         Introduce a set k /k1*k10/
         and add the index k to all variables and equations
         (except the objective -- why?).
@@ -319,8 +319,8 @@ $stop
 
 $ontext
 
-  exersize:
-      solve the dual formulation and see how we can
+  exercise:
+   4. solve the dual formulation and see how we can
       extract the shipping pattern
 
 
