@@ -346,3 +346,45 @@ solve transport minimizing z using lp;
 display x.l,e.m;
 display supply.m,u.l;
 display demand.m,v.l;
+
+$ontext
+
+This can show:
+
+----    346 VARIABLE x.L  shipment quantities in cases       
+
+             new-york     chicago      topeka
+
+seattle        50.000     300.000
+san-diego     275.000                 275.000
+
+
+----    346 EQUATION e.M  dual constraint
+
+             new-york     chicago      topeka
+
+seattle        50.000     300.000
+san-diego     275.000                 275.000
+
+
+----    347 EQUATION supply.M  observe supply limit at plant i
+
+seattle EPS
+
+
+----    347 VARIABLE u.L  dual of supply
+
+                      ( ALL       0.000 )
+
+
+----    348 EQUATION demand.M  satisfy demand at market j
+
+new-york 0.225,    chicago  0.153,    topeka   0.126
+
+
+----    348 VARIABLE v.L  dual of demand
+
+new-york 0.225,    chicago  0.153,    topeka   0.126
+
+
+$offtext
