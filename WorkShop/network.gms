@@ -154,7 +154,7 @@ $offtext
 *-----------------------------------------------------------
 
 * uncomment to run the Python-related part
-*$goto skip_python_section
+$goto skip_python_section
 
 * file names
 $set pythonscript   network.py
@@ -176,6 +176,8 @@ endEmbeddedCode
 
 
 * part 2: use pickle file to display network using networkx package
+* you may need to install the networkx package, e.g. by
+*     pip install networkx
 $onecho > %pythonscript%
 import pickle
 import networkx as nx
@@ -451,7 +453,7 @@ option seed=12345;
 set
   sn(n) 'supply nodes'  /node3,node14,node32/
   dn(n) 'demand nodes'  /node18,node29,node31,node36,node34/
-  tn(n) 'transhipment node'
+  tn(n) 'transshipment node'
 ;
 
 tn(n)$(not sn(n) and not dn(n)) = yes;
@@ -468,7 +470,7 @@ scalars
 inflow(sn) = uniform(1,10);
 s = sum(sn,inflow(sn));
 inflow(sn) = supplyDemand*inflow(sn)/s;
-* total demand distributed over supply nodes
+* total demand distributed over demand nodes
 outflow(dn) = uniform(1,10);
 s = sum(dn,outflow(dn));
 outflow(dn) = supplyDemand*outflow(dn)/s;
@@ -495,17 +497,12 @@ solve mcf using lp minimizing totalCost;
 
 display f.l;
 
-
-
 $ontext
-
 
   exercises:
 
    5.1. Adapt the HTML report to display these results
    5.2. Convert the original trnsport.gms model to a
         min-cost flow problem.
-
-
 
 $offtext
