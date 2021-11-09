@@ -12,8 +12,7 @@
 
 1. trnsportationLP.pptx,trnsportationLP.pdf: powerpoint presentation
 2. trnsport.gms: model with questions/exercises
-3. trnsport-orig.gms: backup in case trnsport.gms is edited and messed up.
-4. trnsport-answers.gms: my answers
+3. trnsport_answers.gms: my answers
 
 ## Shortest path model
 
@@ -28,5 +27,4 @@
 
 1. networkLP.pptx,networkLP.pdf: powerpoint presentation
 2. network.gms: model with questions/exercises
-3. network-orig.gms: backup in case trnsport.gms is edited and messed up.
-4. network-answers.gms: my answers
+3. network_answers.gms: my answers
