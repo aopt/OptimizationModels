@@ -429,7 +429,9 @@ table,th, td {
 </html>
 $offecho
 
-execute 'shellexecute "%htmlfile%"';
+$libInclude win32 shellexecute  "%htmlfile%"
+* for older gams systems use:
+* execute 'shellexecute "%htmlfile%"';
 
 $stop
 
