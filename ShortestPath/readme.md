@@ -2,4 +2,4 @@
 
 Generates a HTML file with results.
 
-[](solution.PNG)
+![](solution.PNG)
