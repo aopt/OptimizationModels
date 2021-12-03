@@ -1,0 +1,909 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Shortest Path Problem with Visualization
+       
+   6   
+   7   
+   8  *-----------------------------------------------------------
+   9  * directed network topology
+  10  * randomly generated data
+  11  *-----------------------------------------------------------
+  12   
+  13  set
+  14     n 'nodes (vertices)' /node1*node50/
+  15     a(n,n) 'arcs (edges)'
+  16  ;
+  17   
+  18  alias (n,i,j);
+  19   
+  20  * sparse random network
+  21  a(i,j) = uniform(0,1)<0.05;
+  22   
+  23  display$(card(n)<=50) n,a;
+  24   
+  25  *-----------------------------------------------------------
+  26  * summary of the data
+  27  *    - calculate number of arcs
+  28  *    - calculate the in-/out-degree for each node
+  29  *-----------------------------------------------------------
+  30   
+  31  scalar numarcs 'number of arcs';
+  32  numarcs = card(a);
+  33  display numarcs;
+  34   
+  35   
+  36  parameter degree(*,*) 'in- and out-degree';
+  37  degree(n,'in-degree') = sum(a(i,n),1);
+  38  degree(n,'out-degree') = sum(a(n,i),1);
+  39  degree('min','in-degree') = smin(n,degree(n,'in-degree'));
+  40  degree('min','out-degree') = smin(n,degree(n,'out-degree'));
+  41  degree('max','in-degree') = smax(n,degree(n,'in-degree'));
+  42  degree('max','out-degree') = smax(n,degree(n,'out-degree'));
+  43  display degree;
+  44   
+  45  *-----------------------------------------------------------
+  46  * diagonal
+  47  * do we have diagonal elements?
+  48  *-----------------------------------------------------------
+  49   
+  50  set diagonal(n) 'diagonal elements';
+  51  diagonal(n) = a(n,n);
+  52  display diagonal;
+  53   
+  54  *-----------------------------------------------------------
+  55  * random coordinates
+  56  * for plotting and for length calculation
+  57  *-----------------------------------------------------------
+  58   
+  59  set xy /x,y/;
+  60  parameter coord(n,xy) 'x-y coordinates';
+  61  coord(n,xy) = uniform(0,100);
+  62  display coord;
+  63   
+  64  *-----------------------------------------------------------
+  65  * shortest path model
+  66  *-----------------------------------------------------------
+  67   
+  68  parameters
+  69     inflow(n)   'exogenous inflow at node'    / node1   1.0 /
+  70     outflow(n)  'exogenous outflow at node'   / node29  1.0 /
+  71     length(i,j) 'arc lengths'
+  72  ;
+  73  length(a(i,j)) = sqrt(sum(xy, sqr(coord(i,xy)-coord(j,xy))));
+  74  * all are very sparse, GAMS will exploit this
+  75   
+  76  positive variable f(i,j) 'flow from node i -> node j';
+  77   
+  78  variable totalLength 'objective: minimize';
+  79   
+  80  equations
+  81      nodeBalance(n) 'kirchoff equations'
+  82      objective      'minimize'
+  83  ;
+  84   
+  85  objective.. totalLength =e= sum(a,length(a)*f(a));
+  86   
+  87  nodeBalance(n)..
+  88       sum(a(i,n), f(a)) + inflow(n) =e=
+  89       sum(a(n,j), f(a)) + outflow(n);
+  90   
+  91  model shortestPath /all/;
+  92  solve shortestPath using lp minimizing totalLength;
+  93   
+  94  display f.l,totalLength.l;
+  95   
+  96   
+  97  *-----------------------------------------------------------
+  98  * form the path (not so easy)
+  99  * and create a solution report
+ 100  *-----------------------------------------------------------
+ 101   
+ 102  sets
+ 103    step /step1*step50/
+ 104    path(step,n) 'easier to read than f'
+ 105  ;
+ 106  singleton set cur(i) 'current node';
+ 107  cur(i)$inflow(i) = yes;
+ 108  * while we have a current node
+ 109  loop(step$card(cur),
+ 110  * record current node
+ 111     path(step,cur) = yes;
+ 112  * current node := next node
+ 113     cur(j) = f.l(cur,j)>0.5;
+ 114  * to debug add this
+ 115  *   display cur;
+ 116  );
+ 117  option path:0:0:1;
+ 118  display path;
+ 119   
+ 120   
+ 121  *-----------------------------------------------------------
+ 122  * adding a different solution report
+ 123  * uses path we just calculated
+ 124  *-----------------------------------------------------------
+ 125   
+ 126  parameter reportSP(*,*,*) 'shortest path solution with lengths';
+ 127  reportSP(path(step,n),j)$(f.l(n,j)>0.5) = length(n,j);
+ 128  reportSP('sum of lengths','','') = sum((step,i,j),reportSP(step,i,j));
+ 129  reportSP('obj from model','','') = totalLength.l;
+ 130  option reportSP:3:0:1;
+ 131  display reportSP;
+ 132   
+ 133   
+ 134   
+ 135  *-----------------------------------------------------------
+ 136  * Plot network using put statement
+ 137  * We generate some JavaScript code to hold the data
+ 138  * For domumentation on plotting library, see:
+ 139  * https://js.cytoscape.org/
+ 140  *-----------------------------------------------------------
+ 141   
+ 144   
+ 145  file fln /networkdata.js/;
+ 146  put fln;
+ 147  put 'networkdata=['/;
+ 148  loop(n,
+ 149      put$(ord(n)>1) ",";
+ 150      put "{data:{id:",(ord(n)):0:0,",color:";
+ 151      put$(inflow(n)=0 and outflow(n)=0) "'black'";
+ 152      put$(inflow(n)>0) "'blue'";
+ 153      put$(outflow(n)>0) "'green'";
+ 154      put ",size:"
+ 155      put$(inflow(n)=0 and outflow(n)=0) "1";
+ 156      put$(inflow(n)>0 or outflow(n)>0) "2";
+ 157      put "},position:{x:",coord(n,'x'):0:3;
+ 158      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 159  );
+ 160  loop(a(i,j),
+ 161      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 162      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 163      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
+ 164      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 165      put "}}"/;
+ 166  );
+ 167  put '];'/;
+ 168   
+ 169  put "table='<h4>GAMS Shortest Path</h4>"
+ 170      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 171      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 172      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
+ 173  loop((path(step,n),j)$(f.l(n,j)>0.5),
+ 174     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
+ 175  );
+ 176  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
+ 177   
+ 178  put "'</table>';";
+ 179  putclose;
+ 180   
+ 181   
+       
+      With an internet connection you can use:
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
+      Without use:
+        <script src="cytoscape.min.js"></script>
+       
+ 190   
+ 249   
+ 250  *$libInclude win32 shellexecute  "%htmlfile%"
+ 251  * for older gams systems use:
+ 252  execute 'shellexecute "network.html"';
+ 253   
+
+
+COMPILATION TIME     =        0.062 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     23 SET n  nodes (vertices)
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36
+node37,    node38,    node39,    node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48
+node49,    node50
+
+
+----     23 SET a  arcs (edges)
+
+             node2       node3       node4       node5       node6       node9      node10      node12      node13      node14
+
+node2                                                                      YES
+node3          YES
+node4                                                                                                                      YES
+node5                      YES
+node6                      YES                                                         YES
+node8                                                                                              YES
+node12                                             YES
+node20                     YES                                 YES
+node25                                                                     YES
+node30         YES                     YES
+node32                                                                                                         YES
+node34                                                                                                         YES
+node35                                             YES
+node37         YES         YES
+node41         YES                                 YES
+node49                                                                     YES                                             YES
+
+     +      node15      node16      node17      node18      node19      node20      node21      node23      node24      node25
+
+node2                      YES
+node4                                                                                                                      YES
+node5                                  YES                                             YES
+node7                                                          YES
+node8                                                                                                                      YES
+node9                                  YES
+node14                                                                                                                     YES
+node17                                             YES
+node18                                                         YES
+node22                                 YES
+node26                                             YES
+node28                                                         YES
+node29                                                                                             YES
+node30                     YES
+node32         YES
+node33         YES
+node34                                                                     YES
+node35                                                         YES                                                         YES
+node36                                             YES
+node37                     YES         YES
+node38                                                                                             YES
+node41                                                                                             YES
+node44                                                                                                         YES
+node45                                                         YES         YES
+
+     +      node26      node27      node28      node29      node30      node31      node32      node33      node34      node35
+
+node2                                                                                  YES
+node3                                  YES
+node4                                                                      YES                                 YES
+node5                      YES
+node7                                                                      YES         YES
+node10         YES                     YES
+node12                     YES                                 YES
+node14                                                                     YES
+node16                                 YES
+node20                                                                     YES
+node22                                                                     YES
+node23                                                                                                         YES
+node25                                 YES
+node27                                                                                             YES
+node29                     YES
+node32         YES                                 YES         YES
+node34                                                         YES
+node35                                                                                                                     YES
+node36                     YES
+node37                                                         YES
+node39         YES
+node40                                                                                             YES
+node42                                                                                 YES
+node44                                                                                                         YES
+node45                                                                     YES
+node47                                                                                 YES
+
+     +      node36      node37      node38      node39      node40      node41      node43      node44      node45      node46
+
+node1                                                                                              YES
+node4                      YES
+node6                                                          YES                                 YES
+node7                                  YES
+node8                                                                                  YES
+node9                                                                      YES         YES
+node10                                                         YES
+node11                                             YES                     YES         YES
+node12                                                                                                         YES
+node13                                             YES         YES
+node14         YES                                                                                                         YES
+node15                                                                     YES
+node16                                 YES
+node18                                                                                                                     YES
+node20                                                                     YES
+node21                                                                     YES
+node22         YES
+node23         YES
+node25                                 YES         YES
+node29                     YES                                                                                             YES
+node30                                             YES         YES
+node31                     YES                                             YES
+node32                                                         YES
+node34                                             YES                                             YES
+node38                                             YES                                                                     YES
+node41                                                                                 YES
+node43                                                                     YES
+node45                                                                                                                     YES
+node46                                                         YES                     YES
+
+     +      node47      node48      node49      node50
+
+node11                                 YES
+node21                                             YES
+node22         YES
+node27                                             YES
+node31                                             YES
+node35                                 YES
+node39                                 YES
+node49                     YES
+node50         YES                     YES
+
+
+----     33 PARAMETER numarcs              =      134.000  number of arcs
+
+----     43 PARAMETER degree  in- and out-degree
+
+         in-degree  out-degree
+
+node1                    1.000
+node2        4.000       3.000
+node3        4.000       2.000
+node4        1.000       5.000
+node5        3.000       4.000
+node6        1.000       4.000
+node7                    4.000
+node8                    3.000
+node9        3.000       3.000
+node10       1.000       3.000
+node11                   4.000
+node12       1.000       4.000
+node13       2.000       2.000
+node14       2.000       4.000
+node15       2.000       1.000
+node16       3.000       2.000
+node17       4.000       1.000
+node18       3.000       2.000
+node19       5.000
+node20       2.000       4.000
+node21       1.000       2.000
+node22                   4.000
+node23       3.000       2.000
+node24       1.000
+node25       4.000       4.000
+node26       3.000       1.000
+node27       4.000       2.000
+node28       4.000       1.000
+node29       1.000       4.000
+node30       4.000       5.000
+node31       6.000       3.000
+node32       4.000       6.000
+node33       2.000       1.000
+node34       3.000       5.000
+node35       1.000       5.000
+node36       3.000       2.000
+node37       3.000       5.000
+node38       3.000       3.000
+node39       6.000       2.000
+node40       6.000       1.000
+node41       7.000       4.000
+node42                   1.000
+node43       5.000       1.000
+node44       3.000       2.000
+node45       1.000       4.000
+node46       5.000       2.000
+node47       2.000       1.000
+node48       1.000
+node49       4.000       3.000
+node50       3.000       2.000
+max          7.000       6.000
+
+
+----     52 SET diagonal  diagonal elements
+
+node35
+
+
+----     62 PARAMETER coord  x-y coordinates
+
+                 x           y
+
+node1       11.625      84.313
+node2       86.434      54.540
+node3        3.909      14.645
+node4       52.783      43.656
+node5       70.724      80.400
+node6       76.770       3.532
+node7       59.535      57.894
+node8       51.236      30.195
+node9       90.787      49.716
+node10      55.571      40.024
+node11      12.514      15.498
+node12      49.640      10.281
+node13      33.556      45.942
+node14      16.233      99.806
+node15      19.380      29.072
+node16       5.573      31.543
+node17      74.081      72.511
+node18      99.526      71.184
+node19      80.308      20.795
+node20      62.566      43.445
+node21      98.592      61.181
+node22      69.527      64.224
+node23      13.749      35.722
+node24      11.222      19.868
+node25      38.558      61.322
+node26      67.865      42.958
+node27      39.167      50.271
+node28      50.831      83.656
+node29      96.646      22.149
+node30      55.738      43.258
+node31      87.510      96.379
+node32      28.456      99.997
+node33      85.740      21.506
+node34      89.091      91.718
+node35      40.719      60.214
+node36      86.752       6.455
+node37      67.029      96.953
+node38      84.083      58.045
+node39      19.562      51.666
+node40      83.958      27.969
+node41      87.667      64.285
+node42      98.802      60.652
+node43      27.135      18.832
+node44      37.298       3.780
+node45      46.783      99.631
+node46      49.411      69.663
+node47      29.989      65.653
+node48      17.529      85.362
+node49      39.201      51.620
+node50      52.814      93.825
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE shortestPath Using LP From line 92
+
+
+---- nodeBalance  =E=  kirchoff equations
+
+nodeBalance(node1)..  - f(node1,node44) =E= -1 ; (LHS = 0, INFES = 1 ****)
+     
+nodeBalance(node2)..  - f(node2,node9) - f(node2,node16) - f(node2,node32) + f(node3,node2) + f(node30,node2) + f(node37,node2)
+     
+      + f(node41,node2) =E= 0 ; (LHS = 0)
+     
+nodeBalance(node3)..  - f(node3,node2) - f(node3,node28) + f(node5,node3) + f(node6,node3) + f(node20,node3) + f(node37,node3)
+      =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- objective  =E=  minimize
+
+objective..  - 84.5257609214314*f(node1,node44) - 6.49814699093176*f(node2,node9) - 84.0675143265567*f(node2,node16)
+     
+      - 73.6729548947929*f(node2,node32) - 91.6620476081781*f(node3,node2) - 83.4514545959749*f(node3,node28)
+     
+      - 66.9980307169029*f(node4,node14) - 22.6814169817711*f(node4,node25) - 63.1328271678389*f(node4,node31)
+     
+      - 60.234951650957*f(node4,node34) - 55.1684284072602*f(node4,node37) - 93.7440646346106*f(node5,node3)
+     
+      - 8.57353111540231*f(node5,node17) - 33.8522935739236*f(node5,node21) - 43.6304340100261*f(node5,node27)
+     
+      - 73.7032550678659*f(node6,node3) - 42.2023735749339*f(node6,node10) - 25.4716487611801*f(node6,node40)
+     
+      - 39.4722291688625*f(node6,node44) - 42.5182552283571*f(node7,node19) - 47.57834600637*f(node7,node31)
+     
+      - 52.3317025877139*f(node7,node32) - 24.547900250078*f(node7,node38) - 19.9779328770632*f(node8,node12)
+     
+      - 33.6101876522054*f(node8,node25) - 26.6455175399713*f(node8,node43) - 28.2615560406638*f(node9,node17)
+     
+      - 14.8995171962973*f(node9,node41) - 70.748844213341*f(node9,node43) - 12.6397734565588*f(node10,node26)
+     
+      - 43.8884444482395*f(node10,node28) - 30.840645952481*f(node10,node40) - 36.8482868938146*f(node11,node39)
+     
+      - 89.5996674253439*f(node11,node41) - 14.9962667310456*f(node11,node43) - 44.91044486383*f(node11,node49)
+     
+      - 73.2204820381766*f(node12,node5) - 41.338593762308*f(node12,node27) - 33.5358888382295*f(node12,node30)
+     
+      - 89.3959647230001*f(node12,node45) - 15.1199255241674*f(node13,node39) - 53.5103869888919*f(node13,node40)
+     
+      - 44.4905088992435*f(node14,node25) - 71.3590380693929*f(node14,node31) - 116.992809030625*f(node14,node36)
+     
+      - 44.8258863929176*f(node14,node46) - 76.831121846352*f(node15,node41) - 69.0216745140657*f(node16,node28)
+     
+      - 82.862474406448*f(node16,node38) - 25.4790964686609*f(node17,node18) - 53.9289915641743*f(node18,node19)
+     
+      - 50.137858987218*f(node18,node46) - 65.3456900975335*f(node20,node3) - 42.3650845695077*f(node20,node6)
+     
+      - 58.5165656109285*f(node20,node31) - 32.6245681886949*f(node20,node41) - 11.3570161223424*f(node21,node41)
+     
+      - 56.2244820853965*f(node21,node50) - 9.45642112354021*f(node22,node17) - 36.8422938814029*f(node22,node31)
+     
+      - 60.282021162705*f(node22,node36) - 39.5639836757494*f(node22,node47) - 93.8712690479987*f(node23,node34)
+     
+      - 78.6512285582854*f(node23,node36) - 53.5028208266503*f(node25,node9) - 25.4834565204449*f(node25,node28)
+     
+      - 45.6423198030562*f(node25,node38) - 21.3098381863628*f(node25,node39) - 42.415429165801*f(node26,node18)
+     
+      - 54.739939046435*f(node27,node33) - 45.6426648806525*f(node27,node50) - 69.4288050702249*f(node28,node19)
+     
+      - 84.0003325282757*f(node29,node23) - 63.989278739489*f(node29,node27) - 80.4539839584434*f(node29,node37)
+     
+      - 66.9981156263218*f(node29,node46) - 32.7033009801652*f(node30,node2) - 2.98224571166481*f(node30,node4)
+     
+      - 51.5150911258484*f(node30,node16) - 37.1411174480234*f(node30,node39) - 32.0948050742556*f(node30,node40)
+     
+      - 20.4890191973523*f(node31,node37) - 32.0944581523482*f(node31,node41) - 34.7893461918092*f(node31,node50)
+     
+      - 54.2951979841529*f(node32,node13) - 71.5033222636224*f(node32,node15) - 69.3287963928362*f(node32,node26)
+     
+      - 103.490067918455*f(node32,node29) - 62.9577669943061*f(node32,node30) - 90.9310783757788*f(node32,node40)
+     
+      - 66.790023499641*f(node33,node15) - 71.9690700551896*f(node34,node13) - 55.0798254306481*f(node34,node20)
+     
+      - 58.8283052597795*f(node34,node30) - 80.2398651321862*f(node34,node39) - 102.05613351033*f(node34,node44)
+     
+      - 36.1626809067089*f(node35,node5) - 55.8671183364067*f(node35,node19) - 2.42849637704332*f(node35,node25)
+     
+      - 8.72753712961539*f(node35,node49) - 65.9770427493214*f(node36,node18) - 64.6849225509454*f(node36,node27)
+     
+      - 46.6409271033114*f(node37,node2) - 103.724047384785*f(node37,node3) - 89.7509377060792*f(node37,node16)
+     
+      - 25.4386524827324*f(node37,node17) - 54.8694379153948*f(node37,node30) - 73.7910283134887*f(node38,node23)
+     
+      - 64.8358172451342*f(node38,node39) - 36.5665235265118*f(node38,node46) - 49.0822614335853*f(node39,node26)
+     
+      - 19.6392303530083*f(node39,node49) - 6.70426820227112*f(node40,node33) - 9.82256475512034*f(node41,node2)
+     
+      - 23.3829487220316*f(node41,node5) - 79.244154920559*f(node41,node23) - 75.6974794543467*f(node41,node43)
+     
+      - 80.6014933012388*f(node42,node32) - 75.6974794543467*f(node43,node41) - 30.63993956586*f(node44,node24)
+     
+      - 102.05613351033*f(node44,node34) - 85.6681252584956*f(node45,node19) - 58.3602864778643*f(node45,node20)
+     
+      - 40.8566428763507*f(node45,node31) - 30.0830930227868*f(node45,node46) - 54.1467656943796*f(node46,node40)
+     
+      - 55.4979821765164*f(node46,node43) - 34.3782971418352*f(node47,node32) - 51.6214308525305*f(node49,node9)
+     
+      - 53.3797576604836*f(node49,node14) - 40.1024374033263*f(node49,node48) - 36.2585381249715*f(node50,node47)
+     
+      - 44.3465799018199*f(node50,node49) + totalLength =E= 0 ; (LHS = 0)
+     
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE shortestPath Using LP From line 92
+
+
+---- f  flow from node i -> node j
+
+f(node1,node44)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       nodeBalance(node1)
+        1       nodeBalance(node44)
+      -84.5258  objective
+
+f(node2,node9)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       nodeBalance(node2)
+        1       nodeBalance(node9)
+       -6.4981  objective
+
+f(node2,node16)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       nodeBalance(node2)
+        1       nodeBalance(node16)
+      -84.0675  objective
+
+REMAINING 130 ENTRIES SKIPPED
+
+---- totalLength  objective: minimize
+
+totalLength
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE shortestPath Using LP From line 92
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           51
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES          134
+NON ZERO ELEMENTS           400
+
+
+GENERATION TIME      =        0.031 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE shortestPath Using LP From line 92
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   shortestPath        OBJECTIVE  totalLength
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  92
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              455.2765
+
+ RESOURCE USAGE, LIMIT          0.109 10000000000.000
+ ITERATION COUNT, LIMIT         7    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.52 Mb (peak 0.52 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.15 ticks)
+
+
+Optimal solution found
+Objective:          455.276523
+
+
+---- EQU nodeBalance  kirchoff equations
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1         -1.0000        -1.0000        -1.0000      -268.2909      
+node2           .              .              .             9.8226      
+node3           .              .              .           -81.8395      
+node4           .              .              .           -19.8985      
+node5           .              .              .            23.3829      
+node6           .              .              .            15.7359      
+node7           .              .              .            31.1638      
+node8           .              .              .              .          
+node9           .              .              .              .          
+node10          .              .              .            57.9382      
+node11          .              .              .              .          
+node12          .              .              .              .          
+node13          .              .              .            -9.7400      
+node14          .              .              .              .          
+node15          .              .              .           -76.8311      
+node16          .              .              .           -82.8625      
+node17          .              .              .           -75.6170      
+node18          .              .              .           -50.1379      
+node19          .              .              .              .          
+node20          .              .              .           -26.6292      
+node21          .              .              .            57.2352      
+node22          .              .              .             9.5532      
+node23          .              .              .              .          
+node24          .              .              .          -153.1252      
+node25          .              .              .              .          
+node26          .              .              .           -92.5533      
+node27          .              .              .              .          
+node28          .              .              .           -13.8408      
+node29         1.0000         1.0000         1.0000       186.9856      
+node30          .              .              .           -22.8807      
+node31          .              .              .              .          
+node32          .              .              .            83.4955      
+node33          .              .              .          -143.6211      
+node34          .              .              .           -81.7090      
+node35          .              .              .              .          
+node36          .              .              .              .          
+node37          .              .              .              .          
+node38          .              .              .              .          
+node39          .              .              .            -1.4692      
+node40          .              .              .          -150.3254      
+node41          .              .              .              .          
+node42          .              .              .             2.8940      
+node43          .              .              .           -75.6975      
+node44          .              .              .          -183.7652      
+node45          .              .              .              .          
+node46          .              .              .              .          
+node47          .              .              .            49.1172      
+node48          .              .              .              .          
+node49          .              .              .              .          
+node50          .              .              .            12.8587      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  minimize
+
+---- VAR f  flow from node i -> node j
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+node1 .node44          .             1.0000        +INF             .          
+node2 .node9           .              .            +INF           16.3207      
+node2 .node16          .              .            +INF          176.7526      
+node2 .node32          .             1.0000        +INF             .          
+node3 .node2           .              .            +INF             .          
+node3 .node28          .              .            +INF           15.4528      
+node4 .node14          .              .            +INF           47.0995      
+node4 .node25          .              .            +INF            2.7829      
+node4 .node31          .              .            +INF           43.2343      
+node4 .node34          .              .            +INF          122.0455      
+node4 .node37          .              .            +INF           35.2699      
+node5 .node3           .              .            +INF          198.9665      
+node5 .node17          .              .            +INF          107.5734      
+node5 .node21          .              .            +INF             .          
+node5 .node27          .              .            +INF           67.0134      
+node6 .node3           .              .            +INF          171.2786      
+node6 .node10          .              .            +INF             .          
+node6 .node40          .              .            +INF          191.5329      
+node6 .node44          .              .            +INF          238.9733      
+node7 .node19          .              .            +INF           73.6821      
+node7 .node31          .              .            +INF           78.7422      
+node7 .node32          .              .            +INF             .          
+node7 .node38          .              .            +INF           55.7117      
+node8 .node12          .              .            +INF           19.9779      
+node8 .node25          .              .            +INF           33.6102      
+node8 .node43          .              .            +INF          102.3430      
+node9 .node17          .              .            +INF          103.8785      
+node9 .node41          .              .            +INF           14.8995      
+node9 .node43          .              .            +INF          146.4463      
+node10.node26          .              .            +INF          163.1313      
+node10.node28          .              .            +INF          115.6675      
+node10.node40          .              .            +INF          239.1043      
+node11.node39          .              .            +INF           38.3175      
+node11.node41          .              .            +INF           89.5997      
+node11.node43          .              .            +INF           90.6937      
+node11.node49          .              .            +INF           44.9104      
+node12.node5           .              .            +INF           49.8375      
+node12.node27          .              .            +INF           41.3386      
+node12.node30          .              .            +INF           56.4166      
+node12.node45          .              .            +INF           89.3960      
+node13.node39          .              .            +INF            6.8491      
+node13.node40          .              .            +INF          194.0958      
+node14.node25          .              .            +INF           44.4905      
+node14.node31          .              .            +INF           71.3590      
+node14.node36          .              .            +INF          116.9928      
+node14.node46          .              .            +INF           44.8259      
+node15.node41          .              .            +INF             .          
+node16.node28          .              .            +INF             .          
+node16.node38          .              .            +INF             .          
+node17.node18          .              .            +INF             .          
+node18.node19          .              .            +INF            3.7911      
+node18.node46          .              .            +INF             .          
+node20.node3           .              .            +INF          120.5560      
+node20.node6           .              .            +INF             .          
+node20.node31          .              .            +INF           31.8873      
+node20.node41          .              .            +INF            5.9954      
+node21.node41          .              .            +INF           68.5923      
+node21.node50          .              .            +INF          100.6010      
+node22.node17          .              .            +INF           94.6266      
+node22.node31          .              .            +INF           46.3955      
+node22.node36          .              .            +INF           69.8353      
+node22.node47          .              .            +INF             .          
+node23.node34          .              .            +INF          175.5803      
+node23.node36          .              .            +INF           78.6512      
+node25.node9           .              .            +INF           53.5028      
+node25.node28          .              .            +INF           39.3243      
+node25.node38          .              .            +INF           45.6423      
+node25.node39          .              .            +INF           22.7790      
+node26.node18          .              .            +INF             .          
+node27.node33          .              .            +INF          198.3611      
+node27.node50          .              .            +INF           32.7840      
+node28.node19          .              .            +INF           55.5880      
+node29.node23          .              .            +INF          270.9859      
+node29.node27          .              .            +INF          250.9749      
+node29.node37          .              .            +INF          267.4396      
+node29.node46          .              .            +INF          253.9837      
+node30.node2           .             1.0000        +INF             .          
+node30.node4           .              .            +INF             .          
+node30.node16          .              .            +INF          111.4968      
+node30.node39          .              .            +INF           15.7296      
+node30.node40          .              .            +INF          159.5395      
+node31.node37          .              .            +INF           20.4890      
+node31.node41          .              .            +INF           32.0945      
+node31.node50          .              .            +INF           21.9307      
+node32.node13          .              .            +INF          147.5307      
+node32.node15          .              .            +INF          231.8300      
+node32.node26          .              .            +INF          245.3776      
+node32.node29          .             1.0000        +INF             .          
+node32.node30          .              .            +INF          169.3340      
+node32.node40          .              .            +INF          324.7520      
+node33.node15          .              .            +INF             .          
+node34.node13          .              .            +INF             .          
+node34.node20          .              .            +INF             .          
+node34.node30          .             1.0000        +INF             .          
+node34.node39          .              .            +INF             .          
+node34.node44          .              .            +INF          204.1123      
+node35.node5           .              .            +INF           12.7797      
+node35.node19          .              .            +INF           55.8671      
+node35.node25          .              .            +INF            2.4285      
+node35.node49          .              .            +INF            8.7275      
+node36.node18          .              .            +INF          116.1149      
+node36.node27          .              .            +INF           64.6849      
+node37.node2           .              .            +INF           36.8184      
+node37.node3           .              .            +INF          185.5635      
+node37.node16          .              .            +INF          172.6134      
+node37.node17          .              .            +INF          101.0556      
+node37.node30          .              .            +INF           77.7502      
+node38.node23          .              .            +INF           73.7910      
+node38.node39          .              .            +INF           66.3050      
+node38.node46          .              .            +INF           36.5665      
+node39.node26          .              .            +INF          140.1664      
+node39.node49          .              .            +INF           18.1701      
+node40.node33          .              .            +INF             .          
+node41.node2           .              .            +INF             .          
+node41.node5           .              .            +INF             .          
+node41.node23          .              .            +INF           79.2442      
+node41.node43          .              .            +INF          151.3950      
+node42.node32          .              .            +INF             .          
+node43.node41          .              .            +INF             .          
+node44.node24          .              .            +INF             .          
+node44.node34          .             1.0000        +INF             .          
+node45.node19          .              .            +INF           85.6681      
+node45.node20          .              .            +INF           84.9895      
+node45.node31          .              .            +INF           40.8566      
+node45.node46          .              .            +INF           30.0831      
+node46.node40          .              .            +INF          204.4722      
+node46.node43          .              .            +INF          131.1955      
+node47.node32          .              .            +INF             .          
+node49.node9           .              .            +INF           51.6214      
+node49.node14          .              .            +INF           53.3798      
+node49.node48          .              .            +INF           40.1024      
+node50.node47          .              .            +INF             .          
+node50.node49          .              .            +INF           57.2053      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalLeng~        -INF          455.2765        +INF             .          
+
+  totalLength  objective: minimize
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     94 VARIABLE f.L  flow from node i -> node j
+
+             node2      node29      node30      node32      node34      node44
+
+node1                                                                    1.000
+node2                                            1.000
+node30       1.000
+node32                   1.000
+node34                               1.000
+node44                                                       1.000
+
+
+----     94 VARIABLE totalLength.L         =      455.277  objective: minimize
+
+----    118 SET path  easier to read than f
+
+step1.node1 
+step2.node44
+step3.node34
+step4.node30
+step5.node2 
+step6.node32
+step7.node29
+
+
+----    131 PARAMETER reportSP  shortest path solution with lengths
+
+step1         .node1 .node44  84.526
+step2         .node44.node34 102.056
+step3         .node34.node30  58.828
+step4         .node30.node2   32.703
+step5         .node2 .node32  73.673
+step6         .node32.node29 103.490
+sum of lengths.      .       455.277
+obj from model.      .       455.277
+
+
+**** REPORT FILE SUMMARY
+
+fln D:\projects\OptimizationModels\ShortestPath\networkdata.js
+
+
+EXECUTION TIME       =        1.110 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\ShortestPath\sp.gms
+Output     D:\projects\OptimizationModels\ShortestPath\sp.lst

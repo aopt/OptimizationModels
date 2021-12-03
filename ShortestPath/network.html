@@ -1,0 +1,56 @@
+<html>
+<head>
+<title>GAMS Shortest Path Network</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
+<script src="networkdata.js"></script>
+</head>
+
+<style>
+#cy {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+table,th, td {
+ border: 1px solid black;
+ border-collapse: collapse;
+ padding-left: 10px;
+ padding-right: 10px;
+}
+</style>
+
+<body>
+    <div id="cy"></div>
+    <div id="my-table"></div>
+    <script>
+      document.getElementById('my-table').innerHTML = table
+      var cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: networkdata,
+        style: [
+          {
+            selector: 'node',
+            style: {
+                shape: 'circle',
+                'background-color': 'data(color)',
+                label: 'data(id)',
+                width: 'data(size)', height: 'data(size)',
+               'font-size': 1.5
+            }
+          },
+          {
+            selector: 'edge',
+            style: { 'width': 'data(width)', 'line-color': 'data(color)',
+                     'mid-target-arrow-shape': 'triangle',
+                     'mid-target-arrow-color': 'data(color)',
+                     'arrow-scale': '0.15' }
+          }
+        ],
+        layout: { name: 'preset' }
+      });
+    </script>
+</body>
+</html>
