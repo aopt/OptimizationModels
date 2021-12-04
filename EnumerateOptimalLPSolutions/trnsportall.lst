@@ -1,0 +1,172 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:34 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Enumerate all optimal LP bases
+       
+   6   
+   7   
+   8  Sets
+   9       k                       /seattle, san-diego, new-york, chicago, topeka/
+  10       i(k)   canning plants   / seattle, san-diego /
+  11       j(k)   markets          / new-york, chicago, topeka /
+  12  ;
+  13   
+  14  Parameters
+  15   
+  16       a(i)  capacity of plant i in cases
+  17         /    seattle     350
+  18              san-diego   600  /
+  19   
+  20       b(j)  demand at market j in cases
+  21         /    new-york    325
+  22              chicago     300
+  23              topeka      275  / ;
+  24   
+  25  Table d(i,j)  distance in thousands of miles
+  26                    new-york       chicago      topeka
+  27      seattle          2.5           1.7          1.8
+  28      san-diego        2.5           1.8          1.4  ;
+  29   
+  30  Scalar f  freight in dollars per case per thousand miles  /90/ ;
+  31   
+  32  Parameter c(i,j)  transport cost in thousands of dollars per case ;
+  33   
+  34            c(i,j) = f * d(i,j) / 1000 ;
+  35  Scalars
+  36       nb  'number of basic variables'
+  37       nnb 'number of non-basic variables'
+  38    ;
+  39  nb = card(i)+card(j);
+  40  nnb = card(i)*card(j);
+  41   
+  42  parameter Mx(i,j), Mk(k);
+  43  Mx(i,j) = min(a(i),b(j));
+  44  Mk(i) = a(i);
+  45  Mk(j) = b(j);
+  46   
+  47  set bs(*,*);
+  48  bs(i,j)=yes;
+  49  bs('-',k) = yes;
+  50   
+  51  set n /iter1*iter100/;
+  52  set cn(n) 'used cuts';
+  53  parameter alpha(n,*,*);
+  54  cn(n) = no;
+  55  alpha(n,bs) = 0;
+  56   
+  57  Variables
+  58       x(i,j)  shipment quantities in cases
+  59       z       total transportation costs in thousands of dollars
+  60       s(k)       'slacks'
+  61       beta(*,*)  'basis'
+  62  ;
+  63   
+  64  Positive Variable x,s;
+  65  Binary Variable beta;
+  66   
+  67   
+  68  Equations
+  69       cost        define objective function
+  70       supply(i)   observe supply limit at plant i
+  71       demand(j)   satisfy demand at market j
+  72       basisx(i,j)  'x=nb => x=0'
+  73       basiss(k)    's=nb => s=0'
+  74       basis        'basis accounting'
+  75       cut(n)       '0-1 cuts'
+  76  ;
+  77   
+  78  cost ..        z  =e=  sum((i,j), c(i,j)*x(i,j)) ;
+  79  supply(i) ..   sum(j, x(i,j)) + s(i) =e=  a(i) ;
+  80  demand(j) ..   sum(i, x(i,j)) - s(j) =e=  b(j) ;
+  81   
+  82  basis..        sum(bs,beta(bs)) =e= nb;
+  83  basisx(i,j)..  x(i,j) =l= Mx(i,j)*beta(i,j);
+  84  basiss(k)..    s(k) =l= Mk(k)*beta('-',k);
+  85   
+  86   
+  87  cut(cn)..      sum(bs, alpha(cn,bs)*beta(bs)) =l= nb-1;
+  88   
+  89   
+  90  Model transport /all/ ;
+  91   
+  92  scalar zopt;
+  93  scalar continue /1/;
+  94  parameter reportv(*,*,*,*);
+  95  parameter reportb(*,*,*,*);
+  96  option reportv:2:3:1;
+  97  option reportb:0:3:1;
+  98   
+  99  option optcr=0;
+ 100  transport.solvelink=5;
+ 101  transport.solprint=2;
+ 102   
+ 103  loop(n$continue,
+ 104     Solve transport using mip minimizing z ;
+ 105     zopt$(ord(n)=1) = z.l;
+ 106     continue$(transport.modelstat<>1 or z.l > zopt + 0.0001) = 0;
+ 107     if(continue,
+ 108        alpha(n,bs) = round(beta.l(bs));
+ 109        cn(n) = yes;
+ 110        reportv('x',i,j,n) = x.l(i,j);
+ 111        reportv('s','-',k,n) = s.l(k);
+ 112        reportv('z','-','-',n) = z.l;
+ 113        reportb('x',i,j,n) = beta.l(i,j);
+ 114        reportb('s','-',k,n) = beta.l('-',k);
+ 115     );
+ 116  );
+ 117   
+ 118  Display reportv, reportb;
+ 119   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:34 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    118 PARAMETER reportv  
+
+                            iter1       iter2       iter3       iter4       iter5       iter6       iter7       iter8
+
+x.seattle  .new-york                                                                                            50.00
+x.seattle  .chicago        300.00      300.00      300.00      300.00      300.00      300.00      300.00      300.00
+x.san-diego.new-york       325.00      325.00      325.00      325.00      325.00      325.00      325.00      275.00
+x.san-diego.topeka         275.00      275.00      275.00      275.00      275.00      275.00      275.00      275.00
+s.-        .seattle         50.00       50.00       50.00       50.00       50.00       50.00       50.00
+s.-        .san-diego                                                                                           50.00
+z.-        .-              153.68      153.68      153.68      153.68      153.68      153.68      153.68      153.68
+
+
+----    118 PARAMETER reportb  
+
+                            iter1       iter2       iter3       iter4       iter5       iter6       iter7       iter8
+
+x.seattle  .new-york            1                                                                                   1
+x.seattle  .chicago             1           1           1           1           1           1           1           1
+x.seattle  .topeka                                                                                      1
+x.san-diego.new-york            1           1           1           1           1           1           1           1
+x.san-diego.chicago                                                                         1
+x.san-diego.topeka              1           1           1           1           1           1           1           1
+s.-        .seattle             1           1           1           1           1           1           1
+s.-        .san-diego                                                           1                                   1
+s.-        .new-york                                                1
+s.-        .chicago                                     1
+s.-        .topeka                          1
+
+
+
+EXECUTION TIME       =        2.328 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\trnsportall.gms
+Output     D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\trnsportall.lst

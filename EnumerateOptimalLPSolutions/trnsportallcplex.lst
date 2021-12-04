@@ -1,0 +1,464 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Enumerate all optimal LP bases
+        Use Cplex solution pool
+       
+   7   
+   8   
+   9  Sets
+  10       k                       /seattle, san-diego, new-york, chicago, topeka/
+  11       i(k)   canning plants   / seattle, san-diego /
+  12       j(k)   markets          / new-york, chicago, topeka /
+  13  ;
+  14   
+  15  Parameters
+  16   
+  17       a(i)  capacity of plant i in cases
+  18         /    seattle     350
+  19              san-diego   600  /
+  20   
+  21       b(j)  demand at market j in cases
+  22         /    new-york    325
+  23              chicago     300
+  24              topeka      275  / ;
+  25   
+  26  Table d(i,j)  distance in thousands of miles
+  27                    new-york       chicago      topeka
+  28      seattle          2.5           1.7          1.8
+  29      san-diego        2.5           1.8          1.4  ;
+  30   
+  31  Scalar f  freight in dollars per case per thousand miles  /90/ ;
+  32   
+  33  Parameter c(i,j)  transport cost in thousands of dollars per case ;
+  34   
+  35            c(i,j) = f * d(i,j) / 1000 ;
+  36  Scalars
+  37       nb  'number of basic variables'
+  38       nnb 'number of non-basic variables'
+  39    ;
+  40  nb = card(i)+card(j);
+  41  nnb = card(i)*card(j);
+  42   
+  43  parameter Mx(i,j), Mk(k);
+  44  Mx(i,j) = min(a(i),b(j));
+  45  Mk(i) = a(i);
+  46  Mk(j) = b(j);
+  47   
+  48  set bs(*,*);
+  49  bs(i,j)=yes;
+  50  bs('-',k) = yes;
+  51   
+  52  Variables
+  53       x(i,j)  shipment quantities in cases
+  54       z       total transportation costs in thousands of dollars
+  55       s(k)       'slacks'
+  56       beta(*,*)  'basis'
+  57  ;
+  58   
+  59  Positive Variable x,s;
+  60  Binary Variable beta;
+  61   
+  62  Equations
+  63       cost        define objective function
+  64       supply(i)   observe supply limit at plant i
+  65       demand(j)   satisfy demand at market j
+  66       basisx(i,j)  'x=nb => x=0'
+  67       basiss(k)    's=nb => s=0'
+  68       basis        'basis accounting'
+  69  ;
+  70   
+  71  cost ..        z  =e=  sum((i,j), c(i,j)*x(i,j)) ;
+  72  supply(i) ..   sum(j, x(i,j)) + s(i) =e=  a(i) ;
+  73  demand(j) ..   sum(i, x(i,j)) - s(j) =e=  b(j) ;
+  74   
+  75  basis..        sum(bs,beta(bs)) =e= nb;
+  76  basisx(i,j)..  x(i,j) =l= Mx(i,j)*beta(i,j);
+  77  basiss(k)..    s(k) =l= Mk(k)*beta('-',k);
+  78   
+  79  Model transport /all/ ;
+  80   
+  81  option optcr=0;
+  82  option mip=cplex;
+  83   
+  91   
+  92  transport.optfile=1;
+  93  Solve transport using mip minimizing z ;
+  94   
+  95  *
+  96  * read solutions from solutions.gdx
+  97  * produce similar report as in trnsportall.gms
+  98  *
+  99   
+ 100  sets
+ 101    idx 'long name' /soln_transport_p1*soln_transport_p100/
+ 102    shrt 'short name' /p1*p100/
+ 103    mapidx(idx,shrt) /#idx:#shrt/
+ 104    index(idx)
+ 105  ;
+ 106  parameters xs(idx,i,j),ss(idx,k),zs(idx),betas(idx,*,*);
+ 107  execute_load "solutions.gdx",xs=x,ss=s,zs=z,betas=beta,index;
+ 108   
+ 109  parameter reportv(*,*,*,*);
+ 110  parameter reportb(*,*,*,*);
+ 111  option reportv:2:3:1;
+ 112  option reportb:0:3:1;
+ 113   
+ 114  loop(mapidx(index,shrt),
+ 115    reportv('x',i,j,shrt) =  xs(index,i,j);
+ 116    reportv('s','-',k,shrt) = ss(index,k);
+ 117    reportv('z','-','-',shrt) = zs(index);
+ 118    reportb('x',i,j,shrt) = betas(index,i,j);
+ 119    reportb('s','-',k,shrt) = betas(index,'-',k);
+ 120  );
+ 121   
+ 122  Display reportv, reportb;
+
+
+COMPILATION TIME     =        0.015 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE transport Using MIP From line 93
+
+
+---- cost  =E=  define objective function
+
+cost..  - 0.225*x(seattle,new-york) - 0.153*x(seattle,chicago) - 0.162*x(seattle,topeka) - 0.225*x(san-diego,new-york)
+     
+      - 0.162*x(san-diego,chicago) - 0.126*x(san-diego,topeka) + z =E= 0 ; (LHS = 0)
+     
+
+---- supply  =E=  observe supply limit at plant i
+
+supply(seattle)..  x(seattle,new-york) + x(seattle,chicago) + x(seattle,topeka) + s(seattle) =E= 350 ; (LHS = 0, INFES = 350 ****)
+     
+supply(san-diego)..  x(san-diego,new-york) + x(san-diego,chicago) + x(san-diego,topeka) + s(san-diego) =E= 600 ;
+     
+      (LHS = 0, INFES = 600 ****)
+     
+
+---- demand  =E=  satisfy demand at market j
+
+demand(new-york)..  x(seattle,new-york) + x(san-diego,new-york) - s(new-york) =E= 325 ; (LHS = 0, INFES = 325 ****)
+     
+demand(chicago)..  x(seattle,chicago) + x(san-diego,chicago) - s(chicago) =E= 300 ; (LHS = 0, INFES = 300 ****)
+     
+demand(topeka)..  x(seattle,topeka) + x(san-diego,topeka) - s(topeka) =E= 275 ; (LHS = 0, INFES = 275 ****)
+     
+
+---- basisx  =L=  x=nb => x=0
+
+basisx(seattle,new-york)..  x(seattle,new-york) - 325*beta(seattle,new-york) =L= 0 ; (LHS = 0)
+     
+basisx(seattle,chicago)..  x(seattle,chicago) - 300*beta(seattle,chicago) =L= 0 ; (LHS = 0)
+     
+basisx(seattle,topeka)..  x(seattle,topeka) - 275*beta(seattle,topeka) =L= 0 ; (LHS = 0)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- basiss  =L=  s=nb => s=0
+
+basiss(seattle)..  s(seattle) - 350*beta(-,seattle) =L= 0 ; (LHS = 0)
+     
+basiss(san-diego)..  s(san-diego) - 600*beta(-,san-diego) =L= 0 ; (LHS = 0)
+     
+basiss(new-york)..  s(new-york) - 325*beta(-,new-york) =L= 0 ; (LHS = 0)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+
+---- basis  =E=  basis accounting
+
+basis..  beta(seattle,new-york) + beta(seattle,chicago) + beta(seattle,topeka) + beta(san-diego,new-york)
+     
+      + beta(san-diego,chicago) + beta(san-diego,topeka) + beta(-,seattle) + beta(-,san-diego) + beta(-,new-york)
+     
+      + beta(-,chicago) + beta(-,topeka) =E= 5 ; (LHS = 0, INFES = 5 ****)
+     
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE transport Using MIP From line 93
+
+
+---- x  shipment quantities in cases
+
+x(seattle,new-york)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.225   cost
+        1       supply(seattle)
+        1       demand(new-york)
+        1       basisx(seattle,new-york)
+
+x(seattle,chicago)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.153   cost
+        1       supply(seattle)
+        1       demand(chicago)
+        1       basisx(seattle,chicago)
+
+x(seattle,topeka)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -0.162   cost
+        1       supply(seattle)
+        1       demand(topeka)
+        1       basisx(seattle,topeka)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- z  total transportation costs in thousands of dollars
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       cost
+
+
+---- s  slacks
+
+s(seattle)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       supply(seattle)
+        1       basiss(seattle)
+
+s(san-diego)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       supply(san-diego)
+        1       basiss(san-diego)
+
+s(new-york)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       demand(new-york)
+        1       basiss(new-york)
+
+REMAINING 2 ENTRIES SKIPPED
+
+---- beta  basis
+
+beta(seattle,new-york)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -325       basisx(seattle,new-york)
+        1       basis
+
+beta(seattle,chicago)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -300       basisx(seattle,chicago)
+        1       basis
+
+beta(seattle,topeka)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+     -275       basisx(seattle,topeka)
+        1       basis
+
+REMAINING 8 ENTRIES SKIPPED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE transport Using MIP From line 93
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS           18
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           23
+NON ZERO ELEMENTS            57     DISCRETE VARIABLES         11
+
+
+GENERATION TIME      =        0.094 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE transport Using MIP From line 93
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   transport           OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  93
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE              153.6750
+
+ RESOURCE USAGE, LIMIT          0.359 10000000000.000
+ ITERATION COUNT, LIMIT        46    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\cplex.opt"
+>>  SolnPoolAGap = 0.0
+>>  SolnPoolIntensity = 4
+>>  PopulateLim = 10000
+>>  SolnPoolPop = 2
+>>  solnpoolmerge solutions.gdx
+Finished reading from "D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (130): all reachable solutions enumerated, pool tolerance.
+--- Cplex Time: 0.25sec (det. 0.53 ticks)
+
+--- Dumping 8 solutions from the solution pool...
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Populate has completed the enumeration of solutions within tolerance
+MIP Solution:          153.675000    (46 iterations, 34 nodes)
+Final Solve:           153.675000    (0 iterations)
+
+Best possible:         155.475000
+Absolute gap:           -1.800000
+Relative gap:           -0.011577
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU cost                .              .              .             1.0000      
+
+  cost  define objective function
+
+---- EQU supply  observe supply limit at plant i
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+seattle         350.0000       350.0000       350.0000         EPS         
+san-diego       600.0000       600.0000       600.0000         0.2250      
+
+---- EQU demand  satisfy demand at market j
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+new-york       325.0000       325.0000       325.0000          .          
+chicago        300.0000       300.0000       300.0000         0.1530      
+topeka         275.0000       275.0000       275.0000          .          
+
+---- EQU basisx  x=nb => x=0
+
+                          LOWER          LEVEL          UPPER         MARGINAL
+
+seattle  .new-york        -INF         -325.0000          .              .          
+seattle  .chicago         -INF             .              .              .          
+seattle  .topeka          -INF             .              .              .          
+san-diego.new-york        -INF             .              .              .          
+san-diego.chicago         -INF             .              .            -0.2160      
+san-diego.topeka          -INF             .              .            -0.0990      
+
+---- EQU basiss  s=nb => s=0
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+seattle          -INF         -300.0000          .              .          
+san-diego        -INF             .              .            -0.2250      
+new-york         -INF             .              .              .          
+chicago          -INF             .              .              .          
+topeka           -INF             .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU basis              5.0000         5.0000         5.0000          .          
+
+  basis  basis accounting
+
+---- VAR x  shipment quantities in cases
+
+                          LOWER          LEVEL          UPPER         MARGINAL
+
+seattle  .new-york          .              .            +INF            0.2250      
+seattle  .chicago           .           300.0000        +INF             .          
+seattle  .topeka            .              .            +INF            0.1620      
+san-diego.new-york          .           325.0000        +INF             .          
+san-diego.chicago           .              .            +INF             .          
+san-diego.topeka            .           275.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          153.6750        +INF             .          
+
+  z  total transportation costs in thousands of dollars
+
+---- VAR s  slacks
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+seattle            .            50.0000        +INF             .          
+san-diego          .              .            +INF             .          
+new-york           .              .            +INF            EPS         
+chicago            .              .            +INF            0.1530      
+topeka             .              .            +INF            EPS         
+
+---- VAR beta  basis
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+seattle  .new-york           .             1.0000         1.0000         EPS         
+seattle  .chicago            .             1.0000         1.0000         EPS         
+seattle  .topeka             .              .             1.0000         EPS         
+san-diego.new-york           .             1.0000         1.0000         EPS         
+san-diego.chicago            .              .             1.0000       -64.8000      
+san-diego.topeka             .             1.0000         1.0000       -27.2250      
+-        .seattle            .             1.0000         1.0000         EPS         
+-        .san-diego          .              .             1.0000      -135.0000      
+-        .new-york           .              .             1.0000         EPS         
+-        .chicago            .              .             1.0000         EPS         
+-        .topeka             .              .             1.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 04:21:51 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    122 PARAMETER reportv  
+
+                               p1          p2          p3          p4          p5          p6          p7          p8
+
+x.seattle  .new-york                                                                                50.00
+x.seattle  .chicago        300.00      300.00      300.00      300.00      300.00      300.00      300.00      300.00
+x.san-diego.new-york       325.00      325.00      325.00      325.00      325.00      325.00      275.00      325.00
+x.san-diego.topeka         275.00      275.00      275.00      275.00      275.00      275.00      275.00      275.00
+s.-        .seattle         50.00       50.00       50.00       50.00       50.00       50.00                   50.00
+s.-        .san-diego                                                                               50.00
+z.-        .-              153.68      153.68      153.68      153.68      153.68      153.68      153.68      153.68
+
+
+----    122 PARAMETER reportb  
+
+                               p1          p2          p3          p4          p5          p6          p7          p8
+
+x.seattle  .new-york                                                                                    1           1
+x.seattle  .chicago             1           1           1           1           1           1           1           1
+x.seattle  .topeka              1
+x.san-diego.new-york            1           1           1           1           1           1           1           1
+x.san-diego.chicago                         1
+x.san-diego.topeka              1           1           1           1           1           1           1           1
+s.-        .seattle             1           1           1           1           1           1                       1
+s.-        .san-diego                                   1                                               1
+s.-        .new-york                                                1
+s.-        .chicago                                                             1
+s.-        .topeka                                                                          1
+
+
+
+EXECUTION TIME       =        0.797 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Eval License                                   S201210/0001CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\trnsportallcplex.gms
+Output     D:\projects\OptimizationModels\EnumerateOptimalLPSolutions\trnsportallcplex.lst

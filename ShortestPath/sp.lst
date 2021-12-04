@@ -1,4 +1,4 @@
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 1
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -148,54 +148,53 @@ C o m p i l a t i o n
  147  put 'networkdata=['/;
  148  loop(n,
  149      put$(ord(n)>1) ",";
- 150      put "{data:{id:",(ord(n)):0:0,",color:";
- 151      put$(inflow(n)=0 and outflow(n)=0) "'black'";
- 152      put$(inflow(n)>0) "'blue'";
- 153      put$(outflow(n)>0) "'green'";
- 154      put ",size:"
- 155      put$(inflow(n)=0 and outflow(n)=0) "1";
- 156      put$(inflow(n)>0 or outflow(n)>0) "2";
- 157      put "},position:{x:",coord(n,'x'):0:3;
- 158      put ",y:",coord(n,'y'):0:3,"}}"/;
- 159  );
- 160  loop(a(i,j),
- 161      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
- 162      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
- 163      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
- 164      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
- 165      put "}}"/;
- 166  );
- 167  put '];'/;
- 168   
- 169  put "table='<h4>GAMS Shortest Path</h4>"
- 170      "Number of nodes: ",(card(n)):0:0,"<br>"
- 171      "Number of arcs: ",(card(a)):0:0,"<br><br>"
- 172      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
- 173  loop((path(step,n),j)$(f.l(n,j)>0.5),
- 174     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
- 175  );
- 176  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
- 177   
- 178  put "'</table>';";
- 179  putclose;
+ 150      put "{data:{id:",(ord(n)):0:0;
+ 151      put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
+ 152      put$(inflow(n)>0) ",color:'blue'";
+ 153      put$(outflow(n)>0) ",color:'green'";
+ 154      put$(inflow(n)=0 and outflow(n)=0) ",size:1";
+ 155      put$(inflow(n)>0 or outflow(n)>0) ",size:2";
+ 156      put "},position:{x:",coord(n,'x'):0:3;
+ 157      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 158  );
+ 159  loop(a(i,j),
+ 160      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 161      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 162      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
+ 163      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 164      put "}}"/;
+ 165  );
+ 166  put '];'/;
+ 167   
+ 168  put "table='<h4>GAMS Shortest Path</h4>"
+ 169      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 170      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 171      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
+ 172  loop((path(step,n),j)$(f.l(n,j)>0.5),
+ 173     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
+ 174  );
+ 175  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
+ 176   
+ 177  put "'</table>';";
+ 178  putclose;
+ 179   
  180   
- 181   
        
       With an internet connection you can use:
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
-      Without use:
+      Without use a local .js file:
         <script src="cytoscape.min.js"></script>
        
- 190   
- 249   
- 250  *$libInclude win32 shellexecute  "%htmlfile%"
- 251  * for older gams systems use:
- 252  execute 'shellexecute "network.html"';
- 253   
+ 189   
+ 248   
+ 249  *$libInclude win32 shellexecute  "%htmlfile%"
+ 250  * for older gams systems use:
+ 251  execute 'shellexecute "network.html"';
+ 252   
 
 
-COMPILATION TIME     =        0.062 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -450,7 +449,7 @@ node48      17.529      85.362
 node49      39.201      51.620
 node50      52.814      93.825
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 3
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE shortestPath Using LP From line 92
 
@@ -561,7 +560,7 @@ objective..  - 84.5257609214314*f(node1,node44) - 6.49814699093176*f(node2,node9
      
       - 44.3465799018199*f(node50,node49) + totalLength =E= 0 ; (LHS = 0)
      
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 4
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE shortestPath Using LP From line 92
 
@@ -594,7 +593,7 @@ totalLength
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 5
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE shortestPath Using LP From line 92
 
@@ -606,8 +605,8 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES          134
 NON ZERO ELEMENTS           400
 
 
-GENERATION TIME      =        0.031 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 6
+GENERATION TIME      =        0.062 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE shortestPath Using LP From line 92
 
@@ -622,7 +621,7 @@ Solution Report     SOLVE shortestPath Using LP From line 92
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              455.2765
 
- RESOURCE USAGE, LIMIT          0.109 10000000000.000
+ RESOURCE USAGE, LIMIT          0.079 10000000000.000
  ITERATION COUNT, LIMIT         7    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -849,7 +848,7 @@ node50.node49          .              .            +INF           57.2053
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/03/21 17:12:22 Page 7
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -896,7 +895,7 @@ obj from model.      .       455.277
 fln D:\projects\OptimizationModels\ShortestPath\networkdata.js
 
 
-EXECUTION TIME       =        1.110 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+EXECUTION TIME       =        2.110 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
 
 
 USER: Eval License                                   S201210/0001CO-GEN

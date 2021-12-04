@@ -147,13 +147,12 @@ put fln;
 put 'networkdata=['/;
 loop(n,
     put$(ord(n)>1) ",";
-    put "{data:{id:",(ord(n)):0:0,",color:";
-    put$(inflow(n)=0 and outflow(n)=0) "'black'";
-    put$(inflow(n)>0) "'blue'";
-    put$(outflow(n)>0) "'green'";
-    put ",size:"
-    put$(inflow(n)=0 and outflow(n)=0) "1";
-    put$(inflow(n)>0 or outflow(n)>0) "2";
+    put "{data:{id:",(ord(n)):0:0;
+    put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
+    put$(inflow(n)>0) ",color:'blue'";
+    put$(outflow(n)>0) ",color:'green'";
+    put$(inflow(n)=0 and outflow(n)=0) ",size:1";
+    put$(inflow(n)>0 or outflow(n)>0) ",size:2";
     put "},position:{x:",coord(n,'x'):0:3;
     put ",y:",coord(n,'y'):0:3,"}}"/;
 );
@@ -183,7 +182,7 @@ $ontext
 
 With an internet connection you can use:
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
-Without use:
+Without use a local .js file:
   <script src="cytoscape.min.js"></script>
 
 $offtext
@@ -237,7 +236,7 @@ table,th, td {
             style: { 'width': 'data(width)', 'line-color': 'data(color)',
                      'mid-target-arrow-shape': 'triangle',
                      'mid-target-arrow-color': 'data(color)',
-                     'arrow-scale': '0.15' }
+                     'arrow-scale': 0.15 }
           }
         ],
         layout: { name: 'preset' }
