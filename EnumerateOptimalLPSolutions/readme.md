@@ -7,3 +7,6 @@ Files:
 1.  trsnport.gms: original model (model 1 from GAMS model library)
 2.  trnsportall.gms: enumerate all optimal solutions using a loop and no-good cuts
 3.  trnsportallcplex.gms: enumerate all optimal solutions using the Cplex solution pool
+
+Reference: 
+http://yetanothermathprogrammingconsultant.blogspot.com/2016/01/finding-all-optimal-lp-solutions.html.
