@@ -1,0 +1,1423 @@
+
+--- Job MacMahonSquares.gms Start 12/26/21 03:15:03 37.1.0 r07954d5 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\37\gmsprmNT.txt
+    C:\Users\Erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    Input D:\projects\OptimizationModels\MacMahonSquares\MacMahonSquares.gms
+    PageWidth 130
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir D:\projects\OptimizationModels\MacMahonSquares\225a\
+    SysDir C:\GAMS\37\
+    WorkDir D:\projects\OptimizationModels\MacMahonSquares\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\Erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 4 core(s), and 8 thread(s) available
+GAMS 37.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- MacMahonSquares.gms(271) 3 Mb
+--- $echo File D:\projects\OptimizationModels\MacMahonSquares\MacMahon.html
+--- MacMahonSquares.gms(384) 3 Mb
+--- $echo File D:\projects\OptimizationModels\MacMahonSquares\cplex.opt
+--- MacMahonSquares.gms(389) 3 Mb
+--- Starting execution: elapsed 0:00:00.051
+--- MacMahonSquares.gms(181) 4 Mb
+--- Generating MIP model m
+--- MacMahonSquares.gms(184) 5 Mb
+---   451 rows  2,233 columns  12,181 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.163
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.32 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 276 rows, 1122 columns, and 5880 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.71 ticks)
+Probing time = 0.00 sec. (2.60 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 276 rows, 1122 columns, and 5880 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (4.31 ticks)
+Probing time = 0.02 sec. (2.58 ticks)
+Clique table members: 1487.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.52 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000004
+Iteration:   225   Dual objective     =             0.000008
+Iteration:   287   Dual objective     =             0.000010
+Iteration:   349   Dual objective     =             0.000011
+Iteration:   411   Dual objective     =             0.000012
+Removing perturbation.
+Root relaxation solution time = 0.08 sec. (12.86 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   139                      0.0000      444         
+      0     0        0.0000   190                  Cliques: 1      474         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.59 sec. (161.55 ticks)
+      0     0        cutoff              0.0000        0.0000      474    0.00%
+Elapsed time = 0.59 sec. (161.55 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.59 sec. (161.58 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.59 sec. (161.58 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.59sec (det. 161.59 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 450 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.03 sec. (1.10 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (474 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:01.125
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution2
+---   452 rows  2,233 columns  12,205 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:01.163
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.32 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 277 rows, 1122 columns, and 5904 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.74 ticks)
+Probing time = 0.02 sec. (2.63 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 277 rows, 1122 columns, and 5904 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (3.96 ticks)
+Probing time = 0.01 sec. (2.60 ticks)
+Clique table members: 1473.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.02 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000004
+Iteration:   225   Dual objective     =             0.000007
+Iteration:   287   Dual objective     =             0.000009
+Iteration:   349   Dual objective     =             0.000010
+Iteration:   411   Dual objective     =             0.000010
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (12.74 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   157                      0.0000      422         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.50 sec. (146.94 ticks)
+      0     0        cutoff              0.0000        0.0000      422    0.00%
+Elapsed time = 0.50 sec. (146.94 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.50 sec. (146.97 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.50 sec. (146.97 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.50sec (det. 146.97 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 451 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.09 sec. (1.10 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.09sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (422 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:01.837
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution3
+---   453 rows  2,233 columns  12,229 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:01.871
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.32 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 278 rows, 1122 columns, and 5928 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.76 ticks)
+Probing time = 0.01 sec. (2.64 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 278 rows, 1122 columns, and 5928 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (3.92 ticks)
+Probing time = 0.00 sec. (2.61 ticks)
+Clique table members: 1487.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000006
+Iteration:   287   Dual objective     =             0.000009
+Iteration:   349   Dual objective     =             0.000010
+Iteration:   411   Dual objective     =             0.000011
+Iteration:   473   Dual objective     =             0.000012
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (17.02 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   170                      0.0000      521         
+Detecting symmetries...
+      0     2        0.0000    92                      0.0000      521         
+Elapsed time = 1.30 sec. (457.36 ticks, tree = 0.01 MB)
+*    20+    1                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 1.42 sec. (505.74 ticks)
+
+Root node processing (before b&c):
+  Real time             =    1.30 sec. (457.35 ticks)
+Sequential b&c:
+  Real time             =    0.13 sec. (48.47 ticks)
+                          ------------
+Total (root+branch&cut) =    1.42 sec. (505.82 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 1.50sec (det. 505.83 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 452 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (1.10 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (1701 iterations, 20 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:03.448
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution4
+---   454 rows  2,233 columns  12,253 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:03.482
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 279 rows, 1122 columns, and 5952 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (8.77 ticks)
+Probing time = 0.00 sec. (2.66 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 279 rows, 1122 columns, and 5952 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.92 ticks)
+Probing time = 0.02 sec. (2.64 ticks)
+Clique table members: 1487.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   164   Dual objective     =             0.000003
+Iteration:   226   Dual objective     =             0.000007
+Iteration:   288   Dual objective     =             0.000009
+Iteration:   350   Dual objective     =             0.000010
+Iteration:   412   Dual objective     =             0.000010
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (11.77 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   174                      0.0000      413         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.42 sec. (110.78 ticks)
+      0     0        cutoff              0.0000        0.0000      413    0.00%
+Elapsed time = 0.42 sec. (110.78 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.42 sec. (110.81 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.42 sec. (110.81 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.49sec (det. 110.82 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 453 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.06 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.08sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (413 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:04.072
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution5
+---   455 rows  2,233 columns  12,277 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:04.109
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 280 rows, 1122 columns, and 5976 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.79 ticks)
+Probing time = 0.02 sec. (2.66 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 280 rows, 1122 columns, and 5976 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (3.92 ticks)
+Probing time = 0.02 sec. (2.64 ticks)
+Clique table members: 1576.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000006
+Iteration:   287   Dual objective     =             0.000008
+Iteration:   349   Dual objective     =             0.000009
+Iteration:   411   Dual objective     =             0.000010
+Removing perturbation.
+Root relaxation solution time = 0.05 sec. (13.80 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   190                      0.0000      452         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.45 sec. (132.78 ticks)
+      0     0        cutoff              0.0000        0.0000      452    0.00%
+Elapsed time = 0.45 sec. (132.78 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.47 sec. (132.81 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.47 sec. (132.81 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.55sec (det. 132.82 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 454 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.02 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (452 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:04.705
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution6
+---   456 rows  2,233 columns  12,301 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:04.741
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 281 rows, 1122 columns, and 6000 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (8.81 ticks)
+Probing time = 0.00 sec. (2.68 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 281 rows, 1122 columns, and 6000 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.92 ticks)
+Probing time = 0.02 sec. (2.66 ticks)
+Clique table members: 1579.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    70   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000007
+Iteration:   287   Dual objective     =             0.000009
+Iteration:   349   Dual objective     =             0.000010
+Iteration:   411   Dual objective     =             0.000011
+Removing perturbation.
+Root relaxation solution time = 0.03 sec. (13.13 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   179                      0.0000      435         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.63 sec. (168.73 ticks)
+      0     0        cutoff              0.0000        0.0000      435    0.00%
+Elapsed time = 0.63 sec. (168.73 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.63 sec. (168.76 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.63 sec. (168.76 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.69sec (det. 168.77 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 455 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.02 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 1.43 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (435 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:05.495
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution7
+---   457 rows  2,233 columns  12,325 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:05.529
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 282 rows, 1122 columns, and 6024 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.83 ticks)
+Probing time = 0.02 sec. (2.70 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 282 rows, 1122 columns, and 6024 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (3.93 ticks)
+Probing time = 0.01 sec. (2.68 ticks)
+Clique table members: 1583.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000004
+Iteration:   225   Dual objective     =             0.000007
+Iteration:   287   Dual objective     =             0.000009
+Iteration:   349   Dual objective     =             0.000010
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (12.39 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   159                      0.0000      404         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.55 sec. (146.38 ticks)
+      0     0        cutoff              0.0000        0.0000      404    0.00%
+Elapsed time = 0.55 sec. (146.38 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.55 sec. (146.41 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.55 sec. (146.41 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.62sec (det. 146.42 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 456 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.05 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.05sec (det. 1.44 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (404 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:06.243
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution8
+---   458 rows  2,233 columns  12,349 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:06.277
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 283 rows, 1122 columns, and 6048 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.84 ticks)
+Probing time = 0.01 sec. (2.72 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 283 rows, 1122 columns, and 6048 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (3.93 ticks)
+Probing time = 0.00 sec. (2.70 ticks)
+Clique table members: 1613.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.53 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    66   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000007
+Iteration:   287   Dual objective     =             0.000008
+Iteration:   349   Dual objective     =             0.000009
+Removing perturbation.
+Root relaxation solution time = 0.05 sec. (12.07 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   153                      0.0000      394         
+Detecting symmetries...
+      0     2        0.0000    56                      0.0000      394         
+Elapsed time = 1.14 sec. (366.73 ticks, tree = 0.01 MB)
+*    42     1      integral     0        0.0000        0.0000     2008    0.00%
+                                                  ZeroHalf: 1                  
+Found incumbent of value 0.000000 after 1.31 sec. (428.18 ticks)
+
+Zero-half cuts applied:  1
+
+Root node processing (before b&c):
+  Real time             =    1.14 sec. (366.71 ticks)
+Sequential b&c:
+  Real time             =    0.17 sec. (61.58 ticks)
+                          ------------
+Total (root+branch&cut) =    1.31 sec. (428.30 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 1.39sec (det. 428.30 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 457 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.03 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.05sec (det. 1.44 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (2008 iterations, 43 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:07.745
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution9
+---   459 rows  2,233 columns  12,373 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:07.779
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.32 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 284 rows, 1122 columns, and 6072 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (8.86 ticks)
+Probing time = 0.00 sec. (2.75 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 284 rows, 1122 columns, and 6072 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.93 ticks)
+Probing time = 0.01 sec. (2.72 ticks)
+Clique table members: 1622.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.54 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000007
+Iteration:   287   Dual objective     =             0.000008
+Iteration:   349   Dual objective     =             0.000010
+Iteration:   411   Dual objective     =             0.000010
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (14.47 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   135                      0.0000      455         
+Detecting symmetries...
+      0     2        0.0000   109                      0.0000      455         
+Elapsed time = 1.25 sec. (430.05 ticks, tree = 0.01 MB)
+*    18     0      integral     0        0.0000        0.0000     1477    0.00%
+Found incumbent of value 0.000000 after 1.36 sec. (470.44 ticks)
+
+Root node processing (before b&c):
+  Real time             =    1.24 sec. (430.03 ticks)
+Sequential b&c:
+  Real time             =    0.13 sec. (40.48 ticks)
+                          ------------
+Total (root+branch&cut) =    1.36 sec. (470.52 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 1.44sec (det. 470.52 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 458 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.09sec (det. 1.44 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (1477 iterations, 19 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:09.344
+--- MacMahonSquares.gms(217) 5 Mb
+--- Generating MIP model m2
+--- MacMahonSquares.gms(218) 5 Mb
+--- LOOPS sol = solution10
+---   460 rows  2,233 columns  12,397 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=5): elapsed 0:00:09.381
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.32 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.33 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 285 rows, 1122 columns, and 6096 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (8.88 ticks)
+Probing time = 0.02 sec. (2.76 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 285 rows, 1122 columns, and 6096 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.94 ticks)
+Probing time = 0.01 sec. (2.74 ticks)
+Clique table members: 1585.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.54 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000003
+Iteration:   225   Dual objective     =             0.000008
+Iteration:   287   Dual objective     =             0.000010
+Iteration:   349   Dual objective     =             0.000012
+Iteration:   411   Dual objective     =             0.000013
+Iteration:   473   Dual objective     =             0.000014
+Iteration:   535   Dual objective     =             0.000014
+Removing perturbation.
+Root relaxation solution time = 0.06 sec. (18.21 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   175                      0.0000      551         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 1.17 sec. (344.87 ticks)
+      0     0        cutoff              0.0000        0.0000      551    0.00%
+Elapsed time = 1.17 sec. (344.88 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    1.19 sec. (344.91 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    1.19 sec. (344.91 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 1.26sec (det. 344.91 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 459 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.06 sec. (1.11 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.06sec (det. 1.44 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (551 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:10.752
+--- MacMahonSquares.gms(260) 5 Mb
+Shell Execute    37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+--- MacMahonSquares.gms(267) 5 Mb
+--- Generating MIP model m
+--- MacMahonSquares.gms(268) 5 Mb
+---   451 rows  2,233 columns  12,181 non-zeroes
+---   1,944 discrete-columns
+***   288 relaxed-columns WARNING
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:11.672
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\OptimizationModels\MacMahonSquares\cplex.opt"
+>>  SolnPoolIntensity = 4
+>>  PopulateLim = 200000
+>>  SolnPoolPop = 2
+>>  solnpoolmerge solutions.gdx
+Finished reading from "D:\projects\OptimizationModels\MacMahonSquares\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.09 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 1.31 Mb (peak 1.33 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.05 Mb (peak 0.32 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Intensity                      4
+CPXPARAM_MIP_Limits_Populate                     200000
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+
+Populate: phase I 
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 276 rows, 1122 columns, and 5880 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.05 sec. (7.28 ticks)
+Probing time = 0.02 sec. (2.60 ticks)
+Tried aggregator 1 time.
+Reduced MIP has 276 rows, 1122 columns, and 5880 nonzeros.
+Reduced MIP has 1122 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (1.89 ticks)
+Probing time = 0.05 sec. (2.58 ticks)
+Clique table members: 1487.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Parallel mode: deterministic, using up to 2 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 6 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 4 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.45 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000004
+Iteration:   225   Dual objective     =             0.000008
+Iteration:   287   Dual objective     =             0.000010
+Iteration:   349   Dual objective     =             0.000011
+Iteration:   411   Dual objective     =             0.000012
+Removing perturbation.
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.16 sec. (12.84 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000   139                      0.0000      444         
+      0     0        0.0000   190                  Cliques: 1      474         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 1.16 sec. (156.34 ticks)
+
+Root node processing (before b&c):
+  Real time             =    1.16 sec. (156.40 ticks)
+Parallel b&c, 8 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.16 sec. (156.40 ticks)
+
+Populate: phase II 
+Tried aggregator 2 times.
+MIP Presolve eliminated 60 rows and 997 columns.
+MIP Presolve modified 468 coefficients.
+Aggregator did 114 substitutions.
+Reduced MIP has 276 rows, 1122 columns, and 5880 nonzeros.
+Reduced MIP has 1008 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.03 sec. (7.28 ticks)
+Probing time = 0.02 sec. (2.60 ticks)
+Clique table members: 1487.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 8 threads.
+Parallel mode: deterministic, using up to 8 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 6 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.45 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Iteration:    62   Dual objective     =             0.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             0.000000
+Iteration:   163   Dual objective     =             0.000004
+Iteration:   225   Dual objective     =             0.000008
+Iteration:   287   Dual objective     =             0.000010
+Iteration:   349   Dual objective     =             0.000011
+Iteration:   411   Dual objective     =             0.000012
+Removing perturbation.
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.06 sec. (12.84 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 1.30 sec. (181.11 ticks)
+      0     0        0.0000   139        0.0000        0.0000      444    0.00%
+      0     2        0.0000   139        0.0000        0.0000      444    0.00%
+Elapsed time = 1.47 sec. (219.99 ticks, tree = 0.02 MB, solutions = 1)
+    458    92        0.0000     1        0.0000        0.0000     6600    0.00%
+   2266   823        0.0000   128        0.0000        0.0000    38495    0.00%
+   3984  1277        0.0000     1        0.0000        0.0000    81996    0.00%
+   6355  1481    infeasible              0.0000        0.0000   121693    0.00%
+   8245  1913        0.0000     0        0.0000        0.0000   167350    0.00%
+  10092  2370        0.0000    58        0.0000        0.0000   208780    0.00%
+  12146  2549        0.0000    47        0.0000        0.0000   244416    0.00%
+  13685  2756        0.0000   196        0.0000        0.0000   292939    0.00%
+  16182  2996        0.0000    77        0.0000        0.0000   332110    0.00%
+  24744  3869        0.0000     1        0.0000        0.0000   505681    0.00%
+Elapsed time = 10.44 sec. (3320.42 ticks, tree = 2.62 MB, solutions = 1029)
+  33515  4781        0.0000   171        0.0000        0.0000   657326    0.00%
+  42789  5676    infeasible              0.0000        0.0000   828253    0.00%
+  53337  6445    infeasible              0.0000        0.0000   994342    0.00%
+  62824  6897    infeasible              0.0000        0.0000  1130739    0.00%
+  73611  7442        0.0000     1        0.0000        0.0000  1297588    0.00%
+  83898  7816        0.0000    56        0.0000        0.0000  1465095    0.00%
+  94569  8517    infeasible              0.0000        0.0000  1622786    0.00%
+ 105739  8859    infeasible              0.0000        0.0000  1763874    0.00%
+ 117569  9142    infeasible              0.0000        0.0000  1912609    0.00%
+ 129013  9518        0.0000     1        0.0000        0.0000  2101970    0.00%
+Elapsed time = 31.53 sec. (12858.22 ticks, tree = 7.14 MB, solutions = 7878)
+ 139248  9791    infeasible              0.0000        0.0000  2217781    0.00%
+ 149679 10035        0.0000     0        0.0000        0.0000  2392582    0.00%
+ 159899 10429        0.0000     1        0.0000        0.0000  2539901    0.00%
+ 169535 10998        0.0000     0        0.0000        0.0000  2696602    0.00%
+ 179876 11653    infeasible              0.0000        0.0000  2858158    0.00%
+ 190858 12055    infeasible              0.0000        0.0000  3037131    0.00%
+ 202500 12315    infeasible              0.0000        0.0000  3189846    0.00%
+ 213416 12329        0.0000     0        0.0000        0.0000  3320879    0.00%
+ 223162 12679        0.0000    42        0.0000        0.0000  3477048    0.00%
+ 233378 13138        0.0000     0        0.0000        0.0000  3643842    0.00%
+Elapsed time = 51.58 sec. (22395.67 ticks, tree = 9.87 MB, solutions = 15075)
+ 244847 13648    infeasible              0.0000        0.0000  3780376    0.00%
+ 257368 13970        0.0000     1        0.0000        0.0000  3950684    0.00%
+ 268819 13763    infeasible              0.0000        0.0000  4079625    0.00%
+ 280115 13754    infeasible              0.0000        0.0000  4242160    0.00%
+ 291077 13889        0.0000     1        0.0000        0.0000  4407851    0.00%
+ 304104 13876    infeasible              0.0000        0.0000  4541616    0.00%
+ 314908 13811        0.0000     1        0.0000        0.0000  4711054    0.00%
+ 326149 13930    infeasible              0.0000        0.0000  4849847    0.00%
+ 339356 13862        0.0000     1        0.0000        0.0000  4977729    0.00%
+ 351411 13825    infeasible              0.0000        0.0000  5132450    0.00%
+Elapsed time = 71.09 sec. (31933.14 ticks, tree = 10.30 MB, solutions = 23962)
+ 361953 13895        0.0000     1        0.0000        0.0000  5283661    0.00%
+ 374064 14115    infeasible              0.0000        0.0000  5470463    0.00%
+ 387440 13914        0.0000    34        0.0000        0.0000  5618750    0.00%
+ 398167 13854        0.0000     1        0.0000        0.0000  5722352    0.00%
+ 410457 14077        0.0000    78        0.0000        0.0000  5888254    0.00%
+ 424149 13920        0.0000     1        0.0000        0.0000  6019688    0.00%
+ 435463 13816        0.0000     1        0.0000        0.0000  6194381    0.00%
+ 449480 13814    infeasible              0.0000        0.0000  6345513    0.00%
+ 460043 13612        0.0000     1        0.0000        0.0000  6465481    0.00%
+ 471244 13951    infeasible              0.0000        0.0000  6676619    0.00%
+Elapsed time = 91.52 sec. (41470.92 ticks, tree = 10.30 MB, solutions = 33299)
+ 484109 13797    infeasible              0.0000        0.0000  6770974    0.00%
+ 495036 13802    infeasible              0.0000        0.0000  6957045    0.00%
+ 509253 13728        0.0000     0        0.0000        0.0000  7107869    0.00%
+ 519675 13728        0.0000    54        0.0000        0.0000  7239150    0.00%
+ 532524 13864        0.0000     1        0.0000        0.0000  7415962    0.00%
+ 542857 13703    infeasible              0.0000        0.0000  7528625    0.00%
+ 555755 13853        0.0000     1        0.0000        0.0000  7693495    0.00%
+ 568561 13513        0.0000     0        0.0000        0.0000  7846597    0.00%
+ 579940 13405        0.0000    48        0.0000        0.0000  8022074    0.00%
+ 593662 13243    infeasible              0.0000        0.0000  8160258    0.00%
+Elapsed time = 111.52 sec. (51008.35 ticks, tree = 9.63 MB, solutions = 42472)
+ 604404 13293        0.0000    35        0.0000        0.0000  8304130    0.00%
+ 618683 13270        0.0000     1        0.0000        0.0000  8476933    0.00%
+ 628297 13328        0.0000     1        0.0000        0.0000  8599080    0.00%
+ 642554 13457        0.0000    53        0.0000        0.0000  8774058    0.00%
+ 652809 13456        0.0000    83        0.0000        0.0000  8910383    0.00%
+ 667409 13642        0.0000     1        0.0000        0.0000  9072217    0.00%
+ 678550 13553        0.0000     1        0.0000        0.0000  9184079    0.00%
+ 693022 13324        0.0000     1        0.0000        0.0000  9334146    0.00%
+ 703844 12975        0.0000     1        0.0000        0.0000  9498095    0.00%
+ 718735 12996        0.0000     1        0.0000        0.0000  9633732    0.00%
+Elapsed time = 132.73 sec. (60545.68 ticks, tree = 9.31 MB, solutions = 52230)
+ 729918 12889    infeasible              0.0000        0.0000  9792047    0.00%
+ 744870 12371        0.0000     1        0.0000        0.0000  9964497    0.00%
+ 755495 12127    infeasible              0.0000        0.0000 10099413    0.00%
+ 769872 11929        0.0000     1        0.0000        0.0000 10182662    0.00%
+ 782297 11622        0.0000     1        0.0000        0.0000 10411339    0.00%
+ 795337 11226        0.0000     1        0.0000        0.0000 10541496    0.00%
+ 809255 11113    infeasible              0.0000        0.0000 10640175    0.00%
+ 821539 10391        0.0000     0        0.0000        0.0000 10792268    0.00%
+ 835729 10276        0.0000    49        0.0000        0.0000 10937179    0.00%
+ 846394  9892    infeasible              0.0000        0.0000 11094001    0.00%
+Elapsed time = 154.25 sec. (70083.12 ticks, tree = 6.75 MB, solutions = 62810)
+ 861311  9696        0.0000     1        0.0000        0.0000 11227866    0.00%
+ 871995  9400        0.0000   113        0.0000        0.0000 11410122    0.00%
+ 885959  8964        0.0000     1        0.0000        0.0000 11509762    0.00%
+ 899070  9158        0.0000     1        0.0000        0.0000 11684324    0.00%
+ 910161  8859        0.0000     0        0.0000        0.0000 11805975    0.00%
+ 925664  9014        0.0000    18        0.0000        0.0000 11954675    0.00%
+ 936888  9056        0.0000     0        0.0000        0.0000 12146936    0.00%
+ 950435  8782        0.0000    43        0.0000        0.0000 12273113    0.00%
+ 963350  8615    infeasible              0.0000        0.0000 12437317    0.00%
+ 974826  8127        0.0000     1        0.0000        0.0000 12584647    0.00%
+Elapsed time = 175.91 sec. (79620.65 ticks, tree = 5.19 MB, solutions = 73534)
+ 987858  8069        0.0000     1        0.0000        0.0000 12749139    0.00%
+ 997413  7751    infeasible              0.0000        0.0000 12896841    0.00%
+ 1010126  7479        0.0000     1        0.0000        0.0000 12997577    0.00%
+ 1021042  7613        0.0000     0        0.0000        0.0000 13190440    0.00%
+ 1034220  7115        0.0000     1        0.0000        0.0000 13295654    0.00%
+ 1047767  7273        0.0000     0        0.0000        0.0000 13524350    0.00%
+ 1057585  7170    infeasible              0.0000        0.0000 13620128    0.00%
+ 1072120  7098    infeasible              0.0000        0.0000 13762739    0.00%
+ 1084764  7538        0.0000     1        0.0000        0.0000 13981829    0.00%
+ 1134792  7527        0.0000     1        0.0000        0.0000 14449280    0.00%
+Elapsed time = 205.09 sec. (92021.50 ticks, tree = 4.53 MB, solutions = 86572)
+ 1189279  7572        0.0000    34        0.0000        0.0000 15081539    0.00%
+ 1240284  6776    infeasible              0.0000        0.0000 15660113    0.00%
+ 1293335  4820    infeasible              0.0000        0.0000 16250438    0.00%
+ 1350953  2278        0.0000     1        0.0000        0.0000 16796011    0.00%
+
+Root node processing (before b&c):
+  Real time             =   24.17 sec. (1654.31 ticks)
+Parallel b&c, 8 threads:
+  Real time             =  247.22 sec. (108698.84 ticks)
+  Sync time (average)   =   32.51 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =  271.39 sec. (110353.15 ticks)
+
+--- MIP status (129): all reachable solutions enumerated, integer optimal.
+--- Cplex Time: 272.62sec (det. 110509.57 ticks)
+
+--- Dumping 106624 solutions from the solution pool...
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 8
+CPXPARAM_Parallel                                1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Intensity                      4
+CPXPARAM_MIP_Limits_Populate                     200000
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 450 rows and 2233 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (1.10 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 1.43 ticks)
+
+
+Populate has completed the enumeration of solutions
+MIP Solution:            0.000000    (17094044 iterations, 1370694 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:               -inf
+Absolute gap:                  na
+Relative gap:                  na
+
+--- Reading solution for model m
+--- Putfile f D:\projects\OptimizationModels\MacMahonSquares\data.js
+*** Status: Normal completion
+--- Job MacMahonSquares.gms Stop 12/26/21 03:24:27 elapsed 0:09:23.365
