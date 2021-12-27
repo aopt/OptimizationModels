@@ -20,7 +20,7 @@ set
 ;
 
 parameter
-   series(id,t<) 'series_id, data from IEO.txt'
+   series(id,t<) 'data for each series'
 ;
 
 $onEmbeddedCode Python:
