@@ -1,0 +1,1495 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Here we consider a directed network. We want to find all feasible
+         paths from A->B such that arcs are used only once (nodes can be
+         visited several times).
+       
+         We use an augmented graph for this, in combination with the
+         MTZ subtour-elimination constraint (from TSP models). We solve
+         using the solution pool.
+       
+         References:
+           https://yetanothermathprogrammingconsultant.blogspot.com/2022/01/an-all-paths-network-problem.html
+       
+  15   
+  16  *-----------------------------------------------------------
+  17  * network topology
+  18  *-----------------------------------------------------------
+  19   
+  20  option seed=1;
+  21   
+  22  set
+  23     n 'nodes' /n1*n10/
+  24     a(n,n) 'directed arcs'
+  25  ;
+  26   
+  27  alias (n,i,j);
+  28   
+  29  a(i,j) = uniform(0,1)<0.2;
+  30   
+  31  scalar M 'maximum hops' /3/;
+  32   
+  33  display n,a,M;
+  34   
+  35   
+  36  singleton sets
+  37     src(n) 'source' /n1/
+  38     snk(n) 'sink'   /n10/
+  39  ;
+  40  set ni(n) 'interior nodes';
+  41  ni(n) = yes;
+  42  ni(src) = no;
+  43  ni(snk) = no;
+  44   
+  45   
+  46  *-----------------------------------------------------------
+  47  * visualization using GraphViz
+  48  *-----------------------------------------------------------
+  49   
+  50  file gv1 /graph1.gv/;
+  51  put gv1;
+  52  put "digraph neato{"/;
+  53  put "node [shape=circle,style=filled,color=yellowgreen] ",src.tl/;
+  54  put "node [shape=circle,style=filled,color=orange] ",snk.tl/;
+  55  put "node [shape=circle,style=filled,color=lightblue]"/;
+  56  loop(ni, put ni.tl:0," ";); put /;
+  57  put "edge [color=grey]"/;
+  58  loop(a(i,j), put i.tl:0,"->",j.tl:0/;);
+  59  putclose"}"/;
+  60   
+  61  *-----------------------------------------------------------
+  62  *   shortest path n1->n2 as MIP/RMIP model
+  63  *-----------------------------------------------------------
+  64   
+  65  parameter inflow(n) 'exogenous inflow';
+  66  inflow(src) = 1;
+  67  inflow(snk) = -1;
+  68   
+  69  binary variable f(i,j) 'flow';
+  70  variable count 'length of shortest path (hops)';
+  71   
+  72  equations
+  73      obj           'objective'
+  74      flowbal(n)    'flow balance at node'
+  75  ;
+  76   
+  77  obj.. count =e= sum(a,f(a));
+  78  flowbal(n)..  sum(a(i,n),f(a)) + inflow(n) =e= sum(a(n,j),f(a));
+  79   
+  80  model sp /all/;
+  81  solve sp minimizing count using rmip;
+  82   
+  83  display "#### Model SP: Single Shortest Path Solution", count.l,f.l;
+  84   
+  85   
+  86  *-----------------------------------------------------------
+  87  *   add hop count
+  88  *   and solve with solution pool
+  89  *-----------------------------------------------------------
+  90   
+  91  count.up = M;
+  92   
+  93  sp.optfile=1;
+  94  solve sp minimizing count using mip;
+  95   
+  96  set
+  97    solIndex /soln_sp_p1*soln_sp_p20
+  98              soln_sp2_p1*soln_sp2_p20
+  99              soln_sp3_p1*soln_sp3_p20/
+ 100    sol(solIndex)
+ 101  ;
+ 102  parameter fsol(solIndex,n,n) 'solution from solution pool';
+ 103   
+ 104  execute_load "solutions.gdx",sol=index,fsol=f;
+ 105  option fsol:0:1:1;
+ 106  display "#### Model SP/solution pool: Find all feasible paths with max length",
+ 107           count.up,sol,fsol,
+ 108          "#### WARNING: This solution contains subtours";
+ 109   
+ 110  *-----------------------------------------------------------
+ 111  *   add MTZ subtour elimination constraints
+ 112  *-----------------------------------------------------------
+ 113   
+ 114  positive variable t(i) 'ordering of hops';
+ 115   
+ 116  equation mtz(i,j) 'subtour elimination constraints';
+ 117   
+ 118  mtz(a(i,j))$(not src(i) and not snk(j))..
+ 119      t(j) =g= t(i) + 1 + card(n)*(f(i,j)-1);
+ 120   
+ 121  model sp2 /sp+mtz/;
+ 122  sp2.optfile=1;
+ 123  solve sp2 minimizing count using mip;
+ 124   
+ 125  execute_load "solutions.gdx",sol=index,fsol=f;
+ 126  display "#### Model SP2/solution pool: Find all feasible paths with max length",
+ 127           sol,fsol,
+ 128          "#### WARNING: This solution excludes tours";
+ 129   
+ 130   
+ 131  *-----------------------------------------------------------
+ 132  *  make arcs nodes, and arcs indicate adjacency
+ 133  *-----------------------------------------------------------
+ 134   
+ 135  set in(*)  'references to old nodes while adding src/snk' /src,snk/;
+ 136  in(n) = yes;
+ 137  alias(in,jn,kn);
+ 138   
+ 139  set nn(*,*) 'new nodes' /src.n1, n10.snk/;
+ 140  nn(a) = yes;
+ 141  display nn;
+ 142  alias (nn,nn2);
+ 143   
+ 144  set an(*,*,*,*) 'new arcs (w/o self-loops)';
+ 145  an(in,jn,jn,kn)$(nn(in,jn) and nn(jn,kn)
+ 146                  and not (sameas(in,jn) and sameas(jn,kn))) = yes;
+ 147  option an:0:2:2;
+ 148  display an;
+ 149   
+ 150   
+ 151  *-----------------------------------------------------------
+ 152  * visualization using GraphViz
+ 153  *-----------------------------------------------------------
+ 154   
+ 155  file gv2 /graph2.gv/;
+ 156  put gv2;
+ 157  put "digraph neato{"/;
+ 158  put "node [shape=circle,style=filled,color=yellowgreen] ";
+ 159  loop(nn('src',in), put 'src_':0,in.tl:0/ );
+ 160  put "node [shape=circle,style=filled,color=orange] ";
+ 161  loop(nn(in,'snk'), put in.tl:0,'_snk':0/ );
+ 162  put "node [shape=circle,style=filled,color=lightblue]"/;
+ 163  loop(nn(in,jn)$(not sameas(in,'src') and not sameas(jn,'snk')),
+ 164      put in.tl:0,"_":0,jn.tl:0," ":0;);
+ 165  put /;
+ 166  put "edge [color=grey]"/;
+ 167  loop(an(in,jn,jn,kn),
+ 168     put in.tl:0,"_":0,jn.tl:0,"->":0,jn.tl:0,"_",kn.tl:0/);
+ 169  putclose"}"/;
+ 170   
+ 171  *-----------------------------------------------------------
+ 172  * Model v2
+ 173  *-----------------------------------------------------------
+ 174   
+ 175  M = 4;
+ 176   
+ 177  singleton sets
+ 178     srcn(*,*) / src.n1 /
+ 179     snkn(*,*) /n10.snk /
+ 180  ;
+ 181   
+ 182  parameter inflown(*,*) 'new inflow';
+ 183  inflown(srcn) = 1;
+ 184  inflown(snkn) = -1;
+ 185   
+ 186  binary variables fn 'new flow variables';
+ 187  positive variable tn 'MTZ variable';
+ 188   
+ 189  equations
+ 190      objn     'new objective'
+ 191      flowbaln 'new flow balance on nodes'
+ 192      mtzn     'new MTZ subtour elimination constraints'
+ 193  ;
+ 194   
+ 195  objn.. count =e= sum(an,fn(an));
+ 196  flowbaln(nn).. sum(an(nn2,nn),fn(an)) + inflown(nn) =e= sum(an(nn,nn2),fn(an));
+ 197  mtzn(an(nn,nn2))$(not srcn(nn) and not snkn(nn2))..
+ 198      tn(nn2) =g= tn(nn) + 1 + card(nn)*(fn(nn,nn2)-1);
+ 199  count.up = M+1;
+ 200   
+ 201  model sp3 /objn,flowbaln,mtzn/;
+ 202  sp3.optfile=1;
+ 203  solve sp3 minimizing count using mip;
+ 204   
+ 205  parameter fsoln(solIndex,*,*,*,*) 'solution from solution pool';
+ 206   
+ 207  execute_load "solutions.gdx",sol=index,fsoln=fn;
+ 208  option fsoln:0:2:2;
+ 209  display "#### Model SP3/solution pool: augmented graph",
+ 210           count.up,sol,fsoln;
+ 211   
+ 212   
+ 219   
+
+
+COMPILATION TIME     =        0.031 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     33 SET n  nodes
+
+n1 ,    n2 ,    n3 ,    n4 ,    n5 ,    n6 ,    n7 ,    n8 ,    n9 ,    n10
+
+
+----     33 SET a  directed arcs
+
+            n1          n2          n3          n4          n5          n6          n7          n8          n9         n10
+
+n1                     YES                     YES                                             YES
+n2                                                                     YES                     YES
+n3                                 YES                                                         YES         YES
+n4                                 YES         YES                     YES         YES
+n5                                                                                                         YES
+n6                                                         YES                                                         YES
+n7         YES                                             YES
+n8                                 YES                                                                                 YES
+n9         YES                                                                     YES                                 YES
+
+
+----     33 PARAMETER M                    =        3.000  maximum hops
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE sp Using RMIP From line 81
+
+
+---- obj  =E=  objective
+
+obj..  - f(n1,n2) - f(n1,n4) - f(n1,n8) - f(n2,n6) - f(n2,n8) - f(n3,n3) - f(n3,n8) - f(n3,n9) - f(n4,n3) - f(n4,n4) - f(n4,n6)
+     
+      - f(n4,n7) - f(n5,n9) - f(n6,n5) - f(n6,n10) - f(n7,n1) - f(n7,n5) - f(n8,n3) - f(n8,n10) - f(n9,n1) - f(n9,n7) - f(n9,n10)
+     
+      + count =E= 0 ; (LHS = 0)
+     
+
+---- flowbal  =E=  flow balance at node
+
+flowbal(n1)..  - f(n1,n2) - f(n1,n4) - f(n1,n8) + f(n7,n1) + f(n9,n1) =E= -1 ; (LHS = 0, INFES = 1 ****)
+     
+flowbal(n2)..  f(n1,n2) - f(n2,n6) - f(n2,n8) =E= 0 ; (LHS = 0)
+     
+flowbal(n3)..  - f(n3,n8) - f(n3,n9) + f(n4,n3) + f(n8,n3) =E= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE sp Using RMIP From line 81
+
+
+---- f  flow
+
+f(n1,n2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n2)
+
+f(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n4)
+
+f(n1,n8)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n8)
+
+REMAINING 19 ENTRIES SKIPPED
+
+---- count  length of shortest path (hops)
+
+count
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE sp Using RMIP From line 81
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           23
+NON ZERO ELEMENTS            63     DISCRETE VARIABLES         22
+
+
+GENERATION TIME      =        0.484 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE sp Using RMIP From line 81
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   sp                  OBJECTIVE  count
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  81
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                2.0000
+
+ RESOURCE USAGE, LIMIT          0.797 10000000000.000
+ ITERATION COUNT, LIMIT         2    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.02s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.16sec (det. 0.03 ticks)
+
+
+Optimal solution found
+Objective:            2.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU flowbal  flow balance at node
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n1         -1.0000        -1.0000        -1.0000        -1.0000      
+n2           .              .              .              .          
+n3           .              .              .              .          
+n4           .              .              .              .          
+n5           .              .              .              .          
+n6           .              .              .             EPS         
+n7           .              .              .              .          
+n8           .              .              .              .          
+n9           .              .              .             EPS         
+n10         1.0000         1.0000         1.0000         1.0000      
+
+---- VAR f  flow
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+n1.n2           .              .             1.0000         EPS         
+n1.n4           .              .             1.0000         EPS         
+n1.n8           .             1.0000         1.0000          .          
+n2.n6           .              .             1.0000         1.0000      
+n2.n8           .              .             1.0000         1.0000      
+n3.n3           .              .             1.0000         1.0000      
+n3.n8           .              .             1.0000         1.0000      
+n3.n9           .              .             1.0000         1.0000      
+n4.n3           .              .             1.0000         1.0000      
+n4.n4           .              .             1.0000         1.0000      
+n4.n6           .              .             1.0000         1.0000      
+n4.n7           .              .             1.0000         1.0000      
+n5.n9           .              .             1.0000         1.0000      
+n6.n5           .              .             1.0000         1.0000      
+n6.n10          .              .             1.0000          .          
+n7.n1           .              .             1.0000         2.0000      
+n7.n5           .              .             1.0000         1.0000      
+n8.n3           .              .             1.0000         1.0000      
+n8.n10          .             1.0000         1.0000          .          
+n9.n1           .              .             1.0000         2.0000      
+n9.n7           .              .             1.0000         1.0000      
+n9.n10          .              .             1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR count             -INF            2.0000        +INF             .          
+
+  count  length of shortest path (hops)
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     83 #### Model SP: Single Shortest Path Solution
+            VARIABLE count.L               =        2.000  length of shortest path (hops)
+
+----     83 VARIABLE f.L  flow
+
+            n8         n10
+
+n1       1.000
+n8                   1.000
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE sp Using MIP From line 94
+
+
+---- obj  =E=  objective
+
+obj..  - f(n1,n2) - f(n1,n4) - f(n1,n8) - f(n2,n6) - f(n2,n8) - f(n3,n3) - f(n3,n8) - f(n3,n9) - f(n4,n3) - f(n4,n4) - f(n4,n6)
+     
+      - f(n4,n7) - f(n5,n9) - f(n6,n5) - f(n6,n10) - f(n7,n1) - f(n7,n5) - f(n8,n3) - f(n8,n10) - f(n9,n1) - f(n9,n7) - f(n9,n10)
+     
+      + count =E= 0 ; (LHS = 0)
+     
+
+---- flowbal  =E=  flow balance at node
+
+flowbal(n1)..  - f(n1,n2) - f(n1,n4) - f(n1,n8) + f(n7,n1) + f(n9,n1) =E= -1 ; (LHS = -1)
+     
+flowbal(n2)..  f(n1,n2) - f(n2,n6) - f(n2,n8) =E= 0 ; (LHS = 0)
+     
+flowbal(n3)..  - f(n3,n8) - f(n3,n9) + f(n4,n3) + f(n8,n3) =E= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE sp Using MIP From line 94
+
+
+---- f  flow
+
+f(n1,n2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n2)
+
+f(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n4)
+
+f(n1,n8)
+                (.LO, .L, .UP, .M = 0, 1, 1, 0)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n8)
+
+REMAINING 19 ENTRIES SKIPPED
+
+---- count  length of shortest path (hops)
+
+count
+                (.LO, .L, .UP, .M = -INF, 2, 3, 0)
+        1       obj
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE sp Using MIP From line 94
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           23
+NON ZERO ELEMENTS            63     DISCRETE VARIABLES         22
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE sp Using MIP From line 94
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   sp                  OBJECTIVE  count
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  94
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                2.0000
+
+ RESOURCE USAGE, LIMIT          0.313 10000000000.000
+ ITERATION COUNT, LIMIT         3    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+>>  SolnPoolIntensity = 4
+>>  PopulateLim = 10000
+>>  SolnPoolPop = 2
+>>  solnpoolmerge solutions.gdx
+Finished reading from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (129): all reachable solutions enumerated, integer optimal.
+--- Cplex Time: 0.17sec (det. 0.14 ticks)
+
+--- Dumping 6 solutions from the solution pool...
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Populate has completed the enumeration of solutions
+MIP Solution:            2.000000    (3 iterations, 11 nodes)
+Final Solve:             2.000000    (0 iterations)
+
+Best possible:               -inf
+Absolute gap:                  na
+Relative gap:                  na
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU flowbal  flow balance at node
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n1         -1.0000        -1.0000        -1.0000          .          
+n2           .              .              .              .          
+n3           .              .              .              .          
+n4           .              .              .              .          
+n5           .              .              .              .          
+n6           .              .              .              .          
+n7           .              .              .              .          
+n8           .              .              .              .          
+n9           .              .              .              .          
+n10         1.0000         1.0000         1.0000          .          
+
+---- VAR f  flow
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+n1.n2           .              .             1.0000         1.0000      
+n1.n4           .              .             1.0000         1.0000      
+n1.n8           .             1.0000         1.0000         1.0000      
+n2.n6           .              .             1.0000         1.0000      
+n2.n8           .              .             1.0000         1.0000      
+n3.n3           .              .             1.0000         1.0000      
+n3.n8           .              .             1.0000         1.0000      
+n3.n9           .              .             1.0000         1.0000      
+n4.n3           .              .             1.0000         1.0000      
+n4.n4           .              .             1.0000         1.0000      
+n4.n6           .              .             1.0000         1.0000      
+n4.n7           .              .             1.0000         1.0000      
+n5.n9           .              .             1.0000         1.0000      
+n6.n5           .              .             1.0000         1.0000      
+n6.n10          .              .             1.0000         1.0000      
+n7.n1           .              .             1.0000         1.0000      
+n7.n5           .              .             1.0000         1.0000      
+n8.n3           .              .             1.0000         1.0000      
+n8.n10          .             1.0000         1.0000         1.0000      
+n9.n1           .              .             1.0000         1.0000      
+n9.n7           .              .             1.0000         1.0000      
+n9.n10          .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR count             -INF            2.0000         3.0000          .          
+
+  count  length of shortest path (hops)
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    106 #### Model SP/solution pool: Find all feasible paths with max length
+            VARIABLE count.Up              =        3.000  length of shortest path (hops)
+
+----    106 SET sol  
+
+soln_sp_p1,    soln_sp_p2,    soln_sp_p3,    soln_sp_p4,    soln_sp_p5,    soln_sp_p6
+
+
+----    106 PARAMETER fsol  solution from solution pool
+
+INDEX 1 = soln_sp_p1
+
+            n8         n10
+
+n1           1
+n8                       1
+
+INDEX 1 = soln_sp_p2
+
+            n4          n8         n10
+
+n1                       1
+n4           1
+n8                                   1
+
+INDEX 1 = soln_sp_p3
+
+            n2          n8         n10
+
+n1           1
+n2                       1
+n8                                   1
+
+INDEX 1 = soln_sp_p4
+
+            n4          n6         n10
+
+n1           1
+n4                       1
+n6                                   1
+
+INDEX 1 = soln_sp_p5
+
+            n2          n6         n10
+
+n1           1
+n2                       1
+n6                                   1
+
+INDEX 1 = soln_sp_p6
+
+            n3          n8         n10
+
+n1                       1
+n3           1
+n8                                   1
+
+
+----    106 #### WARNING: This solution contains subtours
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE sp2 Using MIP From line 123
+
+
+---- obj  =E=  objective
+
+obj..  - f(n1,n2) - f(n1,n4) - f(n1,n8) - f(n2,n6) - f(n2,n8) - f(n3,n3) - f(n3,n8) - f(n3,n9) - f(n4,n3) - f(n4,n4) - f(n4,n6)
+     
+      - f(n4,n7) - f(n5,n9) - f(n6,n5) - f(n6,n10) - f(n7,n1) - f(n7,n5) - f(n8,n3) - f(n8,n10) - f(n9,n1) - f(n9,n7) - f(n9,n10)
+     
+      + count =E= 0 ; (LHS = 0)
+     
+
+---- flowbal  =E=  flow balance at node
+
+flowbal(n1)..  - f(n1,n2) - f(n1,n4) - f(n1,n8) + f(n7,n1) + f(n9,n1) =E= -1 ; (LHS = -1)
+     
+flowbal(n2)..  f(n1,n2) - f(n2,n6) - f(n2,n8) =E= 0 ; (LHS = 0)
+     
+flowbal(n3)..  - f(n3,n8) - f(n3,n9) + f(n4,n3) + f(n8,n3) =E= 0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- mtz  =G=  subtour elimination constraints
+
+mtz(n2,n6)..  - 10*f(n2,n6) - t(n2) + t(n6) =G= -9 ; (LHS = 0)
+     
+mtz(n2,n8)..  - 10*f(n2,n8) - t(n2) + t(n8) =G= -9 ; (LHS = 0)
+     
+mtz(n3,n3)..  - 10*f(n3,n3) =G= -9 ; (LHS = 0)
+     
+REMAINING 13 ENTRIES SKIPPED
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE sp2 Using MIP From line 123
+
+
+---- f  flow
+
+f(n1,n2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n2)
+
+f(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n4)
+
+f(n1,n8)
+                (.LO, .L, .UP, .M = 0, 1, 1, 1)
+       -1       obj
+       -1       flowbal(n1)
+        1       flowbal(n8)
+
+REMAINING 19 ENTRIES SKIPPED
+
+---- count  length of shortest path (hops)
+
+count
+                (.LO, .L, .UP, .M = -INF, 2, 3, 0)
+        1       obj
+
+
+---- t  ordering of hops
+
+t(n1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       mtz(n7,n1)
+        1       mtz(n9,n1)
+
+t(n2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       mtz(n2,n6)
+       -1       mtz(n2,n8)
+
+t(n3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       mtz(n3,n8)
+       -1       mtz(n3,n9)
+        1       mtz(n4,n3)
+        1       mtz(n8,n3)
+
+REMAINING 6 ENTRIES SKIPPED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE sp2 Using MIP From line 123
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           27
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           32
+NON ZERO ELEMENTS           107     DISCRETE VARIABLES         22
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE sp2 Using MIP From line 123
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   sp2                 OBJECTIVE  count
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  123
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                2.0000
+
+ RESOURCE USAGE, LIMIT          0.094 10000000000.000
+ ITERATION COUNT, LIMIT         8    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+>>  SolnPoolIntensity = 4
+>>  PopulateLim = 10000
+>>  SolnPoolPop = 2
+>>  solnpoolmerge solutions.gdx
+Finished reading from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (129): all reachable solutions enumerated, integer optimal.
+--- Cplex Time: 0.06sec (det. 0.23 ticks)
+
+--- Dumping 4 solutions from the solution pool...
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.03 ticks)
+
+
+Populate has completed the enumeration of solutions
+MIP Solution:            2.000000    (8 iterations, 7 nodes)
+Final Solve:             2.000000    (0 iterations)
+
+Best possible:               -inf
+Absolute gap:                  na
+Relative gap:                  na
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU flowbal  flow balance at node
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n1         -1.0000        -1.0000        -1.0000          .          
+n2           .              .              .              .          
+n3           .              .              .              .          
+n4           .              .              .              .          
+n5           .              .              .              .          
+n6           .              .              .              .          
+n7           .              .              .              .          
+n8           .              .              .              .          
+n9           .              .              .              .          
+n10         1.0000         1.0000         1.0000          .          
+
+---- EQU mtz  subtour elimination constraints
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+n2.n6        -9.0000        18.0000        +INF             .          
+n2.n8        -9.0000        18.0000        +INF             .          
+n3.n3        -9.0000          .            +INF             .          
+n3.n8        -9.0000         9.0000        +INF             .          
+n3.n9        -9.0000        -9.0000        +INF            EPS         
+n4.n3        -9.0000         9.0000        +INF             .          
+n4.n4        -9.0000          .            +INF             .          
+n4.n6        -9.0000        18.0000        +INF             .          
+n4.n7        -9.0000        18.0000        +INF             .          
+n5.n9        -9.0000        -9.0000        +INF            EPS         
+n6.n5        -9.0000        -9.0000        +INF            EPS         
+n7.n1        -9.0000        -9.0000        +INF            EPS         
+n7.n5        -9.0000        -9.0000        +INF            EPS         
+n8.n3        -9.0000        -9.0000        +INF            EPS         
+n9.n1        -9.0000         9.0000        +INF             .          
+n9.n7        -9.0000        18.0000        +INF             .          
+
+---- VAR f  flow
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+n1.n2           .              .             1.0000         1.0000      
+n1.n4           .              .             1.0000         1.0000      
+n1.n8           .             1.0000         1.0000         1.0000      
+n2.n6           .              .             1.0000         1.0000      
+n2.n8           .              .             1.0000         1.0000      
+n3.n3           .              .             1.0000         1.0000      
+n3.n8           .              .             1.0000         1.0000      
+n3.n9           .              .             1.0000         1.0000      
+n4.n3           .              .             1.0000         1.0000      
+n4.n4           .              .             1.0000         1.0000      
+n4.n6           .              .             1.0000         1.0000      
+n4.n7           .              .             1.0000         1.0000      
+n5.n9           .              .             1.0000         1.0000      
+n6.n5           .              .             1.0000         1.0000      
+n6.n10          .              .             1.0000         1.0000      
+n7.n1           .              .             1.0000         1.0000      
+n7.n5           .              .             1.0000         1.0000      
+n8.n3           .              .             1.0000         1.0000      
+n8.n10          .             1.0000         1.0000         1.0000      
+n9.n1           .              .             1.0000         1.0000      
+n9.n7           .              .             1.0000         1.0000      
+n9.n10          .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR count             -INF            2.0000         3.0000          .          
+
+  count  length of shortest path (hops)
+
+---- VAR t  ordering of hops
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+n1          .             9.0000        +INF             .          
+n2          .              .            +INF            EPS         
+n3          .             9.0000        +INF             .          
+n4          .              .            +INF            EPS         
+n5          .             9.0000        +INF             .          
+n6          .            18.0000        +INF             .          
+n7          .            18.0000        +INF             .          
+n8          .            18.0000        +INF             .          
+n9          .              .            +INF            EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    126 #### Model SP2/solution pool: Find all feasible paths with max length
+
+----    126 SET sol  
+
+soln_sp2_p1,    soln_sp2_p2,    soln_sp2_p3,    soln_sp2_p4
+
+
+----    126 PARAMETER fsol  solution from solution pool
+
+INDEX 1 = soln_sp2_p1
+
+            n8         n10
+
+n1           1
+n8                       1
+
+INDEX 1 = soln_sp2_p2
+
+            n2          n6         n10
+
+n1           1
+n2                       1
+n6                                   1
+
+INDEX 1 = soln_sp2_p3
+
+            n2          n8         n10
+
+n1           1
+n2                       1
+n8                                   1
+
+INDEX 1 = soln_sp2_p4
+
+            n4          n6         n10
+
+n1           1
+n4                       1
+n6                                   1
+
+
+----    126 #### WARNING: This solution excludes tours
+
+----    141 SET nn  new nodes
+
+             n1          n2          n3          n4          n5          n6          n7          n8          n9         n10
+
+n1                      YES                     YES                                             YES
+n2                                                                      YES                     YES
+n3                                  YES                                                         YES         YES
+n4                                  YES         YES                     YES         YES
+n5                                                                                                          YES
+n6                                                          YES                                                         YES
+n7          YES                                             YES
+n8                                  YES                                                                                 YES
+n9          YES                                                                     YES                                 YES
+src         YES
+
+  +         snk
+
+n10         YES
+
+
+----    148 SET an  new arcs (w/o self-loops)
+
+              n1.n2       n1.n4       n1.n8       n2.n6       n2.n8       n3.n3       n3.n8       n3.n9       n4.n3       n4.n4
+
+n1 .n2                                              YES         YES
+n1 .n4                                                                                                          YES         YES
+n3 .n3                                                                                  YES         YES
+n4 .n3                                                                      YES         YES         YES
+n4 .n4                                                                                                          YES
+n7 .n1          YES         YES         YES
+n8 .n3                                                                      YES         YES         YES
+n9 .n1          YES         YES         YES
+src.n1          YES         YES         YES
+
+      +       n4.n6       n4.n7       n5.n9       n6.n5      n6.n10       n7.n1       n7.n5       n8.n3      n8.n10       n9.n1
+
+n1 .n4          YES         YES
+n1 .n8                                                                                              YES         YES
+n2 .n6                                              YES         YES
+n2 .n8                                                                                              YES         YES
+n3 .n8                                                                                              YES         YES
+n3 .n9                                                                                                                      YES
+n4 .n4          YES         YES
+n4 .n6                                              YES         YES
+n4 .n7                                                                      YES         YES
+n5 .n9                                                                                                                      YES
+n6 .n5                                  YES
+n7 .n5                                  YES
+n9 .n7                                                                      YES         YES
+
+      +       n9.n7      n9.n10     n10.snk
+
+n3 .n9          YES         YES
+n5 .n9          YES         YES
+n6 .n10                                 YES
+n8 .n10                                 YES
+n9 .n10                                 YES
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE sp3 Using MIP From line 203
+
+
+---- objn  =E=  new objective
+
+objn..  count - fn(n1,n2,n2,n6) - fn(n1,n2,n2,n8) - fn(n1,n4,n4,n3) - fn(n1,n4,n4,n4) - fn(n1,n4,n4,n6) - fn(n1,n4,n4,n7)
+     
+      - fn(n1,n8,n8,n3) - fn(n1,n8,n8,n10) - fn(n2,n6,n6,n5) - fn(n2,n6,n6,n10) - fn(n2,n8,n8,n3) - fn(n2,n8,n8,n10)
+     
+      - fn(n3,n3,n3,n8) - fn(n3,n3,n3,n9) - fn(n3,n8,n8,n3) - fn(n3,n8,n8,n10) - fn(n3,n9,n9,n1) - fn(n3,n9,n9,n7)
+     
+      - fn(n3,n9,n9,n10) - fn(n4,n3,n3,n3) - fn(n4,n3,n3,n8) - fn(n4,n3,n3,n9) - fn(n4,n4,n4,n3) - fn(n4,n4,n4,n6)
+     
+      - fn(n4,n4,n4,n7) - fn(n4,n6,n6,n5) - fn(n4,n6,n6,n10) - fn(n4,n7,n7,n1) - fn(n4,n7,n7,n5) - fn(n5,n9,n9,n1)
+     
+      - fn(n5,n9,n9,n7) - fn(n5,n9,n9,n10) - fn(n6,n5,n5,n9) - fn(n6,n10,n10,snk) - fn(n7,n1,n1,n2) - fn(n7,n1,n1,n4)
+     
+      - fn(n7,n1,n1,n8) - fn(n7,n5,n5,n9) - fn(n8,n3,n3,n3) - fn(n8,n3,n3,n8) - fn(n8,n3,n3,n9) - fn(n8,n10,n10,snk)
+     
+      - fn(n9,n1,n1,n2) - fn(n9,n1,n1,n4) - fn(n9,n1,n1,n8) - fn(n9,n7,n7,n1) - fn(n9,n7,n7,n5) - fn(n9,n10,n10,snk)
+     
+      - fn(src,n1,n1,n2) - fn(src,n1,n1,n4) - fn(src,n1,n1,n8) =E= 0 ; (LHS = 2, INFES = 2 ****)
+     
+
+---- flowbaln  =E=  new flow balance on nodes
+
+flowbaln(n1,n2)..  - fn(n1,n2,n2,n6) - fn(n1,n2,n2,n8) + fn(n7,n1,n1,n2) + fn(n9,n1,n1,n2) + fn(src,n1,n1,n2) =E= 0 ; (LHS = 0)
+     
+flowbaln(n1,n4)..  - fn(n1,n4,n4,n3) - fn(n1,n4,n4,n4) - fn(n1,n4,n4,n6) - fn(n1,n4,n4,n7) + fn(n7,n1,n1,n4) + fn(n9,n1,n1,n4)
+     
+      + fn(src,n1,n1,n4) =E= 0 ; (LHS = 0)
+     
+flowbaln(n1,n8)..  - fn(n1,n8,n8,n3) - fn(n1,n8,n8,n10) + fn(n7,n1,n1,n8) + fn(n9,n1,n1,n8) + fn(src,n1,n1,n8) =E= 0 ; (LHS = 0)
+     
+REMAINING 21 ENTRIES SKIPPED
+
+
+---- mtzn  =G=  new MTZ subtour elimination constraints
+
+mtzn(n1,n2,n2,n6)..  - 24*fn(n1,n2,n2,n6) - tn(n1,n2) + tn(n2,n6) =G= -23 ; (LHS = 0)
+     
+mtzn(n1,n2,n2,n8)..  - 24*fn(n1,n2,n2,n8) - tn(n1,n2) + tn(n2,n8) =G= -23 ; (LHS = 0)
+     
+mtzn(n1,n4,n4,n3)..  - 24*fn(n1,n4,n4,n3) - tn(n1,n4) + tn(n4,n3) =G= -23 ; (LHS = 0)
+     
+REMAINING 42 ENTRIES SKIPPED
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE sp3 Using MIP From line 203
+
+
+---- count  length of shortest path (hops)
+
+count
+                (.LO, .L, .UP, .M = -INF, 2, 5, 0)
+        1       objn
+
+
+---- fn  new flow variables
+
+fn(n1,n2,n2,n6)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objn
+       -1       flowbaln(n1,n2)
+        1       flowbaln(n2,n6)
+      -24       mtzn(n1,n2,n2,n6)
+
+fn(n1,n2,n2,n8)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objn
+       -1       flowbaln(n1,n2)
+        1       flowbaln(n2,n8)
+      -24       mtzn(n1,n2,n2,n8)
+
+fn(n1,n4,n4,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objn
+       -1       flowbaln(n1,n4)
+        1       flowbaln(n4,n3)
+      -24       mtzn(n1,n4,n4,n3)
+
+REMAINING 48 ENTRIES SKIPPED
+
+---- tn  MTZ variable
+
+tn(n1,n2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       mtzn(n1,n2,n2,n6)
+       -1       mtzn(n1,n2,n2,n8)
+        1       mtzn(n7,n1,n1,n2)
+        1       mtzn(n9,n1,n1,n2)
+
+tn(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       mtzn(n1,n4,n4,n3)
+       -1       mtzn(n1,n4,n4,n4)
+       -1       mtzn(n1,n4,n4,n6)
+       -1       mtzn(n1,n4,n4,n7)
+        1       mtzn(n7,n1,n1,n4)
+        1       mtzn(n9,n1,n1,n4)
+
+tn(n1,n8)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       mtzn(n1,n8,n8,n3)
+       -1       mtzn(n1,n8,n8,n10)
+        1       mtzn(n7,n1,n1,n8)
+        1       mtzn(n9,n1,n1,n8)
+
+REMAINING 19 ENTRIES SKIPPED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE sp3 Using MIP From line 203
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           70
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           74
+NON ZERO ELEMENTS           289     DISCRETE VARIABLES         51
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE sp3 Using MIP From line 203
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   sp3                 OBJECTIVE  count
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  203
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                3.0000
+
+ RESOURCE USAGE, LIMIT          0.265 10000000000.000
+ ITERATION COUNT, LIMIT        72    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+>>  SolnPoolIntensity = 4
+>>  PopulateLim = 10000
+>>  SolnPoolPop = 2
+>>  solnpoolmerge solutions.gdx
+Finished reading from "D:\projects\OptimizationModels\NetworkAllPaths\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.52 Mb (peak 0.52 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (129): all reachable solutions enumerated, integer optimal.
+--- Cplex Time: 0.20sec (det. 3.06 ticks)
+
+--- Dumping 9 solutions from the solution pool...
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.01sec (det. 0.10 ticks)
+
+
+Populate has completed the enumeration of solutions
+MIP Solution:            3.000000    (72 iterations, 85 nodes)
+Final Solve:             3.000000    (0 iterations)
+
+Best possible:               -inf
+Absolute gap:                  na
+Relative gap:                  na
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objn                .              .              .             1.0000      
+
+  objn  new objective
+
+---- EQU flowbaln  new flow balance on nodes
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+n1 .n2           .              .              .              .          
+n1 .n4           .              .              .              .          
+n1 .n8           .              .              .              .          
+n2 .n6           .              .              .              .          
+n2 .n8           .              .              .              .          
+n3 .n3           .              .              .              .          
+n3 .n8           .              .              .              .          
+n3 .n9           .              .              .              .          
+n4 .n3           .              .              .              .          
+n4 .n4           .              .              .              .          
+n4 .n6           .              .              .              .          
+n4 .n7           .              .              .              .          
+n5 .n9           .              .              .              .          
+n6 .n5           .              .              .              .          
+n6 .n10          .              .              .              .          
+n7 .n1           .              .              .              .          
+n7 .n5           .              .              .              .          
+n8 .n3           .              .              .              .          
+n8 .n10          .              .              .              .          
+n9 .n1           .              .              .              .          
+n9 .n7           .              .              .              .          
+n9 .n10          .              .              .              .          
+n10.snk         1.0000         1.0000         1.0000          .          
+src.n1         -1.0000        -1.0000        -1.0000          .          
+
+---- EQU mtzn  new MTZ subtour elimination constraints
+
+                    LOWER          LEVEL          UPPER         MARGINAL
+
+n1.n2.n2.n6        -23.0000        46.0000        +INF             .          
+n1.n2.n2.n8        -23.0000        23.0000        +INF             .          
+n1.n4.n4.n3        -23.0000          .            +INF             .          
+n1.n4.n4.n4        -23.0000          .            +INF             .          
+n1.n4.n4.n6        -23.0000        46.0000        +INF             .          
+n1.n4.n4.n7        -23.0000          .            +INF             .          
+n1.n8.n8.n3        -23.0000       -23.0000        +INF            EPS         
+n1.n8.n8.n10       -23.0000       -23.0000        +INF            EPS         
+n2.n6.n6.n5        -23.0000       -23.0000        +INF            EPS         
+n2.n6.n6.n10       -23.0000       -23.0000        +INF             .          
+n2.n8.n8.n3        -23.0000       -23.0000        +INF            EPS         
+n2.n8.n8.n10       -23.0000         1.0000        +INF             .          
+n3.n3.n3.n8        -23.0000        23.0000        +INF             .          
+n3.n3.n3.n9        -23.0000          .            +INF             .          
+n3.n8.n8.n3        -23.0000       -23.0000        +INF            EPS         
+n3.n8.n8.n10       -23.0000         1.0000        +INF             .          
+n3.n9.n9.n1        -23.0000          .            +INF             .          
+n3.n9.n9.n7        -23.0000          .            +INF             .          
+n3.n9.n9.n10       -23.0000          .            +INF             .          
+n4.n3.n3.n3        -23.0000          .            +INF             .          
+n4.n3.n3.n8        -23.0000        23.0000        +INF             .          
+n4.n3.n3.n9        -23.0000          .            +INF             .          
+n4.n4.n4.n3        -23.0000          .            +INF             .          
+n4.n4.n4.n6        -23.0000        46.0000        +INF             .          
+n4.n4.n4.n7        -23.0000          .            +INF             .          
+n4.n6.n6.n5        -23.0000       -23.0000        +INF            EPS         
+n4.n6.n6.n10       -23.0000       -23.0000        +INF            EPS         
+n4.n7.n7.n1        -23.0000          .            +INF             .          
+n4.n7.n7.n5        -23.0000        23.0000        +INF             .          
+n5.n9.n9.n1        -23.0000          .            +INF             .          
+n5.n9.n9.n7        -23.0000          .            +INF             .          
+n5.n9.n9.n10       -23.0000          .            +INF             .          
+n6.n5.n5.n9        -23.0000       -23.0000        +INF            EPS         
+n7.n1.n1.n2        -23.0000          .            +INF             .          
+n7.n1.n1.n4        -23.0000          .            +INF             .          
+n7.n1.n1.n8        -23.0000        23.0000        +INF             .          
+n7.n5.n5.n9        -23.0000       -23.0000        +INF            EPS         
+n8.n3.n3.n3        -23.0000          .            +INF             .          
+n8.n3.n3.n8        -23.0000        23.0000        +INF             .          
+n8.n3.n3.n9        -23.0000          .            +INF             .          
+n9.n1.n1.n2        -23.0000          .            +INF             .          
+n9.n1.n1.n4        -23.0000          .            +INF             .          
+n9.n1.n1.n8        -23.0000        23.0000        +INF             .          
+n9.n7.n7.n1        -23.0000          .            +INF             .          
+n9.n7.n7.n5        -23.0000        23.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR count             -INF            3.0000         5.0000          .          
+
+  count  length of shortest path (hops)
+
+---- VAR fn  new flow variables
+
+                       LOWER          LEVEL          UPPER         MARGINAL
+
+n1 .n2 .n2 .n6           .              .             1.0000         1.0000      
+n1 .n2 .n2 .n8           .              .             1.0000         1.0000      
+n1 .n4 .n4 .n3           .              .             1.0000         1.0000      
+n1 .n4 .n4 .n4           .              .             1.0000         1.0000      
+n1 .n4 .n4 .n6           .              .             1.0000         1.0000      
+n1 .n4 .n4 .n7           .              .             1.0000         1.0000      
+n1 .n8 .n8 .n3           .              .             1.0000         1.0000      
+n1 .n8 .n8 .n10          .             1.0000         1.0000         1.0000      
+n2 .n6 .n6 .n5           .              .             1.0000         1.0000      
+n2 .n6 .n6 .n10          .              .             1.0000         1.0000      
+n2 .n8 .n8 .n3           .              .             1.0000         1.0000      
+n2 .n8 .n8 .n10          .              .             1.0000         1.0000      
+n3 .n3 .n3 .n8           .              .             1.0000         1.0000      
+n3 .n3 .n3 .n9           .              .             1.0000         1.0000      
+n3 .n8 .n8 .n3           .              .             1.0000         1.0000      
+n3 .n8 .n8 .n10          .              .             1.0000         1.0000      
+n3 .n9 .n9 .n1           .              .             1.0000         1.0000      
+n3 .n9 .n9 .n7           .              .             1.0000         1.0000      
+n3 .n9 .n9 .n10          .              .             1.0000         1.0000      
+n4 .n3 .n3 .n3           .              .             1.0000         1.0000      
+n4 .n3 .n3 .n8           .              .             1.0000         1.0000      
+n4 .n3 .n3 .n9           .              .             1.0000         1.0000      
+n4 .n4 .n4 .n3           .              .             1.0000         1.0000      
+n4 .n4 .n4 .n6           .              .             1.0000         1.0000      
+n4 .n4 .n4 .n7           .              .             1.0000         1.0000      
+n4 .n6 .n6 .n5           .              .             1.0000         1.0000      
+n4 .n6 .n6 .n10          .              .             1.0000         1.0000      
+n4 .n7 .n7 .n1           .              .             1.0000         1.0000      
+n4 .n7 .n7 .n5           .              .             1.0000         1.0000      
+n5 .n9 .n9 .n1           .              .             1.0000         1.0000      
+n5 .n9 .n9 .n7           .              .             1.0000         1.0000      
+n5 .n9 .n9 .n10          .              .             1.0000         1.0000      
+n6 .n5 .n5 .n9           .              .             1.0000         1.0000      
+n6 .n10.n10.snk          .              .             1.0000         1.0000      
+n7 .n1 .n1 .n2           .              .             1.0000         1.0000      
+n7 .n1 .n1 .n4           .              .             1.0000         1.0000      
+n7 .n1 .n1 .n8           .              .             1.0000         1.0000      
+n7 .n5 .n5 .n9           .              .             1.0000         1.0000      
+n8 .n3 .n3 .n3           .              .             1.0000         1.0000      
+n8 .n3 .n3 .n8           .              .             1.0000         1.0000      
+n8 .n3 .n3 .n9           .              .             1.0000         1.0000      
+n8 .n10.n10.snk          .             1.0000         1.0000         1.0000      
+n9 .n1 .n1 .n2           .              .             1.0000         1.0000      
+n9 .n1 .n1 .n4           .              .             1.0000         1.0000      
+n9 .n1 .n1 .n8           .              .             1.0000         1.0000      
+n9 .n7 .n7 .n1           .              .             1.0000         1.0000      
+n9 .n7 .n7 .n5           .              .             1.0000         1.0000      
+n9 .n10.n10.snk          .              .             1.0000         1.0000      
+src.n1 .n1 .n2           .              .             1.0000         1.0000      
+src.n1 .n1 .n4           .              .             1.0000         1.0000      
+src.n1 .n1 .n8           .             1.0000         1.0000         1.0000      
+
+---- VAR tn  MTZ variable
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+n1.n2           .              .            +INF            EPS         
+n1.n4           .              .            +INF            EPS         
+n1.n8           .            23.0000        +INF             .          
+n2.n6           .            46.0000        +INF             .          
+n2.n8           .            23.0000        +INF             .          
+n3.n3           .              .            +INF            EPS         
+n3.n8           .            23.0000        +INF             .          
+n3.n9           .              .            +INF            EPS         
+n4.n3           .              .            +INF            EPS         
+n4.n4           .              .            +INF            EPS         
+n4.n6           .            46.0000        +INF             .          
+n4.n7           .              .            +INF            EPS         
+n5.n9           .              .            +INF            EPS         
+n6.n5           .            23.0000        +INF             .          
+n6.n10          .            23.0000        +INF             .          
+n7.n1           .              .            +INF            EPS         
+n7.n5           .            23.0000        +INF             .          
+n8.n3           .              .            +INF            EPS         
+n8.n10          .            24.0000        +INF             .          
+n9.n1           .              .            +INF            EPS         
+n9.n7           .              .            +INF            EPS         
+n9.n10          .              .            +INF            EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/19/22 15:35:43 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    209 #### Model SP3/solution pool: augmented graph
+            VARIABLE count.Up              =        5.000  length of shortest path (hops)
+
+----    209 SET sol  
+
+soln_sp3_p1,    soln_sp3_p2,    soln_sp3_p3,    soln_sp3_p4,    soln_sp3_p5,    soln_sp3_p6,    soln_sp3_p7,    soln_sp3_p8
+soln_sp3_p9
+
+
+----    209 PARAMETER fsoln  solution from solution pool
+
+INDEX 1 = soln_sp3_p1
+
+              n1.n8      n8.n10     n10.snk
+
+n1 .n8                        1
+n8 .n10                                   1
+src.n1            1
+
+INDEX 1 = soln_sp3_p2
+
+              n1.n2       n2.n8      n8.n10     n10.snk
+
+n1 .n2                        1
+n2 .n8                                    1
+n8 .n10                                               1
+src.n1            1
+
+INDEX 1 = soln_sp3_p3
+
+              n1.n4       n4.n6      n6.n10     n10.snk
+
+n1 .n4                        1
+n4 .n6                                    1
+n6 .n10                                               1
+src.n1            1
+
+INDEX 1 = soln_sp3_p4
+
+              n1.n2       n2.n6      n6.n10     n10.snk
+
+n1 .n2                        1
+n2 .n6                                    1
+n6 .n10                                               1
+src.n1            1
+
+INDEX 1 = soln_sp3_p5
+
+              n1.n8       n3.n8       n8.n3      n8.n10     n10.snk
+
+n1 .n8                                    1
+n3 .n8                                                1
+n8 .n3                        1
+n8 .n10                                                           1
+src.n1            1
+
+INDEX 1 = soln_sp3_p6
+
+              n1.n8       n3.n9       n8.n3      n9.n10     n10.snk
+
+n1 .n8                                    1
+n3 .n9                                                1
+n8 .n3                        1
+n9 .n10                                                           1
+src.n1            1
+
+INDEX 1 = soln_sp3_p7
+
+              n1.n4       n3.n9       n4.n3      n9.n10     n10.snk
+
+n1 .n4                                    1
+n3 .n9                                                1
+n4 .n3                        1
+n9 .n10                                                           1
+src.n1            1
+
+INDEX 1 = soln_sp3_p8
+
+              n1.n4       n3.n8       n4.n3      n8.n10     n10.snk
+
+n1 .n4                                    1
+n3 .n8                                                1
+n4 .n3                        1
+n8 .n10                                                           1
+src.n1            1
+
+INDEX 1 = soln_sp3_p9
+
+              n1.n4       n4.n4       n4.n6      n6.n10     n10.snk
+
+n1 .n4                        1
+n4 .n4                                    1
+n4 .n6                                                1
+n6 .n10                                                           1
+src.n1            1
+
+
+**** REPORT FILE SUMMARY
+
+gv1 D:\projects\OptimizationModels\NetworkAllPaths\graph1.gv
+gv2 D:\projects\OptimizationModels\NetworkAllPaths\graph2.gv
+
+
+EXECUTION TIME       =        3.406 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      D:\projects\OptimizationModels\NetworkAllPaths\AllPaths.gms
+Output     D:\projects\OptimizationModels\NetworkAllPaths\AllPaths.lst
