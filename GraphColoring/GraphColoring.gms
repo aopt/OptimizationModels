@@ -7,46 +7,57 @@ $ontext
 
 $offtext
 
-*
+*---------------------------------------------------------------
 * random graph
 *
+* sparse undirected network:
+* arcs only from i->j when i<j
+*---------------------------------------------------------------
+
 set
-   v 'vertices' /n1*n20/
-   e(v,v) 'edges'
+   n 'nodes' /n1*n20/
+   a(n,n) 'arcs'
    c 'colors' /orange,lightblue,yellow,green,chocolate,grey/
 ;
 
-alias(v,i,j);
-e(i,j)$(ord(i)<ord(j)) = uniform(0,1)<0.2;
+alias(n,i,j);
 
-*
+a(i,j)$(ord(i)<ord(j)) = uniform(0,1)<0.2;
+
+*---------------------------------------------------------------
 * model
-*
+*---------------------------------------------------------------
+
 binary variables
-    x(v,c) 'assign color to node'
-    w(c)   'color is used'
+   x(n,c) 'assign color to node'
+   u(c)   'color is used'
 ;
 
 variable
-    numColors 'number of colors needed'
+   numColors 'number of colors needed'
 ;
 
 equations
-    objective         'minimize number of colors used'
-    assign(v)         'every node should have exactly one color'
-    sameColor(i,j,c)  'adjacent vertices cannot have the same color'
+   objective            'minimize number of colors used'
+   assign(n)            'every node should have exactly one color'
+   notSameColor(i,j,c)  'adjacent vertices cannot have the same color'
+   order(c)             'ordering constraint (optional)'
 ;
 
-objective..  numColors =e= sum(c, w(c));
-assign(v)..  sum(c, x(v,c)) =e= 1;
-sameColor(e(i,j),c).. x(i,c)+x(j,c) =l= w(c);
+objective..  numColors =e= sum(c, u(c));
+
+assign(n)..  sum(c, x(n,c)) =e= 1;
+
+notSameColor(a(i,j),c).. x(i,c)+x(j,c) =l= u(c);
+
+order(c-1).. u(c) =l= u(c-1);
 
 model color /all/;
 option optcr=0;
 solve color minimizing numColors using mip;
 
 
-display x.l,w.l,numColors.l;
+display x.l,u.l,numColors.l;
 
 
 *-----------------------------------------------------------
@@ -56,14 +67,14 @@ display x.l,w.l,numColors.l;
 file gv1 /graph1.gv/;
 put gv1;
 put "graph neato{"/;
-loop(c$(w.l(c)>0.5),
+loop(c$(u.l(c)>0.5),
    put "node [shape=circle,style=filled,color=",c.tl:0,"] ";
-   loop(v$(x.l(v,c)>0.5), put v.tl:0," ");
+   loop(n$(x.l(n,c)>0.5), put n.tl:0," ");
    put/;
 );
 
 put "edge [color=black]"/;
-loop(e(i,j), put i.tl:0,"--",j.tl:0/;);
+loop(a(i,j), put i.tl:0,"--",j.tl:0/;);
 putclose"}"/;
 
 
