@@ -10,4 +10,4 @@ This folder contains some models related to Graph Coloring.
 
 
 References:
-http://yetanothermathprogrammingconsultant.blogspot.com/
+https://yetanothermathprogrammingconsultant.blogspot.com/2022/01/coloring-us-county-map.html
