@@ -39,7 +39,6 @@ parameter w(n,n) 'weights';
 w(a)$(uniform(0,1)<0.25) = uniform(0,1);
 display w;
 
-
 *---------------------------------------------------------------
 * MIQP model
 *---------------------------------------------------------------
@@ -78,7 +77,7 @@ equations
 ;
 
 objective2..        cost =e= sum(a,w(a)*y(a));
-ybound(a(i,j),c)..  y(i,j) =g= x(i,c)+x(j,c)-1;
+ybound(a(i,j),c)$w(a)..  y(a) =g= x(i,c)+x(j,c)-1;
 
 model color2 /objective2,assign,ybound/;
 
