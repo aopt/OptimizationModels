@@ -28,7 +28,7 @@ $offtext
 set
    n 'nodes' /n1*n50/
    a(n,n) 'arcs'
-   c 'colors' /color1*color5/
+   c 'colors' /color1*color3/
 ;
 
 alias(n,i,j);
@@ -60,6 +60,7 @@ objective..  cost =e= sum((a(i,j),c),w(a)*x(i,c)*x(j,c));
 
 assign(n)..  sum(c, x(n,c)) =e= 1;
 
+
 model color1 /all/;
 option optcr=0, miqcp=cplex, threads=16;
 solve color1 minimizing cost using miqcp;
@@ -85,6 +86,28 @@ model color2 /objective2,assign,ybound/;
 y.prior(a) = INF;
 
 solve color2 minimizing cost using mip;
+
+
+*---------------------------------------------------------------
+* symmetry
+* impose restrictions on first few nodes
+*   node1 = color1
+*   node2 = color1 or color2
+*   node3 = color1 or color2 or color3
+*---------------------------------------------------------------
+
+
+set allowed(n,c) 'allowed colors for first few nodes';
+allowed(n,c) = ord(c) <= ord(n) and ord(n) <= card(c)-1;
+display allowed;
+
+equation symmetry(n) 'break some symmetry';
+
+symmetry(n)$(ord(n)<card(c)).. sum(allowed(n,c),x(n,c)) =e= 1;
+
+
+model color3 /color1,symmetry/;
+solve color3 minimizing cost using miqcp;
 
 
 *---------------------------------------------------------------
