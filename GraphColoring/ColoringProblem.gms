@@ -97,7 +97,7 @@ solve color2 minimizing cost using mip;
 *---------------------------------------------------------------
 
 
-set allowed(n,c) 'allowed colors for first few nodes';
+set allowed(n,c) 'allowed colors for first card(c)-1 nodes';
 allowed(n,c) = ord(c) <= ord(n) and ord(n) <= card(c)-1;
 display allowed;
 

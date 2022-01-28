@@ -1,4 +1,4 @@
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 1
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -100,7 +100,7 @@ C o m p i l a t i o n
   97  *---------------------------------------------------------------
   98   
   99   
- 100  set allowed(n,c) 'allowed colors for first few nodes';
+ 100  set allowed(n,c) 'allowed colors for first card(c)-1 nodes';
  101  allowed(n,c) = ord(c) <= ord(n) and ord(n) <= card(c)-1;
  102  display allowed;
  103   
@@ -127,7 +127,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 2
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -279,7 +279,7 @@ n45       0.305
 n46                   0.216
 n47                   0.817
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 3
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE color1 Using MIQCP From line 66
 
@@ -347,7 +347,7 @@ assign(n3)..  x(n3,color1) + x(n3,color2) + x(n3,color3) =E= 1 ; (LHS = 0, INFES
      
 REMAINING 47 ENTRIES SKIPPED
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 4
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE color1 Using MIQCP From line 66
 
@@ -377,7 +377,7 @@ cost
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 5
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE color1 Using MIQCP From line 66
 
@@ -391,7 +391,7 @@ CODE LENGTH               3,854     CONSTANT POOL             337     DISCRETE V
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 6
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE color1 Using MIQCP From line 66
 
@@ -406,7 +406,7 @@ Solution Report     SOLVE color1 Using MIQCP From line 66
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               16.9541
 
- RESOURCE USAGE, LIMIT         28.875 10000000000.000
+ RESOURCE USAGE, LIMIT         30.281 10000000000.000
  ITERATION COUNT, LIMIT   5703304    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
@@ -418,13 +418,13 @@ Solution Report     SOLVE color1 Using MIQCP From line 66
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 28.78sec (det. 22780.65 ticks)
+--- Cplex Time: 30.25sec (det. 22780.65 ticks)
 
 --- Fixing integer variables and solving final QP...
 
 
 --- Fixed MIQP status (1): optimal.
---- Cplex Time: 0.09sec (det. 0.44 ticks)
+--- Cplex Time: 0.03sec (det. 0.44 ticks)
 
 
 Proven optimal solution
@@ -663,7 +663,7 @@ n50.color3          .              .             1.0000         2.4287
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 7
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE color2 Using MIP From line 88
 
@@ -822,7 +822,7 @@ ybound(n1,n2,color3)..  - x(n1,color3) - x(n2,color3) + y(n1,n2) =G= -1 ; (LHS =
      
 REMAINING 960 ENTRIES SKIPPED
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 8
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE color2 Using MIP From line 88
 
@@ -919,7 +919,7 @@ y(n1,n8)
         1       ybound(n1,n8,color3)
 
 REMAINING 318 ENTRIES SKIPPED
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 9
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE color2 Using MIP From line 88
 
@@ -932,8 +932,8 @@ NON ZERO ELEMENTS         3,361     DISCRETE VARIABLES        150
                                     RELAXED VARIABLES         321 ****
 
 
-GENERATION TIME      =        0.015 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 10
+GENERATION TIME      =        0.000 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE color2 Using MIP From line 88
 
@@ -948,7 +948,7 @@ Solution Report     SOLVE color2 Using MIP From line 88
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               16.9541
 
- RESOURCE USAGE, LIMIT         49.625 10000000000.000
+ RESOURCE USAGE, LIMIT         52.672 10000000000.000
  ITERATION COUNT, LIMIT  10749091    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -961,13 +961,13 @@ Solution Report     SOLVE color2 Using MIP From line 88
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 49.58sec (det. 44973.11 ticks)
+--- Cplex Time: 52.58sec (det. 44973.11 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.03sec (det. 0.66 ticks)
+--- Cplex Time: 0.09sec (det. 0.66 ticks)
 
 
 Proven optimal solution
@@ -2499,19 +2499,19 @@ n47.n49          .              .             1.0000         0.8171
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 11
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    102 SET allowed  allowed colors for first few nodes
+----    102 SET allowed  allowed colors for first card(c)-1 nodes
 
         color1      color2
 
 n1         YES
 n2         YES         YES
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 12
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE color3 Using MIQCP From line 110
 
@@ -2612,7 +2612,7 @@ symmetry(n1)..  x(n1,color1) =E= 1 ; (LHS = 1)
      
 symmetry(n2)..  x(n2,color1) + x(n2,color2) =E= 1 ; (LHS = 1)
      
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 13
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE color3 Using MIQCP From line 110
 
@@ -2643,7 +2643,7 @@ cost
                 (.LO, .L, .UP, .M = -INF, 16.954111504, +INF, 0)
         1       objective
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 14
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE color3 Using MIQCP From line 110
 
@@ -2656,8 +2656,8 @@ NON ZERO ELEMENTS           304     NON LINEAR N-Z            150
 CODE LENGTH               3,854     CONSTANT POOL             337     DISCRETE VARIABLES        150
 
 
-GENERATION TIME      =        0.016 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 15
+GENERATION TIME      =        0.000 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE color3 Using MIQCP From line 110
 
@@ -2672,11 +2672,11 @@ Solution Report     SOLVE color3 Using MIQCP From line 110
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               16.9541
 
- RESOURCE USAGE, LIMIT         28.484 10000000000.000
+ RESOURCE USAGE, LIMIT         29.406 10000000000.000
  ITERATION COUNT, LIMIT   5569733    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
---- GMO setup time: 0.02s
+--- GMO setup time: 0.00s
 --- GMO memory 0.58 Mb (peak 0.59 Mb)
 --- Dictionary memory 0.00 Mb
 --- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.04 Mb)
@@ -2684,13 +2684,13 @@ Solution Report     SOLVE color3 Using MIQCP From line 110
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 28.41sec (det. 24762.24 ticks)
+--- Cplex Time: 29.33sec (det. 24762.24 ticks)
 
 --- Fixing integer variables and solving final QP...
 
 
 --- Fixed MIQP status (1): optimal.
---- Cplex Time: 0.06sec (det. 0.44 ticks)
+--- Cplex Time: 0.08sec (det. 0.44 ticks)
 
 
 Proven optimal solution
@@ -2936,7 +2936,7 @@ n50.color3          .              .             1.0000         2.4287
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/26/22 15:51:46 Page 16
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/27/22 22:31:21 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -3043,7 +3043,7 @@ n45                   0.120
 
 
 
-EXECUTION TIME       =      107.063 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
+EXECUTION TIME       =      112.453 SECONDS      5 MB  37.1.0 r07954d5 WEX-WEI
 
 
 USER: Eval License                                   G211206|0002CO-GEN

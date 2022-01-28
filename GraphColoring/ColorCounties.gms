@@ -22,7 +22,7 @@ sets
 
 $include data.inc
 
-* fix data wrt Glades
+* fix data wrt Glades County, FL
 a('12043','12085') = no;
 a('12043','12099') = no;
 

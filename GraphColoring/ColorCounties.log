@@ -1,5 +1,5 @@
 
---- Job ColorCounties.gms Start 01/23/22 19:53:32 37.1.0 r07954d5 WEX-WEI x86 64bit/MS Windows
+--- Job ColorCounties.gms Start 01/27/22 22:27:30 37.1.0 r07954d5 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\37\gmsprmNT.txt
 --- GAMS Parameters defined
@@ -8,7 +8,7 @@
     PageSize 0
     PageContr 3
     Action CE
-    ScrDir C:\projects\OptimizationModels\GraphColoring\225b\
+    ScrDir C:\projects\OptimizationModels\GraphColoring\225a\
     SysDir C:\GAMS\37\
     WorkDir C:\projects\OptimizationModels\GraphColoring\
     LogOption 3
@@ -18,7 +18,7 @@
     IDE 1
 Licensee: Eval License                                   G211206|0002CO-GEN
           Amsterdam Optimization Modeling Group,                     DCE378
-          C:\GAMS\37\gamslice.txt
+          C:\Users\erwin\OneDrive\Documents\GAMS\gamslice.txt
           License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
           Evaluation license: Not for commercial or production use
 Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
@@ -27,13 +27,13 @@ GAMS 37.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
 --- ColorCounties.gms(23) 3 Mb
 --- . data.inc(6188) 4 Mb
 --- ColorCounties.gms(93) 4 Mb
---- Starting execution: elapsed 0:00:00.069
+--- Starting execution: elapsed 0:00:00.052
 --- ColorCounties.gms(6261) 5 Mb
 --- Generating MIP model color
 --- ColorCounties.gms(6262) 27 Mb
 ---   50,616 rows  16,111 columns  158,289 non-zeroes
 ---   16,110 discrete-columns
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.158
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.192
 
 IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
 
@@ -60,8 +60,8 @@ MIP Presolve eliminated 28325 rows and 16 columns.
 MIP Presolve modified 18958 coefficients.
 Reduced MIP has 22290 rows, 16095 columns, and 93365 nonzeros.
 Reduced MIP has 16095 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 4.83 sec. (4531.42 ticks)
-Found incumbent of value 5.000000 after 5.03 sec. (4829.11 ticks)
+Presolve time = 4.89 sec. (4531.42 ticks)
+Found incumbent of value 5.000000 after 5.09 sec. (4829.11 ticks)
 Probing fixed 2 vars, tightened 0 bounds.
 Probing changed sense of 1 constraints.
 Probing time = 0.03 sec. (8.29 ticks)
@@ -70,7 +70,7 @@ Detecting symmetries...
 MIP Presolve eliminated 2 rows and 2 columns.
 Reduced MIP has 22288 rows, 16093 columns, and 85729 nonzeros.
 Reduced MIP has 16093 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.13 sec. (208.79 ticks)
+Presolve time = 0.14 sec. (208.79 ticks)
 Probing time = 0.02 sec. (5.46 ticks)
 Clique table members: 41805.
 MIP emphasis: balance optimality and feasibility.
@@ -114,20 +114,20 @@ Removing perturbation.
 
 Barrier solved model.
 
-Root relaxation solution time = 1.38 sec. (1637.19 ticks)
+Root relaxation solution time = 1.44 sec. (1637.19 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
 
 *     0+    0                            5.0000        2.0000            60.00%
-Found incumbent of value 5.000000 after 6.63 sec. (6726.37 ticks)
+Found incumbent of value 5.000000 after 6.76 sec. (6726.37 ticks)
       0     0        4.0000 12049        5.0000        4.0000        9   20.00%
       0     0        4.0000  6236        5.0000     Cuts: 201    22682   20.00%
       0     0        4.0000  7079        5.0000    Cuts: 1488    31823   20.00%
       0     0        4.0000  4623        5.0000      Cuts: 55    32974   20.00%
       0     0        4.0000  5778        5.0000     Cuts: 951    39691   20.00%
       0     2        4.0000  3319        5.0000        4.0000    39691   20.00%
-Elapsed time = 47.88 sec. (57420.01 ticks, tree = 0.02 MB)
+Elapsed time = 48.78 sec. (57420.01 ticks, tree = 0.02 MB)
       1     3        4.0000  2915        5.0000        4.0000    51453   20.00%
       3     5        4.0000  2704        5.0000        4.0000    52261   20.00%
       4     6        4.0000  2848        5.0000        4.0000    52813   20.00%
@@ -143,7 +143,7 @@ Elapsed time = 47.88 sec. (57420.01 ticks, tree = 0.02 MB)
                                                       Cuts: 3                  
      84    56        4.0000  3220        5.0000        4.0000    83871   20.00%
                                                    Cliques: 3                  
-Elapsed time = 62.45 sec. (65058.82 ticks, tree = 0.18 MB)
+Elapsed time = 63.67 sec. (65058.82 ticks, tree = 0.18 MB)
     258   153        4.0000  3616        5.0000        4.0000   124835   20.00%
                                                      Cuts: 36                  
     371   330        4.0000  3711        5.0000        4.0000   173101   20.00%
@@ -160,7 +160,7 @@ Elapsed time = 62.45 sec. (65058.82 ticks, tree = 0.18 MB)
    2724  2124        4.0000  1432        5.0000        4.0000   497958   20.00%
                                                      Cuts: 11                  
    3486  2828        4.0000  1756        5.0000        4.0000   559048   20.00%
-Elapsed time = 88.75 sec. (74622.94 ticks, tree = 396.72 MB)
+Elapsed time = 93.06 sec. (74622.94 ticks, tree = 396.72 MB)
    4311  3429        4.0000  1273        5.0000        4.0000   601682   20.00%
                                                   Cliques: 21                  
    4881  3427        4.0000  3238        5.0000        4.0000   608127   20.00%
@@ -174,7 +174,7 @@ Tried aggregator 1 time.
 MIP Presolve eliminated 4321 rows and 3665 columns.
 Reduced MIP has 17967 rows, 12428 columns, and 57816 nonzeros.
 Reduced MIP has 12428 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.05 sec. (37.61 ticks)
+Presolve time = 0.03 sec. (37.61 ticks)
 Tried aggregator 1 time.
 Reduced MIP has 17967 rows, 12428 columns, and 57816 nonzeros.
 Reduced MIP has 12428 binaries, 0 generals, 0 SOSs, and 0 indicators.
@@ -288,7 +288,7 @@ Iteration: 17797   Dual objective     =             4.000847
 Iteration: 17920   Dual objective     =             4.000848
 Iteration: 18043   Dual objective     =             4.000849
 Iteration: 18172   Dual objective     =             4.000850
-Elapsed time = 6.72 sec. (10000.30 ticks, 18199 iterations)
+Elapsed time = 6.89 sec. (10000.30 ticks, 18199 iterations)
 Iteration: 18306   Dual objective     =             4.000851
 Iteration: 18439   Dual objective     =             4.000852
 Iteration: 18571   Dual objective     =             4.000853
@@ -323,7 +323,7 @@ Removing perturbation.
    5154    98        4.0000  2558        5.0000        4.0000   804219   20.00%
                                                      Cuts: 41                  
    5552   347    infeasible              5.0000        4.0000   863335   20.00%
-Elapsed time = 179.31 sec. (160346.30 ticks, tree = 5.83 MB)
+Elapsed time = 192.17 sec. (160346.30 ticks, tree = 5.83 MB)
    6109   883        4.0000  1908        5.0000        4.0000   947665   20.00%
    6766  1323        4.0000  2162        5.0000        4.0000   991191   20.00%
    7502  1848        4.0000  2047        5.0000        4.0000  1048512   20.00%
@@ -334,11 +334,11 @@ Elapsed time = 179.31 sec. (160346.30 ticks, tree = 5.83 MB)
   11320  5199        4.0000   665        5.0000        4.0000  1385541   20.00%
   12172  6065        4.0000   958        5.0000        4.0000  1470951   20.00%
   13033  7091        4.0000   481        5.0000        4.0000  1566864   20.00%
-Elapsed time = 201.97 sec. (169897.03 ticks, tree = 182.70 MB)
+Elapsed time = 216.22 sec. (169897.03 ticks, tree = 182.70 MB)
   13971  7766        4.0000   823        5.0000        4.0000  1629176   20.00%
 * 14847  8457      integral     0        4.0000        4.0000  1700610    0.00%
                                                       Cuts: 6                  
-Found incumbent of value 4.000000 after 206.50 sec. (171766.79 ticks)
+Found incumbent of value 4.000000 after 221.03 sec. (171766.79 ticks)
   14884  8650        4.0000   772        4.0000        4.0000  1713577    0.00%
 
 Clique cuts applied:  209
@@ -346,16 +346,16 @@ Cover cuts applied:  2
 Zero-half cuts applied:  21
 
 Root node processing (before b&c):
-  Real time             =   47.78 sec. (57402.87 ticks)
+  Real time             =   48.67 sec. (57402.87 ticks)
 Parallel b&c, 16 threads:
-  Real time             =  159.45 sec. (114909.32 ticks)
-  Sync time (average)   =   26.45 sec.
-  Wait time (average)   =    0.04 sec.
+  Real time             =  173.11 sec. (114909.32 ticks)
+  Sync time (average)   =   27.95 sec.
+  Wait time (average)   =    0.05 sec.
                           ------------
-Total (root+branch&cut) =  207.23 sec. (172312.20 ticks)
+Total (root+branch&cut) =  221.78 sec. (172312.20 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 207.23sec (det. 172312.24 ticks)
+--- Cplex Time: 221.78sec (det. 172312.24 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -392,9 +392,8 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model color
---- ColorCounties.gms(6262) 27 Mb  207 secs
---- Executing after solve: elapsed 0:03:27.626
+--- Executing after solve: elapsed 0:03:42.326
 --- ColorCounties.gms(6278) 27 Mb
 --- Putfile f C:\projects\OptimizationModels\GraphColoring\mapcolors.csv
 *** Status: Normal completion
---- Job ColorCounties.gms Stop 01/23/22 19:57:00 elapsed 0:03:27.632
+--- Job ColorCounties.gms Stop 01/27/22 22:31:12 elapsed 0:03:42.333
