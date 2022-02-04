@@ -10,6 +10,7 @@ This folder contains some models related to Graph Coloring.
 6. `ColoringProblem.gms/log/lst`: Model from [2].
 7. `ColoringProblemGraph.gms/log/lst`: Create picture of small instance with 10 nodes
 8. `Graph2.gv/png`: Output of previous model
+9. `Plotter.py` : called from [2]
 
 
 References:
