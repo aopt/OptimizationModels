@@ -1,0 +1,1013 @@
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Standard Graph Coloring Model
+       
+        References:
+            http://math.ucdenver.edu/~sborgwardt/wiki/index.php/An_Integer_Linear_Programming_Approach_to_Graph_Coloring
+       
+   9   
+  10  *---------------------------------------------------------------
+  11  * random graph
+  12  *
+  13  * sparse undirected network:
+  14  * arcs only from i->j when i<j
+  15  *---------------------------------------------------------------
+  16   
+  17  set
+  18     n 'nodes' /n1*n20/
+  19     a(n,n) 'arcs'
+  20     c 'colors' /orange,lightblue,yellow,green,chocolate,grey/
+  21  ;
+  22   
+  23  alias(n,i,j);
+  24   
+  25  a(i,j)$(ord(i)<ord(j)) = uniform(0,1)<0.2;
+  26   
+  27  *---------------------------------------------------------------
+  28  * model
+  29  *---------------------------------------------------------------
+  30   
+  31  binary variables
+  32     x(n,c) 'assign color to node'
+  33     u(c)   'color is used'
+  34  ;
+  35   
+  36  variable
+  37     numColors 'number of colors needed'
+  38  ;
+  39   
+  40  equations
+  41     objective            'minimize number of colors used'
+  42     assign(n)            'every node should have exactly one color'
+  43     notSameColor(i,j,c)  'adjacent vertices cannot have the same color'
+  44     order(c)             'ordering constraint (optional)'
+  45  ;
+  46   
+  47  objective..  numColors =e= sum(c, u(c));
+  48   
+  49  assign(n)..  sum(c, x(n,c)) =e= 1;
+  50   
+  51  notSameColor(a(i,j),c).. x(i,c)+x(j,c) =l= u(c);
+  52   
+  53  order(c-1).. u(c) =l= u(c-1);
+  54   
+  55  model color /all/;
+  56  option optcr=0;
+  57  solve color minimizing numColors using mip;
+  58   
+  59   
+  60  display x.l,u.l,numColors.l;
+  61   
+  62   
+  63  *-----------------------------------------------------------
+  64  * visualization using GraphViz
+  65  *-----------------------------------------------------------
+  66   
+  67  file gv1 /graph1.gv/;
+  68  put gv1;
+  69  put "graph neato{"/;
+  70  loop(c$(u.l(c)>0.5),
+  71     put "node [shape=circle,style=filled,color=",c.tl:0,"] ";
+  72     loop(n$(x.l(n,c)>0.5), put n.tl:0," ");
+  73     put/;
+  74  );
+  75   
+  76  put "edge [color=black]"/;
+  77  loop(a(i,j), put i.tl:0,"--",j.tl:0/;);
+  78  putclose"}"/;
+  79   
+  80   
+  81   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE color Using MIP From line 57
+
+
+---- objective  =E=  minimize number of colors used
+
+objective..  - u(orange) - u(lightblue) - u(yellow) - u(green) - u(chocolate) - u(grey) + numColors =E= 0 ; (LHS = 0)
+     
+
+---- assign  =E=  every node should have exactly one color
+
+assign(n1)..  x(n1,orange) + x(n1,lightblue) + x(n1,yellow) + x(n1,green) + x(n1,chocolate) + x(n1,grey) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+assign(n2)..  x(n2,orange) + x(n2,lightblue) + x(n2,yellow) + x(n2,green) + x(n2,chocolate) + x(n2,grey) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+assign(n3)..  x(n3,orange) + x(n3,lightblue) + x(n3,yellow) + x(n3,green) + x(n3,chocolate) + x(n3,grey) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+REMAINING 17 ENTRIES SKIPPED
+
+
+---- notSameColor  =L=  adjacent vertices cannot have the same color
+
+notSameColor(n1,n2,orange)..  x(n1,orange) + x(n2,orange) - u(orange) =L= 0 ; (LHS = 0)
+     
+notSameColor(n1,n2,lightblue)..  x(n1,lightblue) + x(n2,lightblue) - u(lightblue) =L= 0 ; (LHS = 0)
+     
+notSameColor(n1,n2,yellow)..  x(n1,yellow) + x(n2,yellow) - u(yellow) =L= 0 ; (LHS = 0)
+     
+REMAINING 339 ENTRIES SKIPPED
+
+
+---- order  =L=  ordering constraint (optional)
+
+order(orange)..  - u(orange) + u(lightblue) =L= 0 ; (LHS = 0)
+     
+order(lightblue)..  - u(lightblue) + u(yellow) =L= 0 ; (LHS = 0)
+     
+order(yellow)..  - u(yellow) + u(green) =L= 0 ; (LHS = 0)
+     
+REMAINING 2 ENTRIES SKIPPED
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE color Using MIP From line 57
+
+
+---- x  assign color to node
+
+x(n1,orange)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       assign(n1)
+        1       notSameColor(n1,n2,orange)
+        1       notSameColor(n1,n10,orange)
+        1       notSameColor(n1,n16,orange)
+        1       notSameColor(n1,n18,orange)
+
+x(n1,lightblue)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       assign(n1)
+        1       notSameColor(n1,n2,lightblue)
+        1       notSameColor(n1,n10,lightblue)
+        1       notSameColor(n1,n16,lightblue)
+        1       notSameColor(n1,n18,lightblue)
+
+x(n1,yellow)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       assign(n1)
+        1       notSameColor(n1,n2,yellow)
+        1       notSameColor(n1,n10,yellow)
+        1       notSameColor(n1,n16,yellow)
+        1       notSameColor(n1,n18,yellow)
+
+REMAINING 117 ENTRIES SKIPPED
+
+---- u  color is used
+
+u(orange)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+       -1       notSameColor(n1,n2,orange)
+       -1       notSameColor(n1,n10,orange)
+       -1       notSameColor(n1,n16,orange)
+       -1       notSameColor(n1,n18,orange)
+       -1       notSameColor(n2,n6,orange)
+       -1       notSameColor(n2,n7,orange)
+       -1       notSameColor(n2,n14,orange)
+       -1       notSameColor(n2,n16,orange)
+       -1       notSameColor(n3,n8,orange)
+       -1       notSameColor(n3,n10,orange)
+       -1       notSameColor(n3,n12,orange)
+       -1       notSameColor(n4,n5,orange)
+       -1       notSameColor(n4,n6,orange)
+       -1       notSameColor(n4,n9,orange)
+       -1       notSameColor(n4,n11,orange)
+       -1       notSameColor(n4,n12,orange)
+       -1       notSameColor(n4,n15,orange)
+       -1       notSameColor(n4,n16,orange)
+       -1       notSameColor(n5,n8,orange)
+       -1       notSameColor(n5,n13,orange)
+       -1       notSameColor(n5,n15,orange)
+       -1       notSameColor(n5,n17,orange)
+       -1       notSameColor(n5,n20,orange)
+       -1       notSameColor(n6,n7,orange)
+       -1       notSameColor(n6,n18,orange)
+       -1       notSameColor(n6,n20,orange)
+       -1       notSameColor(n7,n9,orange)
+       -1       notSameColor(n7,n10,orange)
+       -1       notSameColor(n7,n17,orange)
+       -1       notSameColor(n7,n20,orange)
+       -1       notSameColor(n8,n13,orange)
+       -1       notSameColor(n8,n15,orange)
+       -1       notSameColor(n8,n17,orange)
+       -1       notSameColor(n8,n20,orange)
+       -1       notSameColor(n9,n10,orange)
+       -1       notSameColor(n9,n13,orange)
+       -1       notSameColor(n10,n12,orange)
+       -1       notSameColor(n10,n15,orange)
+       -1       notSameColor(n11,n14,orange)
+       -1       notSameColor(n11,n18,orange)
+       -1       notSameColor(n11,n19,orange)
+       -1       notSameColor(n12,n13,orange)
+       -1       notSameColor(n12,n16,orange)
+       -1       notSameColor(n13,n15,orange)
+       -1       notSameColor(n13,n16,orange)
+       -1       notSameColor(n13,n17,orange)
+       -1       notSameColor(n13,n19,orange)
+       -1       notSameColor(n14,n15,orange)
+       -1       notSameColor(n14,n20,orange)
+       -1       notSameColor(n15,n19,orange)
+       -1       notSameColor(n15,n20,orange)
+       -1       notSameColor(n16,n17,orange)
+       -1       notSameColor(n16,n18,orange)
+       -1       notSameColor(n16,n19,orange)
+       -1       notSameColor(n16,n20,orange)
+       -1       notSameColor(n17,n20,orange)
+       -1       notSameColor(n18,n19,orange)
+       -1       order(orange)
+
+u(lightblue)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+       -1       notSameColor(n1,n2,lightblue)
+       -1       notSameColor(n1,n10,lightblue)
+       -1       notSameColor(n1,n16,lightblue)
+       -1       notSameColor(n1,n18,lightblue)
+       -1       notSameColor(n2,n6,lightblue)
+       -1       notSameColor(n2,n7,lightblue)
+       -1       notSameColor(n2,n14,lightblue)
+       -1       notSameColor(n2,n16,lightblue)
+       -1       notSameColor(n3,n8,lightblue)
+       -1       notSameColor(n3,n10,lightblue)
+       -1       notSameColor(n3,n12,lightblue)
+       -1       notSameColor(n4,n5,lightblue)
+       -1       notSameColor(n4,n6,lightblue)
+       -1       notSameColor(n4,n9,lightblue)
+       -1       notSameColor(n4,n11,lightblue)
+       -1       notSameColor(n4,n12,lightblue)
+       -1       notSameColor(n4,n15,lightblue)
+       -1       notSameColor(n4,n16,lightblue)
+       -1       notSameColor(n5,n8,lightblue)
+       -1       notSameColor(n5,n13,lightblue)
+       -1       notSameColor(n5,n15,lightblue)
+       -1       notSameColor(n5,n17,lightblue)
+       -1       notSameColor(n5,n20,lightblue)
+       -1       notSameColor(n6,n7,lightblue)
+       -1       notSameColor(n6,n18,lightblue)
+       -1       notSameColor(n6,n20,lightblue)
+       -1       notSameColor(n7,n9,lightblue)
+       -1       notSameColor(n7,n10,lightblue)
+       -1       notSameColor(n7,n17,lightblue)
+       -1       notSameColor(n7,n20,lightblue)
+       -1       notSameColor(n8,n13,lightblue)
+       -1       notSameColor(n8,n15,lightblue)
+       -1       notSameColor(n8,n17,lightblue)
+       -1       notSameColor(n8,n20,lightblue)
+       -1       notSameColor(n9,n10,lightblue)
+       -1       notSameColor(n9,n13,lightblue)
+       -1       notSameColor(n10,n12,lightblue)
+       -1       notSameColor(n10,n15,lightblue)
+       -1       notSameColor(n11,n14,lightblue)
+       -1       notSameColor(n11,n18,lightblue)
+       -1       notSameColor(n11,n19,lightblue)
+       -1       notSameColor(n12,n13,lightblue)
+       -1       notSameColor(n12,n16,lightblue)
+       -1       notSameColor(n13,n15,lightblue)
+       -1       notSameColor(n13,n16,lightblue)
+       -1       notSameColor(n13,n17,lightblue)
+       -1       notSameColor(n13,n19,lightblue)
+       -1       notSameColor(n14,n15,lightblue)
+       -1       notSameColor(n14,n20,lightblue)
+       -1       notSameColor(n15,n19,lightblue)
+       -1       notSameColor(n15,n20,lightblue)
+       -1       notSameColor(n16,n17,lightblue)
+       -1       notSameColor(n16,n18,lightblue)
+       -1       notSameColor(n16,n19,lightblue)
+       -1       notSameColor(n16,n20,lightblue)
+       -1       notSameColor(n17,n20,lightblue)
+       -1       notSameColor(n18,n19,lightblue)
+        1       order(orange)
+       -1       order(lightblue)
+
+u(yellow)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       objective
+       -1       notSameColor(n1,n2,yellow)
+       -1       notSameColor(n1,n10,yellow)
+       -1       notSameColor(n1,n16,yellow)
+       -1       notSameColor(n1,n18,yellow)
+       -1       notSameColor(n2,n6,yellow)
+       -1       notSameColor(n2,n7,yellow)
+       -1       notSameColor(n2,n14,yellow)
+       -1       notSameColor(n2,n16,yellow)
+       -1       notSameColor(n3,n8,yellow)
+       -1       notSameColor(n3,n10,yellow)
+       -1       notSameColor(n3,n12,yellow)
+       -1       notSameColor(n4,n5,yellow)
+       -1       notSameColor(n4,n6,yellow)
+       -1       notSameColor(n4,n9,yellow)
+       -1       notSameColor(n4,n11,yellow)
+       -1       notSameColor(n4,n12,yellow)
+       -1       notSameColor(n4,n15,yellow)
+       -1       notSameColor(n4,n16,yellow)
+       -1       notSameColor(n5,n8,yellow)
+       -1       notSameColor(n5,n13,yellow)
+       -1       notSameColor(n5,n15,yellow)
+       -1       notSameColor(n5,n17,yellow)
+       -1       notSameColor(n5,n20,yellow)
+       -1       notSameColor(n6,n7,yellow)
+       -1       notSameColor(n6,n18,yellow)
+       -1       notSameColor(n6,n20,yellow)
+       -1       notSameColor(n7,n9,yellow)
+       -1       notSameColor(n7,n10,yellow)
+       -1       notSameColor(n7,n17,yellow)
+       -1       notSameColor(n7,n20,yellow)
+       -1       notSameColor(n8,n13,yellow)
+       -1       notSameColor(n8,n15,yellow)
+       -1       notSameColor(n8,n17,yellow)
+       -1       notSameColor(n8,n20,yellow)
+       -1       notSameColor(n9,n10,yellow)
+       -1       notSameColor(n9,n13,yellow)
+       -1       notSameColor(n10,n12,yellow)
+       -1       notSameColor(n10,n15,yellow)
+       -1       notSameColor(n11,n14,yellow)
+       -1       notSameColor(n11,n18,yellow)
+       -1       notSameColor(n11,n19,yellow)
+       -1       notSameColor(n12,n13,yellow)
+       -1       notSameColor(n12,n16,yellow)
+       -1       notSameColor(n13,n15,yellow)
+       -1       notSameColor(n13,n16,yellow)
+       -1       notSameColor(n13,n17,yellow)
+       -1       notSameColor(n13,n19,yellow)
+       -1       notSameColor(n14,n15,yellow)
+       -1       notSameColor(n14,n20,yellow)
+       -1       notSameColor(n15,n19,yellow)
+       -1       notSameColor(n15,n20,yellow)
+       -1       notSameColor(n16,n17,yellow)
+       -1       notSameColor(n16,n18,yellow)
+       -1       notSameColor(n16,n19,yellow)
+       -1       notSameColor(n16,n20,yellow)
+       -1       notSameColor(n17,n20,yellow)
+       -1       notSameColor(n18,n19,yellow)
+        1       order(lightblue)
+       -1       order(yellow)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- numColors  number of colors needed
+
+numColors
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE color Using MIP From line 57
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS          368
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          127
+NON ZERO ELEMENTS         1,163     DISCRETE VARIABLES        126
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE color Using MIP From line 57
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   color               OBJECTIVE  numColors
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  57
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                4.0000
+
+ RESOURCE USAGE, LIMIT          0.110 10000000000.000
+ ITERATION COUNT, LIMIT       121    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.11sec (det. 4.52 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.24 ticks)
+
+
+Proven optimal solution
+MIP Solution:            4.000000    (121 iterations, 0 nodes)
+Final Solve:             4.000000    (0 iterations)
+
+Best possible:           4.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  minimize number of colors used
+
+---- EQU assign  every node should have exactly one color
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n1          1.0000         1.0000         1.0000          .          
+n2          1.0000         1.0000         1.0000          .          
+n3          1.0000         1.0000         1.0000          .          
+n4          1.0000         1.0000         1.0000          .          
+n5          1.0000         1.0000         1.0000          .          
+n6          1.0000         1.0000         1.0000          .          
+n7          1.0000         1.0000         1.0000          .          
+n8          1.0000         1.0000         1.0000          .          
+n9          1.0000         1.0000         1.0000          .          
+n10         1.0000         1.0000         1.0000          .          
+n11         1.0000         1.0000         1.0000          .          
+n12         1.0000         1.0000         1.0000          .          
+n13         1.0000         1.0000         1.0000          .          
+n14         1.0000         1.0000         1.0000          .          
+n15         1.0000         1.0000         1.0000          .          
+n16         1.0000         1.0000         1.0000          .          
+n17         1.0000         1.0000         1.0000          .          
+n18         1.0000         1.0000         1.0000          .          
+n19         1.0000         1.0000         1.0000          .          
+n20         1.0000         1.0000         1.0000          .          
+
+---- EQU notSameColor  adjacent vertices cannot have the same color
+
+                         LOWER          LEVEL          UPPER         MARGINAL
+
+n1 .n2 .orange           -INF             .              .              .          
+n1 .n2 .lightblue        -INF           -1.0000          .              .          
+n1 .n2 .yellow           -INF           -1.0000          .              .          
+n1 .n2 .green            -INF             .              .              .          
+n1 .n2 .chocolate        -INF             .              .              .          
+n1 .n2 .grey             -INF             .              .              .          
+n1 .n10.orange           -INF             .              .              .          
+n1 .n10.lightblue        -INF           -1.0000          .              .          
+n1 .n10.yellow           -INF           -1.0000          .              .          
+n1 .n10.green            -INF             .              .              .          
+n1 .n10.chocolate        -INF             .              .              .          
+n1 .n10.grey             -INF             .              .              .          
+n1 .n16.orange           -INF           -1.0000          .              .          
+n1 .n16.lightblue        -INF           -1.0000          .              .          
+n1 .n16.yellow           -INF             .              .              .          
+n1 .n16.green            -INF             .              .              .          
+n1 .n16.chocolate        -INF             .              .              .          
+n1 .n16.grey             -INF             .              .              .          
+n1 .n18.orange           -INF             .              .              .          
+n1 .n18.lightblue        -INF           -1.0000          .              .          
+n1 .n18.yellow           -INF           -1.0000          .              .          
+n1 .n18.green            -INF             .              .              .          
+n1 .n18.chocolate        -INF             .              .              .          
+n1 .n18.grey             -INF             .              .              .          
+n2 .n6 .orange           -INF             .              .              .          
+n2 .n6 .lightblue        -INF           -1.0000          .              .          
+n2 .n6 .yellow           -INF             .              .              .          
+n2 .n6 .green            -INF           -1.0000          .              .          
+n2 .n6 .chocolate        -INF             .              .              .          
+n2 .n6 .grey             -INF             .              .              .          
+n2 .n7 .orange           -INF             .              .              .          
+n2 .n7 .lightblue        -INF             .              .              .          
+n2 .n7 .yellow           -INF           -1.0000          .              .          
+n2 .n7 .green            -INF           -1.0000          .              .          
+n2 .n7 .chocolate        -INF             .              .              .          
+n2 .n7 .grey             -INF             .              .              .          
+n2 .n14.orange           -INF             .              .              .          
+n2 .n14.lightblue        -INF             .              .              .          
+n2 .n14.yellow           -INF           -1.0000          .              .          
+n2 .n14.green            -INF           -1.0000          .              .          
+n2 .n14.chocolate        -INF             .              .              .          
+n2 .n14.grey             -INF             .              .              .          
+n2 .n16.orange           -INF             .              .              .          
+n2 .n16.lightblue        -INF           -1.0000          .              .          
+n2 .n16.yellow           -INF             .              .              .          
+n2 .n16.green            -INF           -1.0000          .              .          
+n2 .n16.chocolate        -INF             .              .              .          
+n2 .n16.grey             -INF             .              .              .          
+n3 .n8 .orange           -INF           -1.0000          .              .          
+n3 .n8 .lightblue        -INF             .              .              .          
+n3 .n8 .yellow           -INF             .              .              .          
+n3 .n8 .green            -INF           -1.0000          .              .          
+n3 .n8 .chocolate        -INF             .              .              .          
+n3 .n8 .grey             -INF             .              .              .          
+n3 .n10.orange           -INF             .              .              .          
+n3 .n10.lightblue        -INF             .              .              .          
+n3 .n10.yellow           -INF           -1.0000          .              .          
+n3 .n10.green            -INF           -1.0000          .              .          
+n3 .n10.chocolate        -INF             .              .              .          
+n3 .n10.grey             -INF             .              .              .          
+n3 .n12.orange           -INF           -1.0000          .              .          
+n3 .n12.lightblue        -INF             .              .              .          
+n3 .n12.yellow           -INF           -1.0000          .              .          
+n3 .n12.green            -INF             .              .              .          
+n3 .n12.chocolate        -INF             .              .              .          
+n3 .n12.grey             -INF             .              .              .          
+n4 .n5 .orange           -INF             .              .              .          
+n4 .n5 .lightblue        -INF             .              .              .          
+n4 .n5 .yellow           -INF           -1.0000          .              .          
+n4 .n5 .green            -INF           -1.0000          .              .          
+n4 .n5 .chocolate        -INF             .              .              .          
+n4 .n5 .grey             -INF             .              .              .          
+n4 .n6 .orange           -INF             .              .              .          
+n4 .n6 .lightblue        -INF           -1.0000          .              .          
+n4 .n6 .yellow           -INF             .              .              .          
+n4 .n6 .green            -INF           -1.0000          .              .          
+n4 .n6 .chocolate        -INF             .              .              .          
+n4 .n6 .grey             -INF             .              .              .          
+n4 .n9 .orange           -INF             .              .              .          
+n4 .n9 .lightblue        -INF           -1.0000          .              .          
+n4 .n9 .yellow           -INF             .              .              .          
+n4 .n9 .green            -INF           -1.0000          .              .          
+n4 .n9 .chocolate        -INF             .              .              .          
+n4 .n9 .grey             -INF             .              .              .          
+n4 .n11.orange           -INF             .              .              .          
+n4 .n11.lightblue        -INF           -1.0000          .              .          
+n4 .n11.yellow           -INF             .              .              .          
+n4 .n11.green            -INF           -1.0000          .              .          
+n4 .n11.chocolate        -INF             .              .              .          
+n4 .n11.grey             -INF             .              .              .          
+n4 .n12.orange           -INF             .              .              .          
+n4 .n12.lightblue        -INF           -1.0000          .              .          
+n4 .n12.yellow           -INF           -1.0000          .              .          
+n4 .n12.green            -INF             .              .              .          
+n4 .n12.chocolate        -INF             .              .              .          
+n4 .n12.grey             -INF             .              .              .          
+n4 .n15.orange           -INF             .              .              .          
+n4 .n15.lightblue        -INF           -1.0000          .              .          
+n4 .n15.yellow           -INF           -1.0000          .              .          
+n4 .n15.green            -INF             .              .              .          
+n4 .n15.chocolate        -INF             .              .              .          
+n4 .n15.grey             -INF             .              .              .          
+n4 .n16.orange           -INF             .              .              .          
+n4 .n16.lightblue        -INF           -1.0000          .              .          
+n4 .n16.yellow           -INF             .              .              .          
+n4 .n16.green            -INF           -1.0000          .              .          
+n4 .n16.chocolate        -INF             .              .              .          
+n4 .n16.grey             -INF             .              .              .          
+n5 .n8 .orange           -INF           -1.0000          .              .          
+n5 .n8 .lightblue        -INF             .              .              .          
+n5 .n8 .yellow           -INF             .              .              .          
+n5 .n8 .green            -INF           -1.0000          .              .          
+n5 .n8 .chocolate        -INF             .              .              .          
+n5 .n8 .grey             -INF             .              .              .          
+n5 .n13.orange           -INF             .              .              .          
+n5 .n13.lightblue        -INF             .              .              .          
+n5 .n13.yellow           -INF           -1.0000          .              .          
+n5 .n13.green            -INF           -1.0000          .              .          
+n5 .n13.chocolate        -INF             .              .              .          
+n5 .n13.grey             -INF             .              .              .          
+n5 .n15.orange           -INF           -1.0000          .              .          
+n5 .n15.lightblue        -INF             .              .              .          
+n5 .n15.yellow           -INF           -1.0000          .              .          
+n5 .n15.green            -INF             .              .              .          
+n5 .n15.chocolate        -INF             .              .              .          
+n5 .n15.grey             -INF             .              .              .          
+n5 .n17.orange           -INF           -1.0000          .              .          
+n5 .n17.lightblue        -INF             .              .              .          
+n5 .n17.yellow           -INF           -1.0000          .              .          
+n5 .n17.green            -INF             .              .              .          
+n5 .n17.chocolate        -INF             .              .              .          
+n5 .n17.grey             -INF             .              .              .          
+n5 .n20.orange           -INF             .              .              .          
+n5 .n20.lightblue        -INF             .              .              .          
+n5 .n20.yellow           -INF           -1.0000          .              .          
+n5 .n20.green            -INF           -1.0000          .              .          
+n5 .n20.chocolate        -INF             .              .              .          
+n5 .n20.grey             -INF             .              .              .          
+n6 .n7 .orange           -INF           -1.0000          .              .          
+n6 .n7 .lightblue        -INF             .              .              .          
+n6 .n7 .yellow           -INF             .              .              .          
+n6 .n7 .green            -INF           -1.0000          .              .          
+n6 .n7 .chocolate        -INF             .              .              .          
+n6 .n7 .grey             -INF             .              .              .          
+n6 .n18.orange           -INF             .              .              .          
+n6 .n18.lightblue        -INF           -1.0000          .              .          
+n6 .n18.yellow           -INF             .              .              .          
+n6 .n18.green            -INF           -1.0000          .              .          
+n6 .n18.chocolate        -INF             .              .              .          
+n6 .n18.grey             -INF             .              .              .          
+n6 .n20.orange           -INF             .              .              .          
+n6 .n20.lightblue        -INF           -1.0000          .              .          
+n6 .n20.yellow           -INF             .              .              .          
+n6 .n20.green            -INF           -1.0000          .              .          
+n6 .n20.chocolate        -INF             .              .              .          
+n6 .n20.grey             -INF             .              .              .          
+n7 .n9 .orange           -INF           -1.0000          .              .          
+n7 .n9 .lightblue        -INF             .              .              .          
+n7 .n9 .yellow           -INF             .              .              .          
+n7 .n9 .green            -INF           -1.0000          .              .          
+n7 .n9 .chocolate        -INF             .              .              .          
+n7 .n9 .grey             -INF             .              .              .          
+n7 .n10.orange           -INF             .              .              .          
+n7 .n10.lightblue        -INF             .              .              .          
+n7 .n10.yellow           -INF           -1.0000          .              .          
+n7 .n10.green            -INF           -1.0000          .              .          
+n7 .n10.chocolate        -INF             .              .              .          
+n7 .n10.grey             -INF             .              .              .          
+n7 .n17.orange           -INF           -1.0000          .              .          
+n7 .n17.lightblue        -INF             .              .              .          
+n7 .n17.yellow           -INF           -1.0000          .              .          
+n7 .n17.green            -INF             .              .              .          
+n7 .n17.chocolate        -INF             .              .              .          
+n7 .n17.grey             -INF             .              .              .          
+n7 .n20.orange           -INF             .              .              .          
+n7 .n20.lightblue        -INF             .              .              .          
+n7 .n20.yellow           -INF           -1.0000          .              .          
+n7 .n20.green            -INF           -1.0000          .              .          
+n7 .n20.chocolate        -INF             .              .              .          
+n7 .n20.grey             -INF             .              .              .          
+n8 .n13.orange           -INF             .              .              .          
+n8 .n13.lightblue        -INF           -1.0000          .              .          
+n8 .n13.yellow           -INF             .              .              .          
+n8 .n13.green            -INF           -1.0000          .              .          
+n8 .n13.chocolate        -INF             .              .              .          
+n8 .n13.grey             -INF             .              .              .          
+n8 .n15.orange           -INF           -1.0000          .              .          
+n8 .n15.lightblue        -INF           -1.0000          .              .          
+n8 .n15.yellow           -INF             .              .              .          
+n8 .n15.green            -INF             .              .              .          
+n8 .n15.chocolate        -INF             .              .              .          
+n8 .n15.grey             -INF             .              .              .          
+n8 .n17.orange           -INF           -1.0000          .              .          
+n8 .n17.lightblue        -INF           -1.0000          .              .          
+n8 .n17.yellow           -INF             .              .              .          
+n8 .n17.green            -INF             .              .              .          
+n8 .n17.chocolate        -INF             .              .              .          
+n8 .n17.grey             -INF             .              .              .          
+n8 .n20.orange           -INF             .              .              .          
+n8 .n20.lightblue        -INF           -1.0000          .              .          
+n8 .n20.yellow           -INF             .              .              .          
+n8 .n20.green            -INF           -1.0000          .              .          
+n8 .n20.chocolate        -INF             .              .              .          
+n8 .n20.grey             -INF             .              .              .          
+n9 .n10.orange           -INF             .              .              .          
+n9 .n10.lightblue        -INF           -1.0000          .              .          
+n9 .n10.yellow           -INF             .              .              .          
+n9 .n10.green            -INF           -1.0000          .              .          
+n9 .n10.chocolate        -INF             .              .              .          
+n9 .n10.grey             -INF             .              .              .          
+n9 .n13.orange           -INF             .              .              .          
+n9 .n13.lightblue        -INF           -1.0000          .              .          
+n9 .n13.yellow           -INF             .              .              .          
+n9 .n13.green            -INF           -1.0000          .              .          
+n9 .n13.chocolate        -INF             .              .              .          
+n9 .n13.grey             -INF             .              .              .          
+n10.n12.orange           -INF             .              .              .          
+n10.n12.lightblue        -INF           -1.0000          .              .          
+n10.n12.yellow           -INF           -1.0000          .              .          
+n10.n12.green            -INF             .              .              .          
+n10.n12.chocolate        -INF             .              .              .          
+n10.n12.grey             -INF             .              .              .          
+n10.n15.orange           -INF             .              .              .          
+n10.n15.lightblue        -INF           -1.0000          .              .          
+n10.n15.yellow           -INF           -1.0000          .              .          
+n10.n15.green            -INF             .              .              .          
+n10.n15.chocolate        -INF             .              .              .          
+n10.n15.grey             -INF             .              .              .          
+n11.n14.orange           -INF           -1.0000          .              .          
+n11.n14.lightblue        -INF             .              .              .          
+n11.n14.yellow           -INF             .              .              .          
+n11.n14.green            -INF           -1.0000          .              .          
+n11.n14.chocolate        -INF             .              .              .          
+n11.n14.grey             -INF             .              .              .          
+n11.n18.orange           -INF             .              .              .          
+n11.n18.lightblue        -INF           -1.0000          .              .          
+n11.n18.yellow           -INF             .              .              .          
+n11.n18.green            -INF           -1.0000          .              .          
+n11.n18.chocolate        -INF             .              .              .          
+n11.n18.grey             -INF             .              .              .          
+n11.n19.orange           -INF           -1.0000          .              .          
+n11.n19.lightblue        -INF             .              .              .          
+n11.n19.yellow           -INF             .              .              .          
+n11.n19.green            -INF           -1.0000          .              .          
+n11.n19.chocolate        -INF             .              .              .          
+n11.n19.grey             -INF             .              .              .          
+n12.n13.orange           -INF             .              .              .          
+n12.n13.lightblue        -INF           -1.0000          .              .          
+n12.n13.yellow           -INF           -1.0000          .              .          
+n12.n13.green            -INF             .              .              .          
+n12.n13.chocolate        -INF             .              .              .          
+n12.n13.grey             -INF             .              .              .          
+n12.n16.orange           -INF           -1.0000          .              .          
+n12.n16.lightblue        -INF           -1.0000          .              .          
+n12.n16.yellow           -INF             .              .              .          
+n12.n16.green            -INF             .              .              .          
+n12.n16.chocolate        -INF             .              .              .          
+n12.n16.grey             -INF             .              .              .          
+n13.n15.orange           -INF             .              .              .          
+n13.n15.lightblue        -INF           -1.0000          .              .          
+n13.n15.yellow           -INF           -1.0000          .              .          
+n13.n15.green            -INF             .              .              .          
+n13.n15.chocolate        -INF             .              .              .          
+n13.n15.grey             -INF             .              .              .          
+n13.n16.orange           -INF             .              .              .          
+n13.n16.lightblue        -INF           -1.0000          .              .          
+n13.n16.yellow           -INF             .              .              .          
+n13.n16.green            -INF           -1.0000          .              .          
+n13.n16.chocolate        -INF             .              .              .          
+n13.n16.grey             -INF             .              .              .          
+n13.n17.orange           -INF             .              .              .          
+n13.n17.lightblue        -INF           -1.0000          .              .          
+n13.n17.yellow           -INF           -1.0000          .              .          
+n13.n17.green            -INF             .              .              .          
+n13.n17.chocolate        -INF             .              .              .          
+n13.n17.grey             -INF             .              .              .          
+n13.n19.orange           -INF             .              .              .          
+n13.n19.lightblue        -INF             .              .              .          
+n13.n19.yellow           -INF           -1.0000          .              .          
+n13.n19.green            -INF           -1.0000          .              .          
+n13.n19.chocolate        -INF             .              .              .          
+n13.n19.grey             -INF             .              .              .          
+n14.n15.orange           -INF           -1.0000          .              .          
+n14.n15.lightblue        -INF             .              .              .          
+n14.n15.yellow           -INF           -1.0000          .              .          
+n14.n15.green            -INF             .              .              .          
+n14.n15.chocolate        -INF             .              .              .          
+n14.n15.grey             -INF             .              .              .          
+n14.n20.orange           -INF             .              .              .          
+n14.n20.lightblue        -INF             .              .              .          
+n14.n20.yellow           -INF           -1.0000          .              .          
+n14.n20.green            -INF           -1.0000          .              .          
+n14.n20.chocolate        -INF             .              .              .          
+n14.n20.grey             -INF             .              .              .          
+n15.n19.orange           -INF           -1.0000          .              .          
+n15.n19.lightblue        -INF             .              .              .          
+n15.n19.yellow           -INF           -1.0000          .              .          
+n15.n19.green            -INF             .              .              .          
+n15.n19.chocolate        -INF             .              .              .          
+n15.n19.grey             -INF             .              .              .          
+n15.n20.orange           -INF             .              .              .          
+n15.n20.lightblue        -INF           -1.0000          .              .          
+n15.n20.yellow           -INF           -1.0000          .              .          
+n15.n20.green            -INF             .              .              .          
+n15.n20.chocolate        -INF             .              .              .          
+n15.n20.grey             -INF             .              .              .          
+n16.n17.orange           -INF           -1.0000          .              .          
+n16.n17.lightblue        -INF           -1.0000          .              .          
+n16.n17.yellow           -INF             .              .              .          
+n16.n17.green            -INF             .              .              .          
+n16.n17.chocolate        -INF             .              .              .          
+n16.n17.grey             -INF             .              .              .          
+n16.n18.orange           -INF             .              .              .          
+n16.n18.lightblue        -INF           -1.0000          .              .          
+n16.n18.yellow           -INF             .              .              .          
+n16.n18.green            -INF           -1.0000          .              .          
+n16.n18.chocolate        -INF             .              .              .          
+n16.n18.grey             -INF             .              .              .          
+n16.n19.orange           -INF           -1.0000          .              .          
+n16.n19.lightblue        -INF             .              .              .          
+n16.n19.yellow           -INF             .              .              .          
+n16.n19.green            -INF           -1.0000          .              .          
+n16.n19.chocolate        -INF             .              .              .          
+n16.n19.grey             -INF             .              .              .          
+n16.n20.orange           -INF             .              .              .          
+n16.n20.lightblue        -INF           -1.0000          .              .          
+n16.n20.yellow           -INF             .              .              .          
+n16.n20.green            -INF           -1.0000          .              .          
+n16.n20.chocolate        -INF             .              .              .          
+n16.n20.grey             -INF             .              .              .          
+n17.n20.orange           -INF             .              .              .          
+n17.n20.lightblue        -INF           -1.0000          .              .          
+n17.n20.yellow           -INF           -1.0000          .              .          
+n17.n20.green            -INF             .              .              .          
+n17.n20.chocolate        -INF             .              .              .          
+n17.n20.grey             -INF             .              .              .          
+n18.n19.orange           -INF             .              .              .          
+n18.n19.lightblue        -INF             .              .              .          
+n18.n19.yellow           -INF           -1.0000          .              .          
+n18.n19.green            -INF           -1.0000          .              .          
+n18.n19.chocolate        -INF             .              .              .          
+n18.n19.grey             -INF             .              .              .          
+
+---- EQU order  ordering constraint (optional)
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+orange           -INF             .              .              .          
+lightblue        -INF             .              .              .          
+yellow           -INF             .              .              .          
+green            -INF           -1.0000          .              .          
+chocolate        -INF             .              .              .          
+
+---- VAR x  assign color to node
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+n1 .orange             .              .             1.0000         EPS         
+n1 .lightblue          .              .             1.0000         EPS         
+n1 .yellow             .              .             1.0000         EPS         
+n1 .green              .             1.0000         1.0000         EPS         
+n1 .chocolate          .              .             1.0000         EPS         
+n1 .grey               .              .             1.0000         EPS         
+n2 .orange             .             1.0000         1.0000         EPS         
+n2 .lightblue          .              .             1.0000         EPS         
+n2 .yellow             .              .             1.0000         EPS         
+n2 .green              .              .             1.0000         EPS         
+n2 .chocolate          .              .             1.0000         EPS         
+n2 .grey               .              .             1.0000         EPS         
+n3 .orange             .              .             1.0000         EPS         
+n3 .lightblue          .             1.0000         1.0000         EPS         
+n3 .yellow             .              .             1.0000         EPS         
+n3 .green              .              .             1.0000         EPS         
+n3 .chocolate          .              .             1.0000         EPS         
+n3 .grey               .              .             1.0000         EPS         
+n4 .orange             .             1.0000         1.0000         EPS         
+n4 .lightblue          .              .             1.0000         EPS         
+n4 .yellow             .              .             1.0000         EPS         
+n4 .green              .              .             1.0000         EPS         
+n4 .chocolate          .              .             1.0000         EPS         
+n4 .grey               .              .             1.0000         EPS         
+n5 .orange             .              .             1.0000         EPS         
+n5 .lightblue          .             1.0000         1.0000         EPS         
+n5 .yellow             .              .             1.0000         EPS         
+n5 .green              .              .             1.0000         EPS         
+n5 .chocolate          .              .             1.0000         EPS         
+n5 .grey               .              .             1.0000         EPS         
+n6 .orange             .              .             1.0000         EPS         
+n6 .lightblue          .              .             1.0000         EPS         
+n6 .yellow             .             1.0000         1.0000         EPS         
+n6 .green              .              .             1.0000         EPS         
+n6 .chocolate          .              .             1.0000         EPS         
+n6 .grey               .              .             1.0000         EPS         
+n7 .orange             .              .             1.0000         EPS         
+n7 .lightblue          .             1.0000         1.0000         EPS         
+n7 .yellow             .              .             1.0000         EPS         
+n7 .green              .              .             1.0000         EPS         
+n7 .chocolate          .              .             1.0000         EPS         
+n7 .grey               .              .             1.0000         EPS         
+n8 .orange             .              .             1.0000         EPS         
+n8 .lightblue          .              .             1.0000         EPS         
+n8 .yellow             .             1.0000         1.0000         EPS         
+n8 .green              .              .             1.0000         EPS         
+n8 .chocolate          .              .             1.0000         EPS         
+n8 .grey               .              .             1.0000         EPS         
+n9 .orange             .              .             1.0000         EPS         
+n9 .lightblue          .              .             1.0000         EPS         
+n9 .yellow             .             1.0000         1.0000         EPS         
+n9 .green              .              .             1.0000         EPS         
+n9 .chocolate          .              .             1.0000         EPS         
+n9 .grey               .              .             1.0000         EPS         
+n10.orange             .             1.0000         1.0000         EPS         
+n10.lightblue          .              .             1.0000         EPS         
+n10.yellow             .              .             1.0000         EPS         
+n10.green              .              .             1.0000         EPS         
+n10.chocolate          .              .             1.0000         EPS         
+n10.grey               .              .             1.0000         EPS         
+n11.orange             .              .             1.0000         EPS         
+n11.lightblue          .              .             1.0000         EPS         
+n11.yellow             .             1.0000         1.0000         EPS         
+n11.green              .              .             1.0000         EPS         
+n11.chocolate          .              .             1.0000         EPS         
+n11.grey               .              .             1.0000         EPS         
+n12.orange             .              .             1.0000         EPS         
+n12.lightblue          .              .             1.0000         EPS         
+n12.yellow             .              .             1.0000         EPS         
+n12.green              .             1.0000         1.0000         EPS         
+n12.chocolate          .              .             1.0000         EPS         
+n12.grey               .              .             1.0000         EPS         
+n13.orange             .             1.0000         1.0000         EPS         
+n13.lightblue          .              .             1.0000         EPS         
+n13.yellow             .              .             1.0000         EPS         
+n13.green              .              .             1.0000         EPS         
+n13.chocolate          .              .             1.0000         EPS         
+n13.grey               .              .             1.0000         EPS         
+n14.orange             .              .             1.0000         EPS         
+n14.lightblue          .             1.0000         1.0000         EPS         
+n14.yellow             .              .             1.0000         EPS         
+n14.green              .              .             1.0000         EPS         
+n14.chocolate          .              .             1.0000         EPS         
+n14.grey               .              .             1.0000         EPS         
+n15.orange             .              .             1.0000         EPS         
+n15.lightblue          .              .             1.0000         EPS         
+n15.yellow             .              .             1.0000         EPS         
+n15.green              .             1.0000         1.0000         EPS         
+n15.chocolate          .              .             1.0000         EPS         
+n15.grey               .              .             1.0000         EPS         
+n16.orange             .              .             1.0000         EPS         
+n16.lightblue          .              .             1.0000         EPS         
+n16.yellow             .             1.0000         1.0000         EPS         
+n16.green              .              .             1.0000         EPS         
+n16.chocolate          .              .             1.0000         EPS         
+n16.grey               .              .             1.0000         EPS         
+n17.orange             .              .             1.0000         EPS         
+n17.lightblue          .              .             1.0000         EPS         
+n17.yellow             .              .             1.0000         EPS         
+n17.green              .             1.0000         1.0000         EPS         
+n17.chocolate          .              .             1.0000         EPS         
+n17.grey               .              .             1.0000         EPS         
+n18.orange             .             1.0000         1.0000         EPS         
+n18.lightblue          .              .             1.0000         EPS         
+n18.yellow             .              .             1.0000         EPS         
+n18.green              .              .             1.0000         EPS         
+n18.chocolate          .              .             1.0000         EPS         
+n18.grey               .              .             1.0000         EPS         
+n19.orange             .              .             1.0000         EPS         
+n19.lightblue          .             1.0000         1.0000         EPS         
+n19.yellow             .              .             1.0000         EPS         
+n19.green              .              .             1.0000         EPS         
+n19.chocolate          .              .             1.0000         EPS         
+n19.grey               .              .             1.0000         EPS         
+n20.orange             .             1.0000         1.0000         EPS         
+n20.lightblue          .              .             1.0000         EPS         
+n20.yellow             .              .             1.0000         EPS         
+n20.green              .              .             1.0000         EPS         
+n20.chocolate          .              .             1.0000         EPS         
+n20.grey               .              .             1.0000         EPS         
+
+---- VAR u  color is used
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+orange             .             1.0000         1.0000         1.0000      
+lightblue          .             1.0000         1.0000         1.0000      
+yellow             .             1.0000         1.0000         1.0000      
+green              .             1.0000         1.0000         1.0000      
+chocolate          .              .             1.0000         1.0000      
+grey               .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR numColors         -INF            4.0000        +INF             .          
+
+  numColors  number of colors needed
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 01/23/22 00:31:03 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     60 VARIABLE x.L  assign color to node
+
+         orange   lightblue      yellow       green
+
+n1                                            1.000
+n2        1.000
+n3                    1.000
+n4        1.000
+n5                    1.000
+n6                                1.000
+n7                    1.000
+n8                                1.000
+n9                                1.000
+n10       1.000
+n11                               1.000
+n12                                           1.000
+n13       1.000
+n14                   1.000
+n15                                           1.000
+n16                               1.000
+n17                                           1.000
+n18       1.000
+n19                   1.000
+n20       1.000
+
+
+----     60 VARIABLE u.L  color is used
+
+orange    1.000,    lightblue 1.000,    yellow    1.000,    green     1.000
+
+
+----     60 VARIABLE numColors.L           =        4.000  number of colors needed
+
+**** REPORT FILE SUMMARY
+
+gv1 C:\projects\OptimizationModels\GraphColoring\graph1.gv
+
+
+EXECUTION TIME       =        0.156 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\GraphColoring\GraphColoring.gms
+Output     C:\projects\OptimizationModels\GraphColoring\GraphColoring.lst

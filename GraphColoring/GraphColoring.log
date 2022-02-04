@@ -1,0 +1,142 @@
+
+--- Job GraphColoring.gms Start 01/23/22 00:31:03 37.1.0 r07954d5 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\37\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input C:\projects\OptimizationModels\GraphColoring\GraphColoring.gms
+    PageWidth 120
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir C:\projects\OptimizationModels\GraphColoring\225b\
+    SysDir C:\GAMS\37\
+    WorkDir C:\projects\OptimizationModels\GraphColoring\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+    GDX C:\projects\OptimizationModels\GraphColoring\x.gdx
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\GAMS\37\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 37.1.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- GraphColoring.gms(81) 3 Mb
+--- Starting execution: elapsed 0:00:00.065
+--- GraphColoring.gms(56) 4 Mb
+--- Generating MIP model color
+--- GraphColoring.gms(57) 4 Mb
+---   368 rows  127 columns  1,163 non-zeroes
+---   126 discrete-columns
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.070
+
+IBM ILOG CPLEX   37.1.0 r07954d5 Released Nov 11, 2021 WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 0
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 168 rows and 1 columns.
+MIP Presolve modified 114 coefficients.
+Reduced MIP has 199 rows, 126 columns, and 784 nonzeros.
+Reduced MIP has 126 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.09 sec. (0.79 ticks)
+Found incumbent of value 6.000000 after 0.09 sec. (1.42 ticks)
+Probing fixed 2 vars, tightened 0 bounds.
+Probing time = 0.00 sec. (0.19 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 2 rows and 2 columns.
+Reduced MIP has 197 rows, 124 columns, and 722 nonzeros.
+Reduced MIP has 124 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.56 ticks)
+Probing time = 0.00 sec. (0.16 ticks)
+Clique table members: 321.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.08 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             2.000000
+Perturbation started.
+Iteration:    51   Dual objective     =             2.000000
+Iteration:   113   Dual objective     =             4.000004
+Removing perturbation.
+Root relaxation solution time = 0.00 sec. (1.46 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            6.0000        2.0000            66.67%
+Found incumbent of value 6.000000 after 0.11 sec. (4.15 ticks)
+      0     0        4.0000    63        6.0000        4.0000      121   33.33%
+*     0+    0                            4.0000        4.0000             0.00%
+Found incumbent of value 4.000000 after 0.11 sec. (4.51 ticks)
+      0     0        cutoff              4.0000        4.0000      121    0.00%
+Elapsed time = 0.11 sec. (4.51 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.11 sec. (4.52 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.11 sec. (4.52 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.11sec (det. 4.52 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 20.1.0.1 | 2021-04-07 | 3a818710c
+CPXPARAM_Advance                                 2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+CPXPARAM_MIP_Tolerances_MIPGap                   0
+Tried aggregator 1 time.
+LP Presolve eliminated 367 rows and 127 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.14 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.24 ticks)
+
+
+Proven optimal solution
+MIP Solution:            4.000000    (121 iterations, 0 nodes)
+Final Solve:             4.000000    (0 iterations)
+
+Best possible:           4.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model color
+--- Executing after solve: elapsed 0:00:00.210
+--- GraphColoring.gms(78) 4 Mb
+--- Putfile gv1 C:\projects\OptimizationModels\GraphColoring\graph1.gv
+--- GDX File C:\projects\OptimizationModels\GraphColoring\x.gdx
+*** Status: Normal completion
+--- Job GraphColoring.gms Stop 01/23/22 00:31:03 elapsed 0:00:00.211
