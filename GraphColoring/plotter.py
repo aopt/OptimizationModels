@@ -19,7 +19,7 @@ with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-c
 #
 # import the csv file with results from the GAMS model
 #
-df = pd.read_csv("mapcolors.csv",dtype={"id": str,"color":str})
+df = pd.read_csv("mapcolors.csv",dtype={"id": str,"color":str,"county":str},encoding='cp437')
 
 #
 # plot the counties with our colors
@@ -27,6 +27,7 @@ df = pd.read_csv("mapcolors.csv",dtype={"id": str,"color":str})
 
 fig = px.choropleth(df, geojson=counties, locations='id', color='color',
                            scope="usa", color_discrete_sequence=px.colors.qualitative.Set3,
+                           hover_name="county",hover_data=["id","color"]
                           )
 fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig.show()

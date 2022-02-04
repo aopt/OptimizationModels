@@ -86,9 +86,12 @@ mapcolors(n) = sum(c, ord(c)*round(x.l(n,c)));
 file f /mapcolors.csv/;
 * csv format
 f.pc=5;
-put f,"id","color"/;
+put f,"id","color","county"/;
 loop(n,
-   put n.tl:0,mapcolors(n):0:0/;
+   put n.tl:0,mapcolors(n):0:0;
+   loop(map(n,county),
+       put county.tl:0:0/;
+   );
 );
 putclose;
 
@@ -104,6 +107,8 @@ $ontext
 
 $offtext
 
+file log /''/;
+putclose log, "Creating map. This takes a minute..."/;
 execute "py plotter.py";
 
 
