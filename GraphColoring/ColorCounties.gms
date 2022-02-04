@@ -24,7 +24,7 @@ $include data.inc
 
 * fix data wrt Glades County, FL
 a('12043','12085') = no;
-a('12043','12099') = no;
+*a('12043','12099') = no;
 
 
 scalar numCounties 'number of counties in map';
@@ -90,4 +90,20 @@ put f,"id","color"/;
 loop(n,
    put n.tl:0,mapcolors(n):0:0/;
 );
+putclose;
+
+*---------------------------------------------------------------
+* create map
+*---------------------------------------------------------------
+
+$ontext
+
+  Notes: py is part of python 3.10
+         Make sure that the following packages are installed:
+            pandas, plotly
+
+$offtext
+
+execute "py plotter.py";
+
 
