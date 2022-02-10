@@ -41,6 +41,20 @@ abort$(card(map)<>numCounties) "check map";
 abort$sum(a(i,j)$(ord(i)>=ord(j)),1) "a(i,j) is not strictly upper-triangular";
 
 *---------------------------------------------------------------
+* isolated counties (no neighboring counties), all in Hawaii
+* we fix them outside the model
+*---------------------------------------------------------------
+
+set isolated(n) 'county without neighbors';
+isolated(n) = sum(j$(a(n,j) or a(j,n)),1)=0;
+display isolated;
+
+
+set isolated2(n,county) 'county without neighbors (incl. name)';
+isolated2(isolated,county) = map(isolated,county);
+option isolated2:0:0:1; display isolated2;
+
+*---------------------------------------------------------------
 * model
 *---------------------------------------------------------------
 
@@ -68,6 +82,9 @@ notSameColor(a(i,j),c).. x(i,c)+x(j,c) =l= u(c);
 
 order(c-1).. u(c) =l= u(c-1);
 
+
+* fix isolated counties
+x.fx(isolated,'color1') = 1;
 
 model color /all/;
 option optcr=0, threads=16;
