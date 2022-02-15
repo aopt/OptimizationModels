@@ -138,7 +138,7 @@ display reportSP;
 *-----------------------------------------------------------
 * Plot network using put statement
 * We generate some JavaScript code to hold the data
-* For domumentation on plotting library, see:
+* For documentation on plotting library, see:
 * https://js.cytoscape.org/
 *-----------------------------------------------------------
 
