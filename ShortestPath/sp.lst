@@ -1,4 +1,4 @@
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 1
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -23,161 +23,161 @@ C o m p i l a t i o n
   20  * sparse random network
   21  a(i,j) = uniform(0,1)<0.05;
   22   
-  23  display$(card(n)<=50) n,a;
-  24   
-  25  *-----------------------------------------------------------
-  26  * summary of the data
-  27  *    - calculate number of arcs
-  28  *    - calculate the in-/out-degree for each node
-  29  *-----------------------------------------------------------
-  30   
-  31  scalar numarcs 'number of arcs';
-  32  numarcs = card(a);
-  33  display numarcs;
-  34   
+  23  option a:0:0:8;
+  24  display$(card(n)<=50) n,a;
+  25   
+  26  *-----------------------------------------------------------
+  27  * summary of the data
+  28  *    - calculate number of arcs
+  29  *    - calculate the in-/out-degree for each node
+  30  *-----------------------------------------------------------
+  31   
+  32  scalar numarcs 'number of arcs';
+  33  numarcs = card(a);
+  34  display numarcs;
   35   
-  36  parameter degree(*,*) 'in- and out-degree';
-  37  degree(n,'in-degree') = sum(a(i,n),1);
-  38  degree(n,'out-degree') = sum(a(n,i),1);
-  39  degree('min','in-degree') = smin(n,degree(n,'in-degree'));
-  40  degree('min','out-degree') = smin(n,degree(n,'out-degree'));
-  41  degree('max','in-degree') = smax(n,degree(n,'in-degree'));
-  42  degree('max','out-degree') = smax(n,degree(n,'out-degree'));
-  43  display degree;
-  44   
-  45  *-----------------------------------------------------------
-  46  * diagonal
-  47  * do we have diagonal elements?
-  48  *-----------------------------------------------------------
-  49   
-  50  set diagonal(n) 'diagonal elements';
-  51  diagonal(n) = a(n,n);
-  52  display diagonal;
-  53   
-  54  *-----------------------------------------------------------
-  55  * random coordinates
-  56  * for plotting and for length calculation
-  57  *-----------------------------------------------------------
-  58   
-  59  set xy /x,y/;
-  60  parameter coord(n,xy) 'x-y coordinates';
-  61  coord(n,xy) = uniform(0,100);
-  62  display coord;
-  63   
-  64  *-----------------------------------------------------------
-  65  * shortest path model
-  66  *-----------------------------------------------------------
-  67   
-  68  parameters
-  69     inflow(n)   'exogenous inflow at node'    / node1   1.0 /
-  70     outflow(n)  'exogenous outflow at node'   / node29  1.0 /
-  71     length(i,j) 'arc lengths'
-  72  ;
-  73  length(a(i,j)) = sqrt(sum(xy, sqr(coord(i,xy)-coord(j,xy))));
-  74  * all are very sparse, GAMS will exploit this
-  75   
-  76  positive variable f(i,j) 'flow from node i -> node j';
-  77   
-  78  variable totalLength 'objective: minimize';
-  79   
-  80  equations
-  81      nodeBalance(n) 'kirchoff equations'
-  82      objective      'minimize'
-  83  ;
-  84   
-  85  objective.. totalLength =e= sum(a,length(a)*f(a));
-  86   
-  87  nodeBalance(n)..
-  88       sum(a(i,n), f(a)) + inflow(n) =e=
-  89       sum(a(n,j), f(a)) + outflow(n);
-  90   
-  91  model shortestPath /all/;
-  92  solve shortestPath using lp minimizing totalLength;
-  93   
-  94  display f.l,totalLength.l;
-  95   
+  36   
+  37  parameter degree(*,*) 'in- and out-degree';
+  38  degree(n,'in-degree') = sum(a(i,n),1);
+  39  degree(n,'out-degree') = sum(a(n,i),1);
+  40  degree('min','in-degree') = smin(n,degree(n,'in-degree'));
+  41  degree('min','out-degree') = smin(n,degree(n,'out-degree'));
+  42  degree('max','in-degree') = smax(n,degree(n,'in-degree'));
+  43  degree('max','out-degree') = smax(n,degree(n,'out-degree'));
+  44  display degree;
+  45   
+  46  *-----------------------------------------------------------
+  47  * diagonal
+  48  * do we have diagonal elements?
+  49  *-----------------------------------------------------------
+  50   
+  51  set diagonal(n) 'diagonal elements';
+  52  diagonal(n) = a(n,n);
+  53  display diagonal;
+  54   
+  55  *-----------------------------------------------------------
+  56  * random coordinates
+  57  * for plotting and for length calculation
+  58  *-----------------------------------------------------------
+  59   
+  60  set xy /x,y/;
+  61  parameter coord(n,xy) 'x-y coordinates';
+  62  coord(n,xy) = uniform(0,100);
+  63  display coord;
+  64   
+  65  *-----------------------------------------------------------
+  66  * shortest path model
+  67  *-----------------------------------------------------------
+  68   
+  69  parameters
+  70     inflow(n)   'exogenous inflow at node'    / node1   1.0 /
+  71     outflow(n)  'exogenous outflow at node'   / node29  1.0 /
+  72     length(i,j) 'arc lengths'
+  73  ;
+  74  length(a(i,j)) = sqrt(sum(xy, sqr(coord(i,xy)-coord(j,xy))));
+  75  * all are very sparse, GAMS will exploit this
+  76   
+  77  positive variable f(i,j) 'flow from node i -> node j';
+  78   
+  79  variable totalLength 'objective: minimize';
+  80   
+  81  equations
+  82      nodeBalance(n) 'kirchoff equations'
+  83      objective      'minimize'
+  84  ;
+  85   
+  86  objective.. totalLength =e= sum(a,length(a)*f(a));
+  87   
+  88  nodeBalance(n)..
+  89       sum(a(i,n), f(a)) + inflow(n) =e=
+  90       sum(a(n,j), f(a)) + outflow(n);
+  91   
+  92  model shortestPath /all/;
+  93  solve shortestPath using lp minimizing totalLength;
+  94   
+  95  display f.l,totalLength.l;
   96   
-  97  *-----------------------------------------------------------
-  98  * form the path (not so easy)
-  99  * and create a solution report
- 100  *-----------------------------------------------------------
- 101   
- 102  sets
- 103    step /step1*step50/
- 104    path(step,n) 'easier to read than f'
- 105  ;
- 106  singleton set cur(i) 'current node';
- 107  cur(i)$inflow(i) = yes;
- 108  * while we have a current node
- 109  loop(step$card(cur),
- 110  * record current node
- 111     path(step,cur) = yes;
- 112  * current node := next node
- 113     cur(j) = f.l(cur,j)>0.5;
- 114  * to debug add this
- 115  *   display cur;
- 116  );
- 117  option path:0:0:1;
- 118  display path;
- 119   
+  97   
+  98  *-----------------------------------------------------------
+  99  * form the path (not so easy)
+ 100  * and create a solution report
+ 101  *-----------------------------------------------------------
+ 102   
+ 103  sets
+ 104    step /step1*step50/
+ 105    path(step,n) 'easier to read than f'
+ 106  ;
+ 107  singleton set cur(i) 'current node';
+ 108  cur(i)$inflow(i) = yes;
+ 109  * while we have a current node
+ 110  loop(step$card(cur),
+ 111  * record current node
+ 112     path(step,cur) = yes;
+ 113  * current node := next node
+ 114     cur(j) = f.l(cur,j)>0.5;
+ 115  * to debug add this
+ 116  *   display cur;
+ 117  );
+ 118  option path:0:0:1;
+ 119  display path;
  120   
- 121  *-----------------------------------------------------------
- 122  * adding a different solution report
- 123  * uses path we just calculated
- 124  *-----------------------------------------------------------
- 125   
- 126  parameter reportSP(*,*,*) 'shortest path solution with lengths';
- 127  reportSP(path(step,n),j)$(f.l(n,j)>0.5) = length(n,j);
- 128  reportSP('sum of lengths','','') = sum((step,i,j),reportSP(step,i,j));
- 129  reportSP('obj from model','','') = totalLength.l;
- 130  option reportSP:3:0:1;
- 131  display reportSP;
- 132   
+ 121   
+ 122  *-----------------------------------------------------------
+ 123  * adding a different solution report
+ 124  * uses path we just calculated
+ 125  *-----------------------------------------------------------
+ 126   
+ 127  parameter reportSP(*,*,*) 'shortest path solution with lengths';
+ 128  reportSP(path(step,n),j)$(f.l(n,j)>0.5) = length(n,j);
+ 129  reportSP('sum of lengths','','') = sum((step,i,j),reportSP(step,i,j));
+ 130  reportSP('obj from model','','') = totalLength.l;
+ 131  option reportSP:3:0:1;
+ 132  display reportSP;
  133   
  134   
- 135  *-----------------------------------------------------------
- 136  * Plot network using put statement
- 137  * We generate some JavaScript code to hold the data
- 138  * For domumentation on plotting library, see:
- 139  * https://js.cytoscape.org/
- 140  *-----------------------------------------------------------
- 141   
- 144   
- 145  file fln /networkdata.js/;
- 146  put fln;
- 147  put 'networkdata=['/;
- 148  loop(n,
- 149      put$(ord(n)>1) ",";
- 150      put "{data:{id:",(ord(n)):0:0;
- 151      put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
- 152      put$(inflow(n)>0) ",color:'blue'";
- 153      put$(outflow(n)>0) ",color:'green'";
- 154      put$(inflow(n)=0 and outflow(n)=0) ",size:1";
- 155      put$(inflow(n)>0 or outflow(n)>0) ",size:2";
- 156      put "},position:{x:",coord(n,'x'):0:3;
- 157      put ",y:",coord(n,'y'):0:3,"}}"/;
- 158  );
- 159  loop(a(i,j),
- 160      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
- 161      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
- 162      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
- 163      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
- 164      put "}}"/;
- 165  );
- 166  put '];'/;
- 167   
- 168  put "table='<h4>GAMS Shortest Path</h4>"
- 169      "Number of nodes: ",(card(n)):0:0,"<br>"
- 170      "Number of arcs: ",(card(a)):0:0,"<br><br>"
- 171      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
- 172  loop((path(step,n),j)$(f.l(n,j)>0.5),
- 173     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
- 174  );
- 175  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
- 176   
- 177  put "'</table>';";
- 178  putclose;
- 179   
+ 135   
+ 136  *-----------------------------------------------------------
+ 137  * Plot network using put statement
+ 138  * We generate some JavaScript code to hold the data
+ 139  * For domumentation on plotting library, see:
+ 140  * https://js.cytoscape.org/
+ 141  *-----------------------------------------------------------
+ 142   
+ 145   
+ 146  file fln /networkdata.js/;
+ 147  put fln;
+ 148  put 'networkdata=['/;
+ 149  loop(n,
+ 150      put$(ord(n)>1) ",";
+ 151      put "{data:{id:",(ord(n)):0:0;
+ 152      put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
+ 153      put$(inflow(n)>0) ",color:'blue'";
+ 154      put$(outflow(n)>0) ",color:'green'";
+ 155      put$(inflow(n)=0 and outflow(n)=0) ",size:1";
+ 156      put$(inflow(n)>0 or outflow(n)>0) ",size:2";
+ 157      put "},position:{x:",coord(n,'x'):0:3;
+ 158      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 159  );
+ 160  loop(a(i,j),
+ 161      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 162      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 163      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
+ 164      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 165      put "}}"/;
+ 166  );
+ 167  put '];'/;
+ 168   
+ 169  put "table='<h4>GAMS Shortest Path</h4>"
+ 170      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 171      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 172      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
+ 173  loop((path(step,n),j)$(f.l(n,j)>0.5),
+ 174     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
+ 175  );
+ 176  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
+ 177   
+ 178  put "'</table><br>';";
+ 179  putclose;
  180   
        
       With an internet connection you can use:
@@ -186,153 +186,51 @@ C o m p i l a t i o n
         <script src="cytoscape.min.js"></script>
        
  189   
- 248   
- 249  *$libInclude win32 shellexecute  "%htmlfile%"
- 250  * for older gams systems use:
- 251  execute 'shellexecute "network.html"';
- 252   
+ 284   
+ 285  *$libInclude win32 shellexecute  "%htmlfile%"
+ 286  * for older gams systems use:
+ 287  execute 'shellexecute "network.html"';
+ 288   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 2
+COMPILATION TIME     =        0.063 SECONDS      3 MB  38.1.0 a1a3b545 WEX-WEI
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     23 SET n  nodes (vertices)
+----     24 SET n  nodes (vertices)
 
-node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
-node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
-node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36
-node37,    node38,    node39,    node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48
-node49,    node50
-
-
-----     23 SET a  arcs (edges)
-
-             node2       node3       node4       node5       node6       node9      node10      node12      node13      node14
-
-node2                                                                      YES
-node3          YES
-node4                                                                                                                      YES
-node5                      YES
-node6                      YES                                                         YES
-node8                                                                                              YES
-node12                                             YES
-node20                     YES                                 YES
-node25                                                                     YES
-node30         YES                     YES
-node32                                                                                                         YES
-node34                                                                                                         YES
-node35                                             YES
-node37         YES         YES
-node41         YES                                 YES
-node49                                                                     YES                                             YES
-
-     +      node15      node16      node17      node18      node19      node20      node21      node23      node24      node25
-
-node2                      YES
-node4                                                                                                                      YES
-node5                                  YES                                             YES
-node7                                                          YES
-node8                                                                                                                      YES
-node9                                  YES
-node14                                                                                                                     YES
-node17                                             YES
-node18                                                         YES
-node22                                 YES
-node26                                             YES
-node28                                                         YES
-node29                                                                                             YES
-node30                     YES
-node32         YES
-node33         YES
-node34                                                                     YES
-node35                                                         YES                                                         YES
-node36                                             YES
-node37                     YES         YES
-node38                                                                                             YES
-node41                                                                                             YES
-node44                                                                                                         YES
-node45                                                         YES         YES
-
-     +      node26      node27      node28      node29      node30      node31      node32      node33      node34      node35
-
-node2                                                                                  YES
-node3                                  YES
-node4                                                                      YES                                 YES
-node5                      YES
-node7                                                                      YES         YES
-node10         YES                     YES
-node12                     YES                                 YES
-node14                                                                     YES
-node16                                 YES
-node20                                                                     YES
-node22                                                                     YES
-node23                                                                                                         YES
-node25                                 YES
-node27                                                                                             YES
-node29                     YES
-node32         YES                                 YES         YES
-node34                                                         YES
-node35                                                                                                                     YES
-node36                     YES
-node37                                                         YES
-node39         YES
-node40                                                                                             YES
-node42                                                                                 YES
-node44                                                                                                         YES
-node45                                                                     YES
-node47                                                                                 YES
-
-     +      node36      node37      node38      node39      node40      node41      node43      node44      node45      node46
-
-node1                                                                                              YES
-node4                      YES
-node6                                                          YES                                 YES
-node7                                  YES
-node8                                                                                  YES
-node9                                                                      YES         YES
-node10                                                         YES
-node11                                             YES                     YES         YES
-node12                                                                                                         YES
-node13                                             YES         YES
-node14         YES                                                                                                         YES
-node15                                                                     YES
-node16                                 YES
-node18                                                                                                                     YES
-node20                                                                     YES
-node21                                                                     YES
-node22         YES
-node23         YES
-node25                                 YES         YES
-node29                     YES                                                                                             YES
-node30                                             YES         YES
-node31                     YES                                             YES
-node32                                                         YES
-node34                                             YES                                             YES
-node38                                             YES                                                                     YES
-node41                                                                                 YES
-node43                                                                     YES
-node45                                                                                                                     YES
-node46                                                         YES                     YES
-
-     +      node47      node48      node49      node50
-
-node11                                 YES
-node21                                             YES
-node22         YES
-node27                                             YES
-node31                                             YES
-node35                                 YES
-node39                                 YES
-node49                     YES
-node50         YES                     YES
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12,    node13
+node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24,    node25,    node26
+node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36,    node37,    node38,    node39
+node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48,    node49,    node50
 
 
-----     33 PARAMETER numarcs              =      134.000  number of arcs
+----     24 SET a  arcs (edges)
 
-----     43 PARAMETER degree  in- and out-degree
+node1 .node44,    node2 .node9 ,    node2 .node16,    node2 .node32,    node3 .node2 ,    node3 .node28,    node4 .node14,    node4 .node25
+node4 .node31,    node4 .node34,    node4 .node37,    node5 .node3 ,    node5 .node17,    node5 .node21,    node5 .node27,    node6 .node3 
+node6 .node10,    node6 .node40,    node6 .node44,    node7 .node19,    node7 .node31,    node7 .node32,    node7 .node38,    node8 .node12
+node8 .node25,    node8 .node43,    node9 .node17,    node9 .node41,    node9 .node43,    node10.node26,    node10.node28,    node10.node40
+node11.node39,    node11.node41,    node11.node43,    node11.node49,    node12.node5 ,    node12.node27,    node12.node30,    node12.node45
+node13.node39,    node13.node40,    node14.node25,    node14.node31,    node14.node36,    node14.node46,    node15.node41,    node16.node28
+node16.node38,    node17.node18,    node18.node19,    node18.node46,    node20.node3 ,    node20.node6 ,    node20.node31,    node20.node41
+node21.node41,    node21.node50,    node22.node17,    node22.node31,    node22.node36,    node22.node47,    node23.node34,    node23.node36
+node25.node9 ,    node25.node28,    node25.node38,    node25.node39,    node26.node18,    node27.node33,    node27.node50,    node28.node19
+node29.node23,    node29.node27,    node29.node37,    node29.node46,    node30.node2 ,    node30.node4 ,    node30.node16,    node30.node39
+node30.node40,    node31.node37,    node31.node41,    node31.node50,    node32.node13,    node32.node15,    node32.node26,    node32.node29
+node32.node30,    node32.node40,    node33.node15,    node34.node13,    node34.node20,    node34.node30,    node34.node39,    node34.node44
+node35.node5 ,    node35.node19,    node35.node25,    node35.node35,    node35.node49,    node36.node18,    node36.node27,    node37.node2 
+node37.node3 ,    node37.node16,    node37.node17,    node37.node30,    node38.node23,    node38.node39,    node38.node46,    node39.node26
+node39.node49,    node40.node33,    node41.node2 ,    node41.node5 ,    node41.node23,    node41.node43,    node42.node32,    node43.node41
+node44.node24,    node44.node34,    node45.node19,    node45.node20,    node45.node31,    node45.node46,    node46.node40,    node46.node43
+node47.node32,    node49.node9 ,    node49.node14,    node49.node48,    node50.node47,    node50.node49
+
+
+----     34 PARAMETER numarcs              =      134.000  number of arcs
+
+----     44 PARAMETER degree  in- and out-degree
 
          in-degree  out-degree
 
@@ -389,12 +287,12 @@ node50       3.000       2.000
 max          7.000       6.000
 
 
-----     52 SET diagonal  diagonal elements
+----     53 SET diagonal  diagonal elements
 
 node35
 
 
-----     62 PARAMETER coord  x-y coordinates
+----     63 PARAMETER coord  x-y coordinates
 
                  x           y
 
@@ -449,9 +347,9 @@ node48      17.529      85.362
 node49      39.201      51.620
 node50      52.814      93.825
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 3
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE shortestPath Using LP From line 92
+Equation Listing    SOLVE shortestPath Using LP From line 93
 
 
 ---- nodeBalance  =E=  kirchoff equations
@@ -462,8 +360,9 @@ nodeBalance(node2)..  - f(node2,node9) - f(node2,node16) - f(node2,node32) + f(n
      
       + f(node41,node2) =E= 0 ; (LHS = 0)
      
-nodeBalance(node3)..  - f(node3,node2) - f(node3,node28) + f(node5,node3) + f(node6,node3) + f(node20,node3) + f(node37,node3)
-      =E= 0 ; (LHS = 0)
+nodeBalance(node3)..  - f(node3,node2) - f(node3,node28) + f(node5,node3) + f(node6,node3) + f(node20,node3) + f(node37,node3) =E= 0 ;
+     
+      (LHS = 0)
      
 REMAINING 47 ENTRIES SKIPPED
 
@@ -560,9 +459,9 @@ objective..  - 84.5257609214314*f(node1,node44) - 6.49814699093176*f(node2,node9
      
       - 44.3465799018199*f(node50,node49) + totalLength =E= 0 ; (LHS = 0)
      
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 4
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE shortestPath Using LP From line 92
+Column Listing      SOLVE shortestPath Using LP From line 93
 
 
 ---- f  flow from node i -> node j
@@ -593,9 +492,9 @@ totalLength
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 5
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE shortestPath Using LP From line 92
+Model Statistics    SOLVE shortestPath Using LP From line 93
 
 
 MODEL STATISTICS
@@ -605,23 +504,23 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES          134
 NON ZERO ELEMENTS           400
 
 
-GENERATION TIME      =        0.062 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 6
+GENERATION TIME      =        0.000 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE shortestPath Using LP From line 92
+Solution Report     SOLVE shortestPath Using LP From line 93
 
 
                S O L V E      S U M M A R Y
 
      MODEL   shortestPath        OBJECTIVE  totalLength
      TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  92
+     SOLVER  CPLEX               FROM LINE  93
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              455.2765
 
- RESOURCE USAGE, LIMIT          0.079 10000000000.000
+ RESOURCE USAGE, LIMIT          0.094 10000000000.000
  ITERATION COUNT, LIMIT         7    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -848,12 +747,12 @@ node50.node49          .              .            +INF           57.2053
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 37.1.0  r07954d5 Released Nov 11, 2021 WEX-WEI x86 64bit/MS Windows - 12/04/21 03:32:44 Page 7
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 11:11:41 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     94 VARIABLE f.L  flow from node i -> node j
+----     95 VARIABLE f.L  flow from node i -> node j
 
              node2      node29      node30      node32      node34      node44
 
@@ -865,9 +764,9 @@ node34                               1.000
 node44                                                       1.000
 
 
-----     94 VARIABLE totalLength.L         =      455.277  objective: minimize
+----     95 VARIABLE totalLength.L         =      455.277  objective: minimize
 
-----    118 SET path  easier to read than f
+----    119 SET path  easier to read than f
 
 step1.node1 
 step2.node44
@@ -878,7 +777,7 @@ step6.node32
 step7.node29
 
 
-----    131 PARAMETER reportSP  shortest path solution with lengths
+----    132 PARAMETER reportSP  shortest path solution with lengths
 
 step1         .node1 .node44  84.526
 step2         .node44.node34 102.056
@@ -892,17 +791,17 @@ obj from model.      .       455.277
 
 **** REPORT FILE SUMMARY
 
-fln D:\projects\OptimizationModels\ShortestPath\networkdata.js
+fln C:\projects\OptimizationModels\ShortestPath\networkdata.js
 
 
-EXECUTION TIME       =        2.110 SECONDS      4 MB  37.1.0 r07954d5 WEX-WEI
+EXECUTION TIME       =        0.281 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
 
 
-USER: Eval License                                   S201210/0001CO-GEN
+USER: Eval License                                   G211206|0002CO-GEN
       Amsterdam Optimization Modeling Group,                     DCE378
 
 
 **** FILE SUMMARY
 
-Input      D:\projects\OptimizationModels\ShortestPath\sp.gms
-Output     D:\projects\OptimizationModels\ShortestPath\sp.lst
+Input      C:\projects\OptimizationModels\ShortestPath\sp.gms
+Output     C:\projects\OptimizationModels\ShortestPath\sp.lst

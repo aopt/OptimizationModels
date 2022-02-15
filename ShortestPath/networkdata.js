@@ -192,4 +192,4 @@ table='<h4>GAMS Shortest Path</h4>Number of nodes: 50<br>Number of arcs: 134<br>
 '<tr><td>node2</td><td>node32</td><td><pre>    73.673</pre></td></tr>'+
 '<tr><td>node32</td><td>node29</td><td><pre>   103.490</pre></td></tr>'+
 '<tr><td colspan=2>Total length</td><td><pre>   455.277</pre></td></tr>'+
-'</table>';
+'</table><br>';

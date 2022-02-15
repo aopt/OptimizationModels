@@ -20,6 +20,7 @@ alias (n,i,j);
 * sparse random network
 a(i,j) = uniform(0,1)<0.05;
 
+option a:0:0:8;
 display$(card(n)<=50) n,a;
 
 *-----------------------------------------------------------
@@ -174,9 +175,8 @@ loop((path(step,n),j)$(f.l(n,j)>0.5),
 );
 put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
 
-put "'</table>';";
+put "'</table><br>';";
 putclose;
-
 
 $ontext
 
@@ -192,7 +192,7 @@ $onecho > %htmlfile%
 <head>
 <title>GAMS Shortest Path Network</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
-<script src="%datafile%"></script>
+<script src="networkdata.js"></script>
 </head>
 
 <style>
@@ -201,7 +201,7 @@ $onecho > %htmlfile%
     height: 100%;
     position: absolute;
     top: 0px;
-    left: 0px;
+    left: 100px;
 }
 
 table,th, td {
@@ -210,11 +210,13 @@ table,th, td {
  padding-left: 10px;
  padding-right: 10px;
 }
+
 </style>
 
 <body>
     <div id="cy"></div>
     <div id="my-table"></div>
+    <div><button onclick="buttonClicked()" id="btn">Animate Flow</button></div>
     <script>
       document.getElementById('my-table').innerHTML = table
       var cy = cytoscape({
@@ -224,7 +226,7 @@ table,th, td {
           {
             selector: 'node',
             style: {
-                shape: 'circle',
+                // shape: 'circle',
                 'background-color': 'data(color)',
                 label: 'data(id)',
                 width: 'data(size)', height: 'data(size)',
@@ -236,11 +238,45 @@ table,th, td {
             style: { 'width': 'data(width)', 'line-color': 'data(color)',
                      'mid-target-arrow-shape': 'triangle',
                      'mid-target-arrow-color': 'data(color)',
-                     'arrow-scale': 0.15 }
+                     'arrow-scale': 0.15, 'curve-style': 'bezier' }
+                    //'line-style': 'dashed', 'line-dash-pattern': [6, 3]
+
           }
         ],
         layout: { name: 'preset' }
       });
+
+
+      const loopAnimation = (ele, i) => {
+         const opts = {
+           style: {'line-dash-offset': -10 * i }
+          };
+          const durOptions = { duration: 1000 };
+          return ele.animation(opts, durOptions).play()
+          .promise('complete')
+          .then(() => loopAnimation(ele, i + 1));
+      };
+
+      var reds = cy.edges().filter(function(ele) { return ele.data('color') == 'red'; });
+      reds.forEach((edge) => {
+          loopAnimation(edge, 1);
+      });
+
+
+     var animated = false;
+     const btn = document.getElementById("btn");
+
+     function buttonClicked(b) {
+       if (animated) {
+         reds.style({'line-style':'solid', 'width':0.2});
+         btn.innerHTML = "Animate flow";
+       }
+       else {
+         reds.style({'line-style':'dashed', 'line-dash-pattern': [0.6, 1.1], 'width':0.4});
+         btn.innerHTML = "Stop animation";
+       }
+       animated = !animated;
+     }
     </script>
 </body>
 </html>
