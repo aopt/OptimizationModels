@@ -59,9 +59,9 @@ table,th, td {
 
       const loopAnimation = (ele, i) => {
          const opts = {
-           style: {'line-dash-offset': -10 * i }
+           style: {'line-dash-offset': -100 * i }
           };
-          const durOptions = { duration: 1000 };
+          const durOptions = { duration: 10000 };
           return ele.animation(opts, durOptions).play()
           .promise('complete')
           .then(() => loopAnimation(ele, i + 1));
