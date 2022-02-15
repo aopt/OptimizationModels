@@ -1,213 +1,212 @@
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 1
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
        
          Shortest Path Problem with Visualization
+         
+         To do: width is handled in different parts (GAMS, JS). Need to refactor that.
        
-   6   
-   7   
-   8  *-----------------------------------------------------------
-   9  * directed network topology
-  10  * randomly generated data
-  11  *-----------------------------------------------------------
-  12   
-  13  set
-  14     n 'nodes (vertices)' /node1*node50/
-  15     a(n,n) 'arcs (edges)'
-  16  ;
-  17   
-  18  alias (n,i,j);
+   8   
+   9   
+  10  *-----------------------------------------------------------
+  11  * directed network topology
+  12  * randomly generated data
+  13  *-----------------------------------------------------------
+  14   
+  15  set
+  16     n 'nodes (vertices)' /node1*node50/
+  17     a(n,n) 'arcs (edges)'
+  18  ;
   19   
-  20  * sparse random network
-  21  a(i,j) = uniform(0,1)<0.05;
-  22   
-  23  option a:0:0:8;
-  24  display$(card(n)<=50) n,a;
-  25   
-  26  *-----------------------------------------------------------
-  27  * summary of the data
-  28  *    - calculate number of arcs
-  29  *    - calculate the in-/out-degree for each node
-  30  *-----------------------------------------------------------
-  31   
-  32  scalar numarcs 'number of arcs';
-  33  numarcs = card(a);
-  34  display numarcs;
-  35   
-  36   
-  37  parameter degree(*,*) 'in- and out-degree';
-  38  degree(n,'in-degree') = sum(a(i,n),1);
-  39  degree(n,'out-degree') = sum(a(n,i),1);
-  40  degree('min','in-degree') = smin(n,degree(n,'in-degree'));
-  41  degree('min','out-degree') = smin(n,degree(n,'out-degree'));
-  42  degree('max','in-degree') = smax(n,degree(n,'in-degree'));
-  43  degree('max','out-degree') = smax(n,degree(n,'out-degree'));
-  44  display degree;
-  45   
-  46  *-----------------------------------------------------------
-  47  * diagonal
-  48  * do we have diagonal elements?
-  49  *-----------------------------------------------------------
-  50   
-  51  set diagonal(n) 'diagonal elements';
-  52  diagonal(n) = a(n,n);
-  53  display diagonal;
-  54   
-  55  *-----------------------------------------------------------
-  56  * random coordinates
-  57  * for plotting and for length calculation
-  58  *-----------------------------------------------------------
-  59   
-  60  set xy /x,y/;
-  61  parameter coord(n,xy) 'x-y coordinates';
-  62  coord(n,xy) = uniform(0,100);
-  63  display coord;
-  64   
-  65  *-----------------------------------------------------------
-  66  * shortest path model
+  20  alias (n,i,j);
+  21   
+  22  * sparse random network
+  23  a(i,j) = uniform(0,1)<0.05;
+  24   
+  25  option a:0:0:8;
+  26  display$(card(n)<=50) n,a;
+  27   
+  28  *-----------------------------------------------------------
+  29  * summary of the data
+  30  *    - calculate number of arcs
+  31  *    - calculate the in-/out-degree for each node
+  32  *-----------------------------------------------------------
+  33   
+  34  scalar numarcs 'number of arcs';
+  35  numarcs = card(a);
+  36  display numarcs;
+  37   
+  38   
+  39  parameter degree(*,*) 'in- and out-degree';
+  40  degree(n,'in-degree') = sum(a(i,n),1);
+  41  degree(n,'out-degree') = sum(a(n,i),1);
+  42  degree('min','in-degree') = smin(n,degree(n,'in-degree'));
+  43  degree('min','out-degree') = smin(n,degree(n,'out-degree'));
+  44  degree('max','in-degree') = smax(n,degree(n,'in-degree'));
+  45  degree('max','out-degree') = smax(n,degree(n,'out-degree'));
+  46  display degree;
+  47   
+  48  *-----------------------------------------------------------
+  49  * diagonal
+  50  * do we have diagonal elements?
+  51  *-----------------------------------------------------------
+  52   
+  53  set diagonal(n) 'diagonal elements';
+  54  diagonal(n) = a(n,n);
+  55  display diagonal;
+  56   
+  57  *-----------------------------------------------------------
+  58  * random coordinates
+  59  * for plotting and for length calculation
+  60  *-----------------------------------------------------------
+  61   
+  62  set xy /x,y/;
+  63  parameter coord(n,xy) 'x-y coordinates';
+  64  coord(n,xy) = uniform(0,100);
+  65  display coord;
+  66   
   67  *-----------------------------------------------------------
-  68   
-  69  parameters
-  70     inflow(n)   'exogenous inflow at node'    / node1   1.0 /
-  71     outflow(n)  'exogenous outflow at node'   / node29  1.0 /
-  72     length(i,j) 'arc lengths'
-  73  ;
-  74  length(a(i,j)) = sqrt(sum(xy, sqr(coord(i,xy)-coord(j,xy))));
-  75  * all are very sparse, GAMS will exploit this
-  76   
-  77  positive variable f(i,j) 'flow from node i -> node j';
+  68  * shortest path model
+  69  *-----------------------------------------------------------
+  70   
+  71  parameters
+  72     inflow(n)   'exogenous inflow at node'    / node1   1.0 /
+  73     outflow(n)  'exogenous outflow at node'   / node29  1.0 /
+  74     length(i,j) 'arc lengths'
+  75  ;
+  76  length(a(i,j)) = sqrt(sum(xy, sqr(coord(i,xy)-coord(j,xy))));
+  77  * all are very sparse, GAMS will exploit this
   78   
-  79  variable totalLength 'objective: minimize';
+  79  positive variable f(i,j) 'flow from node i -> node j';
   80   
-  81  equations
-  82      nodeBalance(n) 'kirchoff equations'
-  83      objective      'minimize'
-  84  ;
-  85   
-  86  objective.. totalLength =e= sum(a,length(a)*f(a));
+  81  variable totalLength 'objective: minimize';
+  82   
+  83  equations
+  84      nodeBalance(n) 'kirchoff equations'
+  85      objective      'minimize'
+  86  ;
   87   
-  88  nodeBalance(n)..
-  89       sum(a(i,n), f(a)) + inflow(n) =e=
-  90       sum(a(n,j), f(a)) + outflow(n);
-  91   
-  92  model shortestPath /all/;
-  93  solve shortestPath using lp minimizing totalLength;
-  94   
-  95  display f.l,totalLength.l;
+  88  objective.. totalLength =e= sum(a,length(a)*f(a));
+  89   
+  90  nodeBalance(n)..
+  91       sum(a(i,n), f(a)) + inflow(n) =e=
+  92       sum(a(n,j), f(a)) + outflow(n);
+  93   
+  94  model shortestPath /all/;
+  95  solve shortestPath using lp minimizing totalLength;
   96   
-  97   
-  98  *-----------------------------------------------------------
-  99  * form the path (not so easy)
- 100  * and create a solution report
- 101  *-----------------------------------------------------------
- 102   
- 103  sets
- 104    step /step1*step50/
- 105    path(step,n) 'easier to read than f'
- 106  ;
- 107  singleton set cur(i) 'current node';
- 108  cur(i)$inflow(i) = yes;
- 109  * while we have a current node
- 110  loop(step$card(cur),
- 111  * record current node
- 112     path(step,cur) = yes;
- 113  * current node := next node
- 114     cur(j) = f.l(cur,j)>0.5;
- 115  * to debug add this
- 116  *   display cur;
- 117  );
- 118  option path:0:0:1;
- 119  display path;
- 120   
- 121   
- 122  *-----------------------------------------------------------
- 123  * adding a different solution report
- 124  * uses path we just calculated
- 125  *-----------------------------------------------------------
- 126   
- 127  parameter reportSP(*,*,*) 'shortest path solution with lengths';
- 128  reportSP(path(step,n),j)$(f.l(n,j)>0.5) = length(n,j);
- 129  reportSP('sum of lengths','','') = sum((step,i,j),reportSP(step,i,j));
- 130  reportSP('obj from model','','') = totalLength.l;
- 131  option reportSP:3:0:1;
- 132  display reportSP;
- 133   
- 134   
+  97  display f.l,totalLength.l;
+  98   
+  99   
+ 100  *-----------------------------------------------------------
+ 101  * form the path (not so easy)
+ 102  * and create a solution report
+ 103  *-----------------------------------------------------------
+ 104   
+ 105  sets
+ 106    step /step1*step50/
+ 107    path(step,n) 'easier to read than f'
+ 108  ;
+ 109  singleton set cur(i) 'current node';
+ 110  cur(i)$inflow(i) = yes;
+ 111  * while we have a current node
+ 112  loop(step$card(cur),
+ 113  * record current node
+ 114     path(step,cur) = yes;
+ 115  * current node := next node
+ 116     cur(j) = f.l(cur,j)>0.5;
+ 117  * to debug add this
+ 118  *   display cur;
+ 119  );
+ 120  option path:0:0:1;
+ 121  display path;
+ 122   
+ 123   
+ 124  *-----------------------------------------------------------
+ 125  * adding a different solution report
+ 126  * uses path we just calculated
+ 127  *-----------------------------------------------------------
+ 128   
+ 129  parameter reportSP(*,*,*) 'shortest path solution with lengths';
+ 130  reportSP(path(step,n),j)$(f.l(n,j)>0.5) = length(n,j);
+ 131  reportSP('sum of lengths','','') = sum((step,i,j),reportSP(step,i,j));
+ 132  reportSP('obj from model','','') = totalLength.l;
+ 133  option reportSP:3:0:1;
+ 134  display reportSP;
  135   
- 136  *-----------------------------------------------------------
- 137  * Plot network using put statement
- 138  * We generate some JavaScript code to hold the data
- 139  * For domumentation on plotting library, see:
- 140  * https://js.cytoscape.org/
- 141  *-----------------------------------------------------------
- 142   
- 145   
- 146  file fln /networkdata.js/;
- 147  put fln;
- 148  put 'networkdata=['/;
- 149  loop(n,
- 150      put$(ord(n)>1) ",";
- 151      put "{data:{id:",(ord(n)):0:0;
- 152      put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
- 153      put$(inflow(n)>0) ",color:'blue'";
- 154      put$(outflow(n)>0) ",color:'green'";
- 155      put$(inflow(n)=0 and outflow(n)=0) ",size:1";
- 156      put$(inflow(n)>0 or outflow(n)>0) ",size:2";
- 157      put "},position:{x:",coord(n,'x'):0:3;
- 158      put ",y:",coord(n,'y'):0:3,"}}"/;
- 159  );
- 160  loop(a(i,j),
- 161      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
- 162      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
- 163      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
- 164      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
- 165      put "}}"/;
- 166  );
- 167  put '];'/;
- 168   
- 169  put "table='<h4>GAMS Shortest Path</h4>"
- 170      "Number of nodes: ",(card(n)):0:0,"<br>"
- 171      "Number of arcs: ",(card(a)):0:0,"<br><br>"
- 172      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
- 173  loop((path(step,n),j)$(f.l(n,j)>0.5),
- 174     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
- 175  );
- 176  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
- 177   
- 178  put "'</table><br>';";
- 179  putclose;
- 180   
+ 136   
+ 137   
+ 138  *-----------------------------------------------------------
+ 139  * Plot network using put statement
+ 140  * We generate some JavaScript code to hold the data
+ 141  * For domumentation on plotting library, see:
+ 142  * https://js.cytoscape.org/
+ 143  *-----------------------------------------------------------
+ 144   
+ 147   
+ 148  file fln /networkdata.js/;
+ 149  put fln;
+ 150  put 'networkdata=['/;
+ 151  loop(n,
+ 152      put$(ord(n)>1) ",";
+ 153      put "{data:{id:",(ord(n)):0:0;
+ 154      put$(inflow(n)=0 and outflow(n)=0) ",color:'black'";
+ 155      put$(inflow(n)>0) ",color:'blue'";
+ 156      put$(outflow(n)>0) ",color:'green'";
+ 157      put$(inflow(n)=0 and outflow(n)=0) ",size:1";
+ 158      put$(inflow(n)>0 or outflow(n)>0) ",size:2";
+ 159      put "},position:{x:",coord(n,'x'):0:3;
+ 160      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 161  );
+ 162  loop(a(i,j),
+ 163      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 164      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 165      put$(f.l(i,j)>0.5) ",color:'red',width:0.2";
+ 166      put$(f.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 167      put "}}"/;
+ 168  );
+ 169  put '];'/;
+ 170   
+ 171  put "table='<h4>GAMS Shortest Path</h4>"
+ 172      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 173      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 174      "<table><tr><th>From</th><th>To</th><th>Length</th></tr>'+"/;
+ 175  loop((path(step,n),j)$(f.l(n,j)>0.5),
+ 176     put "'<tr><td>",n.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",length(n,j):10:3,"</pre></td></tr>'+"/;
+ 177  );
+ 178  put "'<tr><td colspan=2>Total length</td><td><pre>",totalLength.l:10:3,"</pre></td></tr>'+"/;
+ 179   
+ 180  put "'</table><br>';";
+ 181  putclose;
+ 182   
        
       With an internet connection you can use:
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
       Without use a local .js file:
         <script src="cytoscape.min.js"></script>
        
- 189   
- 284   
- 285  *$libInclude win32 shellexecute  "%htmlfile%"
- 286  * for older gams systems use:
- 287  execute 'shellexecute "network.html"';
- 288   
+ 191   
+ 286   
+ 287  *$libInclude win32 shellexecute  "%htmlfile%"
+ 288  * for older gams systems use:
+ 289  execute 'shellexecute "network.html"';
+ 290   
 
 
-COMPILATION TIME     =        0.062 SECONDS      3 MB  38.1.0 a1a3b545 WEX-WEI
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  38.1.0 a1a3b545 WEX-WEI
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     24 SET n  nodes (vertices)
+----     26 SET n  nodes (vertices)
 
-node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12,    node13
-node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24,    node25,    node26
-node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36,    node37,    node38,    node39
-node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48,    node49,    node50
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12,    node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24,    node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36,    node37,    node38,    node39,    node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48,    node49,    node50
 
 
-----     24 SET a  arcs (edges)
+----     26 SET a  arcs (edges)
 
 node1 .node44,    node2 .node9 ,    node2 .node16,    node2 .node32,    node3 .node2 ,    node3 .node28,    node4 .node14,    node4 .node25
 node4 .node31,    node4 .node34,    node4 .node37,    node5 .node3 ,    node5 .node17,    node5 .node21,    node5 .node27,    node6 .node3 
@@ -228,9 +227,9 @@ node44.node24,    node44.node34,    node45.node19,    node45.node20,    node45.n
 node47.node32,    node49.node9 ,    node49.node14,    node49.node48,    node50.node47,    node50.node49
 
 
-----     34 PARAMETER numarcs              =      134.000  number of arcs
+----     36 PARAMETER numarcs              =      134.000  number of arcs
 
-----     44 PARAMETER degree  in- and out-degree
+----     46 PARAMETER degree  in- and out-degree
 
          in-degree  out-degree
 
@@ -287,12 +286,12 @@ node50       3.000       2.000
 max          7.000       6.000
 
 
-----     53 SET diagonal  diagonal elements
+----     55 SET diagonal  diagonal elements
 
 node35
 
 
-----     63 PARAMETER coord  x-y coordinates
+----     65 PARAMETER coord  x-y coordinates
 
                  x           y
 
@@ -347,121 +346,29 @@ node48      17.529      85.362
 node49      39.201      51.620
 node50      52.814      93.825
 
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 3
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE shortestPath Using LP From line 93
+Equation Listing    SOLVE shortestPath Using LP From line 95
 
 
 ---- nodeBalance  =E=  kirchoff equations
 
 nodeBalance(node1)..  - f(node1,node44) =E= -1 ; (LHS = 0, INFES = 1 ****)
      
-nodeBalance(node2)..  - f(node2,node9) - f(node2,node16) - f(node2,node32) + f(node3,node2) + f(node30,node2) + f(node37,node2)
+nodeBalance(node2)..  - f(node2,node9) - f(node2,node16) - f(node2,node32) + f(node3,node2) + f(node30,node2) + f(node37,node2) + f(node41,node2) =E= 0 ; (LHS = 0)
      
-      + f(node41,node2) =E= 0 ; (LHS = 0)
-     
-nodeBalance(node3)..  - f(node3,node2) - f(node3,node28) + f(node5,node3) + f(node6,node3) + f(node20,node3) + f(node37,node3) =E= 0 ;
-     
-      (LHS = 0)
+nodeBalance(node3)..  - f(node3,node2) - f(node3,node28) + f(node5,node3) + f(node6,node3) + f(node20,node3) + f(node37,node3) =E= 0 ; (LHS = 0)
      
 REMAINING 47 ENTRIES SKIPPED
 
 
 ---- objective  =E=  minimize
 
-objective..  - 84.5257609214314*f(node1,node44) - 6.49814699093176*f(node2,node9) - 84.0675143265567*f(node2,node16)
+objective..  - 84.5257609214314*f(node1,node44) - 6.49814699093176*f(node2,node9) - 84.0675143265567*f(node2,node16) - 73.6729548947929*f(node2,node32) - 91.6620476081781*f(node3,node2) - 83.4514545959749*f(node3,node28) - 66.9980307169029*f(node4,node14) - 22.6814169817711*f(node4,node25) - 63.1328271678389*f(node4,node31) - 60.234951650957*f(node4,node34) - 55.1684284072602*f(node4,node37) - 93.7440646346106*f(node5,node3) - 8.57353111540231*f(node5,node17) - 33.8522935739236*f(node5,node21) - 43.6304340100261*f(node5,node27) - 73.7032550678659*f(node6,node3) - 42.2023735749339*f(node6,node10) - 25.4716487611801*f(node6,node40) - 39.4722291688625*f(node6,node44) - 42.5182552283571*f(node7,node19) - 47.57834600637*f(node7,node31) - 52.3317025877139*f(node7,node32) - 24.547900250078*f(node7,node38) - 19.9779328770632*f(node8,node12) - 33.6101876522054*f(node8,node25) - 26.6455175399713*f(node8,node43) - 28.2615560406638*f(node9,node17) - 14.8995171962973*f(node9,node41) - 70.748844213341*f(node9,node43) - 12.6397734565588*f(node10,node26) - 43.8884444482395*f(node10,node28) - 30.840645952481*f(node10,node40) - 36.8482868938146*f(node11,node39) - 89.5996674253439*f(node11,node41) - 14.9962667310456*f(node11,node43) - 44.91044486383*f(node11,node49) - 73.2204820381766*f(node12,node5) - 41.338593762308*f(node12,node27) - 33.5358888382295*f(node12,node30) - 89.3959647230001*f(node12,node45) - 15.1199255241674*f(node13,node39) - 53.5103869888919*f(node13,node40) - 44.4905088992435*f(node14,node25) - 71.3590380693929*f(node14,node31) - 116.992809030625*f(node14,node36) - 44.8258863929176*f(node14,node46) - 76.831121846352*f(node15,node41) - 69.0216745140657*f(node16,node28) - 82.862474406448*f(node16,node38) - 25.4790964686609*f(node17,node18) - 53.9289915641743*f(node18,node19) - 50.137858987218*f(node18,node46) - 65.3456900975335*f(node20,node3) - 42.3650845695077*f(node20,node6) - 58.5165656109285*f(node20,node31) - 32.6245681886949*f(node20,node41) - 11.3570161223424*f(node21,node41) - 56.2244820853965*f(node21,node50) - 9.45642112354021*f(node22,node17) - 36.8422938814029*f(node22,node31) - 60.282021162705*f(node22,node36) - 39.5639836757494*f(node22,node47) - 93.8712690479987*f(node23,node34) - 78.6512285582854*f(node23,node36) - 53.5028208266503*f(node25,node9) - 25.4834565204449*f(node25,node28) - 45.6423198030562*f(node25,node38) - 21.3098381863628*f(node25,node39) - 42.415429165801*f(node26,node18) - 54.739939046435*f(node27,node33) - 45.6426648806525*f(node27,node50) - 69.4288050702249*f(node28,node19) - 84.0003325282757*f(node29,node23) - 63.989278739489*f(node29,node27) - 80.4539839584434*f(node29,node37) - 66.9981156263218*f(node29,node46) - 32.7033009801652*f(node30,node2) - 2.98224571166481*f(node30,node4) - 51.5150911258484*f(node30,node16) - 37.1411174480234*f(node30,node39) - 32.0948050742556*f(node30,node40) - 20.4890191973523*f(node31,node37) - 32.0944581523482*f(node31,node41) - 34.7893461918092*f(node31,node50) - 54.2951979841529*f(node32,node13) - 71.5033222636224*f(node32,node15) - 69.3287963928362*f(node32,node26) - 103.490067918455*f(node32,node29) - 62.9577669943061*f(node32,node30) - 90.9310783757788*f(node32,node40) - 66.790023499641*f(node33,node15) - 71.9690700551896*f(node34,node13) - 55.0798254306481*f(node34,node20) - 58.8283052597795*f(node34,node30) - 80.2398651321862*f(node34,node39) - 102.05613351033*f(node34,node44) - 36.1626809067089*f(node35,node5) - 55.8671183364067*f(node35,node19) - 2.42849637704332*f(node35,node25) - 8.72753712961539*f(node35,node49) - 65.9770427493214*f(node36,node18) - 64.6849225509454*f(node36,node27) - 46.6409271033114*f(node37,node2) - 103.724047384785*f(node37,node3) - 89.7509377060792*f(node37,node16) - 25.4386524827324*f(node37,node17) - 54.8694379153948*f(node37,node30) - 73.7910283134887*f(node38,node23) - 64.8358172451342*f(node38,node39) - 36.5665235265118*f(node38,node46) - 49.0822614335853*f(node39,node26) - 19.6392303530083*f(node39,node49) - 6.70426820227112*f(node40,node33) - 9.82256475512034*f(node41,node2) - 23.3829487220316*f(node41,node5) - 79.244154920559*f(node41,node23) - 75.6974794543467*f(node41,node43) - 80.6014933012388*f(node42,node32) - 75.6974794543467*f(node43,node41) - 30.63993956586*f(node44,node24) - 102.05613351033*f(node44,node34) - 85.6681252584956*f(node45,node19) - 58.3602864778643*f(node45,node20) - 40.8566428763507*f(node45,node31) - 30.0830930227868*f(node45,node46) - 54.1467656943796*f(node46,node40) - 55.4979821765164*f(node46,node43) - 34.3782971418352*f(node47,node32) - 51.6214308525305*f(node49,node9) - 53.3797576604836*f(node49,node14) - 40.1024374033263*f(node49,node48) - 36.2585381249715*f(node50,node47) - 44.3465799018199*f(node50,node49) + totalLength =E= 0 ; (LHS = 0)
      
-      - 73.6729548947929*f(node2,node32) - 91.6620476081781*f(node3,node2) - 83.4514545959749*f(node3,node28)
-     
-      - 66.9980307169029*f(node4,node14) - 22.6814169817711*f(node4,node25) - 63.1328271678389*f(node4,node31)
-     
-      - 60.234951650957*f(node4,node34) - 55.1684284072602*f(node4,node37) - 93.7440646346106*f(node5,node3)
-     
-      - 8.57353111540231*f(node5,node17) - 33.8522935739236*f(node5,node21) - 43.6304340100261*f(node5,node27)
-     
-      - 73.7032550678659*f(node6,node3) - 42.2023735749339*f(node6,node10) - 25.4716487611801*f(node6,node40)
-     
-      - 39.4722291688625*f(node6,node44) - 42.5182552283571*f(node7,node19) - 47.57834600637*f(node7,node31)
-     
-      - 52.3317025877139*f(node7,node32) - 24.547900250078*f(node7,node38) - 19.9779328770632*f(node8,node12)
-     
-      - 33.6101876522054*f(node8,node25) - 26.6455175399713*f(node8,node43) - 28.2615560406638*f(node9,node17)
-     
-      - 14.8995171962973*f(node9,node41) - 70.748844213341*f(node9,node43) - 12.6397734565588*f(node10,node26)
-     
-      - 43.8884444482395*f(node10,node28) - 30.840645952481*f(node10,node40) - 36.8482868938146*f(node11,node39)
-     
-      - 89.5996674253439*f(node11,node41) - 14.9962667310456*f(node11,node43) - 44.91044486383*f(node11,node49)
-     
-      - 73.2204820381766*f(node12,node5) - 41.338593762308*f(node12,node27) - 33.5358888382295*f(node12,node30)
-     
-      - 89.3959647230001*f(node12,node45) - 15.1199255241674*f(node13,node39) - 53.5103869888919*f(node13,node40)
-     
-      - 44.4905088992435*f(node14,node25) - 71.3590380693929*f(node14,node31) - 116.992809030625*f(node14,node36)
-     
-      - 44.8258863929176*f(node14,node46) - 76.831121846352*f(node15,node41) - 69.0216745140657*f(node16,node28)
-     
-      - 82.862474406448*f(node16,node38) - 25.4790964686609*f(node17,node18) - 53.9289915641743*f(node18,node19)
-     
-      - 50.137858987218*f(node18,node46) - 65.3456900975335*f(node20,node3) - 42.3650845695077*f(node20,node6)
-     
-      - 58.5165656109285*f(node20,node31) - 32.6245681886949*f(node20,node41) - 11.3570161223424*f(node21,node41)
-     
-      - 56.2244820853965*f(node21,node50) - 9.45642112354021*f(node22,node17) - 36.8422938814029*f(node22,node31)
-     
-      - 60.282021162705*f(node22,node36) - 39.5639836757494*f(node22,node47) - 93.8712690479987*f(node23,node34)
-     
-      - 78.6512285582854*f(node23,node36) - 53.5028208266503*f(node25,node9) - 25.4834565204449*f(node25,node28)
-     
-      - 45.6423198030562*f(node25,node38) - 21.3098381863628*f(node25,node39) - 42.415429165801*f(node26,node18)
-     
-      - 54.739939046435*f(node27,node33) - 45.6426648806525*f(node27,node50) - 69.4288050702249*f(node28,node19)
-     
-      - 84.0003325282757*f(node29,node23) - 63.989278739489*f(node29,node27) - 80.4539839584434*f(node29,node37)
-     
-      - 66.9981156263218*f(node29,node46) - 32.7033009801652*f(node30,node2) - 2.98224571166481*f(node30,node4)
-     
-      - 51.5150911258484*f(node30,node16) - 37.1411174480234*f(node30,node39) - 32.0948050742556*f(node30,node40)
-     
-      - 20.4890191973523*f(node31,node37) - 32.0944581523482*f(node31,node41) - 34.7893461918092*f(node31,node50)
-     
-      - 54.2951979841529*f(node32,node13) - 71.5033222636224*f(node32,node15) - 69.3287963928362*f(node32,node26)
-     
-      - 103.490067918455*f(node32,node29) - 62.9577669943061*f(node32,node30) - 90.9310783757788*f(node32,node40)
-     
-      - 66.790023499641*f(node33,node15) - 71.9690700551896*f(node34,node13) - 55.0798254306481*f(node34,node20)
-     
-      - 58.8283052597795*f(node34,node30) - 80.2398651321862*f(node34,node39) - 102.05613351033*f(node34,node44)
-     
-      - 36.1626809067089*f(node35,node5) - 55.8671183364067*f(node35,node19) - 2.42849637704332*f(node35,node25)
-     
-      - 8.72753712961539*f(node35,node49) - 65.9770427493214*f(node36,node18) - 64.6849225509454*f(node36,node27)
-     
-      - 46.6409271033114*f(node37,node2) - 103.724047384785*f(node37,node3) - 89.7509377060792*f(node37,node16)
-     
-      - 25.4386524827324*f(node37,node17) - 54.8694379153948*f(node37,node30) - 73.7910283134887*f(node38,node23)
-     
-      - 64.8358172451342*f(node38,node39) - 36.5665235265118*f(node38,node46) - 49.0822614335853*f(node39,node26)
-     
-      - 19.6392303530083*f(node39,node49) - 6.70426820227112*f(node40,node33) - 9.82256475512034*f(node41,node2)
-     
-      - 23.3829487220316*f(node41,node5) - 79.244154920559*f(node41,node23) - 75.6974794543467*f(node41,node43)
-     
-      - 80.6014933012388*f(node42,node32) - 75.6974794543467*f(node43,node41) - 30.63993956586*f(node44,node24)
-     
-      - 102.05613351033*f(node44,node34) - 85.6681252584956*f(node45,node19) - 58.3602864778643*f(node45,node20)
-     
-      - 40.8566428763507*f(node45,node31) - 30.0830930227868*f(node45,node46) - 54.1467656943796*f(node46,node40)
-     
-      - 55.4979821765164*f(node46,node43) - 34.3782971418352*f(node47,node32) - 51.6214308525305*f(node49,node9)
-     
-      - 53.3797576604836*f(node49,node14) - 40.1024374033263*f(node49,node48) - 36.2585381249715*f(node50,node47)
-     
-      - 44.3465799018199*f(node50,node49) + totalLength =E= 0 ; (LHS = 0)
-     
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 4
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE shortestPath Using LP From line 93
+Column Listing      SOLVE shortestPath Using LP From line 95
 
 
 ---- f  flow from node i -> node j
@@ -492,9 +399,9 @@ totalLength
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       objective
 
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 5
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE shortestPath Using LP From line 93
+Model Statistics    SOLVE shortestPath Using LP From line 95
 
 
 MODEL STATISTICS
@@ -505,22 +412,22 @@ NON ZERO ELEMENTS           400
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 6
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE shortestPath Using LP From line 93
+Solution Report     SOLVE shortestPath Using LP From line 95
 
 
                S O L V E      S U M M A R Y
 
      MODEL   shortestPath        OBJECTIVE  totalLength
      TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  93
+     SOLVER  CPLEX               FROM LINE  95
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              455.2765
 
- RESOURCE USAGE, LIMIT          0.094 10000000000.000
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
  ITERATION COUNT, LIMIT         7    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -747,12 +654,12 @@ node50.node49          .              .            +INF           57.2053
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 14:35:04 Page 7
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/15/22 15:26:45 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     95 VARIABLE f.L  flow from node i -> node j
+----     97 VARIABLE f.L  flow from node i -> node j
 
              node2      node29      node30      node32      node34      node44
 
@@ -764,9 +671,9 @@ node34                               1.000
 node44                                                       1.000
 
 
-----     95 VARIABLE totalLength.L         =      455.277  objective: minimize
+----     97 VARIABLE totalLength.L         =      455.277  objective: minimize
 
-----    119 SET path  easier to read than f
+----    121 SET path  easier to read than f
 
 step1.node1 
 step2.node44
@@ -777,7 +684,7 @@ step6.node32
 step7.node29
 
 
-----    132 PARAMETER reportSP  shortest path solution with lengths
+----    134 PARAMETER reportSP  shortest path solution with lengths
 
 step1         .node1 .node44  84.526
 step2         .node44.node34 102.056
@@ -794,7 +701,7 @@ obj from model.      .       455.277
 fln C:\projects\OptimizationModels\ShortestPath\networkdata.js
 
 
-EXECUTION TIME       =        0.204 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
+EXECUTION TIME       =        0.110 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
 
 
 USER: Eval License                                   G211206|0002CO-GEN

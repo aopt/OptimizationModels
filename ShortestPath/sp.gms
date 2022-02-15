@@ -1,6 +1,8 @@
 $ontext
 
    Shortest Path Problem with Visualization
+   
+   To do: width is handled in different parts (GAMS, JS). Need to refactor that.
 
 $offtext
 
@@ -201,7 +203,7 @@ $onecho > %htmlfile%
     height: 100%;
     position: absolute;
     top: 0px;
-    left: 100px;
+    left: 150px;
 }
 
 table,th, td {
