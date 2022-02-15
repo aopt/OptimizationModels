@@ -199,7 +199,7 @@ $onecho > %htmlfile%
 
 <style>
 #cy {
-    width: 100%;
+    width: calc(100% - 150px);
     height: 100%;
     position: absolute;
     top: 0px;
