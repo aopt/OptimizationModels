@@ -1,0 +1,209 @@
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/24/22 14:31:00 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+          D3 State Map, lower 48
+       
+          erwin@amsterdamoptimization.com
+       
+          Original topography from:
+       
+       
+  11   
+  12   
+  13  *-----------------------------------------------------------------------
+  14  * states
+  15  *-----------------------------------------------------------------------
+  16  set id 'nuts2' /
+  17   
+  18       AL01,AL02,AL03,AT11,AT12,AT13,AT21,AT22,AT31,AT32,AT33,AT34,BE10
+  19       BE21,BE22,BE23,BE24,BE25,BE31,BE32,BE33,BE34,BE35,BG31,BG32,BG33
+  20       BG34,BG41,BG42,CH01,CH02,CH03,CH04,CH05,CH06,CH07,CY00,CZ01,CZ02
+  21       CZ03,CZ04,CZ05,CZ06,CZ07,CZ08,DE11,DE12,DE13,DE14,DE21,DE22,DE23
+  22       DE24,DE25,DE26,DE27,DE30,DE40,DE50,DE60,DE71,DE72,DE73,DE80,DE91
+  23       DE92,DE93,DE94,DEA1,DEA2,DEA3,DEA4,DEA5,DEB1,DEB2,DEB3,DEC0,DED2
+  24       DED4,DED5,DEE0,DEF0,DEG0,DK01,DK02,DK03,DK04,DK05,EE00,EL30,EL41
+  25       EL42,EL43,EL51,EL52,EL53,EL54,EL61,EL62,EL63,EL64,EL65,ES11,ES12
+  26       ES13,ES21,ES22,ES23,ES24,ES30,ES41,ES42,ES43,ES51,ES52,ES53,ES61
+  27       ES62,ES63,ES64,FI19,FI1B,FI1C,FI1D,FI20,FR10,FRB0,FRC1,FRC2,FRD1
+  28       FRD2,FRE1,FRE2,FRF1,FRF2,FRF3,FRG0,FRH0,FRI1,FRI2,FRI3,FRJ1,FRJ2
+  29       FRK1,FRK2,FRL0,FRM0,HR02,HR03,HR05,HR06,HU11,HU12,HU21,HU22,HU23
+  30       HU31,HU32,HU33,IE04,IE05,IE06,IS00,ITC1,ITC2,ITC3,ITC4,ITF1,ITF2
+  31       ITF3,ITF4,ITF5,ITF6,ITG1,ITG2,ITH1,ITH2,ITH3,ITH4,ITH5,ITI1,ITI2
+  32       ITI3,ITI4,LI00,LT01,LT02,LU00,LV00,ME00,MK00,MT00,NL11,NL12,NL13
+  33       NL21,NL22,NL23,NL31,NL32,NL33,NL34,NL41,NL42,NO02,NO06,NO07,NO08
+  34       NO09,NO0A,PL21,PL22,PL41,PL42,PL43,PL51,PL52,PL61,PL62,PL63,PL71
+  35       PL72,PL81,PL82,PL84,PL91,PL92,PT11,PT15,PT16,PT17,PT18,RO11,RO12
+  36       RO21,RO22,RO31,RO32,RO41,RO42,RS11,RS12,RS21,RS22,SE11,SE12,SE21
+  37       SE22,SE23,SE31,SE32,SE33,SI03,SI04,SK01,SK02,SK03,SK04,TR10,TR21
+  38       TR22,TR31,TR32,TR33,TR41,TR42,TR51,TR52,TR61,TR62,TR63,TR71,TR72
+  39       TR81,TR82,TR83,TR90,TRA1,TRA2,TRB1,TRB2,TRC1,TRC2,TRC3,UKC1,UKC2
+  40       UKD1,UKD3,UKD4,UKD6,UKD7,UKE1,UKE2,UKE3,UKE4,UKF1,UKF2,UKF3,UKG1
+  41       UKG2,UKG3,UKH1,UKH2,UKH3,UKI3,UKI4,UKI5,UKI6,UKI7,UKJ1,UKJ2,UKJ3
+  42       UKJ4,UKK1,UKK2,UKK3,UKK4,UKL1,UKL2,UKM5,UKM6,UKM7,UKM8,UKM9,UKN0
+  43   
+  44     /;
+  45   
+  46  *-----------------------------------------------------------------------
+  47  * generate random data
+  48  *-----------------------------------------------------------------------
+  49   
+  50  parameter data(id) 'random data';
+  51  data(id) = uniform(0,100);
+  52  display data;
+  53   
+  54   
+  55  *-----------------------------------------------------------------------
+  56  * write solution file in js format
+  57  *-----------------------------------------------------------------------
+  58   
+  60   
+  61  file f /results.js/;
+  62  put f,"solution = {"/;
+  63  loop(id,
+  64     put '  "',id.tl:0,'": {';
+  65     put 'data:',data(id):0:3;
+  66     put '},'/
+  67  );
+  68  putclose '};'/;
+  69   
+  70   
+  71   
+  72  *-----------------------------------------------------------------------
+  73  * launch HTML file
+  74  *-----------------------------------------------------------------------
+  75   
+  79   
+  80   
+  81  *$libInclude win32 shellexecute  "%htmlfile%"
+  82  * for older gams systems use:
+  83  execute 'shellexecute "Map.html"';
+  84   
+  85   
+  86   
+  87  *-----------------------------------------------------------------------
+  88  * echo HTML file
+  89  * done at compile time so we can place this big piece
+  90  * at the bottom of this .gms file
+  91  *-----------------------------------------------------------------------
+  92   
+  93   
+ 239   
+ 240   
+ 241   
+ 242   
+ 243   
+ 244   
+ 245   
+ 246   
+ 247   
+ 248   
+ 249   
+ 250   
+ 251   
+ 252   
+ 253   
+ 254   
+ 255   
+ 256   
+ 257   
+ 258   
+ 259   
+ 260   
+ 261   
+ 262   
+ 263   
+ 264   
+ 265   
+ 266   
+ 267   
+ 268   
+ 269   
+ 270   
+ 271   
+ 272   
+ 273   
+ 274   
+ 275   
+ 276   
+ 277   
+ 278   
+ 279   
+ 280   
+ 281   
+ 282   
+ 283   
+ 284   
+ 285   
+ 286   
+ 287   
+ 288   
+ 289   
+ 290   
+ 291   
+ 292   
+ 293   
+ 294   
+ 295   
+ 296   
+ 297   
+ 298   
+ 299   
+ 300   
+ 301   
+ 302   
+ 303   
+ 304   
+ 305   
+ 306   
+ 307   
+ 308   
+ 309   
+ 310   
+ 311   
+ 312   
+ 313   
+ 314   
+ 315   
+ 316   
+ 317   
+ 318   
+ 319   
+ 320   
+ 321   
+ 322   
+ 323   
+ 324   
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  38.1.0 a1a3b545 WEX-WEI
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/24/22 14:31:00 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     52 PARAMETER data  random data
+
+AL01 17.175,    AL02 84.327,    AL03 55.038,    AT11 30.114,    AT12 29.221,    AT13 22.405,    AT21 34.983,    AT22 85.627,    AT31  6.711,    AT32 50.021,    AT33 99.812,    AT34 57.873,    BE10 99.113,    BE21 76.225,    BE22 13.069,    BE23 63.972,    BE24 15.952,    BE25 25.008,    BE31 66.893,    BE32 43.536,    BE33 35.970,    BE34 35.144,    BE35 13.149,    BG31 15.010,    BG32 58.911,    BG33 83.089,    BG34 23.082,    BG41 66.573,    BG42 77.586,    CH01 30.366,    CH02 11.049,    CH03 50.238,    CH04 16.017,    CH05 87.246,    CH06 26.511,    CH07 28.581,    CY00 59.396,    CZ01 72.272,    CZ02 62.825,    CZ03 46.380,    CZ04 41.331,    CZ05 11.770,    CZ06 31.421,    CZ07  4.655,    CZ08 33.855,    DE11 18.210,    DE12 64.573,    DE13 56.075,    DE14 76.996,    DE21 29.781,    DE22 66.111,    DE23 75.582,    DE24 62.745,    DE25 28.386,    DE26  8.642,    DE27 10.251,    DE30 64.125,    DE40 54.531,    DE50  3.152,    DE60 79.236,    DE71  7.277,    DE72 17.566,    DE73 52.563,    DE80 75.021,    DE91 17.812,    DE92  3.414,    DE93 58.513,    DE94 62.123,    DEA1 38.936,    DEA2 35.871,    DEA3 24.303,    DEA4 24.642,    DEA5 13.050,    DEB1 93.345,    DEB2 37.994,    DEB3 78.340,    DEC0 30.003,    DED2 12.548,    DED4 74.887,    DED5  6.923,    DEE0 20.202,    DEF0  0.507,    DEG0 26.961,    DK01 49.985,    DK02 15.129,    DK03 17.417,    DK04 33.064,    DK05 31.691,    EE00 32.209,    EL30 96.398,    EL41 99.360,    EL42 36.990,    EL43 37.289,    EL51 77.198,    EL52 39.668,    EL53 91.310,    EL54 11.958,    EL61 73.548,    EL62  5.542,    EL63 57.630,    EL64  5.141,    EL65  0.601,    ES11 40.123,    ES12 51.988,    ES13 62.888,    ES21 22.575,    ES22 39.612,    ES23 27.601,    ES24 15.237,    ES30 93.632,    ES41 42.266,    ES42 13.466,    ES43 38.606,    ES51 37.463,    ES52 26.848,    ES53 94.837,    ES61 18.894,    ES62 29.751,    ES63  7.455,    ES64 40.135,    FI19 10.169,    FI1B 38.389,    FI1C 32.409,    FI1D 19.213,    FI20 11.237,    FR10 59.656,    FRB0 51.145
+FRC1  4.507,    FRC2 78.310,    FRD1 94.575,    FRD2 59.646,    FRE1 60.734,    FRE2 36.251,    FRF1 59.407,    FRF2 67.985,    FRF3 50.659,    FRG0 15.925,    FRH0 65.689,    FRI1 52.388,    FRI2 12.440,    FRI3 98.672,    FRJ1 22.812,    FRJ2 67.565,    FRK1 77.678,    FRK2 93.245,    FRL0 20.124,    FRM0 29.714,    HR02 19.723,    HR03 24.635,    HR05 64.648,    HR06 73.497,    HU11  8.544,    HU12 15.035,    HU21 43.419,    HU22 18.694,    HU23 69.269,    HU31 76.297,    HU32 15.481,    HU33 38.938,    IE04 69.543,    IE05 84.581,    IE06 61.272,    IS00 97.597,    ITC1  2.689,    ITC2 18.745,    ITC3  8.712,    ITC4 54.040,    ITF1 12.686,    ITF2 73.400,    ITF3 11.323,    ITF4 48.835,    ITF5 79.560,    ITF6 49.205,    ITG1 53.356,    ITG2  1.062,    ITH1 54.387,    ITH2 45.113,    ITH3 97.533,    ITH4 18.385,    ITH5 16.353,    ITI1  2.463,    ITI2 17.782,    ITI3  6.132,    ITI4  1.664,    LI00 83.565,    LT01 60.166,    LT02  2.702,    LU00 19.609,    LV00 95.071,    ME00 33.554,    MK00 59.426,    MT00 25.919,    NL11 64.063,    NL12 15.525,    NL13 46.002,    NL21 39.334,    NL22 80.546,    NL23 54.099,    NL31 39.072,    NL32 55.782,    NL33 93.276,    NL34 34.877,    NL41  0.829,    NL42 94.884,    NO02 57.192,    NO06 33.363,    NO07 98.375,    NO08 76.646,    NO09 11.009,    NO0A 99.480,    PL21 58.032,    PL22 16.642,    PL41 64.336,    PL42 34.431,    PL43 91.233,    PL51 90.006,    PL52  1.626,    PL61 36.863,    PL62 66.438,    PL63 59.338,    PL71  3.457,    PL72 84.182,    PL81 93.208,    PL82 50.796,    PL84 29.960,    PL91 49.662,    PL92  4.493,    PT11 77.370,    PT15 53.297,    PT16 74.677,    PT17 72.005,    PT18 63.160,    RO11 11.492,    RO12 97.116,    RO21 70.674,    RO22 98.627,    RO31 85.482,    RO32 62.144,    RO41 70.131,    RO42 70.089,    RS11 79.070,    RS12 61.022,    RS21  5.431,    RS22 48.518,    SE11  5.255,    SE12 69.858,    SE21 19.478,    SE22 22.603,    SE23 81.364,    SE31 99.173,    SE32 75.067,    SE33 71.834,    SI03  0.059,    SI04 26.386
+SK01 82.382,    SK02 81.953,    SK03 86.041,    SK04 21.269,    TR10 45.679,    TR21  3.836,    TR22 32.300,    TR31 43.988,    TR32 31.533,    TR33 13.477,    TR41 81.096,    TR42 41.679,    TR51 14.178,    TR52 46.553,    TR61 28.299,    TR62 89.568,    TR63  6.441,    TR71 41.460,    TR72 34.161,    TR81 46.829,    TR82 64.267,    TR83 64.358,    TR90 33.761,    TRA1 10.082,    TRA2 90.583,    TRB1 21.735,    TRB2 91.887,    TRC1 45.175,    TRC2  8.993,    TRC3 37.420,    UKC1 41.499,    UKC2 40.419,    UKD1 11.167,    UKD3 75.113,    UKD4 80.340,    UKD6  2.366,    UKD7 48.088,    UKE1 27.859,    UKE2 90.161,    UKE3  1.759,    UKE4 68.104,    UKF1 95.091,    UKF2 90.018,    UKF3 89.880,    UKG1 87.446,    UKG2 39.100,    UKG3 50.421,    UKH1 83.126,    UKH2 60.214,    UKH3  8.225,    UKI3 57.776,    UKI4 59.318,    UKI5 68.377,    UKI6 15.877,    UKI7 33.178,    UKJ1 31.586,    UKJ2 51.993,    UKJ3 36.379,    UKJ4 16.776,    UKK1 68.309,    UKK2 50.539,    UKK3 57.624,    UKK4 71.983,    UKL1 68.373,    UKL2  1.985,    UKM5 83.980,    UKM6 71.005,    UKM7 15.551,    UKM8 61.071,    UKM9 66.155,    UKN0 19.437
+
+
+**** REPORT FILE SUMMARY
+
+f G:\My Drive\reap2020\GAMS and HTML-JS maps\nuts2Map\results.js
+
+
+EXECUTION TIME       =        0.109 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      G:\My Drive\reap2020\GAMS and HTML-JS maps\nuts2Map\DrawMap.gms
+Output     G:\My Drive\reap2020\GAMS and HTML-JS maps\nuts2Map\DrawMap.lst

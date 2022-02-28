@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="cp437">
+
+<style>
+
+    path {
+      stroke: black;
+      stroke-width: .3px;
+    }
+
+    th,td.colorbox {
+      border: 1px solid black;
+    }
+
+    td.ra {
+      text-align: right;
+      font-family: monospace;
+    }
+
+    div.statdiv {
+      display:inline-block;
+      vertical-align: top;
+    }
+
+    div.tooltip {
+      position: absolute;
+      text-align: left;
+      width: 80px;
+      height: 100px;
+      padding: 2px;
+      font: 12px sans-serif;
+      background: rgb(17, 11, 94);
+      color:aqua;
+      border: 0px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+</style>
+
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+<script src="geojson-counties-fips.js"></script>
+<script src="results.js"></script>
+
+</head>
+<body>
+
+  <h1>Coloring a map of US counties with four colors</h1>
+
+<script>
+
+    var width = 960,  height = 700, margin = 20;
+
+    var projection = d3.geoAlbersUsa().fitExtent([[margin, margin], [width-margin, height-margin]], geojsonData);
+    var path = d3.geoPath().projection(projection);
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    // return color of county c (black if not found)
+    var colorCounty = function(c) {
+        col = "black";
+        if (c in solution) col = solution[c].color;
+        return col;
+    }
+
+    var Tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+    var mouseover = function(e,d) {
+        Tooltip.style("opacity", 1)
+    }
+
+    var tooltipHtml = function(d) {
+      if (d.id in solution) {
+        return solution[d.id]["name"]+"<br><hr><br>fips: " + d.id + "<br>color: "+solution[d.id]["colorno"];
+      }
+
+      return d.id+" not recognized";
+    }
+
+    var mousemove = function(e,d) {
+        Tooltip
+          .html(tooltipHtml(d))
+          .style("left", (e.x+10) + "px")
+          .style("top", (e.y) + "px")
+    }
+
+    var mouseleave = function(e,d) {
+        Tooltip
+          .style("opacity", 0)
+    }
+
+    // plot map
+    svg.selectAll("path")
+      .data(geojsonData.features)
+      .enter().append("path")
+      .attr("d", path)
+      .style("fill", function(d) { return colorCounty(d.id); } )
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave);
+
+
+    // display tables with statistics
+    d3.select("body").append("div").attr("class","statdiv").html(htmltable)
+    d3.select("body").append("div").attr("class","statdiv").html(htmltable2)
+
+
+</script>
+
+</body>
+</html>

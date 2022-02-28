@@ -1,0 +1,195 @@
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/24/22 01:20:21 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+          D3 State Map, lower 48
+       
+          erwin@amsterdamoptimization.com
+       
+          Original topography: 
+               cb_2020_us_state_20m.zip 
+               shape file downloaded from 
+               https://www.census.gov/geographies/mapping-files/time-series/geo/cartographic-boundary.html
+       
+       
+  14   
+  15   
+  16  *-----------------------------------------------------------------------
+  17  * states
+  18  *-----------------------------------------------------------------------
+  19  set
+  20    id   'state code' /
+  21   
+  22         AL, AR, AZ, CA, CO, CT
+  23         DE, FL, GA, IA, ID, IL
+  24         IN, KS, KY, LA, MA, MD
+  25         ME, MI, MN, MO, MS, MT
+  26         NC, ND, NE, NH, NJ, NM
+  27         NV, NY, OH, OK, OR, PA
+  28         RI, SC, SD, TN, TX, UT
+  29         VA, VT, WA, WI, WV, WY
+  30   
+  31     /;
+  32   
+  33   
+  34  *-----------------------------------------------------------------------
+  35  * generate random data
+  36  *-----------------------------------------------------------------------
+  37   
+  38  parameter data(id) 'random data';
+  39  data(id) = uniform(0,100);
+  40  display data;
+  41   
+  42   
+  43  *-----------------------------------------------------------------------
+  44  * write solution file in js format
+  45  *-----------------------------------------------------------------------
+  46   
+  48   
+  49  file f /results.js/;
+  50  put f,"solution = {"/;
+  51  loop(id,
+  52     put '  "',id.tl:0,'": {';
+  53     put 'data:',data(id):0:3;
+  54     put '},'/
+  55  );
+  56  putclose '};'/;
+  57   
+  58   
+  59   
+  60  *-----------------------------------------------------------------------
+  61  * launch HTML file
+  62  *-----------------------------------------------------------------------
+  63   
+  67   
+  68   
+  69  *$libInclude win32 shellexecute  "%htmlfile%"
+  70  * for older gams systems use:
+  71  execute 'shellexecute "USStateMap.html"';
+  72   
+  73   
+  74   
+  75  *-----------------------------------------------------------------------
+  76  * echo HTML file
+  77  * done at compile time so we can place this big piece
+  78  * at the bottom of this .gms file
+  79  *-----------------------------------------------------------------------
+  80   
+  81   
+ 226   
+ 227   
+ 228   
+ 229   
+ 230   
+ 231   
+ 232   
+ 233   
+ 234   
+ 235   
+ 236   
+ 237   
+ 238   
+ 239   
+ 240   
+ 241   
+ 242   
+ 243   
+ 244   
+ 245   
+ 246   
+ 247   
+ 248   
+ 249   
+ 250   
+ 251   
+ 252   
+ 253   
+ 254   
+ 255   
+ 256   
+ 257   
+ 258   
+ 259   
+ 260   
+ 261   
+ 262   
+ 263   
+ 264   
+ 265   
+ 266   
+ 267   
+ 268   
+ 269   
+ 270   
+ 271   
+ 272   
+ 273   
+ 274   
+ 275   
+ 276   
+ 277   
+ 278   
+ 279   
+ 280   
+ 281   
+ 282   
+ 283   
+ 284   
+ 285   
+ 286   
+ 287   
+ 288   
+ 289   
+ 290   
+ 291   
+ 292   
+ 293   
+ 294   
+ 295   
+ 296   
+ 297   
+ 298   
+ 299   
+ 300   
+ 301   
+ 302   
+ 303   
+ 304   
+ 305   
+ 306   
+ 307   
+ 308   
+ 309   
+ 310   
+ 311   
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  38.1.0 a1a3b545 WEX-WEI
+GAMS 38.1.0  a1a3b545 Jan 31, 2022          WEX-WEI x86 64bit/MS Windows - 02/24/22 01:20:21 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     40 PARAMETER data  random data
+
+AL 17.175,    AR 84.327,    AZ 55.038,    CA 30.114,    CO 29.221,    CT 22.405,    DE 34.983,    FL 85.627,    GA  6.711,    IA 50.021,    ID 99.812,    IL 57.873,    IN 99.113,    KS 76.225,    KY 13.069,    LA 63.972,    MA 15.952,    MD 25.008,    ME 66.893,    MI 43.536,    MN 35.970,    MO 35.144,    MS 13.149,    MT 15.010,    NC 58.911,    ND 83.089,    NE 23.082,    NH 66.573,    NJ 77.586,    NM 30.366,    NV 11.049,    NY 50.238,    OH 16.017,    OK 87.246,    OR 26.511,    PA 28.581,    RI 59.396,    SC 72.272,    SD 62.825,    TN 46.380,    TX 41.331,    UT 11.770,    VA 31.421,    VT  4.655,    WA 33.855,    WI 18.210,    WV 64.573,    WY 56.075
+
+
+**** REPORT FILE SUMMARY
+
+f G:\My Drive\reap2020\GAMS and HTML-JS maps\StateMap\results.js
+
+
+EXECUTION TIME       =        0.171 SECONDS      4 MB  38.1.0 a1a3b545 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      G:\My Drive\reap2020\GAMS and HTML-JS maps\StateMap\StateMap.gms
+Output     G:\My Drive\reap2020\GAMS and HTML-JS maps\StateMap\StateMap.lst
