@@ -1,7 +1,7 @@
 $ontext
 
    Shortest Path Problem with Visualization
-   
+
    To do: width is handled in different parts (GAMS, JS). Need to refactor that.
 
 $offtext
@@ -199,18 +199,18 @@ $onecho > %htmlfile%
 
 <style>
 #cy {
-    width: calc(100% - 150px);
+    width: calc(100% - 200px);
     height: 100%;
     position: absolute;
     top: 0px;
-    left: 150px;
+    left: 200px;
 }
 
 table,th, td {
- border: 1px solid black;
- border-collapse: collapse;
- padding-left: 10px;
- padding-right: 10px;
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 </style>
@@ -228,7 +228,6 @@ table,th, td {
           {
             selector: 'node',
             style: {
-                // shape: 'circle',
                 'background-color': 'data(color)',
                 label: 'data(id)',
                 width: 'data(size)', height: 'data(size)',
@@ -241,7 +240,6 @@ table,th, td {
                      'mid-target-arrow-shape': 'triangle',
                      'mid-target-arrow-color': 'data(color)',
                      'arrow-scale': 0.15, 'curve-style': 'bezier' }
-                    //'line-style': 'dashed', 'line-dash-pattern': [6, 3]
 
           }
         ],
@@ -250,13 +248,11 @@ table,th, td {
 
 
       const loopAnimation = (ele, i) => {
-         const opts = {
-           style: {'line-dash-offset': -100 * i }
-          };
-          const durOptions = { duration: 10000 };
-          return ele.animation(opts, durOptions).play()
-          .promise('complete')
-          .then(() => loopAnimation(ele, i + 1));
+          const offset = { style: {'line-dash-offset': -100 * i } };
+          const duration = { duration: 10000 };
+          return ele.animation(offset, duration).play()
+                 .promise('complete')
+                 .then(() => loopAnimation(ele, i + 1));
       };
 
       var reds = cy.edges().filter(function(ele) { return ele.data('color') == 'red'; });
