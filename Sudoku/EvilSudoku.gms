@@ -23,6 +23,7 @@ set
 u(i,i,j) = yes;
 u(j,i,j) = yes;
 u(s,i,j)$(ord(s)=3*ceil(ord(i)/3)+ceil(ord(j)/3)-3) = yes;
+display u;
 
 *
 * given values

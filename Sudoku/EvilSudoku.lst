@@ -1,4 +1,4 @@
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 1
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -26,61 +26,189 @@ C o m p i l a t i o n
   23  u(i,i,j) = yes;
   24  u(j,i,j) = yes;
   25  u(s,i,j)$(ord(s)=3*ceil(ord(i)/3)+ceil(ord(j)/3)-3) = yes;
-  26   
-  27  *
-  28  * given values
-  29  *
-  30  table v0(i,j)
-  31     c1 c2 c3 c4 c5 c6 c7 c8 c9
-  32  r1                 9     5
-  33  r2  7                    1
-  34  r3        8  2        7     9
-  35  r4  6              4  9     8
-  36  r5     4     1
-  37  r6                          5
-  38  r7        2     3
-  39  r8  8              1  6     4
-  40  r9                       7
-  41  ;
-  42   
-  43  *
-  44  * MIP model
-  45  *
-  46  binary variable x(i,j,k);
-  47  x.fx(i,j,k)$(v0(i,j)=k.val) = 1;
-  48  variable z 'dummy objective';
-  49   
-  50  equations
-  51     dummy 'objective'
-  52     unique(a,k) 'all-different'
-  53     values(i,j) 'one value per cell'
-  54  ;
-  55   
-  56  dummy.. z =e= 0;
-  57  unique(a,k).. sum(u(a,i,j), x(i,j,k)) =e= 1;
-  58  values(i,j).. sum(k, x(i,j,k)) =e= 1;
-  59   
-  60  model sudoku /all/;
-  61   
-  62  *
-  63  * solve
-  64  *
-  65  solve sudoku minimizing z using mip;
-  66   
-  67  *
-  68  * display solution
-  69  *
-  70  parameter v(i,j) 'solution';
-  71  v(i,j) = sum(k, k.val*x.l(i,j,k));
-  72  option v:0;
-  73  display v;
-  74   
+  26  display u;
+  27   
+  28  *
+  29  * given values
+  30  *
+  31  table v0(i,j)
+  32     c1 c2 c3 c4 c5 c6 c7 c8 c9
+  33  r1                 9     5
+  34  r2  7                    1
+  35  r3        8  2        7     9
+  36  r4  6              4  9     8
+  37  r5     4     1
+  38  r6                          5
+  39  r7        2     3
+  40  r8  8              1  6     4
+  41  r9                       7
+  42  ;
+  43   
+  44  *
+  45  * MIP model
+  46  *
+  47  binary variable x(i,j,k);
+  48  x.fx(i,j,k)$(v0(i,j)=k.val) = 1;
+  49  variable z 'dummy objective';
+  50   
+  51  equations
+  52     dummy 'objective'
+  53     unique(a,k) 'all-different'
+  54     values(i,j) 'one value per cell'
+  55  ;
+  56   
+  57  dummy.. z =e= 0;
+  58  unique(a,k).. sum(u(a,i,j), x(i,j,k)) =e= 1;
+  59  values(i,j).. sum(k, x(i,j,k)) =e= 1;
+  60   
+  61  model sudoku /all/;
+  62   
+  63  *
+  64  * solve
+  65  *
+  66  solve sudoku minimizing z using mip;
+  67   
+  68  *
+  69  * display solution
+  70  *
+  71  parameter v(i,j) 'solution';
+  72  v(i,j) = sum(k, k.val*x.l(i,j,k));
+  73  option v:0;
+  74  display v;
+  75   
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  38.2.1 96226ea8 WEX-WEI
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 2
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE sudoku Using MIP From line 65
+E x e c u t i o n
+
+
+----     26 SET u  areas with unique values a=area name, (i,j) are the cells
+
+               c1          c2          c3          c4          c5          c6          c7          c8          c9
+
+r1.r1         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r2.r2         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r3.r3         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r4.r4         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r5.r5         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r6.r6         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r7.r7         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r8.r8         YES         YES         YES         YES         YES         YES         YES         YES         YES
+r9.r9         YES         YES         YES         YES         YES         YES         YES         YES         YES
+c1.r1         YES
+c1.r2         YES
+c1.r3         YES
+c1.r4         YES
+c1.r5         YES
+c1.r6         YES
+c1.r7         YES
+c1.r8         YES
+c1.r9         YES
+c2.r1                     YES
+c2.r2                     YES
+c2.r3                     YES
+c2.r4                     YES
+c2.r5                     YES
+c2.r6                     YES
+c2.r7                     YES
+c2.r8                     YES
+c2.r9                     YES
+c3.r1                                 YES
+c3.r2                                 YES
+c3.r3                                 YES
+c3.r4                                 YES
+c3.r5                                 YES
+c3.r6                                 YES
+c3.r7                                 YES
+c3.r8                                 YES
+c3.r9                                 YES
+c4.r1                                             YES
+c4.r2                                             YES
+c4.r3                                             YES
+c4.r4                                             YES
+c4.r5                                             YES
+c4.r6                                             YES
+c4.r7                                             YES
+c4.r8                                             YES
+c4.r9                                             YES
+c5.r1                                                         YES
+c5.r2                                                         YES
+c5.r3                                                         YES
+c5.r4                                                         YES
+c5.r5                                                         YES
+c5.r6                                                         YES
+c5.r7                                                         YES
+c5.r8                                                         YES
+c5.r9                                                         YES
+c6.r1                                                                     YES
+c6.r2                                                                     YES
+c6.r3                                                                     YES
+c6.r4                                                                     YES
+c6.r5                                                                     YES
+c6.r6                                                                     YES
+c6.r7                                                                     YES
+c6.r8                                                                     YES
+c6.r9                                                                     YES
+c7.r1                                                                                 YES
+c7.r2                                                                                 YES
+c7.r3                                                                                 YES
+c7.r4                                                                                 YES
+c7.r5                                                                                 YES
+c7.r6                                                                                 YES
+c7.r7                                                                                 YES
+c7.r8                                                                                 YES
+c7.r9                                                                                 YES
+c8.r1                                                                                             YES
+c8.r2                                                                                             YES
+c8.r3                                                                                             YES
+c8.r4                                                                                             YES
+c8.r5                                                                                             YES
+c8.r6                                                                                             YES
+c8.r7                                                                                             YES
+c8.r8                                                                                             YES
+c8.r9                                                                                             YES
+c9.r1                                                                                                         YES
+c9.r2                                                                                                         YES
+c9.r3                                                                                                         YES
+c9.r4                                                                                                         YES
+c9.r5                                                                                                         YES
+c9.r6                                                                                                         YES
+c9.r7                                                                                                         YES
+c9.r8                                                                                                         YES
+c9.r9                                                                                                         YES
+s1.r1         YES         YES         YES
+s1.r2         YES         YES         YES
+s1.r3         YES         YES         YES
+s2.r1                                             YES         YES         YES
+s2.r2                                             YES         YES         YES
+s2.r3                                             YES         YES         YES
+s3.r1                                                                                 YES         YES         YES
+s3.r2                                                                                 YES         YES         YES
+s3.r3                                                                                 YES         YES         YES
+s4.r4         YES         YES         YES
+s4.r5         YES         YES         YES
+s4.r6         YES         YES         YES
+s5.r4                                             YES         YES         YES
+s5.r5                                             YES         YES         YES
+s5.r6                                             YES         YES         YES
+s6.r4                                                                                 YES         YES         YES
+s6.r5                                                                                 YES         YES         YES
+s6.r6                                                                                 YES         YES         YES
+s7.r7         YES         YES         YES
+s7.r8         YES         YES         YES
+s7.r9         YES         YES         YES
+s8.r7                                             YES         YES         YES
+s8.r8                                             YES         YES         YES
+s8.r9                                             YES         YES         YES
+s9.r7                                                                                 YES         YES         YES
+s9.r8                                                                                 YES         YES         YES
+s9.r9                                                                                 YES         YES         YES
+
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE sudoku Using MIP From line 66
 
 
 ---- dummy  =E=  objective
@@ -118,9 +246,9 @@ values(r1,c3)..  x(r1,c3,1) + x(r1,c3,2) + x(r1,c3,3) + x(r1,c3,4) + x(r1,c3,5) 
      
 REMAINING 78 ENTRIES SKIPPED
 
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 3
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE sudoku Using MIP From line 65
+Column Listing      SOLVE sudoku Using MIP From line 66
 
 
 ---- x  
@@ -154,9 +282,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       dummy
 
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 4
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE sudoku Using MIP From line 65
+Model Statistics    SOLVE sudoku Using MIP From line 66
 
 
 MODEL STATISTICS
@@ -166,23 +294,23 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES          730
 NON ZERO ELEMENTS         2,917     DISCRETE VARIABLES        729
 
 
-GENERATION TIME      =        0.062 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 5
+GENERATION TIME      =        0.000 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE sudoku Using MIP From line 65
+Solution Report     SOLVE sudoku Using MIP From line 66
 
 
                S O L V E      S U M M A R Y
 
      MODEL   sudoku              OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  65
+     SOLVER  CPLEX               FROM LINE  66
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                0.0000
 
- RESOURCE USAGE, LIMIT          0.079 10000000000.000
+ RESOURCE USAGE, LIMIT          0.109 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -195,13 +323,13 @@ Solution Report     SOLVE sudoku Using MIP From line 65
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.05sec (det. 1.67 ticks)
+--- Cplex Time: 0.09sec (det. 1.67 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.43 ticks)
+--- Cplex Time: 0.02sec (det. 0.43 ticks)
 
 
 Proven optimal solution
@@ -1297,12 +1425,12 @@ r9.c9.9          .              .             1.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 02:46:13 Page 6
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/05/22 04:22:24 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     73 PARAMETER v  solution
+----     74 PARAMETER v  solution
 
             c1          c2          c3          c4          c5          c6          c7          c8          c9
 
@@ -1318,7 +1446,7 @@ r9           5           1           6           4           9           8      
 
 
 
-EXECUTION TIME       =        0.234 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
+EXECUTION TIME       =        0.219 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
 
 
 USER: Eval License                                   G211206|0002CO-GEN
