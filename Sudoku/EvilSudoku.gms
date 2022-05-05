@@ -2,9 +2,8 @@ $ontext
 
    Evil Sudoku from sudoku.com
 
-   Reference:
-   http://yetanothermathprogrammingconsultant.blogspot.com/2016/10/mip-modeling-from-sudoku-to-kenken.html
-
+   References:
+   https://yetanothermathprogrammingconsultant.blogspot.com/2022/05/evil-sudoku.html
 
 $offtext
 
