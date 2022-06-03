@@ -1,0 +1,2443 @@
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Select K out of N
+       
+         Select K points such that they are as close as possible to a given point.
+       
+         See:
+         https://yetanothermathprogrammingconsultant.blogspot.com/2022/06/a-subset-selection-problem.html 
+       
+  11   
+  12  *------------------------------------------------------------
+  13  * data
+  14  *------------------------------------------------------------
+  15   
+  16  set
+  17     i 'data points' /i1*i100/
+  18     j 'unique values' /1,2,3/
+  19     pm /'+','-'/
+  20   ;
+  21   
+  22  *
+  23  * data drawn from set j
+  24  *
+  25  parameter p(i) 'data';
+  26  p(i) = uniformint(1,card(j));
+  27  p(i) = sum(j$(ord(j)=p(i)),j.val);
+  28  option p:0:0:8;
+  29   
+  30  scalars
+  31     k 'number to select' /50/
+  32     t 'target for mean of selected values' /2.12345/
+  33  ;
+  34  option k:0,t:5;
+  35   
+  36  display p,k,t;
+  37   
+  38   
+  39  *------------------------------------------------------------
+  40  * model 1
+  41  * binary variables delta(i)
+  42  *------------------------------------------------------------
+  43   
+  44  variables
+  45     z          'objective'
+  46     delta(i)   'selection of points'
+  47     dev(pm)    'deviation'
+  48  ;
+  49  binary variable delta;
+  50  positive variable dev;
+  51   
+  52  Equations
+  53     obj         'objective'
+  54     deviation   'deviation of mean from target'
+  55     count       'number of selected points'
+  56  ;
+  57   
+  58  obj.. z =e= sum(pm,dev(pm));
+  59  deviation.. dev('+')-dev('-') =e= sum(i,delta(i)*p(i))/k-t;
+  60  count.. sum(i,delta(i)) =e= k;
+  61   
+  62  model m1 /obj,deviation,count/;
+  63  solve m1 minimizing z using mip;
+  64   
+  65  parameter value(i) 'selected values';
+  66  value(i) = p(i)*delta.l(i);
+  67   
+  68  parameter vcount(j) 'count of each value';
+  69  vcount(j) = sum(i$(value(i)=j.val), 1);
+  70   
+  71  option delta:0:0:6, value:0:0:6, vcount:0;
+  72  option dev:6,z:6;
+  73  display delta.l,value,vcount,dev.l,z.l;
+  74   
+  75  *------------------------------------------------------------
+  76  * model 2
+  77  * integer variable num(j)
+  78  *------------------------------------------------------------
+  79   
+  80   
+  81  parameter tab(j) 'tabulation';
+  82  tab(j) = sum(i$(p(i)=j.val),1);
+  83  option tab:0;
+  84  display tab;
+  85   
+  86  integer variable num(j) 'number selected from bin j';
+  87   
+  88   
+  89  equation idev, icount;
+  90  idev.. dev('+')-dev('-') =e= sum(j,num(j)*j.val)/k-t;
+  91  icount.. sum(j,num(j)) =e= k;
+  92   
+  93  num.up(j) = tab(j);
+  94   
+  95  model m2 /obj,idev,icount/;
+  96  solve m2 minimizing z using mip;
+  97   
+  98  option num:0;
+  99  display num.l,dev.l,z.l;
+ 100   
+ 101  *------------------------------------------------------------
+ 102  * model 3
+ 103  * best k=1...Kmax using a loop
+ 104  *------------------------------------------------------------
+ 105   
+ 106  scalar kmax;
+ 107  kmax = k;
+ 108   
+ 109  * fast solve loop
+ 110  option solprint=silent, solvelink=5;
+ 111   
+ 112  parameter
+ 113    bestObj 'best objective' /INF/
+ 114    bestNum 'best selection'
+ 115    traceObj 'trace objective values'
+ 116  ;
+ 117  for(k=1 to kmax,
+ 118   
+ 119     solve m2 minimizing z using mip;
+ 120     traceObj(i)$(ord(i)=k) = z.l;
+ 121     if (z.l<bestObj,
+ 122         bestObj=z.l;
+ 123         bestNum(j) = num.l(j);
+ 124     );
+ 125   
+ 126  );
+ 127   
+ 128  option bestObj:6,bestNum:0,traceObj:6:0:4;
+ 129  display "**** Loop",traceObj,bestObj,bestNum;
+ 130   
+ 131  option solprint = on;
+ 132  *------------------------------------------------------------
+ 133  * model 4
+ 134  * best k=1...Kmax using single model
+ 135  *------------------------------------------------------------
+ 136   
+ 137  Scalar U 'maximum deviation';
+ 138  U = kmax*(smax(i,p(i))-smin(i,p(i)));
+ 139   
+ 140  positive variable
+ 141      y(i,pm)  'dev(i,pm)*delta(i)'
+ 142  ;
+ 143   
+ 144  integer Variable
+ 145      kvar 'k as variable'
+ 146  ;
+ 147  kvar.lo = 1;
+ 148  kvar.up = kmax;
+ 149   
+ 150  Equation
+ 151      LinDev 'linearized version'
+ 152      Linearization1(i,pm)
+ 153      Linearization2(i,pm)
+ 154      Linearization3(i,pm)
+ 155      kdef
+ 156  ;
+ 157  LinDev..         sum(i,y(i,'+')-y(i,'-')) =e= sum(i,delta(i)*p(i))-t*kvar;
+ 158   
+ 159  Linearization1(i,pm).. y(i,pm) =l= delta(i)*U;
+ 160  Linearization2(i,pm).. y(i,pm) =l= dev(pm);
+ 161  Linearization3(i,pm).. y(i,pm) =g= dev(pm) - (1-delta(i))*U;
+ 162   
+ 163  kdef.. sum(i,delta(i)) =e= kvar;
+ 164   
+ 165  model m4 /obj,lindev,linearization1,linearization2,linearization3,kdef/;
+ 166  solve m4 minimizing z using mip;
+ 167   
+ 168  value(i) = p(i)*delta.l(i);
+ 169  vcount(j) = sum(i$(value(i)=j.val), 1);
+ 170   
+ 171  option kvar:0;
+ 172  display kvar.l, vcount, z.l;
+
+
+COMPILATION TIME     =        0.031 SECONDS      3 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     36 PARAMETER p  data
+
+i1   1,    i2   3,    i3   2,    i4   1,    i5   1,    i6   1,    i7   2,    i8   3
+i9   1,    i10  2,    i11  3,    i12  2,    i13  3,    i14  3,    i15  1,    i16  2
+i17  1,    i18  1,    i19  3,    i20  2,    i21  2,    i22  2,    i23  1,    i24  1
+i25  2,    i26  3,    i27  1,    i28  2,    i29  3,    i30  1,    i31  1,    i32  2
+i33  1,    i34  3,    i35  1,    i36  1,    i37  2,    i38  3,    i39  2,    i40  2
+i41  2,    i42  1,    i43  1,    i44  1,    i45  2,    i46  1,    i47  2,    i48  2
+i49  3,    i50  1,    i51  2,    i52  3,    i53  2,    i54  1,    i55  1,    i56  1
+i57  2,    i58  2,    i59  1,    i60  3,    i61  1,    i62  1,    i63  2,    i64  3
+i65  1,    i66  1,    i67  2,    i68  2,    i69  2,    i70  2,    i71  1,    i72  1
+i73  1,    i74  3,    i75  2,    i76  3,    i77  1,    i78  1,    i79  3,    i80  1
+i81  1,    i82  1,    i83  1,    i84  2,    i85  1,    i86  1,    i87  1,    i88  1
+i89  1,    i90  3,    i91  3,    i92  2,    i93  2,    i94  3,    i95  2,    i96  3
+i97  1,    i98  3,    i99  1,    i100 2
+
+
+----     36 PARAMETER k                    =           50  number to select
+            PARAMETER t                    =      2.12345  target for mean of selected values
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using MIP From line 63
+
+
+---- obj  =E=  objective
+
+obj..  z - dev(+) - dev(-) =E= 0 ; (LHS = 0)
+     
+
+---- deviation  =E=  deviation of mean from target
+
+deviation..  - 0.02*delta(i1) - 0.06*delta(i2) - 0.04*delta(i3) - 0.02*delta(i4) - 0.02*delta(i5) - 0.02*delta(i6)
+     
+      - 0.04*delta(i7) - 0.06*delta(i8) - 0.02*delta(i9) - 0.04*delta(i10) - 0.06*delta(i11) - 0.04*delta(i12) - 0.06*delta(i13)
+     
+      - 0.06*delta(i14) - 0.02*delta(i15) - 0.04*delta(i16) - 0.02*delta(i17) - 0.02*delta(i18) - 0.06*delta(i19)
+     
+      - 0.04*delta(i20) - 0.04*delta(i21) - 0.04*delta(i22) - 0.02*delta(i23) - 0.02*delta(i24) - 0.04*delta(i25)
+     
+      - 0.06*delta(i26) - 0.02*delta(i27) - 0.04*delta(i28) - 0.06*delta(i29) - 0.02*delta(i30) - 0.02*delta(i31)
+     
+      - 0.04*delta(i32) - 0.02*delta(i33) - 0.06*delta(i34) - 0.02*delta(i35) - 0.02*delta(i36) - 0.04*delta(i37)
+     
+      - 0.06*delta(i38) - 0.04*delta(i39) - 0.04*delta(i40) - 0.04*delta(i41) - 0.02*delta(i42) - 0.02*delta(i43)
+     
+      - 0.02*delta(i44) - 0.04*delta(i45) - 0.02*delta(i46) - 0.04*delta(i47) - 0.04*delta(i48) - 0.06*delta(i49)
+     
+      - 0.02*delta(i50) - 0.04*delta(i51) - 0.06*delta(i52) - 0.04*delta(i53) - 0.02*delta(i54) - 0.02*delta(i55)
+     
+      - 0.02*delta(i56) - 0.04*delta(i57) - 0.04*delta(i58) - 0.02*delta(i59) - 0.06*delta(i60) - 0.02*delta(i61)
+     
+      - 0.02*delta(i62) - 0.04*delta(i63) - 0.06*delta(i64) - 0.02*delta(i65) - 0.02*delta(i66) - 0.04*delta(i67)
+     
+      - 0.04*delta(i68) - 0.04*delta(i69) - 0.04*delta(i70) - 0.02*delta(i71) - 0.02*delta(i72) - 0.02*delta(i73)
+     
+      - 0.06*delta(i74) - 0.04*delta(i75) - 0.06*delta(i76) - 0.02*delta(i77) - 0.02*delta(i78) - 0.06*delta(i79)
+     
+      - 0.02*delta(i80) - 0.02*delta(i81) - 0.02*delta(i82) - 0.02*delta(i83) - 0.04*delta(i84) - 0.02*delta(i85)
+     
+      - 0.02*delta(i86) - 0.02*delta(i87) - 0.02*delta(i88) - 0.02*delta(i89) - 0.06*delta(i90) - 0.06*delta(i91)
+     
+      - 0.04*delta(i92) - 0.04*delta(i93) - 0.06*delta(i94) - 0.04*delta(i95) - 0.06*delta(i96) - 0.02*delta(i97)
+     
+      - 0.06*delta(i98) - 0.02*delta(i99) - 0.04*delta(i100) + dev(+) - dev(-) =E= -2.12345 ; (LHS = 0, INFES = 2.12345 ****)
+     
+
+---- count  =E=  number of selected points
+
+count..  delta(i1) + delta(i2) + delta(i3) + delta(i4) + delta(i5) + delta(i6) + delta(i7) + delta(i8) + delta(i9) + delta(i10)
+     
+      + delta(i11) + delta(i12) + delta(i13) + delta(i14) + delta(i15) + delta(i16) + delta(i17) + delta(i18) + delta(i19)
+     
+      + delta(i20) + delta(i21) + delta(i22) + delta(i23) + delta(i24) + delta(i25) + delta(i26) + delta(i27) + delta(i28)
+     
+      + delta(i29) + delta(i30) + delta(i31) + delta(i32) + delta(i33) + delta(i34) + delta(i35) + delta(i36) + delta(i37)
+     
+      + delta(i38) + delta(i39) + delta(i40) + delta(i41) + delta(i42) + delta(i43) + delta(i44) + delta(i45) + delta(i46)
+     
+      + delta(i47) + delta(i48) + delta(i49) + delta(i50) + delta(i51) + delta(i52) + delta(i53) + delta(i54) + delta(i55)
+     
+      + delta(i56) + delta(i57) + delta(i58) + delta(i59) + delta(i60) + delta(i61) + delta(i62) + delta(i63) + delta(i64)
+     
+      + delta(i65) + delta(i66) + delta(i67) + delta(i68) + delta(i69) + delta(i70) + delta(i71) + delta(i72) + delta(i73)
+     
+      + delta(i74) + delta(i75) + delta(i76) + delta(i77) + delta(i78) + delta(i79) + delta(i80) + delta(i81) + delta(i82)
+     
+      + delta(i83) + delta(i84) + delta(i85) + delta(i86) + delta(i87) + delta(i88) + delta(i89) + delta(i90) + delta(i91)
+     
+      + delta(i92) + delta(i93) + delta(i94) + delta(i95) + delta(i96) + delta(i97) + delta(i98) + delta(i99) + delta(i100) =E= 50
+      ; (LHS = 0, INFES = 50 ****)
+     
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using MIP From line 63
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- delta  selection of points
+
+delta(i1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.02    deviation
+        1       count
+
+delta(i2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.06    deviation
+        1       count
+
+delta(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.04    deviation
+        1       count
+
+REMAINING 97 ENTRIES SKIPPED
+
+---- dev  deviation
+
+dev(+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       deviation
+
+dev(-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+       -1       deviation
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using MIP From line 63
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.123E+00, 5.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 2.000E-02, 1.000E+00]
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using MIP From line 63
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          103
+NON ZERO ELEMENTS           205     DISCRETE VARIABLES        100
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using MIP From line 63
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  63
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0035
+
+ RESOURCE USAGE, LIMIT          0.109 10000000000.000
+ ITERATION COUNT, LIMIT         3    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.09sec (det. 0.09 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.04 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.003450    (3 iterations, 0 nodes)
+Final Solve:             0.003450    (0 iterations)
+
+Best possible:           0.003450
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+---- EQU deviation         -2.1235        -2.1235        -2.1235        -1.0000      
+---- EQU count             50.0000        50.0000        50.0000          .          
+
+  obj  objective
+  deviation  deviation of mean from target
+  count  number of selected points
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0035        +INF             .          
+
+  z  objective
+
+---- VAR delta  selection of points
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+i1            .              .             1.0000        -0.0200      
+i2            .             1.0000         1.0000        -0.0600      
+i3            .              .             1.0000        -0.0400      
+i4            .              .             1.0000        -0.0200      
+i5            .             1.0000         1.0000        -0.0200      
+i6            .             1.0000         1.0000        -0.0200      
+i7            .             1.0000         1.0000        -0.0400      
+i8            .             1.0000         1.0000        -0.0600      
+i9            .             1.0000         1.0000        -0.0200      
+i10           .              .             1.0000        -0.0400      
+i11           .             1.0000         1.0000        -0.0600      
+i12           .             1.0000         1.0000        -0.0400      
+i13           .             1.0000         1.0000        -0.0600      
+i14           .             1.0000         1.0000        -0.0600      
+i15           .             1.0000         1.0000        -0.0200      
+i16           .             1.0000         1.0000        -0.0400      
+i17           .             1.0000         1.0000        -0.0200      
+i18           .             1.0000         1.0000        -0.0200      
+i19           .             1.0000         1.0000        -0.0600      
+i20           .              .             1.0000        -0.0400      
+i21           .              .             1.0000        -0.0400      
+i22           .             1.0000         1.0000        -0.0400      
+i23           .              .             1.0000        -0.0200      
+i24           .              .             1.0000        -0.0200      
+i25           .              .             1.0000        -0.0400      
+i26           .             1.0000         1.0000        -0.0600      
+i27           .             1.0000         1.0000        -0.0200      
+i28           .             1.0000         1.0000        -0.0400      
+i29           .             1.0000         1.0000        -0.0600      
+i30           .             1.0000         1.0000        -0.0200      
+i31           .             1.0000         1.0000        -0.0200      
+i32           .              .             1.0000        -0.0400      
+i33           .             1.0000         1.0000        -0.0200      
+i34           .             1.0000         1.0000        -0.0600      
+i35           .             1.0000         1.0000        -0.0200      
+i36           .             1.0000         1.0000        -0.0200      
+i37           .              .             1.0000        -0.0400      
+i38           .             1.0000         1.0000        -0.0600      
+i39           .              .             1.0000        -0.0400      
+i40           .              .             1.0000        -0.0400      
+i41           .             1.0000         1.0000        -0.0400      
+i42           .              .             1.0000        -0.0200      
+i43           .              .             1.0000        -0.0200      
+i44           .              .             1.0000        -0.0200      
+i45           .              .             1.0000        -0.0400      
+i46           .              .             1.0000        -0.0200      
+i47           .              .             1.0000        -0.0400      
+i48           .              .             1.0000        -0.0400      
+i49           .             1.0000         1.0000        -0.0600      
+i50           .              .             1.0000        -0.0200      
+i51           .              .             1.0000        -0.0400      
+i52           .             1.0000         1.0000        -0.0600      
+i53           .              .             1.0000        -0.0400      
+i54           .              .             1.0000        -0.0200      
+i55           .             1.0000         1.0000        -0.0200      
+i56           .             1.0000         1.0000        -0.0200      
+i57           .              .             1.0000        -0.0400      
+i58           .             1.0000         1.0000        -0.0400      
+i59           .              .             1.0000        -0.0200      
+i60           .             1.0000         1.0000        -0.0600      
+i61           .             1.0000         1.0000        -0.0200      
+i62           .             1.0000         1.0000        -0.0200      
+i63           .              .             1.0000        -0.0400      
+i64           .             1.0000         1.0000        -0.0600      
+i65           .              .             1.0000        -0.0200      
+i66           .              .             1.0000        -0.0200      
+i67           .             1.0000         1.0000        -0.0400      
+i68           .             1.0000         1.0000        -0.0400      
+i69           .              .             1.0000        -0.0400      
+i70           .              .             1.0000        -0.0400      
+i71           .              .             1.0000        -0.0200      
+i72           .              .             1.0000        -0.0200      
+i73           .              .             1.0000        -0.0200      
+i74           .             1.0000         1.0000        -0.0600      
+i75           .              .             1.0000        -0.0400      
+i76           .             1.0000         1.0000        -0.0600      
+i77           .              .             1.0000        -0.0200      
+i78           .              .             1.0000        -0.0200      
+i79           .             1.0000         1.0000        -0.0600      
+i80           .              .             1.0000        -0.0200      
+i81           .              .             1.0000        -0.0200      
+i82           .              .             1.0000        -0.0200      
+i83           .              .             1.0000        -0.0200      
+i84           .             1.0000         1.0000        -0.0400      
+i85           .              .             1.0000        -0.0200      
+i86           .              .             1.0000        -0.0200      
+i87           .              .             1.0000        -0.0200      
+i88           .              .             1.0000        -0.0200      
+i89           .              .             1.0000        -0.0200      
+i90           .             1.0000         1.0000        -0.0600      
+i91           .             1.0000         1.0000        -0.0600      
+i92           .             1.0000         1.0000        -0.0400      
+i93           .             1.0000         1.0000        -0.0400      
+i94           .             1.0000         1.0000        -0.0600      
+i95           .              .             1.0000        -0.0400      
+i96           .             1.0000         1.0000        -0.0600      
+i97           .              .             1.0000        -0.0200      
+i98           .             1.0000         1.0000        -0.0600      
+i99           .              .             1.0000        -0.0200      
+i100          .              .             1.0000        -0.0400      
+
+---- VAR dev  deviation
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
++          .              .            +INF            2.0000      
+-          .             0.0034        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     73 VARIABLE delta.L  selection of points
+
+i2  1,    i5  1,    i6  1,    i7  1,    i8  1,    i9  1
+i11 1,    i12 1,    i13 1,    i14 1,    i15 1,    i16 1
+i17 1,    i18 1,    i19 1,    i22 1,    i26 1,    i27 1
+i28 1,    i29 1,    i30 1,    i31 1,    i33 1,    i34 1
+i35 1,    i36 1,    i38 1,    i41 1,    i49 1,    i52 1
+i55 1,    i56 1,    i58 1,    i60 1,    i61 1,    i62 1
+i64 1,    i67 1,    i68 1,    i74 1,    i76 1,    i79 1
+i84 1,    i90 1,    i91 1,    i92 1,    i93 1,    i94 1
+i96 1,    i98 1
+
+
+----     73 PARAMETER value  selected values
+
+i2  3,    i5  1,    i6  1,    i7  2,    i8  3,    i9  1
+i11 3,    i12 2,    i13 3,    i14 3,    i15 1,    i16 2
+i17 1,    i18 1,    i19 3,    i22 2,    i26 3,    i27 1
+i28 2,    i29 3,    i30 1,    i31 1,    i33 1,    i34 3
+i35 1,    i36 1,    i38 3,    i41 2,    i49 3,    i52 3
+i55 1,    i56 1,    i58 2,    i60 3,    i61 1,    i62 1
+i64 3,    i67 2,    i68 2,    i74 3,    i76 3,    i79 3
+i84 2,    i90 3,    i91 3,    i92 2,    i93 2,    i94 3
+i96 3,    i98 3
+
+
+----     73 PARAMETER vcount  count of each value
+
+1 16,    2 12,    3 22
+
+
+----     73 VARIABLE dev.L  deviation
+
+- 0.003450
+
+
+----     73 VARIABLE z.L                   =     0.003450  objective
+
+----     84 PARAMETER tab  tabulation
+
+1 45,    2 33,    3 22
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 96
+
+
+---- obj  =E=  objective
+
+obj..  z - dev(+) - dev(-) =E= 0 ; (LHS = 0)
+     
+
+---- idev  =E=  
+
+idev..  dev(+) - dev(-) - 0.02*num(1) - 0.04*num(2) - 0.06*num(3) =E= -2.12345 ; (LHS = -0.00344999999999862, INFES = 2.12 ****)
+     
+
+---- icount  =E=  
+
+icount..  num(1) + num(2) + num(3) =E= 50 ; (LHS = 0, INFES = 50 ****)
+     
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 96
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.00345000000000018, +INF, 0)
+        1       obj
+
+
+---- dev  deviation
+
+dev(+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 2)
+       -1       obj
+        1       idev
+
+dev(-)
+                (.LO, .L, .UP, .M = 0, 0.00344999999999868, +INF, 0)
+       -1       obj
+       -1       idev
+
+
+---- num  number selected from bin j
+
+num(1)
+                (.LO, .L, .UP, .M = 0, 0, 45, 0)
+       -0.02    idev
+        1       icount
+
+num(2)
+                (.LO, .L, .UP, .M = 0, 0, 33, 0)
+       -0.04    idev
+        1       icount
+
+num(3)
+                (.LO, .L, .UP, .M = 0, 0, 22, 0)
+       -0.06    idev
+        1       icount
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 96
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.123E+00, 5.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 2.200E+01, 4.500E+01] - Zero values observed as well
+Matrix    [min, max] : [ 2.000E-02, 1.000E+00]
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 96
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES            6
+NON ZERO ELEMENTS            11     DISCRETE VARIABLES          3
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 96
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  96
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0035
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT         4    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.11sec (det. 0.04 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.00 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.003450    (4 iterations, 0 nodes)
+Final Solve:             0.003450    (0 iterations)
+
+Best possible:           0.003450
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+---- EQU idev              -2.1235        -2.1235        -2.1235        -1.0000      
+---- EQU icount            50.0000        50.0000        50.0000          .          
+
+  obj  objective
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0035        +INF             .          
+
+  z  objective
+
+---- VAR dev  deviation
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
++          .              .            +INF            2.0000      
+-          .             0.0034        +INF             .          
+
+---- VAR num  number selected from bin j
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .             6.0000        45.0000        -0.0200      
+2          .            32.0000        33.0000        -0.0400      
+3          .            12.0000        22.0000        -0.0600      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     99 VARIABLE num.L  number selected from bin j
+
+1  6,    2 32,    3 12
+
+
+----     99 VARIABLE dev.L  deviation
+
+- 0.003450
+
+
+----     99 VARIABLE z.L                   =     0.003450  objective
+----    129 **** Loop
+
+----    129 PARAMETER traceObj  trace objective values
+
+i1  0.123450,    i2  0.123450,    i3  0.123450,    i4  0.123450
+i5  0.076550,    i6  0.043217,    i7  0.019407,    i8  0.001550
+i9  0.012339,    i10 0.023450,    i11 0.032541,    i12 0.040117
+i13 0.030396,    i14 0.019407,    i15 0.009883,    i16 0.001550
+i17 0.005803,    i18 0.012339,    i19 0.018187,    i20 0.023450
+i21 0.019407,    i22 0.012914,    i23 0.006985,    i24 0.001550
+i25 0.003450,    i26 0.008065,    i27 0.012339,    i28 0.016307
+i29 0.014481,    i30 0.009883,    i31 0.005582,    i32 0.001550
+i33 0.002238,    i34 0.005803,    i35 0.009164,    i36 0.012339
+i37 0.011685,    i38 0.008129,    i39 0.004755,    i40 0.001550
+i41 0.001499,    i42 0.004402,    i43 0.007171,    i44 0.009814
+i45 0.009883,    i46 0.006985,    i47 0.004210,    i48 0.001550
+i49 0.001001,    i50 0.003450
+
+
+----    129 PARAMETER bestObj              =     0.001001  best objective
+
+----    129 PARAMETER bestNum  best selection
+
+1  5,    2 33,    3 11
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m4 Using MIP From line 166
+
+
+---- obj  =E=  objective
+
+obj..  z - dev(+) - dev(-) =E= 0 ; (LHS = 0)
+     
+
+---- LinDev  =E=  linearized version
+
+LinDev..  - delta(i1) - 3*delta(i2) - 2*delta(i3) - delta(i4) - delta(i5) - delta(i6) - 2*delta(i7) - 3*delta(i8) - delta(i9)
+     
+      - 2*delta(i10) - 3*delta(i11) - 2*delta(i12) - 3*delta(i13) - 3*delta(i14) - delta(i15) - 2*delta(i16) - delta(i17)
+     
+      - delta(i18) - 3*delta(i19) - 2*delta(i20) - 2*delta(i21) - 2*delta(i22) - delta(i23) - delta(i24) - 2*delta(i25)
+     
+      - 3*delta(i26) - delta(i27) - 2*delta(i28) - 3*delta(i29) - delta(i30) - delta(i31) - 2*delta(i32) - delta(i33)
+     
+      - 3*delta(i34) - delta(i35) - delta(i36) - 2*delta(i37) - 3*delta(i38) - 2*delta(i39) - 2*delta(i40) - 2*delta(i41)
+     
+      - delta(i42) - delta(i43) - delta(i44) - 2*delta(i45) - delta(i46) - 2*delta(i47) - 2*delta(i48) - 3*delta(i49) - delta(i50)
+     
+      - 2*delta(i51) - 3*delta(i52) - 2*delta(i53) - delta(i54) - delta(i55) - delta(i56) - 2*delta(i57) - 2*delta(i58)
+     
+      - delta(i59) - 3*delta(i60) - delta(i61) - delta(i62) - 2*delta(i63) - 3*delta(i64) - delta(i65) - delta(i66) - 2*delta(i67)
+     
+      - 2*delta(i68) - 2*delta(i69) - 2*delta(i70) - delta(i71) - delta(i72) - delta(i73) - 3*delta(i74) - 2*delta(i75)
+     
+      - 3*delta(i76) - delta(i77) - delta(i78) - 3*delta(i79) - delta(i80) - delta(i81) - delta(i82) - delta(i83) - 2*delta(i84)
+     
+      - delta(i85) - delta(i86) - delta(i87) - delta(i88) - delta(i89) - 3*delta(i90) - 3*delta(i91) - 2*delta(i92) - 2*delta(i93)
+     
+      - 3*delta(i94) - 2*delta(i95) - 3*delta(i96) - delta(i97) - 3*delta(i98) - delta(i99) - 2*delta(i100) + y(i1,+) - y(i1,-)
+     
+      + y(i2,+) - y(i2,-) + y(i3,+) - y(i3,-) + y(i4,+) - y(i4,-) + y(i5,+) - y(i5,-) + y(i6,+) - y(i6,-) + y(i7,+) - y(i7,-)
+     
+      + y(i8,+) - y(i8,-) + y(i9,+) - y(i9,-) + y(i10,+) - y(i10,-) + y(i11,+) - y(i11,-) + y(i12,+) - y(i12,-) + y(i13,+)
+     
+      - y(i13,-) + y(i14,+) - y(i14,-) + y(i15,+) - y(i15,-) + y(i16,+) - y(i16,-) + y(i17,+) - y(i17,-) + y(i18,+) - y(i18,-)
+     
+      + y(i19,+) - y(i19,-) + y(i20,+) - y(i20,-) + y(i21,+) - y(i21,-) + y(i22,+) - y(i22,-) + y(i23,+) - y(i23,-) + y(i24,+)
+     
+      - y(i24,-) + y(i25,+) - y(i25,-) + y(i26,+) - y(i26,-) + y(i27,+) - y(i27,-) + y(i28,+) - y(i28,-) + y(i29,+) - y(i29,-)
+     
+      + y(i30,+) - y(i30,-) + y(i31,+) - y(i31,-) + y(i32,+) - y(i32,-) + y(i33,+) - y(i33,-) + y(i34,+) - y(i34,-) + y(i35,+)
+     
+      - y(i35,-) + y(i36,+) - y(i36,-) + y(i37,+) - y(i37,-) + y(i38,+) - y(i38,-) + y(i39,+) - y(i39,-) + y(i40,+) - y(i40,-)
+     
+      + y(i41,+) - y(i41,-) + y(i42,+) - y(i42,-) + y(i43,+) - y(i43,-) + y(i44,+) - y(i44,-) + y(i45,+) - y(i45,-) + y(i46,+)
+     
+      - y(i46,-) + y(i47,+) - y(i47,-) + y(i48,+) - y(i48,-) + y(i49,+) - y(i49,-) + y(i50,+) - y(i50,-) + y(i51,+) - y(i51,-)
+     
+      + y(i52,+) - y(i52,-) + y(i53,+) - y(i53,-) + y(i54,+) - y(i54,-) + y(i55,+) - y(i55,-) + y(i56,+) - y(i56,-) + y(i57,+)
+     
+      - y(i57,-) + y(i58,+) - y(i58,-) + y(i59,+) - y(i59,-) + y(i60,+) - y(i60,-) + y(i61,+) - y(i61,-) + y(i62,+) - y(i62,-)
+     
+      + y(i63,+) - y(i63,-) + y(i64,+) - y(i64,-) + y(i65,+) - y(i65,-) + y(i66,+) - y(i66,-) + y(i67,+) - y(i67,-) + y(i68,+)
+     
+      - y(i68,-) + y(i69,+) - y(i69,-) + y(i70,+) - y(i70,-) + y(i71,+) - y(i71,-) + y(i72,+) - y(i72,-) + y(i73,+) - y(i73,-)
+     
+      + y(i74,+) - y(i74,-) + y(i75,+) - y(i75,-) + y(i76,+) - y(i76,-) + y(i77,+) - y(i77,-) + y(i78,+) - y(i78,-) + y(i79,+)
+     
+      - y(i79,-) + y(i80,+) - y(i80,-) + y(i81,+) - y(i81,-) + y(i82,+) - y(i82,-) + y(i83,+) - y(i83,-) + y(i84,+) - y(i84,-)
+     
+      + y(i85,+) - y(i85,-) + y(i86,+) - y(i86,-) + y(i87,+) - y(i87,-) + y(i88,+) - y(i88,-) + y(i89,+) - y(i89,-) + y(i90,+)
+     
+      - y(i90,-) + y(i91,+) - y(i91,-) + y(i92,+) - y(i92,-) + y(i93,+) - y(i93,-) + y(i94,+) - y(i94,-) + y(i95,+) - y(i95,-)
+     
+      + y(i96,+) - y(i96,-) + y(i97,+) - y(i97,-) + y(i98,+) - y(i98,-) + y(i99,+) - y(i99,-) + y(i100,+) - y(i100,-)
+     
+      + 2.12345*kvar =E= 0 ; (LHS = -103.87655, INFES = 103.87655 ****)
+     
+
+---- Linearization1  =L=  
+
+Linearization1(i1,+)..  - 100*delta(i1) + y(i1,+) =L= 0 ; (LHS = 0)
+     
+Linearization1(i1,-)..  - 100*delta(i1) + y(i1,-) =L= 0 ; (LHS = 0)
+     
+Linearization1(i2,+)..  - 100*delta(i2) + y(i2,+) =L= 0 ; (LHS = -100)
+     
+REMAINING 197 ENTRIES SKIPPED
+
+
+---- Linearization2  =L=  
+
+Linearization2(i1,+)..  - dev(+) + y(i1,+) =L= 0 ; (LHS = 0)
+     
+Linearization2(i1,-)..  - dev(-) + y(i1,-) =L= 0 ; (LHS = -0.00344999999999995)
+     
+Linearization2(i2,+)..  - dev(+) + y(i2,+) =L= 0 ; (LHS = 0)
+     
+REMAINING 197 ENTRIES SKIPPED
+
+
+---- Linearization3  =G=  
+
+Linearization3(i1,+)..  - 100*delta(i1) - dev(+) + y(i1,+) =G= -100 ; (LHS = 0)
+     
+Linearization3(i1,-)..  - 100*delta(i1) - dev(-) + y(i1,-) =G= -100 ; (LHS = -0.00345000000000084)
+     
+Linearization3(i2,+)..  - 100*delta(i2) - dev(+) + y(i2,+) =G= -100 ; (LHS = -100)
+     
+REMAINING 197 ENTRIES SKIPPED
+
+
+---- kdef  =E=  
+
+kdef..  delta(i1) + delta(i2) + delta(i3) + delta(i4) + delta(i5) + delta(i6) + delta(i7) + delta(i8) + delta(i9) + delta(i10)
+     
+      + delta(i11) + delta(i12) + delta(i13) + delta(i14) + delta(i15) + delta(i16) + delta(i17) + delta(i18) + delta(i19)
+     
+      + delta(i20) + delta(i21) + delta(i22) + delta(i23) + delta(i24) + delta(i25) + delta(i26) + delta(i27) + delta(i28)
+     
+      + delta(i29) + delta(i30) + delta(i31) + delta(i32) + delta(i33) + delta(i34) + delta(i35) + delta(i36) + delta(i37)
+     
+      + delta(i38) + delta(i39) + delta(i40) + delta(i41) + delta(i42) + delta(i43) + delta(i44) + delta(i45) + delta(i46)
+     
+      + delta(i47) + delta(i48) + delta(i49) + delta(i50) + delta(i51) + delta(i52) + delta(i53) + delta(i54) + delta(i55)
+     
+      + delta(i56) + delta(i57) + delta(i58) + delta(i59) + delta(i60) + delta(i61) + delta(i62) + delta(i63) + delta(i64)
+     
+      + delta(i65) + delta(i66) + delta(i67) + delta(i68) + delta(i69) + delta(i70) + delta(i71) + delta(i72) + delta(i73)
+     
+      + delta(i74) + delta(i75) + delta(i76) + delta(i77) + delta(i78) + delta(i79) + delta(i80) + delta(i81) + delta(i82)
+     
+      + delta(i83) + delta(i84) + delta(i85) + delta(i86) + delta(i87) + delta(i88) + delta(i89) + delta(i90) + delta(i91)
+     
+      + delta(i92) + delta(i93) + delta(i94) + delta(i95) + delta(i96) + delta(i97) + delta(i98) + delta(i99) + delta(i100) - kvar
+      =E= 0 ; (LHS = 49, INFES = 49 ****)
+     
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m4 Using MIP From line 166
+
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.00345000000000012, +INF, 0)
+        1       obj
+
+
+---- delta  selection of points
+
+delta(i1)
+                (.LO, .L, .UP, .M = 0, 0, 1, -0.02)
+       -1       LinDev
+     -100       Linearization1(i1,+)
+     -100       Linearization1(i1,-)
+     -100       Linearization3(i1,+)
+     -100       Linearization3(i1,-)
+        1       kdef
+
+delta(i2)
+                (.LO, .L, .UP, .M = 0, 1, 1, -0.06)
+       -3       LinDev
+     -100       Linearization1(i2,+)
+     -100       Linearization1(i2,-)
+     -100       Linearization3(i2,+)
+     -100       Linearization3(i2,-)
+        1       kdef
+
+delta(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1, -0.04)
+       -2       LinDev
+     -100       Linearization1(i3,+)
+     -100       Linearization1(i3,-)
+     -100       Linearization3(i3,+)
+     -100       Linearization3(i3,-)
+        1       kdef
+
+REMAINING 97 ENTRIES SKIPPED
+
+---- dev  deviation
+
+dev(+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 2)
+       -1       obj
+       -1       Linearization2(i1,+)
+       -1       Linearization2(i2,+)
+       -1       Linearization2(i3,+)
+       -1       Linearization2(i4,+)
+       -1       Linearization2(i5,+)
+       -1       Linearization2(i6,+)
+       -1       Linearization2(i7,+)
+       -1       Linearization2(i8,+)
+       -1       Linearization2(i9,+)
+       -1       Linearization2(i10,+)
+       -1       Linearization2(i11,+)
+       -1       Linearization2(i12,+)
+       -1       Linearization2(i13,+)
+       -1       Linearization2(i14,+)
+       -1       Linearization2(i15,+)
+       -1       Linearization2(i16,+)
+       -1       Linearization2(i17,+)
+       -1       Linearization2(i18,+)
+       -1       Linearization2(i19,+)
+       -1       Linearization2(i20,+)
+       -1       Linearization2(i21,+)
+       -1       Linearization2(i22,+)
+       -1       Linearization2(i23,+)
+       -1       Linearization2(i24,+)
+       -1       Linearization2(i25,+)
+       -1       Linearization2(i26,+)
+       -1       Linearization2(i27,+)
+       -1       Linearization2(i28,+)
+       -1       Linearization2(i29,+)
+       -1       Linearization2(i30,+)
+       -1       Linearization2(i31,+)
+       -1       Linearization2(i32,+)
+       -1       Linearization2(i33,+)
+       -1       Linearization2(i34,+)
+       -1       Linearization2(i35,+)
+       -1       Linearization2(i36,+)
+       -1       Linearization2(i37,+)
+       -1       Linearization2(i38,+)
+       -1       Linearization2(i39,+)
+       -1       Linearization2(i40,+)
+       -1       Linearization2(i41,+)
+       -1       Linearization2(i42,+)
+       -1       Linearization2(i43,+)
+       -1       Linearization2(i44,+)
+       -1       Linearization2(i45,+)
+       -1       Linearization2(i46,+)
+       -1       Linearization2(i47,+)
+       -1       Linearization2(i48,+)
+       -1       Linearization2(i49,+)
+       -1       Linearization2(i50,+)
+       -1       Linearization2(i51,+)
+       -1       Linearization2(i52,+)
+       -1       Linearization2(i53,+)
+       -1       Linearization2(i54,+)
+       -1       Linearization2(i55,+)
+       -1       Linearization2(i56,+)
+       -1       Linearization2(i57,+)
+       -1       Linearization2(i58,+)
+       -1       Linearization2(i59,+)
+       -1       Linearization2(i60,+)
+       -1       Linearization2(i61,+)
+       -1       Linearization2(i62,+)
+       -1       Linearization2(i63,+)
+       -1       Linearization2(i64,+)
+       -1       Linearization2(i65,+)
+       -1       Linearization2(i66,+)
+       -1       Linearization2(i67,+)
+       -1       Linearization2(i68,+)
+       -1       Linearization2(i69,+)
+       -1       Linearization2(i70,+)
+       -1       Linearization2(i71,+)
+       -1       Linearization2(i72,+)
+       -1       Linearization2(i73,+)
+       -1       Linearization2(i74,+)
+       -1       Linearization2(i75,+)
+       -1       Linearization2(i76,+)
+       -1       Linearization2(i77,+)
+       -1       Linearization2(i78,+)
+       -1       Linearization2(i79,+)
+       -1       Linearization2(i80,+)
+       -1       Linearization2(i81,+)
+       -1       Linearization2(i82,+)
+       -1       Linearization2(i83,+)
+       -1       Linearization2(i84,+)
+       -1       Linearization2(i85,+)
+       -1       Linearization2(i86,+)
+       -1       Linearization2(i87,+)
+       -1       Linearization2(i88,+)
+       -1       Linearization2(i89,+)
+       -1       Linearization2(i90,+)
+       -1       Linearization2(i91,+)
+       -1       Linearization2(i92,+)
+       -1       Linearization2(i93,+)
+       -1       Linearization2(i94,+)
+       -1       Linearization2(i95,+)
+       -1       Linearization2(i96,+)
+       -1       Linearization2(i97,+)
+       -1       Linearization2(i98,+)
+       -1       Linearization2(i99,+)
+       -1       Linearization2(i100,+)
+       -1       Linearization3(i1,+)
+       -1       Linearization3(i2,+)
+       -1       Linearization3(i3,+)
+       -1       Linearization3(i4,+)
+       -1       Linearization3(i5,+)
+       -1       Linearization3(i6,+)
+       -1       Linearization3(i7,+)
+       -1       Linearization3(i8,+)
+       -1       Linearization3(i9,+)
+       -1       Linearization3(i10,+)
+       -1       Linearization3(i11,+)
+       -1       Linearization3(i12,+)
+       -1       Linearization3(i13,+)
+       -1       Linearization3(i14,+)
+       -1       Linearization3(i15,+)
+       -1       Linearization3(i16,+)
+       -1       Linearization3(i17,+)
+       -1       Linearization3(i18,+)
+       -1       Linearization3(i19,+)
+       -1       Linearization3(i20,+)
+       -1       Linearization3(i21,+)
+       -1       Linearization3(i22,+)
+       -1       Linearization3(i23,+)
+       -1       Linearization3(i24,+)
+       -1       Linearization3(i25,+)
+       -1       Linearization3(i26,+)
+       -1       Linearization3(i27,+)
+       -1       Linearization3(i28,+)
+       -1       Linearization3(i29,+)
+       -1       Linearization3(i30,+)
+       -1       Linearization3(i31,+)
+       -1       Linearization3(i32,+)
+       -1       Linearization3(i33,+)
+       -1       Linearization3(i34,+)
+       -1       Linearization3(i35,+)
+       -1       Linearization3(i36,+)
+       -1       Linearization3(i37,+)
+       -1       Linearization3(i38,+)
+       -1       Linearization3(i39,+)
+       -1       Linearization3(i40,+)
+       -1       Linearization3(i41,+)
+       -1       Linearization3(i42,+)
+       -1       Linearization3(i43,+)
+       -1       Linearization3(i44,+)
+       -1       Linearization3(i45,+)
+       -1       Linearization3(i46,+)
+       -1       Linearization3(i47,+)
+       -1       Linearization3(i48,+)
+       -1       Linearization3(i49,+)
+       -1       Linearization3(i50,+)
+       -1       Linearization3(i51,+)
+       -1       Linearization3(i52,+)
+       -1       Linearization3(i53,+)
+       -1       Linearization3(i54,+)
+       -1       Linearization3(i55,+)
+       -1       Linearization3(i56,+)
+       -1       Linearization3(i57,+)
+       -1       Linearization3(i58,+)
+       -1       Linearization3(i59,+)
+       -1       Linearization3(i60,+)
+       -1       Linearization3(i61,+)
+       -1       Linearization3(i62,+)
+       -1       Linearization3(i63,+)
+       -1       Linearization3(i64,+)
+       -1       Linearization3(i65,+)
+       -1       Linearization3(i66,+)
+       -1       Linearization3(i67,+)
+       -1       Linearization3(i68,+)
+       -1       Linearization3(i69,+)
+       -1       Linearization3(i70,+)
+       -1       Linearization3(i71,+)
+       -1       Linearization3(i72,+)
+       -1       Linearization3(i73,+)
+       -1       Linearization3(i74,+)
+       -1       Linearization3(i75,+)
+       -1       Linearization3(i76,+)
+       -1       Linearization3(i77,+)
+       -1       Linearization3(i78,+)
+       -1       Linearization3(i79,+)
+       -1       Linearization3(i80,+)
+       -1       Linearization3(i81,+)
+       -1       Linearization3(i82,+)
+       -1       Linearization3(i83,+)
+       -1       Linearization3(i84,+)
+       -1       Linearization3(i85,+)
+       -1       Linearization3(i86,+)
+       -1       Linearization3(i87,+)
+       -1       Linearization3(i88,+)
+       -1       Linearization3(i89,+)
+       -1       Linearization3(i90,+)
+       -1       Linearization3(i91,+)
+       -1       Linearization3(i92,+)
+       -1       Linearization3(i93,+)
+       -1       Linearization3(i94,+)
+       -1       Linearization3(i95,+)
+       -1       Linearization3(i96,+)
+       -1       Linearization3(i97,+)
+       -1       Linearization3(i98,+)
+       -1       Linearization3(i99,+)
+       -1       Linearization3(i100,+)
+
+dev(-)
+                (.LO, .L, .UP, .M = 0, 0.00344999999999995, +INF, 0)
+       -1       obj
+       -1       Linearization2(i1,-)
+       -1       Linearization2(i2,-)
+       -1       Linearization2(i3,-)
+       -1       Linearization2(i4,-)
+       -1       Linearization2(i5,-)
+       -1       Linearization2(i6,-)
+       -1       Linearization2(i7,-)
+       -1       Linearization2(i8,-)
+       -1       Linearization2(i9,-)
+       -1       Linearization2(i10,-)
+       -1       Linearization2(i11,-)
+       -1       Linearization2(i12,-)
+       -1       Linearization2(i13,-)
+       -1       Linearization2(i14,-)
+       -1       Linearization2(i15,-)
+       -1       Linearization2(i16,-)
+       -1       Linearization2(i17,-)
+       -1       Linearization2(i18,-)
+       -1       Linearization2(i19,-)
+       -1       Linearization2(i20,-)
+       -1       Linearization2(i21,-)
+       -1       Linearization2(i22,-)
+       -1       Linearization2(i23,-)
+       -1       Linearization2(i24,-)
+       -1       Linearization2(i25,-)
+       -1       Linearization2(i26,-)
+       -1       Linearization2(i27,-)
+       -1       Linearization2(i28,-)
+       -1       Linearization2(i29,-)
+       -1       Linearization2(i30,-)
+       -1       Linearization2(i31,-)
+       -1       Linearization2(i32,-)
+       -1       Linearization2(i33,-)
+       -1       Linearization2(i34,-)
+       -1       Linearization2(i35,-)
+       -1       Linearization2(i36,-)
+       -1       Linearization2(i37,-)
+       -1       Linearization2(i38,-)
+       -1       Linearization2(i39,-)
+       -1       Linearization2(i40,-)
+       -1       Linearization2(i41,-)
+       -1       Linearization2(i42,-)
+       -1       Linearization2(i43,-)
+       -1       Linearization2(i44,-)
+       -1       Linearization2(i45,-)
+       -1       Linearization2(i46,-)
+       -1       Linearization2(i47,-)
+       -1       Linearization2(i48,-)
+       -1       Linearization2(i49,-)
+       -1       Linearization2(i50,-)
+       -1       Linearization2(i51,-)
+       -1       Linearization2(i52,-)
+       -1       Linearization2(i53,-)
+       -1       Linearization2(i54,-)
+       -1       Linearization2(i55,-)
+       -1       Linearization2(i56,-)
+       -1       Linearization2(i57,-)
+       -1       Linearization2(i58,-)
+       -1       Linearization2(i59,-)
+       -1       Linearization2(i60,-)
+       -1       Linearization2(i61,-)
+       -1       Linearization2(i62,-)
+       -1       Linearization2(i63,-)
+       -1       Linearization2(i64,-)
+       -1       Linearization2(i65,-)
+       -1       Linearization2(i66,-)
+       -1       Linearization2(i67,-)
+       -1       Linearization2(i68,-)
+       -1       Linearization2(i69,-)
+       -1       Linearization2(i70,-)
+       -1       Linearization2(i71,-)
+       -1       Linearization2(i72,-)
+       -1       Linearization2(i73,-)
+       -1       Linearization2(i74,-)
+       -1       Linearization2(i75,-)
+       -1       Linearization2(i76,-)
+       -1       Linearization2(i77,-)
+       -1       Linearization2(i78,-)
+       -1       Linearization2(i79,-)
+       -1       Linearization2(i80,-)
+       -1       Linearization2(i81,-)
+       -1       Linearization2(i82,-)
+       -1       Linearization2(i83,-)
+       -1       Linearization2(i84,-)
+       -1       Linearization2(i85,-)
+       -1       Linearization2(i86,-)
+       -1       Linearization2(i87,-)
+       -1       Linearization2(i88,-)
+       -1       Linearization2(i89,-)
+       -1       Linearization2(i90,-)
+       -1       Linearization2(i91,-)
+       -1       Linearization2(i92,-)
+       -1       Linearization2(i93,-)
+       -1       Linearization2(i94,-)
+       -1       Linearization2(i95,-)
+       -1       Linearization2(i96,-)
+       -1       Linearization2(i97,-)
+       -1       Linearization2(i98,-)
+       -1       Linearization2(i99,-)
+       -1       Linearization2(i100,-)
+       -1       Linearization3(i1,-)
+       -1       Linearization3(i2,-)
+       -1       Linearization3(i3,-)
+       -1       Linearization3(i4,-)
+       -1       Linearization3(i5,-)
+       -1       Linearization3(i6,-)
+       -1       Linearization3(i7,-)
+       -1       Linearization3(i8,-)
+       -1       Linearization3(i9,-)
+       -1       Linearization3(i10,-)
+       -1       Linearization3(i11,-)
+       -1       Linearization3(i12,-)
+       -1       Linearization3(i13,-)
+       -1       Linearization3(i14,-)
+       -1       Linearization3(i15,-)
+       -1       Linearization3(i16,-)
+       -1       Linearization3(i17,-)
+       -1       Linearization3(i18,-)
+       -1       Linearization3(i19,-)
+       -1       Linearization3(i20,-)
+       -1       Linearization3(i21,-)
+       -1       Linearization3(i22,-)
+       -1       Linearization3(i23,-)
+       -1       Linearization3(i24,-)
+       -1       Linearization3(i25,-)
+       -1       Linearization3(i26,-)
+       -1       Linearization3(i27,-)
+       -1       Linearization3(i28,-)
+       -1       Linearization3(i29,-)
+       -1       Linearization3(i30,-)
+       -1       Linearization3(i31,-)
+       -1       Linearization3(i32,-)
+       -1       Linearization3(i33,-)
+       -1       Linearization3(i34,-)
+       -1       Linearization3(i35,-)
+       -1       Linearization3(i36,-)
+       -1       Linearization3(i37,-)
+       -1       Linearization3(i38,-)
+       -1       Linearization3(i39,-)
+       -1       Linearization3(i40,-)
+       -1       Linearization3(i41,-)
+       -1       Linearization3(i42,-)
+       -1       Linearization3(i43,-)
+       -1       Linearization3(i44,-)
+       -1       Linearization3(i45,-)
+       -1       Linearization3(i46,-)
+       -1       Linearization3(i47,-)
+       -1       Linearization3(i48,-)
+       -1       Linearization3(i49,-)
+       -1       Linearization3(i50,-)
+       -1       Linearization3(i51,-)
+       -1       Linearization3(i52,-)
+       -1       Linearization3(i53,-)
+       -1       Linearization3(i54,-)
+       -1       Linearization3(i55,-)
+       -1       Linearization3(i56,-)
+       -1       Linearization3(i57,-)
+       -1       Linearization3(i58,-)
+       -1       Linearization3(i59,-)
+       -1       Linearization3(i60,-)
+       -1       Linearization3(i61,-)
+       -1       Linearization3(i62,-)
+       -1       Linearization3(i63,-)
+       -1       Linearization3(i64,-)
+       -1       Linearization3(i65,-)
+       -1       Linearization3(i66,-)
+       -1       Linearization3(i67,-)
+       -1       Linearization3(i68,-)
+       -1       Linearization3(i69,-)
+       -1       Linearization3(i70,-)
+       -1       Linearization3(i71,-)
+       -1       Linearization3(i72,-)
+       -1       Linearization3(i73,-)
+       -1       Linearization3(i74,-)
+       -1       Linearization3(i75,-)
+       -1       Linearization3(i76,-)
+       -1       Linearization3(i77,-)
+       -1       Linearization3(i78,-)
+       -1       Linearization3(i79,-)
+       -1       Linearization3(i80,-)
+       -1       Linearization3(i81,-)
+       -1       Linearization3(i82,-)
+       -1       Linearization3(i83,-)
+       -1       Linearization3(i84,-)
+       -1       Linearization3(i85,-)
+       -1       Linearization3(i86,-)
+       -1       Linearization3(i87,-)
+       -1       Linearization3(i88,-)
+       -1       Linearization3(i89,-)
+       -1       Linearization3(i90,-)
+       -1       Linearization3(i91,-)
+       -1       Linearization3(i92,-)
+       -1       Linearization3(i93,-)
+       -1       Linearization3(i94,-)
+       -1       Linearization3(i95,-)
+       -1       Linearization3(i96,-)
+       -1       Linearization3(i97,-)
+       -1       Linearization3(i98,-)
+       -1       Linearization3(i99,-)
+       -1       Linearization3(i100,-)
+
+
+---- y  dev(i,pm)*delta(i)
+
+y(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       LinDev
+        1       Linearization1(i1,+)
+        1       Linearization2(i1,+)
+        1       Linearization3(i1,+)
+
+y(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       LinDev
+        1       Linearization1(i1,-)
+        1       Linearization2(i1,-)
+        1       Linearization3(i1,-)
+
+y(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       LinDev
+        1       Linearization1(i2,+)
+        1       Linearization2(i2,+)
+        1       Linearization3(i2,+)
+
+REMAINING 197 ENTRIES SKIPPED
+
+---- kvar  k as variable
+
+kvar
+                (.LO, .L, .UP, .M = 1, 1, 50, 0)
+        2.1235  LinDev
+       -1       kdef
+        0       (OLD LEVEL ****)
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m4 Using MIP From line 166
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 5.000E+01] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+02]
+
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m4 Using MIP From line 166
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS          603
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          304  1 projected
+NON ZERO ELEMENTS         1,805     DISCRETE VARIABLES        101
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m4 Using MIP From line 166
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m4                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  166
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0010
+
+ RESOURCE USAGE, LIMIT          0.828 10000000000.000
+ ITERATION COUNT, LIMIT     66133    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.60 Mb (peak 0.61 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.01 Mb (peak 0.06 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.72sec (det. 1727.73 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.11sec (det. 0.55 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.001001    (66133 iterations, 2086 nodes)
+Final Solve:             0.001001    (0 iterations)
+
+Best possible:           0.001001
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+---- EQU LinDev              .              .              .            -0.0204      
+
+  obj  objective
+  LinDev  linearized version
+
+---- EQU Linearization1  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+i1  .+        -INF             .              .              .          
+i1  .-        -INF             .              .            -0.0204      
+i2  .+        -INF         -100.0000          .              .          
+i2  .-        -INF          -99.9990          .              .          
+i3  .+        -INF         -100.0000          .              .          
+i3  .-        -INF          -99.9990          .              .          
+i4  .+        -INF             .              .              .          
+i4  .-        -INF             .              .            -0.0204      
+i5  .+        -INF         -100.0000          .              .          
+i5  .-        -INF          -99.9990          .              .          
+i6  .+        -INF             .              .              .          
+i6  .-        -INF             .              .            -0.0204      
+i7  .+        -INF         -100.0000          .              .          
+i7  .-        -INF          -99.9990          .              .          
+i8  .+        -INF             .              .              .          
+i8  .-        -INF             .              .            -0.0204      
+i9  .+        -INF             .              .              .          
+i9  .-        -INF             .              .            -0.0204      
+i10 .+        -INF         -100.0000          .              .          
+i10 .-        -INF          -99.9990          .              .          
+i11 .+        -INF         -100.0000          .              .          
+i11 .-        -INF          -99.9990          .              .          
+i12 .+        -INF         -100.0000          .              .          
+i12 .-        -INF          -99.9990          .              .          
+i13 .+        -INF         -100.0000          .              .          
+i13 .-        -INF          -99.9990          .              .          
+i14 .+        -INF         -100.0000          .              .          
+i14 .-        -INF          -99.9990          .              .          
+i15 .+        -INF             .              .              .          
+i15 .-        -INF             .              .            -0.0204      
+i16 .+        -INF         -100.0000          .              .          
+i16 .-        -INF          -99.9990          .              .          
+i17 .+        -INF             .              .              .          
+i17 .-        -INF             .              .            -0.0204      
+i18 .+        -INF             .              .              .          
+i18 .-        -INF             .              .            -0.0204      
+i19 .+        -INF             .              .              .          
+i19 .-        -INF             .              .            -0.0204      
+i20 .+        -INF         -100.0000          .              .          
+i20 .-        -INF          -99.9990          .              .          
+i21 .+        -INF         -100.0000          .              .          
+i21 .-        -INF          -99.9990          .              .          
+i22 .+        -INF         -100.0000          .              .          
+i22 .-        -INF          -99.9990          .              .          
+i23 .+        -INF             .              .              .          
+i23 .-        -INF             .              .            -0.0204      
+i24 .+        -INF         -100.0000          .              .          
+i24 .-        -INF          -99.9990          .              .          
+i25 .+        -INF         -100.0000          .              .          
+i25 .-        -INF          -99.9990          .              .          
+i26 .+        -INF         -100.0000          .              .          
+i26 .-        -INF          -99.9990          .              .          
+i27 .+        -INF             .              .              .          
+i27 .-        -INF             .              .            -0.0204      
+i28 .+        -INF         -100.0000          .              .          
+i28 .-        -INF          -99.9990          .              .          
+i29 .+        -INF         -100.0000          .              .          
+i29 .-        -INF          -99.9990          .              .          
+i30 .+        -INF             .              .              .          
+i30 .-        -INF             .              .            -0.0204      
+i31 .+        -INF         -100.0000          .              .          
+i31 .-        -INF          -99.9990          .              .          
+i32 .+        -INF         -100.0000          .              .          
+i32 .-        -INF          -99.9990          .              .          
+i33 .+        -INF         -100.0000          .              .          
+i33 .-        -INF          -99.9990          .              .          
+i34 .+        -INF             .              .              .          
+i34 .-        -INF             .              .            -0.0204      
+i35 .+        -INF             .              .              .          
+i35 .-        -INF             .              .            -0.0204      
+i36 .+        -INF             .              .              .          
+i36 .-        -INF             .              .            -0.0204      
+i37 .+        -INF         -100.0000          .              .          
+i37 .-        -INF          -99.9990          .              .          
+i38 .+        -INF             .              .              .          
+i38 .-        -INF             .              .            -0.0204      
+i39 .+        -INF         -100.0000          .              .          
+i39 .-        -INF          -99.9990          .              .          
+i40 .+        -INF         -100.0000          .              .          
+i40 .-        -INF          -99.9990          .              .          
+i41 .+        -INF         -100.0000          .              .          
+i41 .-        -INF          -99.9990          .              .          
+i42 .+        -INF             .              .              .          
+i42 .-        -INF             .              .            -0.0204      
+i43 .+        -INF             .              .              .          
+i43 .-        -INF             .              .            -0.0204      
+i44 .+        -INF             .              .              .          
+i44 .-        -INF             .              .            -0.0204      
+i45 .+        -INF         -100.0000          .              .          
+i45 .-        -INF          -99.9990          .              .          
+i46 .+        -INF             .              .              .          
+i46 .-        -INF             .              .            -0.0204      
+i47 .+        -INF         -100.0000          .              .          
+i47 .-        -INF          -99.9990          .              .          
+i48 .+        -INF         -100.0000          .              .          
+i48 .-        -INF          -99.9990          .              .          
+i49 .+        -INF         -100.0000          .              .          
+i49 .-        -INF          -99.9990          .              .          
+i50 .+        -INF             .              .              .          
+i50 .-        -INF             .              .            -0.0204      
+i51 .+        -INF         -100.0000          .              .          
+i51 .-        -INF          -99.9990          .              .          
+i52 .+        -INF         -100.0000          .              .          
+i52 .-        -INF          -99.9990          .              .          
+i53 .+        -INF         -100.0000          .              .          
+i53 .-        -INF          -99.9990          .              .          
+i54 .+        -INF             .              .              .          
+i54 .-        -INF             .              .            -0.0204      
+i55 .+        -INF             .              .              .          
+i55 .-        -INF             .              .            -0.0204      
+i56 .+        -INF             .              .              .          
+i56 .-        -INF             .              .            -0.0204      
+i57 .+        -INF         -100.0000          .              .          
+i57 .-        -INF          -99.9990          .              .          
+i58 .+        -INF         -100.0000          .              .          
+i58 .-        -INF          -99.9990          .              .          
+i59 .+        -INF             .              .              .          
+i59 .-        -INF             .              .            -0.0204      
+i60 .+        -INF         -100.0000          .              .          
+i60 .-        -INF          -99.9990          .              .          
+i61 .+        -INF             .              .              .          
+i61 .-        -INF             .              .            -0.0204      
+i62 .+        -INF             .              .              .          
+i62 .-        -INF             .              .            -0.0204      
+i63 .+        -INF         -100.0000          .              .          
+i63 .-        -INF          -99.9990          .              .          
+i64 .+        -INF         -100.0000          .              .          
+i64 .-        -INF          -99.9990          .              .          
+i65 .+        -INF         -100.0000          .              .          
+i65 .-        -INF          -99.9990          .              .          
+i66 .+        -INF             .              .              .          
+i66 .-        -INF             .              .            -0.0204      
+i67 .+        -INF         -100.0000          .              .          
+i67 .-        -INF          -99.9990          .              .          
+i68 .+        -INF         -100.0000          .              .          
+i68 .-        -INF          -99.9990          .              .          
+i69 .+        -INF         -100.0000          .              .          
+i69 .-        -INF          -99.9990          .              .          
+i70 .+        -INF         -100.0000          .              .          
+i70 .-        -INF          -99.9990          .              .          
+i71 .+        -INF             .              .              .          
+i71 .-        -INF             .              .            -0.0204      
+i72 .+        -INF             .              .              .          
+i72 .-        -INF             .              .            -0.0204      
+i73 .+        -INF             .              .              .          
+i73 .-        -INF             .              .            -0.0204      
+i74 .+        -INF         -100.0000          .              .          
+i74 .-        -INF          -99.9990          .              .          
+i75 .+        -INF         -100.0000          .              .          
+i75 .-        -INF          -99.9990          .              .          
+i76 .+        -INF             .              .              .          
+i76 .-        -INF             .              .            -0.0204      
+i77 .+        -INF             .              .              .          
+i77 .-        -INF             .              .            -0.0204      
+i78 .+        -INF             .              .              .          
+i78 .-        -INF             .              .            -0.0204      
+i79 .+        -INF             .              .              .          
+i79 .-        -INF             .              .            -0.0204      
+i80 .+        -INF             .              .              .          
+i80 .-        -INF             .              .            -0.0204      
+i81 .+        -INF             .              .              .          
+i81 .-        -INF             .              .            -0.0204      
+i82 .+        -INF             .              .              .          
+i82 .-        -INF             .              .            -0.0204      
+i83 .+        -INF             .              .              .          
+i83 .-        -INF             .              .            -0.0204      
+i84 .+        -INF         -100.0000          .              .          
+i84 .-        -INF          -99.9990          .              .          
+i85 .+        -INF             .              .              .          
+i85 .-        -INF             .              .            -0.0204      
+i86 .+        -INF             .              .              .          
+i86 .-        -INF             .              .            -0.0204      
+i87 .+        -INF             .              .              .          
+i87 .-        -INF             .              .            -0.0204      
+i88 .+        -INF             .              .              .          
+i88 .-        -INF             .              .            -0.0204      
+i89 .+        -INF             .              .              .          
+i89 .-        -INF             .              .            -0.0204      
+i90 .+        -INF             .              .              .          
+i90 .-        -INF             .              .            -0.0204      
+i91 .+        -INF             .              .              .          
+i91 .-        -INF             .              .            -0.0204      
+i92 .+        -INF         -100.0000          .              .          
+i92 .-        -INF          -99.9990          .              .          
+i93 .+        -INF         -100.0000          .              .          
+i93 .-        -INF          -99.9990          .              .          
+i94 .+        -INF             .              .              .          
+i94 .-        -INF             .              .            -0.0204      
+i95 .+        -INF         -100.0000          .              .          
+i95 .-        -INF          -99.9990          .              .          
+i96 .+        -INF             .              .              .          
+i96 .-        -INF             .              .            -0.0204      
+i97 .+        -INF             .              .              .          
+i97 .-        -INF             .              .            -0.0204      
+i98 .+        -INF             .              .              .          
+i98 .-        -INF             .              .            -0.0204      
+i99 .+        -INF             .              .              .          
+i99 .-        -INF             .              .            -0.0204      
+i100.+        -INF         -100.0000          .              .          
+i100.-        -INF          -99.9990          .              .          
+
+---- EQU Linearization2  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+i1  .+        -INF             .              .              .          
+i1  .-        -INF           -0.0010          .              .          
+i2  .+        -INF             .              .              .          
+i2  .-        -INF             .              .            -0.0204      
+i3  .+        -INF             .              .              .          
+i3  .-        -INF             .              .            -0.0204      
+i4  .+        -INF             .              .              .          
+i4  .-        -INF           -0.0010          .              .          
+i5  .+        -INF             .              .              .          
+i5  .-        -INF             .              .            -0.0204      
+i6  .+        -INF             .              .              .          
+i6  .-        -INF           -0.0010          .              .          
+i7  .+        -INF             .              .              .          
+i7  .-        -INF             .              .            -0.0204      
+i8  .+        -INF             .              .              .          
+i8  .-        -INF           -0.0010          .              .          
+i9  .+        -INF             .              .              .          
+i9  .-        -INF           -0.0010          .              .          
+i10 .+        -INF             .              .              .          
+i10 .-        -INF             .              .            -0.0204      
+i11 .+        -INF             .              .              .          
+i11 .-        -INF             .              .            -0.0204      
+i12 .+        -INF             .              .              .          
+i12 .-        -INF             .              .            -0.0204      
+i13 .+        -INF             .              .              .          
+i13 .-        -INF             .              .            -0.0204      
+i14 .+        -INF             .              .              .          
+i14 .-        -INF             .              .            -0.0204      
+i15 .+        -INF             .              .              .          
+i15 .-        -INF           -0.0010          .              .          
+i16 .+        -INF             .              .              .          
+i16 .-        -INF             .              .            -0.0204      
+i17 .+        -INF             .              .              .          
+i17 .-        -INF           -0.0010          .              .          
+i18 .+        -INF             .              .              .          
+i18 .-        -INF           -0.0010          .              .          
+i19 .+        -INF             .              .              .          
+i19 .-        -INF           -0.0010          .              .          
+i20 .+        -INF             .              .              .          
+i20 .-        -INF             .              .            -0.0204      
+i21 .+        -INF             .              .              .          
+i21 .-        -INF             .              .            -0.0204      
+i22 .+        -INF             .              .              .          
+i22 .-        -INF             .              .            -0.0204      
+i23 .+        -INF             .              .              .          
+i23 .-        -INF           -0.0010          .              .          
+i24 .+        -INF             .              .              .          
+i24 .-        -INF             .              .            -0.0204      
+i25 .+        -INF             .              .              .          
+i25 .-        -INF             .              .            -0.0204      
+i26 .+        -INF             .              .              .          
+i26 .-        -INF             .              .            -0.0204      
+i27 .+        -INF             .              .              .          
+i27 .-        -INF           -0.0010          .              .          
+i28 .+        -INF             .              .              .          
+i28 .-        -INF             .              .            -0.0204      
+i29 .+        -INF             .              .              .          
+i29 .-        -INF             .              .            -0.0204      
+i30 .+        -INF             .              .              .          
+i30 .-        -INF           -0.0010          .              .          
+i31 .+        -INF             .              .              .          
+i31 .-        -INF             .              .            -0.0204      
+i32 .+        -INF             .              .              .          
+i32 .-        -INF             .              .            -0.0204      
+i33 .+        -INF             .              .              .          
+i33 .-        -INF             .              .            -0.0204      
+i34 .+        -INF             .              .              .          
+i34 .-        -INF           -0.0010          .              .          
+i35 .+        -INF             .              .              .          
+i35 .-        -INF           -0.0010          .              .          
+i36 .+        -INF             .              .              .          
+i36 .-        -INF           -0.0010          .              .          
+i37 .+        -INF             .              .              .          
+i37 .-        -INF             .              .            -0.0204      
+i38 .+        -INF             .              .              .          
+i38 .-        -INF           -0.0010          .              .          
+i39 .+        -INF             .              .              .          
+i39 .-        -INF             .              .            -0.0204      
+i40 .+        -INF             .              .              .          
+i40 .-        -INF             .              .            -0.0204      
+i41 .+        -INF             .              .              .          
+i41 .-        -INF             .              .            -0.0204      
+i42 .+        -INF             .              .              .          
+i42 .-        -INF           -0.0010          .              .          
+i43 .+        -INF             .              .              .          
+i43 .-        -INF           -0.0010          .              .          
+i44 .+        -INF             .              .              .          
+i44 .-        -INF           -0.0010          .              .          
+i45 .+        -INF             .              .              .          
+i45 .-        -INF             .              .            -0.0204      
+i46 .+        -INF             .              .              .          
+i46 .-        -INF           -0.0010          .              .          
+i47 .+        -INF             .              .              .          
+i47 .-        -INF             .              .            -0.0204      
+i48 .+        -INF             .              .              .          
+i48 .-        -INF             .              .            -0.0204      
+i49 .+        -INF             .              .              .          
+i49 .-        -INF             .              .            -0.0204      
+i50 .+        -INF             .              .              .          
+i50 .-        -INF           -0.0010          .              .          
+i51 .+        -INF             .              .              .          
+i51 .-        -INF             .              .            -0.0204      
+i52 .+        -INF             .              .              .          
+i52 .-        -INF             .              .            -0.0204      
+i53 .+        -INF             .              .              .          
+i53 .-        -INF             .              .            -0.0204      
+i54 .+        -INF             .              .              .          
+i54 .-        -INF           -0.0010          .              .          
+i55 .+        -INF             .              .              .          
+i55 .-        -INF           -0.0010          .              .          
+i56 .+        -INF             .              .              .          
+i56 .-        -INF           -0.0010          .              .          
+i57 .+        -INF             .              .              .          
+i57 .-        -INF             .              .            -0.0204      
+i58 .+        -INF             .              .              .          
+i58 .-        -INF             .              .            -0.0204      
+i59 .+        -INF             .              .              .          
+i59 .-        -INF           -0.0010          .              .          
+i60 .+        -INF             .              .              .          
+i60 .-        -INF             .              .            -0.0204      
+i61 .+        -INF             .              .              .          
+i61 .-        -INF           -0.0010          .              .          
+i62 .+        -INF             .              .              .          
+i62 .-        -INF           -0.0010          .              .          
+i63 .+        -INF             .              .              .          
+i63 .-        -INF             .              .            -0.0204      
+i64 .+        -INF             .              .              .          
+i64 .-        -INF             .              .            -0.0204      
+i65 .+        -INF             .              .              .          
+i65 .-        -INF             .              .            -0.0204      
+i66 .+        -INF             .              .              .          
+i66 .-        -INF           -0.0010          .              .          
+i67 .+        -INF             .              .              .          
+i67 .-        -INF             .              .            -0.0204      
+i68 .+        -INF             .              .              .          
+i68 .-        -INF             .              .            -0.0204      
+i69 .+        -INF             .              .              .          
+i69 .-        -INF             .              .            -0.0204      
+i70 .+        -INF             .              .              .          
+i70 .-        -INF             .              .            -0.0204      
+i71 .+        -INF             .              .              .          
+i71 .-        -INF           -0.0010          .              .          
+i72 .+        -INF             .              .              .          
+i72 .-        -INF           -0.0010          .              .          
+i73 .+        -INF             .              .              .          
+i73 .-        -INF           -0.0010          .              .          
+i74 .+        -INF             .              .              .          
+i74 .-        -INF             .              .            -0.0204      
+i75 .+        -INF             .              .              .          
+i75 .-        -INF             .              .            -0.0204      
+i76 .+        -INF             .              .              .          
+i76 .-        -INF           -0.0010          .              .          
+i77 .+        -INF             .              .              .          
+i77 .-        -INF           -0.0010          .              .          
+i78 .+        -INF             .              .              .          
+i78 .-        -INF           -0.0010          .              .          
+i79 .+        -INF             .              .              .          
+i79 .-        -INF           -0.0010          .              .          
+i80 .+        -INF             .              .              .          
+i80 .-        -INF           -0.0010          .              .          
+i81 .+        -INF             .              .              .          
+i81 .-        -INF           -0.0010          .              .          
+i82 .+        -INF             .              .              .          
+i82 .-        -INF           -0.0010          .              .          
+i83 .+        -INF             .              .              .          
+i83 .-        -INF           -0.0010          .              .          
+i84 .+        -INF             .              .              .          
+i84 .-        -INF             .              .            -0.0204      
+i85 .+        -INF             .              .              .          
+i85 .-        -INF           -0.0010          .              .          
+i86 .+        -INF             .              .              .          
+i86 .-        -INF           -0.0010          .              .          
+i87 .+        -INF             .              .              .          
+i87 .-        -INF           -0.0010          .              .          
+i88 .+        -INF             .              .              .          
+i88 .-        -INF           -0.0010          .              .          
+i89 .+        -INF             .              .              .          
+i89 .-        -INF           -0.0010          .              .          
+i90 .+        -INF             .              .              .          
+i90 .-        -INF           -0.0010          .              .          
+i91 .+        -INF             .              .              .          
+i91 .-        -INF           -0.0010          .              .          
+i92 .+        -INF             .              .              .          
+i92 .-        -INF             .              .            -0.0204      
+i93 .+        -INF             .              .              .          
+i93 .-        -INF             .              .            -0.0204      
+i94 .+        -INF             .              .              .          
+i94 .-        -INF           -0.0010          .              .          
+i95 .+        -INF             .              .              .          
+i95 .-        -INF             .              .            -0.0204      
+i96 .+        -INF             .              .              .          
+i96 .-        -INF           -0.0010          .              .          
+i97 .+        -INF             .              .              .          
+i97 .-        -INF           -0.0010          .              .          
+i98 .+        -INF             .              .              .          
+i98 .-        -INF           -0.0010          .              .          
+i99 .+        -INF             .              .              .          
+i99 .-        -INF           -0.0010          .              .          
+i100.+        -INF             .              .              .          
+i100.-        -INF             .              .            -0.0204      
+
+---- EQU Linearization3  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+i1  .+      -100.0000          .            +INF             .          
+i1  .-      -100.0000        -0.0010        +INF             .          
+i2  .+      -100.0000      -100.0000        +INF            0.0204      
+i2  .-      -100.0000      -100.0000        +INF             .          
+i3  .+      -100.0000      -100.0000        +INF            0.0204      
+i3  .-      -100.0000      -100.0000        +INF             .          
+i4  .+      -100.0000          .            +INF             .          
+i4  .-      -100.0000        -0.0010        +INF             .          
+i5  .+      -100.0000      -100.0000        +INF            0.0204      
+i5  .-      -100.0000      -100.0000        +INF             .          
+i6  .+      -100.0000          .            +INF             .          
+i6  .-      -100.0000        -0.0010        +INF             .          
+i7  .+      -100.0000      -100.0000        +INF            0.0204      
+i7  .-      -100.0000      -100.0000        +INF             .          
+i8  .+      -100.0000          .            +INF             .          
+i8  .-      -100.0000        -0.0010        +INF             .          
+i9  .+      -100.0000          .            +INF             .          
+i9  .-      -100.0000        -0.0010        +INF             .          
+i10 .+      -100.0000      -100.0000        +INF            0.0204      
+i10 .-      -100.0000      -100.0000        +INF             .          
+i11 .+      -100.0000      -100.0000        +INF            0.0204      
+i11 .-      -100.0000      -100.0000        +INF             .          
+i12 .+      -100.0000      -100.0000        +INF            0.0204      
+i12 .-      -100.0000      -100.0000        +INF             .          
+i13 .+      -100.0000      -100.0000        +INF            0.0204      
+i13 .-      -100.0000      -100.0000        +INF             .          
+i14 .+      -100.0000      -100.0000        +INF            0.0204      
+i14 .-      -100.0000      -100.0000        +INF             .          
+i15 .+      -100.0000          .            +INF             .          
+i15 .-      -100.0000        -0.0010        +INF             .          
+i16 .+      -100.0000      -100.0000        +INF            0.0204      
+i16 .-      -100.0000      -100.0000        +INF             .          
+i17 .+      -100.0000          .            +INF             .          
+i17 .-      -100.0000        -0.0010        +INF             .          
+i18 .+      -100.0000          .            +INF             .          
+i18 .-      -100.0000        -0.0010        +INF             .          
+i19 .+      -100.0000          .            +INF             .          
+i19 .-      -100.0000        -0.0010        +INF             .          
+i20 .+      -100.0000      -100.0000        +INF            0.0204      
+i20 .-      -100.0000      -100.0000        +INF             .          
+i21 .+      -100.0000      -100.0000        +INF            0.0204      
+i21 .-      -100.0000      -100.0000        +INF             .          
+i22 .+      -100.0000      -100.0000        +INF            0.0204      
+i22 .-      -100.0000      -100.0000        +INF             .          
+i23 .+      -100.0000          .            +INF             .          
+i23 .-      -100.0000        -0.0010        +INF             .          
+i24 .+      -100.0000      -100.0000        +INF            0.0204      
+i24 .-      -100.0000      -100.0000        +INF             .          
+i25 .+      -100.0000      -100.0000        +INF            0.0204      
+i25 .-      -100.0000      -100.0000        +INF             .          
+i26 .+      -100.0000      -100.0000        +INF            0.0204      
+i26 .-      -100.0000      -100.0000        +INF             .          
+i27 .+      -100.0000          .            +INF             .          
+i27 .-      -100.0000        -0.0010        +INF             .          
+i28 .+      -100.0000      -100.0000        +INF            0.0204      
+i28 .-      -100.0000      -100.0000        +INF             .          
+i29 .+      -100.0000      -100.0000        +INF            0.0204      
+i29 .-      -100.0000      -100.0000        +INF             .          
+i30 .+      -100.0000          .            +INF             .          
+i30 .-      -100.0000        -0.0010        +INF             .          
+i31 .+      -100.0000      -100.0000        +INF            0.0204      
+i31 .-      -100.0000      -100.0000        +INF             .          
+i32 .+      -100.0000      -100.0000        +INF            0.0204      
+i32 .-      -100.0000      -100.0000        +INF             .          
+i33 .+      -100.0000      -100.0000        +INF            0.0204      
+i33 .-      -100.0000      -100.0000        +INF             .          
+i34 .+      -100.0000          .            +INF             .          
+i34 .-      -100.0000        -0.0010        +INF             .          
+i35 .+      -100.0000          .            +INF             .          
+i35 .-      -100.0000        -0.0010        +INF             .          
+i36 .+      -100.0000          .            +INF             .          
+i36 .-      -100.0000        -0.0010        +INF             .          
+i37 .+      -100.0000      -100.0000        +INF            0.0204      
+i37 .-      -100.0000      -100.0000        +INF             .          
+i38 .+      -100.0000          .            +INF             .          
+i38 .-      -100.0000        -0.0010        +INF             .          
+i39 .+      -100.0000      -100.0000        +INF            0.0204      
+i39 .-      -100.0000      -100.0000        +INF             .          
+i40 .+      -100.0000      -100.0000        +INF            0.0204      
+i40 .-      -100.0000      -100.0000        +INF             .          
+i41 .+      -100.0000      -100.0000        +INF            0.0204      
+i41 .-      -100.0000      -100.0000        +INF             .          
+i42 .+      -100.0000          .            +INF             .          
+i42 .-      -100.0000        -0.0010        +INF             .          
+i43 .+      -100.0000          .            +INF             .          
+i43 .-      -100.0000        -0.0010        +INF             .          
+i44 .+      -100.0000          .            +INF             .          
+i44 .-      -100.0000        -0.0010        +INF             .          
+i45 .+      -100.0000      -100.0000        +INF            0.0204      
+i45 .-      -100.0000      -100.0000        +INF             .          
+i46 .+      -100.0000          .            +INF             .          
+i46 .-      -100.0000        -0.0010        +INF             .          
+i47 .+      -100.0000      -100.0000        +INF            0.0204      
+i47 .-      -100.0000      -100.0000        +INF             .          
+i48 .+      -100.0000      -100.0000        +INF            0.0204      
+i48 .-      -100.0000      -100.0000        +INF             .          
+i49 .+      -100.0000      -100.0000        +INF            0.0204      
+i49 .-      -100.0000      -100.0000        +INF             .          
+i50 .+      -100.0000          .            +INF             .          
+i50 .-      -100.0000        -0.0010        +INF             .          
+i51 .+      -100.0000      -100.0000        +INF            0.0204      
+i51 .-      -100.0000      -100.0000        +INF             .          
+i52 .+      -100.0000      -100.0000        +INF            0.0204      
+i52 .-      -100.0000      -100.0000        +INF             .          
+i53 .+      -100.0000      -100.0000        +INF            0.0204      
+i53 .-      -100.0000      -100.0000        +INF             .          
+i54 .+      -100.0000          .            +INF             .          
+i54 .-      -100.0000        -0.0010        +INF             .          
+i55 .+      -100.0000          .            +INF             .          
+i55 .-      -100.0000        -0.0010        +INF             .          
+i56 .+      -100.0000          .            +INF             .          
+i56 .-      -100.0000        -0.0010        +INF             .          
+i57 .+      -100.0000      -100.0000        +INF            0.0204      
+i57 .-      -100.0000      -100.0000        +INF             .          
+i58 .+      -100.0000      -100.0000        +INF            0.0204      
+i58 .-      -100.0000      -100.0000        +INF             .          
+i59 .+      -100.0000          .            +INF             .          
+i59 .-      -100.0000        -0.0010        +INF             .          
+i60 .+      -100.0000      -100.0000        +INF            0.0204      
+i60 .-      -100.0000      -100.0000        +INF             .          
+i61 .+      -100.0000          .            +INF             .          
+i61 .-      -100.0000        -0.0010        +INF             .          
+i62 .+      -100.0000          .            +INF             .          
+i62 .-      -100.0000        -0.0010        +INF             .          
+i63 .+      -100.0000      -100.0000        +INF            0.0204      
+i63 .-      -100.0000      -100.0000        +INF             .          
+i64 .+      -100.0000      -100.0000        +INF            0.0204      
+i64 .-      -100.0000      -100.0000        +INF             .          
+i65 .+      -100.0000      -100.0000        +INF            0.0204      
+i65 .-      -100.0000      -100.0000        +INF             .          
+i66 .+      -100.0000          .            +INF             .          
+i66 .-      -100.0000        -0.0010        +INF             .          
+i67 .+      -100.0000      -100.0000        +INF            0.0204      
+i67 .-      -100.0000      -100.0000        +INF             .          
+i68 .+      -100.0000      -100.0000        +INF            0.0204      
+i68 .-      -100.0000      -100.0000        +INF             .          
+i69 .+      -100.0000      -100.0000        +INF            0.0204      
+i69 .-      -100.0000      -100.0000        +INF             .          
+i70 .+      -100.0000      -100.0000        +INF            0.0204      
+i70 .-      -100.0000      -100.0000        +INF             .          
+i71 .+      -100.0000          .            +INF             .          
+i71 .-      -100.0000        -0.0010        +INF             .          
+i72 .+      -100.0000          .            +INF             .          
+i72 .-      -100.0000        -0.0010        +INF             .          
+i73 .+      -100.0000          .            +INF             .          
+i73 .-      -100.0000        -0.0010        +INF             .          
+i74 .+      -100.0000      -100.0000        +INF            0.0204      
+i74 .-      -100.0000      -100.0000        +INF             .          
+i75 .+      -100.0000      -100.0000        +INF            0.0204      
+i75 .-      -100.0000      -100.0000        +INF             .          
+i76 .+      -100.0000          .            +INF             .          
+i76 .-      -100.0000        -0.0010        +INF             .          
+i77 .+      -100.0000          .            +INF             .          
+i77 .-      -100.0000        -0.0010        +INF             .          
+i78 .+      -100.0000          .            +INF             .          
+i78 .-      -100.0000        -0.0010        +INF             .          
+i79 .+      -100.0000          .            +INF             .          
+i79 .-      -100.0000        -0.0010        +INF             .          
+i80 .+      -100.0000          .            +INF             .          
+i80 .-      -100.0000        -0.0010        +INF             .          
+i81 .+      -100.0000          .            +INF             .          
+i81 .-      -100.0000        -0.0010        +INF             .          
+i82 .+      -100.0000          .            +INF             .          
+i82 .-      -100.0000        -0.0010        +INF             .          
+i83 .+      -100.0000          .            +INF             .          
+i83 .-      -100.0000        -0.0010        +INF             .          
+i84 .+      -100.0000      -100.0000        +INF            0.0204      
+i84 .-      -100.0000      -100.0000        +INF             .          
+i85 .+      -100.0000          .            +INF             .          
+i85 .-      -100.0000        -0.0010        +INF             .          
+i86 .+      -100.0000          .            +INF             .          
+i86 .-      -100.0000        -0.0010        +INF             .          
+i87 .+      -100.0000          .            +INF             .          
+i87 .-      -100.0000        -0.0010        +INF             .          
+i88 .+      -100.0000          .            +INF             .          
+i88 .-      -100.0000        -0.0010        +INF             .          
+i89 .+      -100.0000          .            +INF             .          
+i89 .-      -100.0000        -0.0010        +INF             .          
+i90 .+      -100.0000          .            +INF             .          
+i90 .-      -100.0000        -0.0010        +INF             .          
+i91 .+      -100.0000          .            +INF             .          
+i91 .-      -100.0000        -0.0010        +INF             .          
+i92 .+      -100.0000      -100.0000        +INF            0.0204      
+i92 .-      -100.0000      -100.0000        +INF             .          
+i93 .+      -100.0000      -100.0000        +INF            0.0204      
+i93 .-      -100.0000      -100.0000        +INF             .          
+i94 .+      -100.0000          .            +INF             .          
+i94 .-      -100.0000        -0.0010        +INF             .          
+i95 .+      -100.0000      -100.0000        +INF            0.0204      
+i95 .-      -100.0000      -100.0000        +INF             .          
+i96 .+      -100.0000          .            +INF             .          
+i96 .-      -100.0000        -0.0010        +INF             .          
+i97 .+      -100.0000          .            +INF             .          
+i97 .-      -100.0000        -0.0010        +INF             .          
+i98 .+      -100.0000          .            +INF             .          
+i98 .-      -100.0000        -0.0010        +INF             .          
+i99 .+      -100.0000          .            +INF             .          
+i99 .-      -100.0000        -0.0010        +INF             .          
+i100.+      -100.0000      -100.0000        +INF            0.0204      
+i100.-      -100.0000      -100.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU kdef                .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0010        +INF             .          
+
+  z  objective
+
+---- VAR delta  selection of points
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+i1            .              .             1.0000        -2.0612      
+i2            .             1.0000         1.0000         1.9796      
+i3            .             1.0000         1.0000         2.0000      
+i4            .              .             1.0000        -2.0612      
+i5            .             1.0000         1.0000         2.0204      
+i6            .              .             1.0000        -2.0612      
+i7            .             1.0000         1.0000         2.0000      
+i8            .              .             1.0000        -2.1020      
+i9            .              .             1.0000        -2.0612      
+i10           .             1.0000         1.0000         2.0000      
+i11           .             1.0000         1.0000         1.9796      
+i12           .             1.0000         1.0000         2.0000      
+i13           .             1.0000         1.0000         1.9796      
+i14           .             1.0000         1.0000         1.9796      
+i15           .              .             1.0000        -2.0612      
+i16           .             1.0000         1.0000         2.0000      
+i17           .              .             1.0000        -2.0612      
+i18           .              .             1.0000        -2.0612      
+i19           .              .             1.0000        -2.1020      
+i20           .             1.0000         1.0000         2.0000      
+i21           .             1.0000         1.0000         2.0000      
+i22           .             1.0000         1.0000         2.0000      
+i23           .              .             1.0000        -2.0612      
+i24           .             1.0000         1.0000         2.0204      
+i25           .             1.0000         1.0000         2.0000      
+i26           .             1.0000         1.0000         1.9796      
+i27           .              .             1.0000        -2.0612      
+i28           .             1.0000         1.0000         2.0000      
+i29           .             1.0000         1.0000         1.9796      
+i30           .              .             1.0000        -2.0612      
+i31           .             1.0000         1.0000         2.0204      
+i32           .             1.0000         1.0000         2.0000      
+i33           .             1.0000         1.0000         2.0204      
+i34           .              .             1.0000        -2.1020      
+i35           .              .             1.0000        -2.0612      
+i36           .              .             1.0000        -2.0612      
+i37           .             1.0000         1.0000         2.0000      
+i38           .              .             1.0000        -2.1020      
+i39           .             1.0000         1.0000         2.0000      
+i40           .             1.0000         1.0000         2.0000      
+i41           .             1.0000         1.0000         2.0000      
+i42           .              .             1.0000        -2.0612      
+i43           .              .             1.0000        -2.0612      
+i44           .              .             1.0000        -2.0612      
+i45           .             1.0000         1.0000         2.0000      
+i46           .              .             1.0000        -2.0612      
+i47           .             1.0000         1.0000         2.0000      
+i48           .             1.0000         1.0000         2.0000      
+i49           .             1.0000         1.0000         1.9796      
+i50           .              .             1.0000        -2.0612      
+i51           .             1.0000         1.0000         2.0000      
+i52           .             1.0000         1.0000         1.9796      
+i53           .             1.0000         1.0000         2.0000      
+i54           .              .             1.0000        -2.0612      
+i55           .              .             1.0000        -2.0612      
+i56           .              .             1.0000        -2.0612      
+i57           .             1.0000         1.0000         2.0000      
+i58           .             1.0000         1.0000         2.0000      
+i59           .              .             1.0000        -2.0612      
+i60           .             1.0000         1.0000         1.9796      
+i61           .              .             1.0000        -2.0612      
+i62           .              .             1.0000        -2.0612      
+i63           .             1.0000         1.0000         2.0000      
+i64           .             1.0000         1.0000         1.9796      
+i65           .             1.0000         1.0000         2.0204      
+i66           .              .             1.0000        -2.0612      
+i67           .             1.0000         1.0000         2.0000      
+i68           .             1.0000         1.0000         2.0000      
+i69           .             1.0000         1.0000         2.0000      
+i70           .             1.0000         1.0000         2.0000      
+i71           .              .             1.0000        -2.0612      
+i72           .              .             1.0000        -2.0612      
+i73           .              .             1.0000        -2.0612      
+i74           .             1.0000         1.0000         1.9796      
+i75           .             1.0000         1.0000         2.0000      
+i76           .              .             1.0000        -2.1020      
+i77           .              .             1.0000        -2.0612      
+i78           .              .             1.0000        -2.0612      
+i79           .              .             1.0000        -2.1020      
+i80           .              .             1.0000        -2.0612      
+i81           .              .             1.0000        -2.0612      
+i82           .              .             1.0000        -2.0612      
+i83           .              .             1.0000        -2.0612      
+i84           .             1.0000         1.0000         2.0000      
+i85           .              .             1.0000        -2.0612      
+i86           .              .             1.0000        -2.0612      
+i87           .              .             1.0000        -2.0612      
+i88           .              .             1.0000        -2.0612      
+i89           .              .             1.0000        -2.0612      
+i90           .              .             1.0000        -2.1020      
+i91           .              .             1.0000        -2.1020      
+i92           .             1.0000         1.0000         2.0000      
+i93           .             1.0000         1.0000         2.0000      
+i94           .              .             1.0000        -2.1020      
+i95           .             1.0000         1.0000         2.0000      
+i96           .              .             1.0000        -2.1020      
+i97           .              .             1.0000        -2.0612      
+i98           .              .             1.0000        -2.1020      
+i99           .              .             1.0000        -2.0612      
+i100          .             1.0000         1.0000         2.0000      
+
+---- VAR dev  deviation
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
++          .              .            +INF            2.0000      
+-          .             0.0010        +INF             .          
+
+---- VAR y  dev(i,pm)*delta(i)
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+i1  .+          .              .            +INF            0.0204      
+i1  .-          .              .            +INF             .          
+i2  .+          .              .            +INF             .          
+i2  .-          .             0.0010        +INF             .          
+i3  .+          .              .            +INF             .          
+i3  .-          .             0.0010        +INF             .          
+i4  .+          .              .            +INF            0.0204      
+i4  .-          .              .            +INF             .          
+i5  .+          .              .            +INF             .          
+i5  .-          .             0.0010        +INF             .          
+i6  .+          .              .            +INF            0.0204      
+i6  .-          .              .            +INF             .          
+i7  .+          .              .            +INF             .          
+i7  .-          .             0.0010        +INF             .          
+i8  .+          .              .            +INF            0.0204      
+i8  .-          .              .            +INF             .          
+i9  .+          .              .            +INF            0.0204      
+i9  .-          .              .            +INF             .          
+i10 .+          .              .            +INF             .          
+i10 .-          .             0.0010        +INF             .          
+i11 .+          .              .            +INF             .          
+i11 .-          .             0.0010        +INF             .          
+i12 .+          .              .            +INF             .          
+i12 .-          .             0.0010        +INF             .          
+i13 .+          .              .            +INF             .          
+i13 .-          .             0.0010        +INF             .          
+i14 .+          .              .            +INF             .          
+i14 .-          .             0.0010        +INF             .          
+i15 .+          .              .            +INF            0.0204      
+i15 .-          .              .            +INF             .          
+i16 .+          .              .            +INF             .          
+i16 .-          .             0.0010        +INF             .          
+i17 .+          .              .            +INF            0.0204      
+i17 .-          .              .            +INF             .          
+i18 .+          .              .            +INF            0.0204      
+i18 .-          .              .            +INF             .          
+i19 .+          .              .            +INF            0.0204      
+i19 .-          .              .            +INF             .          
+i20 .+          .              .            +INF             .          
+i20 .-          .             0.0010        +INF             .          
+i21 .+          .              .            +INF             .          
+i21 .-          .             0.0010        +INF             .          
+i22 .+          .              .            +INF             .          
+i22 .-          .             0.0010        +INF             .          
+i23 .+          .              .            +INF            0.0204      
+i23 .-          .              .            +INF             .          
+i24 .+          .              .            +INF             .          
+i24 .-          .             0.0010        +INF             .          
+i25 .+          .              .            +INF             .          
+i25 .-          .             0.0010        +INF             .          
+i26 .+          .              .            +INF             .          
+i26 .-          .             0.0010        +INF             .          
+i27 .+          .              .            +INF            0.0204      
+i27 .-          .              .            +INF             .          
+i28 .+          .              .            +INF             .          
+i28 .-          .             0.0010        +INF             .          
+i29 .+          .              .            +INF             .          
+i29 .-          .             0.0010        +INF             .          
+i30 .+          .              .            +INF            0.0204      
+i30 .-          .              .            +INF             .          
+i31 .+          .              .            +INF             .          
+i31 .-          .             0.0010        +INF             .          
+i32 .+          .              .            +INF             .          
+i32 .-          .             0.0010        +INF             .          
+i33 .+          .              .            +INF             .          
+i33 .-          .             0.0010        +INF             .          
+i34 .+          .              .            +INF            0.0204      
+i34 .-          .              .            +INF             .          
+i35 .+          .              .            +INF            0.0204      
+i35 .-          .              .            +INF             .          
+i36 .+          .              .            +INF            0.0204      
+i36 .-          .              .            +INF             .          
+i37 .+          .              .            +INF             .          
+i37 .-          .             0.0010        +INF             .          
+i38 .+          .              .            +INF            0.0204      
+i38 .-          .              .            +INF             .          
+i39 .+          .              .            +INF             .          
+i39 .-          .             0.0010        +INF             .          
+i40 .+          .              .            +INF             .          
+i40 .-          .             0.0010        +INF             .          
+i41 .+          .              .            +INF             .          
+i41 .-          .             0.0010        +INF             .          
+i42 .+          .              .            +INF            0.0204      
+i42 .-          .              .            +INF             .          
+i43 .+          .              .            +INF            0.0204      
+i43 .-          .              .            +INF             .          
+i44 .+          .              .            +INF            0.0204      
+i44 .-          .              .            +INF             .          
+i45 .+          .              .            +INF             .          
+i45 .-          .             0.0010        +INF             .          
+i46 .+          .              .            +INF            0.0204      
+i46 .-          .              .            +INF             .          
+i47 .+          .              .            +INF             .          
+i47 .-          .             0.0010        +INF             .          
+i48 .+          .              .            +INF             .          
+i48 .-          .             0.0010        +INF             .          
+i49 .+          .              .            +INF             .          
+i49 .-          .             0.0010        +INF             .          
+i50 .+          .              .            +INF            0.0204      
+i50 .-          .              .            +INF             .          
+i51 .+          .              .            +INF             .          
+i51 .-          .             0.0010        +INF             .          
+i52 .+          .              .            +INF             .          
+i52 .-          .             0.0010        +INF             .          
+i53 .+          .              .            +INF             .          
+i53 .-          .             0.0010        +INF             .          
+i54 .+          .              .            +INF            0.0204      
+i54 .-          .              .            +INF             .          
+i55 .+          .              .            +INF            0.0204      
+i55 .-          .              .            +INF             .          
+i56 .+          .              .            +INF            0.0204      
+i56 .-          .              .            +INF             .          
+i57 .+          .              .            +INF             .          
+i57 .-          .             0.0010        +INF             .          
+i58 .+          .              .            +INF             .          
+i58 .-          .             0.0010        +INF             .          
+i59 .+          .              .            +INF            0.0204      
+i59 .-          .              .            +INF             .          
+i60 .+          .              .            +INF             .          
+i60 .-          .             0.0010        +INF             .          
+i61 .+          .              .            +INF            0.0204      
+i61 .-          .              .            +INF             .          
+i62 .+          .              .            +INF            0.0204      
+i62 .-          .              .            +INF             .          
+i63 .+          .              .            +INF             .          
+i63 .-          .             0.0010        +INF             .          
+i64 .+          .              .            +INF             .          
+i64 .-          .             0.0010        +INF             .          
+i65 .+          .              .            +INF             .          
+i65 .-          .             0.0010        +INF             .          
+i66 .+          .              .            +INF            0.0204      
+i66 .-          .              .            +INF             .          
+i67 .+          .              .            +INF             .          
+i67 .-          .             0.0010        +INF             .          
+i68 .+          .              .            +INF             .          
+i68 .-          .             0.0010        +INF             .          
+i69 .+          .              .            +INF             .          
+i69 .-          .             0.0010        +INF             .          
+i70 .+          .              .            +INF             .          
+i70 .-          .             0.0010        +INF             .          
+i71 .+          .              .            +INF            0.0204      
+i71 .-          .              .            +INF             .          
+i72 .+          .              .            +INF            0.0204      
+i72 .-          .              .            +INF             .          
+i73 .+          .              .            +INF            0.0204      
+i73 .-          .              .            +INF             .          
+i74 .+          .              .            +INF             .          
+i74 .-          .             0.0010        +INF             .          
+i75 .+          .              .            +INF             .          
+i75 .-          .             0.0010        +INF             .          
+i76 .+          .              .            +INF            0.0204      
+i76 .-          .              .            +INF             .          
+i77 .+          .              .            +INF            0.0204      
+i77 .-          .              .            +INF             .          
+i78 .+          .              .            +INF            0.0204      
+i78 .-          .              .            +INF             .          
+i79 .+          .              .            +INF            0.0204      
+i79 .-          .              .            +INF             .          
+i80 .+          .              .            +INF            0.0204      
+i80 .-          .              .            +INF             .          
+i81 .+          .              .            +INF            0.0204      
+i81 .-          .              .            +INF             .          
+i82 .+          .              .            +INF            0.0204      
+i82 .-          .              .            +INF             .          
+i83 .+          .              .            +INF            0.0204      
+i83 .-          .              .            +INF             .          
+i84 .+          .              .            +INF             .          
+i84 .-          .             0.0010        +INF             .          
+i85 .+          .              .            +INF            0.0204      
+i85 .-          .              .            +INF             .          
+i86 .+          .              .            +INF            0.0204      
+i86 .-          .              .            +INF             .          
+i87 .+          .              .            +INF            0.0204      
+i87 .-          .              .            +INF             .          
+i88 .+          .              .            +INF            0.0204      
+i88 .-          .              .            +INF             .          
+i89 .+          .              .            +INF            0.0204      
+i89 .-          .              .            +INF             .          
+i90 .+          .              .            +INF            0.0204      
+i90 .-          .              .            +INF             .          
+i91 .+          .              .            +INF            0.0204      
+i91 .-          .              .            +INF             .          
+i92 .+          .              .            +INF             .          
+i92 .-          .             0.0010        +INF             .          
+i93 .+          .              .            +INF             .          
+i93 .-          .             0.0010        +INF             .          
+i94 .+          .              .            +INF            0.0204      
+i94 .-          .              .            +INF             .          
+i95 .+          .              .            +INF             .          
+i95 .-          .             0.0010        +INF             .          
+i96 .+          .              .            +INF            0.0204      
+i96 .-          .              .            +INF             .          
+i97 .+          .              .            +INF            0.0204      
+i97 .-          .              .            +INF             .          
+i98 .+          .              .            +INF            0.0204      
+i98 .-          .              .            +INF             .          
+i99 .+          .              .            +INF            0.0204      
+i99 .-          .              .            +INF             .          
+i100.+          .              .            +INF             .          
+i100.-          .             0.0010        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR kvar               1.0000        49.0000        50.0000         0.0433      
+
+  kvar  k as variable
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 06/03/22 05:51:37 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    172 VARIABLE kvar.L                =           49  k as variable
+
+----    172 PARAMETER vcount  count of each value
+
+1  5,    2 33,    3 11
+
+
+----    172 VARIABLE z.L                   =     0.001001  objective
+
+
+EXECUTION TIME       =        2.672 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\KoutOfN\KoutofN.gms
+Output     C:\projects\OptimizationModels\KoutOfN\KoutofN.lst
