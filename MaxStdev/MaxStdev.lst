@@ -1,0 +1,1728 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+          Maximize Standard Deviation of a vector x(i) subject to bounds
+          and a linear side constraint.
+       
+          This is a nonconvex problem. 
+       
+          We have the following models:
+          1. Nonconvex QP
+          2. Linear approximation using SOS1 variables. This is a problematic model.
+          3. As 2. but with a bound on the objective.
+          4. Linear approximation using binary variables.
+       
+  15   
+  16  *------------------------------------------------------------------
+  17  * data
+  18  *------------------------------------------------------------------
+  19   
+  20  set i /i1*i30/;
+  21   
+  22  scalars
+  23     lo / 0.5 /
+  24     up / 3 /
+  25     range
+  26  ;
+  27  range = up-lo;
+  28   
+  29  parameter a(i) 'coefficients of constraint';
+  30  a(i) = uniform(0,2);
+  31   
+  32   
+  33  *------------------------------------------------------------------
+  34  * reporting macros
+  35  *------------------------------------------------------------------
+  36   
+  37  parameter results(*,*);
+  38   
+  39  acronym Optimal;
+  40  acronym TimeLimit;
+  41   
+  42  * macros for reporting
+  43  $macro stdev      sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1))
+  44  $macro report(m,label)  \
+  45      results(i,label) = x.l(i); \
+  46      results('status',label)= m.solvestat; \
+  47      results('status',label)$(m.solvestat=1) = Optimal; \
+  48      results('status',label)$(m.solvestat=3) = TimeLimit; \
+  49      results('obj',label) = z.l; \
+  50      results('mu',label) = mu.l; \
+  51      results('stdev',label) = stdev; \
+  52      results('time',label) = m.resusd; \
+  53      results('nodes',label) = m.nodusd; \
+  54      results('iterations',label) = m.iterusd; \
+  55      display results;
+  56   
+  57   
+  58   
+  59   
+  60  *------------------------------------------------------------------
+  61  * non-convex QP model
+  62  *------------------------------------------------------------------
+  63   
+  64   
+  65  positive variable x(i);
+  66  x.lo(i) = lo;
+  67  x.up(i) = up;
+  68   
+  69  variable
+  70    z 'obj'
+  71    mu 'mean'
+  72  ;
+  73   
+  74  Equations
+  75     e     'side constraint'
+  76     obj   'objective'
+  77     mean  'average'
+  78  ;
+  79   
+  80  e.. sum(i,a(i)*x(i)) =e= card(i);
+  81  mean.. mu =e= sum(i,x(i))/card(i);
+  82   
+  83  obj.. z =e= sum(i, sqr(x(i)-mu));
+  84   
+  85  model m1 /all/;
+  86  option qcp=cplex,threads=0;
+  87  m1.optfile=1;
+  88  solve m1 maximizing z using qcp;
+  89   
+  90   
+  94   
+  95   
+  96   results(i,'GlobalQP') = x.l(i); results('status','GlobalQP')= m1.solvestat; results('status','GlobalQP')$(m1.solvestat=1) = Optimal; results('status','GlobalQP')$(m1.solvestat=3) = TimeLimit; results('obj','GlobalQP') = z.l; results('mu','GlobalQP') = mu.l; results('stdev','GlobalQP') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','GlobalQP') = m1.resusd; results('nodes','GlobalQP') = m1.nodusd; results('iterations','GlobalQP') = m1.iterusd; display results;
+  97   
+  98   
+  99  *------------------------------------------------------------------
+ 100  * SOS1 based model
+ 101  *------------------------------------------------------------------
+ 102   
+ 103  option reslim=1000;
+ 104   
+ 105  set pm /'+','-'/;
+ 106  sos1 variable s(i,pm);
+ 107   
+ 108  equations
+ 109     split
+ 110     obj2
+ 111  ;
+ 112   
+ 113  split(i).. s(i,'+')-s(i,'-') =e= x(i)-mu;
+ 114  obj2.. z =e= sum((i,pm),s(i,pm));
+ 115   
+ 116  model m2 /split,obj2,e,mean/;
+ 117  solve m2 maximizing z using mip;
+ 118   
+ 119   results(i,'SOS1') = x.l(i); results('status','SOS1')= m2.solvestat; results('status','SOS1')$(m2.solvestat=1) = Optimal; results('status','SOS1')$(m2.solvestat=3) = TimeLimit; results('obj','SOS1') = z.l; results('mu','SOS1') = mu.l; results('stdev','SOS1') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','SOS1') = m2.resusd; results('nodes','SOS1') = m2.nodusd; results('iterations','SOS1') = m2.iterusd; display results;
+ 120   
+ 121  *------------------------------------------------------------------
+ 122  * SOS1 with bound on the objective variable
+ 123  *------------------------------------------------------------------
+ 124   
+ 125  z.up = range*card(i);
+ 126  solve m2 maximizing z using mip;
+ 127   
+ 128   results(i,'SOS1/bnd') = x.l(i); results('status','SOS1/bnd')= m2.solvestat; results('status','SOS1/bnd')$(m2.solvestat=1) = Optimal; results('status','SOS1/bnd')$(m2.solvestat=3) = TimeLimit; results('obj','SOS1/bnd') = z.l; results('mu','SOS1/bnd') = mu.l; results('stdev','SOS1/bnd') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','SOS1/bnd') = m2.resusd; results('nodes','SOS1/bnd') = m2.nodusd; results('iterations','SOS1/bnd') = m2.iterusd; display results;
+ 129   
+ 130  z.up = INF;
+ 131   
+ 132  *------------------------------------------------------------------
+ 133  * model using binary variables
+ 134  *------------------------------------------------------------------
+ 135   
+ 136  positive variable s2(i,pm);
+ 137  binary variable b(i);
+ 138   
+ 139  Equations
+ 140     split2a
+ 141     split2b
+ 142     split2c
+ 143     obj3
+ 144     ;
+ 145   
+ 146  split2a(i).. s2(i,'+')-s2(i,'-') =e= x(i)-mu;
+ 147  split2b(i).. s2(i,'+') =l= b(i)*range;
+ 148  split2c(i).. s2(i,'-') =l= (1-b(i))*range;
+ 149  obj3.. z =e= sum((i,pm),s2(i,pm));
+ 150   
+ 151  model m3 /split2a,split2b,split2c,obj3,e,mean/;
+ 152  solve m3 maximizing z using mip;
+ 153   
+ 154   results(i,'Binary') = x.l(i); results('status','Binary')= m3.solvestat; results('status','Binary')$(m3.solvestat=1) = Optimal; results('status','Binary')$(m3.solvestat=3) = TimeLimit; results('obj','Binary') = z.l; results('mu','Binary') = mu.l; results('stdev','Binary') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','Binary') = m3.resusd; results('nodes','Binary') = m3.nodusd; results('iterations','Binary') = m3.iterusd; display results;
+
+
+COMPILATION TIME     =        0.016 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using QCP From line 88
+
+
+---- e  =E=  side constraint
+
+e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i4) + 0.584424234*x(i5) + 0.448105734*x(i6) + 0.699661008*x(i7) + 1.712540694*x(i8) + 0.134227446*x(i9) + 1.000421338*x(i10) + 1.996235254*x(i11) + 1.157466756*x(i12) + 1.982266078*x(i13) + 1.524500934*x(i14) + 0.261384966*x(i15) + 1.279437518*x(i16) + 0.319035728*x(i17) + 0.500161066*x(i18) + 1.337857218*x(i19) + 0.870712762*x(i20) + 0.719400532*x(i21) + 0.702882736*x(i22) + 0.26298318*x(i23) + 0.300203576*x(i24) + 1.1782273*x(i25) + 1.661785624*x(i26) + 0.461631476*x(i27) + 1.33146892*x(i28) + 1.551715212*x(i29) + 0.607316954*x(i30) =E= 30 ; (LHS = 14.159554222, INFES = 15.840445778 ****)
+     
+
+---- obj  =E=  objective
+
+obj..  - (1)*x(i1) - (1)*x(i2) - (1)*x(i3) - (1)*x(i4) - (1)*x(i5) - (1)*x(i6) - (1)*x(i7) - (1)*x(i8) - (1)*x(i9) - (1)*x(i10) - (1)*x(i11) - (1)*x(i12) - (1)*x(i13) - (1)*x(i14) - (1)*x(i15) - (1)*x(i16) - (1)*x(i17) - (1)*x(i18) - (1)*x(i19) - (1)*x(i20) - (1)*x(i21) - (1)*x(i22) - (1)*x(i23) - (1)*x(i24) - (1)*x(i25) - (1)*x(i26) - (1)*x(i27) - (1)*x(i28) - (1)*x(i29) - (1)*x(i30) + z + (30)*mu =E= 0 ; (LHS = -7.5, INFES = 7.5 ****)
+     
+
+---- mean  =E=  average
+
+mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = -0.5, INFES = 0.5 ****)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using QCP From line 88
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, 0)
+        0.3435  e
+      (-1)      obj
+       -0.0333  mean
+        0       (OLD LEVEL ****)
+
+x(i2)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, 0)
+        1.6865  e
+      (-1)      obj
+       -0.0333  mean
+        0       (OLD LEVEL ****)
+
+x(i3)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, 0)
+        1.1008  e
+      (-1)      obj
+       -0.0333  mean
+        0       (OLD LEVEL ****)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  obj
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- mu  mean
+
+mu
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+      (30)      obj
+        1       mean
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using QCP From line 88
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 5.000E-01, 3.000E+00]
+Matrix    [min, max] : [ 3.333E-02, 3.000E+01]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using QCP From line 88
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS            3
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           32  30 projected
+NON ZERO ELEMENTS            93     NON LINEAR N-Z             31
+CODE LENGTH                 122     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using QCP From line 88
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    QCP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  88
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE               46.6326
+
+ RESOURCE USAGE, LIMIT          0.110 10000000000.000
+ ITERATION COUNT, LIMIT     10691    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\projects\OptimizationModels\MaxStdev\cplex.opt"
+>>  OptimalityTarget=3
+Finished reading from "C:\projects\OptimizationModels\MaxStdev\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- No duals possible for models with quadratic objective when solved globally
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIQP status (102): integer optimal, tolerance.
+--- Cplex Time: 0.09sec (det. 44.03 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Solution satisfies tolerances
+MIP Solution:           46.632599    (10691 iterations, 613 nodes)
+
+Best possible:          46.635206
+Absolute gap:            0.002607
+Relative gap:            0.000056
+
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU e                 30.0000        30.0000        30.0000      
+---- EQU obj                 .              .              .          
+---- EQU mean                .              .              .          
+
+  e  side constraint
+  obj  objective
+  mean  average
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER
+
+i1          0.5000         3.0000         3.0000      
+i2          0.5000         0.5000         3.0000      
+i3          0.5000         0.5000         3.0000      
+i4          0.5000         3.0000         3.0000      
+i5          0.5000         3.0000         3.0000      
+i6          0.5000         3.0000         3.0000      
+i7          0.5000         3.0000         3.0000      
+i8          0.5000         0.5000         3.0000      
+i9          0.5000         3.0000         3.0000      
+i10         0.5000         0.5000         3.0000      
+i11         0.5000         0.5000         3.0000      
+i12         0.5000         0.5000         3.0000      
+i13         0.5000         0.5000         3.0000      
+i14         0.5000         0.5000         3.0000      
+i15         0.5000         3.0000         3.0000      
+i16         0.5000         0.5000         3.0000      
+i17         0.5000         3.0000         3.0000      
+i18         0.5000         3.0000         3.0000      
+i19         0.5000         0.5000         3.0000      
+i20         0.5000         0.5000         3.0000      
+i21         0.5000         2.9872         3.0000      
+i22         0.5000         3.0000         3.0000      
+i23         0.5000         3.0000         3.0000      
+i24         0.5000         3.0000         3.0000      
+i25         0.5000         0.5000         3.0000      
+i26         0.5000         0.5000         3.0000      
+i27         0.5000         3.0000         3.0000      
+i28         0.5000         0.5000         3.0000      
+i29         0.5000         0.5000         3.0000      
+i30         0.5000         0.5000         3.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF           46.6326        +INF         
+---- VAR mu                -INF            1.6662        +INF         
+
+  z  obj
+  mu  mean
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            12  PROJECTED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     96 PARAMETER results  
+
+              GlobalQP
+
+i1               3.000
+i2               0.500
+i3               0.500
+i4               3.000
+i5               3.000
+i6               3.000
+i7               3.000
+i8               0.500
+i9               3.000
+i10              0.500
+i11              0.500
+i12              0.500
+i13              0.500
+i14              0.500
+i15              3.000
+i16              0.500
+i17              3.000
+i18              3.000
+i19              0.500
+i20              0.500
+i21              2.987
+i22              3.000
+i23              3.000
+i24              3.000
+i25              0.500
+i26              0.500
+i27              3.000
+i28              0.500
+i29              0.500
+i30              0.500
+status         Optimal
+obj             46.633
+mu               1.666
+stdev            1.268
+time             0.110
+nodes          613.000
+iterations   10691.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 117
+
+
+---- split  =E=  
+
+split(i1)..  - x(i1) + mu + s(i1,+) - s(i1,-) =E= 0 ; (LHS = -1.33376117135445, INFES = 1.33376117135445 ****)
+     
+split(i2)..  - x(i2) + mu + s(i2,+) - s(i2,-) =E= 0 ; (LHS = 1.16623882864555, INFES = 1.16623882864555 ****)
+     
+split(i3)..  - x(i3) + mu + s(i3,+) - s(i3,-) =E= 0 ; (LHS = 1.16623882864555, INFES = 1.16623882864555 ****)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- obj2  =E=  
+
+obj2..  z - s(i1,+) - s(i1,-) - s(i2,+) - s(i2,-) - s(i3,+) - s(i3,-) - s(i4,+) - s(i4,-) - s(i5,+) - s(i5,-) - s(i6,+) - s(i6,-) - s(i7,+) - s(i7,-) - s(i8,+) - s(i8,-) - s(i9,+) - s(i9,-) - s(i10,+) - s(i10,-) - s(i11,+) - s(i11,-) - s(i12,+) - s(i12,-) - s(i13,+) - s(i13,-) - s(i14,+) - s(i14,-) - s(i15,+) - s(i15,-) - s(i16,+) - s(i16,-) - s(i17,+) - s(i17,-) - s(i18,+) - s(i18,-) - s(i19,+) - s(i19,-) - s(i20,+) - s(i20,-) - s(i21,+) - s(i21,-) - s(i22,+) - s(i22,-) - s(i23,+) - s(i23,-) - s(i24,+) - s(i24,-) - s(i25,+) - s(i25,-) - s(i26,+) - s(i26,-) - s(i27,+) - s(i27,-) - s(i28,+) - s(i28,-) - s(i29,+) - s(i29,-) - s(i30,+) - s(i30,-) =E= 0 ; (LHS = 46.6325988744514, INFES = 46.6325988744514 ****)
+     
+
+---- e  =E=  side constraint
+
+e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i4) + 0.584424234*x(i5) + 0.448105734*x(i6) + 0.699661008*x(i7) + 1.712540694*x(i8) + 0.134227446*x(i9) + 1.000421338*x(i10) + 1.996235254*x(i11) + 1.157466756*x(i12) + 1.982266078*x(i13) + 1.524500934*x(i14) + 0.261384966*x(i15) + 1.279437518*x(i16) + 0.319035728*x(i17) + 0.500161066*x(i18) + 1.337857218*x(i19) + 0.870712762*x(i20) + 0.719400532*x(i21) + 0.702882736*x(i22) + 0.26298318*x(i23) + 0.300203576*x(i24) + 1.1782273*x(i25) + 1.661785624*x(i26) + 0.461631476*x(i27) + 1.33146892*x(i28) + 1.551715212*x(i29) + 0.607316954*x(i30) =E= 30 ; (LHS = 30)
+     
+
+---- mean  =E=  average
+
+mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 117
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0.5, 3, 3, NA)
+       -1       split(i1)
+        0.3435  e
+       -0.0333  mean
+
+x(i2)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, NA)
+       -1       split(i2)
+        1.6865  e
+       -0.0333  mean
+
+x(i3)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, NA)
+       -1       split(i3)
+        1.1008  e
+       -0.0333  mean
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  obj
+
+z
+                (.LO, .L, .UP, .M = -INF, 46.6325988744514, +INF, 0)
+        1       obj2
+
+
+---- mu  mean
+
+mu
+                (.LO, .L, .UP, .M = -INF, 1.66623882864555, +INF, NA)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+        1       split(i26)
+        1       split(i27)
+        1       split(i28)
+        1       split(i29)
+        1       split(i30)
+        1       mean
+
+
+---- s  
+
+s(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split(i1)
+       -1       obj2
+
+s(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       split(i1)
+       -1       obj2
+
+s(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split(i2)
+       -1       obj2
+
+REMAINING 57 ENTRIES SKIPPED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 117
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 5.000E-01, 3.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 3.333E-02, 1.996E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 117
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           33
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           92
+NON ZERO ELEMENTS           242
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 117
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  117
+
+**** SOLVER STATUS     3 Resource Interrupt
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE               37.3010
+
+ RESOURCE USAGE, LIMIT       1000.094      1000.000
+ ITERATION COUNT, LIMIT 346418268    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (107): time limit exceeded.
+--- Cplex Time: 1000.08sec (det. 433740.04 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.19 ticks)
+
+
+Resource limit exceeded
+MIP Solution:           37.300956    (346418268 iterations, 180772829 nodes)
+Final Solve:            37.300956    (32 iterations)
+
+Best possible:               +inf
+Absolute gap:                  na
+Relative gap:                  na
+
+
+---- EQU split  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .              .             1.0000      
+i2           .              .              .            -1.0000      
+i3           .              .              .            -1.0000      
+i4           .              .              .            -1.0000      
+i5           .              .              .             1.0000      
+i6           .              .              .             1.0000      
+i7           .              .              .             1.0000      
+i8           .              .              .            -1.0000      
+i9           .              .              .             1.0000      
+i10          .              .              .            -1.0000      
+i11          .              .              .            -1.0000      
+i12          .              .              .            -1.0000      
+i13          .              .              .            -1.0000      
+i14          .              .              .            -1.0000      
+i15          .              .              .             1.0000      
+i16          .              .              .            -1.0000      
+i17          .              .              .             1.0000      
+i18          .              .              .             1.0000      
+i19          .              .              .            -1.0000      
+i20          .              .              .            -1.0000      
+i21          .              .              .             1.0000      
+i22          .              .              .             1.0000      
+i23          .              .              .             1.0000      
+i24          .              .              .             1.0000      
+i25          .              .              .            -1.0000      
+i26          .              .              .            -1.0000      
+i27          .              .              .             1.0000      
+i28          .              .              .            -1.0000      
+i29          .              .              .            -1.0000      
+i30          .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj2                .              .              .             1.0000      
+---- EQU e                 30.0000        30.0000        30.0000         1.4827      
+---- EQU mean                .              .              .             2.0000      
+
+  e  side constraint
+  mean  average
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1          0.5000         3.0000         3.0000         0.5574      
+i2          0.5000         0.5000         3.0000        -3.4340      
+i3          0.5000         0.5000         3.0000        -2.5654      
+i4          0.5000         0.5000         3.0000        -1.8263      
+i5          0.5000         3.0000         3.0000         0.2001      
+i6          0.5000         3.0000         3.0000         0.4023      
+i7          0.5000         3.0000         3.0000         0.0293      
+i8          0.5000         0.5000         3.0000        -3.4725      
+i9          0.5000         3.0000         3.0000         0.8676      
+i10         0.5000         0.5000         3.0000        -2.4167      
+i11         0.5000         0.5000         3.0000        -3.8932      
+i12         0.5000         0.5000         3.0000        -2.6495      
+i13         0.5000         0.5000         3.0000        -3.8725      
+i14         0.5000         0.5000         3.0000        -3.1937      
+i15         0.5000         3.0000         3.0000         0.6791      
+i16         0.5000         0.5000         3.0000        -2.8304      
+i17         0.5000         3.0000         3.0000         0.5936      
+i18         0.5000         3.0000         3.0000         0.3251      
+i19         0.5000         0.5000         3.0000        -2.9170      
+i20         0.5000         0.5000         3.0000        -2.2244      
+i21         0.5000         2.9696         3.0000          .          
+i22         0.5000         3.0000         3.0000         0.0245      
+i23         0.5000         3.0000         3.0000         0.6767      
+i24         0.5000         3.0000         3.0000         0.6216      
+i25         0.5000         0.5000         3.0000        -2.6803      
+i26         0.5000         0.5000         3.0000        -3.3973      
+i27         0.5000         3.0000         3.0000         0.3822      
+i28         0.5000         0.5000         3.0000        -2.9075      
+i29         0.5000         0.5000         3.0000        -3.2341      
+i30         0.5000         3.0000         3.0000         0.1662      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           37.3010        +INF             .          
+---- VAR mu                -INF            1.6657        +INF             .          
+
+  z  obj
+  mu  mean
+
+---- VAR s  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .             1.3343        +INF            EPS         
+i1 .-          .              .            +INF            2.0000      
+i2 .+          .              .            +INF            2.0000      
+i2 .-          .             1.1657        +INF            EPS         
+i3 .+          .              .            +INF            2.0000      
+i3 .-          .             1.1657        +INF            EPS         
+i4 .+          .              .            +INF            2.0000      
+i4 .-          .             1.1657        +INF            EPS         
+i5 .+          .             1.3343        +INF            EPS         
+i5 .-          .              .            +INF            2.0000      
+i6 .+          .             1.3343        +INF            EPS         
+i6 .-          .              .            +INF            2.0000      
+i7 .+          .             1.3343        +INF            EPS         
+i7 .-          .              .            +INF            2.0000      
+i8 .+          .              .            +INF            2.0000      
+i8 .-          .             1.1657        +INF            EPS         
+i9 .+          .             1.3343        +INF            EPS         
+i9 .-          .              .            +INF            2.0000      
+i10.+          .              .            +INF            2.0000      
+i10.-          .             1.1657        +INF            EPS         
+i11.+          .              .            +INF            2.0000      
+i11.-          .             1.1657        +INF            EPS         
+i12.+          .              .            +INF            2.0000      
+i12.-          .             1.1657        +INF            EPS         
+i13.+          .              .            +INF            2.0000      
+i13.-          .             1.1657        +INF            EPS         
+i14.+          .              .            +INF            2.0000      
+i14.-          .             1.1657        +INF            EPS         
+i15.+          .             1.3343        +INF            EPS         
+i15.-          .              .            +INF            2.0000      
+i16.+          .              .            +INF            2.0000      
+i16.-          .             1.1657        +INF            EPS         
+i17.+          .             1.3343        +INF            EPS         
+i17.-          .              .            +INF            2.0000      
+i18.+          .             1.3343        +INF            EPS         
+i18.-          .              .            +INF            2.0000      
+i19.+          .              .            +INF            2.0000      
+i19.-          .             1.1657        +INF            EPS         
+i20.+          .              .            +INF            2.0000      
+i20.-          .             1.1657        +INF            EPS         
+i21.+          .             1.3040        +INF            EPS         
+i21.-          .              .            +INF            2.0000      
+i22.+          .             1.3343        +INF            EPS         
+i22.-          .              .            +INF            2.0000      
+i23.+          .             1.3343        +INF            EPS         
+i23.-          .              .            +INF            2.0000      
+i24.+          .             1.3343        +INF            EPS         
+i24.-          .              .            +INF            2.0000      
+i25.+          .              .            +INF            2.0000      
+i25.-          .             1.1657        +INF            EPS         
+i26.+          .              .            +INF            2.0000      
+i26.-          .             1.1657        +INF            EPS         
+i27.+          .             1.3343        +INF            EPS         
+i27.-          .              .            +INF            2.0000      
+i28.+          .              .            +INF            2.0000      
+i28.-          .             1.1657        +INF            EPS         
+i29.+          .              .            +INF            2.0000      
+i29.-          .             1.1657        +INF            EPS         
+i30.+          .             1.3343        +INF            EPS         
+i30.-          .              .            +INF            2.0000      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    119 PARAMETER results  
+
+              GlobalQP        SOS1
+
+i1               3.000       3.000
+i2               0.500       0.500
+i3               0.500       0.500
+i4               3.000       0.500
+i5               3.000       3.000
+i6               3.000       3.000
+i7               3.000       3.000
+i8               0.500       0.500
+i9               3.000       3.000
+i10              0.500       0.500
+i11              0.500       0.500
+i12              0.500       0.500
+i13              0.500       0.500
+i14              0.500       0.500
+i15              3.000       3.000
+i16              0.500       0.500
+i17              3.000       3.000
+i18              3.000       3.000
+i19              0.500       0.500
+i20              0.500       0.500
+i21              2.987       2.970
+i22              3.000       3.000
+i23              3.000       3.000
+i24              3.000       3.000
+i25              0.500       0.500
+i26              0.500       0.500
+i27              3.000       3.000
+i28              0.500       0.500
+i29              0.500       0.500
+i30              0.500       3.000
+status         Optimal   TimeLimit
+obj             46.633      37.301
+mu               1.666       1.666
+stdev            1.268       1.267
+time             0.110    1000.094
+nodes          613.000 1.807728E+8
+iterations   10691.000 3.464183E+8
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 126
+
+
+---- split  =E=  
+
+split(i1)..  - x(i1) + mu + s(i1,+) - s(i1,-) =E= 0 ; (LHS = 0)
+     
+split(i2)..  - x(i2) + mu + s(i2,+) - s(i2,-) =E= 0 ; (LHS = 0)
+     
+split(i3)..  - x(i3) + mu + s(i3,+) - s(i3,-) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- obj2  =E=  
+
+obj2..  z - s(i1,+) - s(i1,-) - s(i2,+) - s(i2,-) - s(i3,+) - s(i3,-) - s(i4,+) - s(i4,-) - s(i5,+) - s(i5,-) - s(i6,+) - s(i6,-) - s(i7,+) - s(i7,-) - s(i8,+) - s(i8,-) - s(i9,+) - s(i9,-) - s(i10,+) - s(i10,-) - s(i11,+) - s(i11,-) - s(i12,+) - s(i12,-) - s(i13,+) - s(i13,-) - s(i14,+) - s(i14,-) - s(i15,+) - s(i15,-) - s(i16,+) - s(i16,-) - s(i17,+) - s(i17,-) - s(i18,+) - s(i18,-) - s(i19,+) - s(i19,-) - s(i20,+) - s(i20,-) - s(i21,+) - s(i21,-) - s(i22,+) - s(i22,-) - s(i23,+) - s(i23,-) - s(i24,+) - s(i24,-) - s(i25,+) - s(i25,-) - s(i26,+) - s(i26,-) - s(i27,+) - s(i27,-) - s(i28,+) - s(i28,-) - s(i29,+) - s(i29,-) - s(i30,+) - s(i30,-) =E= 0 ; (LHS = 0)
+     
+
+---- e  =E=  side constraint
+
+e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i4) + 0.584424234*x(i5) + 0.448105734*x(i6) + 0.699661008*x(i7) + 1.712540694*x(i8) + 0.134227446*x(i9) + 1.000421338*x(i10) + 1.996235254*x(i11) + 1.157466756*x(i12) + 1.982266078*x(i13) + 1.524500934*x(i14) + 0.261384966*x(i15) + 1.279437518*x(i16) + 0.319035728*x(i17) + 0.500161066*x(i18) + 1.337857218*x(i19) + 0.870712762*x(i20) + 0.719400532*x(i21) + 0.702882736*x(i22) + 0.26298318*x(i23) + 0.300203576*x(i24) + 1.1782273*x(i25) + 1.661785624*x(i26) + 0.461631476*x(i27) + 1.33146892*x(i28) + 1.551715212*x(i29) + 0.607316954*x(i30) =E= 30 ; (LHS = 30)
+     
+
+---- mean  =E=  average
+
+mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 126
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0.5, 3, 3, 0.557362231512315)
+       -1       split(i1)
+        0.3435  e
+       -0.0333  mean
+
+x(i2)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -3.43398338437704)
+       -1       split(i2)
+        1.6865  e
+       -0.0333  mean
+
+x(i3)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -2.56543400684243)
+       -1       split(i3)
+        1.1008  e
+       -0.0333  mean
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  obj
+
+z
+                (.LO, .L, .UP, .M = -INF, 37.300956047296, 75, 0)
+        1       obj2
+
+
+---- mu  mean
+
+mu
+                (.LO, .L, .UP, .M = -INF, 1.665654876478, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+        1       split(i26)
+        1       split(i27)
+        1       split(i28)
+        1       split(i29)
+        1       split(i30)
+        1       mean
+
+
+---- s  
+
+s(i1,+)
+                (.LO, .L, .UP, .M = 0, 1.334345123522, +INF, EPS)
+        1       split(i1)
+       -1       obj2
+
+s(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 2)
+       -1       split(i1)
+       -1       obj2
+
+s(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 2)
+        1       split(i2)
+       -1       obj2
+
+REMAINING 57 ENTRIES SKIPPED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 126
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 5.000E-01, 7.500E+01] - Zero values observed as well
+Matrix    [min, max] : [ 3.333E-02, 1.996E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 126
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           33
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           92
+NON ZERO ELEMENTS           242
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 126
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  126
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE               37.3196
+
+ RESOURCE USAGE, LIMIT          0.594      1000.000
+ ITERATION COUNT, LIMIT     69873    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 0.59sec (det. 337.12 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.32 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:           37.319643    (69873 iterations, 14163 nodes)
+Final Solve:            37.319643    (32 iterations)
+
+Best possible:          37.323183
+Absolute gap:            0.003541
+Relative gap:            0.000095
+
+
+---- EQU split  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .              .             1.0000      
+i2           .              .              .            -1.0000      
+i3           .              .              .            -1.0000      
+i4           .              .              .             1.0000      
+i5           .              .              .             1.0000      
+i6           .              .              .             1.0000      
+i7           .              .              .             1.0000      
+i8           .              .              .            -1.0000      
+i9           .              .              .             1.0000      
+i10          .              .              .            -1.0000      
+i11          .              .              .            -1.0000      
+i12          .              .              .            -1.0000      
+i13          .              .              .            -1.0000      
+i14          .              .              .            -1.0000      
+i15          .              .              .             1.0000      
+i16          .              .              .            -1.0000      
+i17          .              .              .             1.0000      
+i18          .              .              .             1.0000      
+i19          .              .              .            -1.0000      
+i20          .              .              .            -1.0000      
+i21          .              .              .             1.0000      
+i22          .              .              .             1.0000      
+i23          .              .              .             1.0000      
+i24          .              .              .             1.0000      
+i25          .              .              .            -1.0000      
+i26          .              .              .            -1.0000      
+i27          .              .              .             1.0000      
+i28          .              .              .            -1.0000      
+i29          .              .              .            -1.0000      
+i30          .              .              .            -1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj2                .              .              .             1.0000      
+---- EQU e                 30.0000        30.0000        30.0000         1.4827      
+---- EQU mean                .              .              .             2.0000      
+
+  e  side constraint
+  mean  average
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1          0.5000         3.0000         3.0000         0.5574      
+i2          0.5000         0.5000         3.0000        -3.4340      
+i3          0.5000         0.5000         3.0000        -2.5654      
+i4          0.5000         3.0000         3.0000         0.1737      
+i5          0.5000         3.0000         3.0000         0.2001      
+i6          0.5000         3.0000         3.0000         0.4023      
+i7          0.5000         3.0000         3.0000         0.0293      
+i8          0.5000         0.5000         3.0000        -3.4725      
+i9          0.5000         3.0000         3.0000         0.8676      
+i10         0.5000         0.5000         3.0000        -2.4167      
+i11         0.5000         0.5000         3.0000        -3.8932      
+i12         0.5000         0.5000         3.0000        -2.6495      
+i13         0.5000         0.5000         3.0000        -3.8725      
+i14         0.5000         0.5000         3.0000        -3.1937      
+i15         0.5000         3.0000         3.0000         0.6791      
+i16         0.5000         0.5000         3.0000        -2.8304      
+i17         0.5000         3.0000         3.0000         0.5936      
+i18         0.5000         3.0000         3.0000         0.3251      
+i19         0.5000         0.5000         3.0000        -2.9170      
+i20         0.5000         0.5000         3.0000        -2.2244      
+i21         0.5000         2.9872         3.0000          .          
+i22         0.5000         3.0000         3.0000         0.0245      
+i23         0.5000         3.0000         3.0000         0.6767      
+i24         0.5000         3.0000         3.0000         0.6216      
+i25         0.5000         0.5000         3.0000        -2.6803      
+i26         0.5000         0.5000         3.0000        -3.3973      
+i27         0.5000         3.0000         3.0000         0.3822      
+i28         0.5000         0.5000         3.0000        -2.9075      
+i29         0.5000         0.5000         3.0000        -3.2341      
+i30         0.5000         0.5000         3.0000        -1.8338      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           37.3196        75.0000          .          
+---- VAR mu                -INF            1.6662        +INF             .          
+
+  z  obj
+  mu  mean
+
+---- VAR s  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .             1.3338        +INF            EPS         
+i1 .-          .              .            +INF            2.0000      
+i2 .+          .              .            +INF            2.0000      
+i2 .-          .             1.1662        +INF            EPS         
+i3 .+          .              .            +INF            2.0000      
+i3 .-          .             1.1662        +INF            EPS         
+i4 .+          .             1.3338        +INF            EPS         
+i4 .-          .              .            +INF            2.0000      
+i5 .+          .             1.3338        +INF            EPS         
+i5 .-          .              .            +INF            2.0000      
+i6 .+          .             1.3338        +INF            EPS         
+i6 .-          .              .            +INF            2.0000      
+i7 .+          .             1.3338        +INF            EPS         
+i7 .-          .              .            +INF            2.0000      
+i8 .+          .              .            +INF            2.0000      
+i8 .-          .             1.1662        +INF            EPS         
+i9 .+          .             1.3338        +INF            EPS         
+i9 .-          .              .            +INF            2.0000      
+i10.+          .              .            +INF            2.0000      
+i10.-          .             1.1662        +INF            EPS         
+i11.+          .              .            +INF            2.0000      
+i11.-          .             1.1662        +INF            EPS         
+i12.+          .              .            +INF            2.0000      
+i12.-          .             1.1662        +INF            EPS         
+i13.+          .              .            +INF            2.0000      
+i13.-          .             1.1662        +INF            EPS         
+i14.+          .              .            +INF            2.0000      
+i14.-          .             1.1662        +INF            EPS         
+i15.+          .             1.3338        +INF            EPS         
+i15.-          .              .            +INF            2.0000      
+i16.+          .              .            +INF            2.0000      
+i16.-          .             1.1662        +INF            EPS         
+i17.+          .             1.3338        +INF            EPS         
+i17.-          .              .            +INF            2.0000      
+i18.+          .             1.3338        +INF            EPS         
+i18.-          .              .            +INF            2.0000      
+i19.+          .              .            +INF            2.0000      
+i19.-          .             1.1662        +INF            EPS         
+i20.+          .              .            +INF            2.0000      
+i20.-          .             1.1662        +INF            EPS         
+i21.+          .             1.3209        +INF            EPS         
+i21.-          .              .            +INF            2.0000      
+i22.+          .             1.3338        +INF            EPS         
+i22.-          .              .            +INF            2.0000      
+i23.+          .             1.3338        +INF            EPS         
+i23.-          .              .            +INF            2.0000      
+i24.+          .             1.3338        +INF            EPS         
+i24.-          .              .            +INF            2.0000      
+i25.+          .              .            +INF            2.0000      
+i25.-          .             1.1662        +INF            EPS         
+i26.+          .              .            +INF            2.0000      
+i26.-          .             1.1662        +INF            EPS         
+i27.+          .             1.3338        +INF            EPS         
+i27.-          .              .            +INF            2.0000      
+i28.+          .              .            +INF            2.0000      
+i28.-          .             1.1662        +INF            EPS         
+i29.+          .              .            +INF            2.0000      
+i29.-          .             1.1662        +INF            EPS         
+i30.+          .              .            +INF            2.0000      
+i30.-          .             1.1662        +INF            EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    128 PARAMETER results  
+
+              GlobalQP        SOS1    SOS1/bnd
+
+i1               3.000       3.000       3.000
+i2               0.500       0.500       0.500
+i3               0.500       0.500       0.500
+i4               3.000       0.500       3.000
+i5               3.000       3.000       3.000
+i6               3.000       3.000       3.000
+i7               3.000       3.000       3.000
+i8               0.500       0.500       0.500
+i9               3.000       3.000       3.000
+i10              0.500       0.500       0.500
+i11              0.500       0.500       0.500
+i12              0.500       0.500       0.500
+i13              0.500       0.500       0.500
+i14              0.500       0.500       0.500
+i15              3.000       3.000       3.000
+i16              0.500       0.500       0.500
+i17              3.000       3.000       3.000
+i18              3.000       3.000       3.000
+i19              0.500       0.500       0.500
+i20              0.500       0.500       0.500
+i21              2.987       2.970       2.987
+i22              3.000       3.000       3.000
+i23              3.000       3.000       3.000
+i24              3.000       3.000       3.000
+i25              0.500       0.500       0.500
+i26              0.500       0.500       0.500
+i27              3.000       3.000       3.000
+i28              0.500       0.500       0.500
+i29              0.500       0.500       0.500
+i30              0.500       3.000       0.500
+status         Optimal   TimeLimit     Optimal
+obj             46.633      37.301      37.320
+mu               1.666       1.666       1.666
+stdev            1.268       1.267       1.268
+time             0.110    1000.094       0.594
+nodes          613.000 1.807728E+8   14163.000
+iterations   10691.000 3.464183E+8   69873.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m3 Using MIP From line 152
+
+
+---- split2a  =E=  
+
+split2a(i1)..  - x(i1) + mu + s2(i1,+) - s2(i1,-) =E= 0 ; (LHS = -1.33376117135445, INFES = 1.33376117135445 ****)
+     
+split2a(i2)..  - x(i2) + mu + s2(i2,+) - s2(i2,-) =E= 0 ; (LHS = 1.16623882864555, INFES = 1.16623882864555 ****)
+     
+split2a(i3)..  - x(i3) + mu + s2(i3,+) - s2(i3,-) =E= 0 ; (LHS = 1.16623882864555, INFES = 1.16623882864555 ****)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- split2b  =L=  
+
+split2b(i1)..  s2(i1,+) - 2.5*b(i1) =L= 0 ; (LHS = 0)
+     
+split2b(i2)..  s2(i2,+) - 2.5*b(i2) =L= 0 ; (LHS = 0)
+     
+split2b(i3)..  s2(i3,+) - 2.5*b(i3) =L= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- split2c  =L=  
+
+split2c(i1)..  s2(i1,-) + 2.5*b(i1) =L= 2.5 ; (LHS = 0)
+     
+split2c(i2)..  s2(i2,-) + 2.5*b(i2) =L= 2.5 ; (LHS = 0)
+     
+split2c(i3)..  s2(i3,-) + 2.5*b(i3) =L= 2.5 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- obj3  =E=  
+
+obj3..  z - s2(i1,+) - s2(i1,-) - s2(i2,+) - s2(i2,-) - s2(i3,+) - s2(i3,-) - s2(i4,+) - s2(i4,-) - s2(i5,+) - s2(i5,-) - s2(i6,+) - s2(i6,-) - s2(i7,+) - s2(i7,-) - s2(i8,+) - s2(i8,-) - s2(i9,+) - s2(i9,-) - s2(i10,+) - s2(i10,-) - s2(i11,+) - s2(i11,-) - s2(i12,+) - s2(i12,-) - s2(i13,+) - s2(i13,-) - s2(i14,+) - s2(i14,-) - s2(i15,+) - s2(i15,-) - s2(i16,+) - s2(i16,-) - s2(i17,+) - s2(i17,-) - s2(i18,+) - s2(i18,-) - s2(i19,+) - s2(i19,-) - s2(i20,+) - s2(i20,-) - s2(i21,+) - s2(i21,-) - s2(i22,+) - s2(i22,-) - s2(i23,+) - s2(i23,-) - s2(i24,+) - s2(i24,-) - s2(i25,+) - s2(i25,-) - s2(i26,+) - s2(i26,-) - s2(i27,+) - s2(i27,-) - s2(i28,+) - s2(i28,-) - s2(i29,+) - s2(i29,-) - s2(i30,+) - s2(i30,-) =E= 0 ; (LHS = 37.3196425166576, INFES = 37.3196425166576 ****)
+     
+
+---- e  =E=  side constraint
+
+e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i4) + 0.584424234*x(i5) + 0.448105734*x(i6) + 0.699661008*x(i7) + 1.712540694*x(i8) + 0.134227446*x(i9) + 1.000421338*x(i10) + 1.996235254*x(i11) + 1.157466756*x(i12) + 1.982266078*x(i13) + 1.524500934*x(i14) + 0.261384966*x(i15) + 1.279437518*x(i16) + 0.319035728*x(i17) + 0.500161066*x(i18) + 1.337857218*x(i19) + 0.870712762*x(i20) + 0.719400532*x(i21) + 0.702882736*x(i22) + 0.26298318*x(i23) + 0.300203576*x(i24) + 1.1782273*x(i25) + 1.661785624*x(i26) + 0.461631476*x(i27) + 1.33146892*x(i28) + 1.551715212*x(i29) + 0.607316954*x(i30) =E= 30 ; (LHS = 30)
+     
+
+---- mean  =E=  average
+
+mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m3 Using MIP From line 152
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0.5, 3, 3, 0.557362231512315)
+       -1       split2a(i1)
+        0.3435  e
+       -0.0333  mean
+
+x(i2)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -3.43398338437704)
+       -1       split2a(i2)
+        1.6865  e
+       -0.0333  mean
+
+x(i3)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -2.56543400684243)
+       -1       split2a(i3)
+        1.1008  e
+       -0.0333  mean
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  obj
+
+z
+                (.LO, .L, .UP, .M = -INF, 37.3196425166576, +INF, 0)
+        1       obj3
+
+
+---- mu  mean
+
+mu
+                (.LO, .L, .UP, .M = -INF, 1.66623882864555, +INF, 0)
+        1       split2a(i1)
+        1       split2a(i2)
+        1       split2a(i3)
+        1       split2a(i4)
+        1       split2a(i5)
+        1       split2a(i6)
+        1       split2a(i7)
+        1       split2a(i8)
+        1       split2a(i9)
+        1       split2a(i10)
+        1       split2a(i11)
+        1       split2a(i12)
+        1       split2a(i13)
+        1       split2a(i14)
+        1       split2a(i15)
+        1       split2a(i16)
+        1       split2a(i17)
+        1       split2a(i18)
+        1       split2a(i19)
+        1       split2a(i20)
+        1       split2a(i21)
+        1       split2a(i22)
+        1       split2a(i23)
+        1       split2a(i24)
+        1       split2a(i25)
+        1       split2a(i26)
+        1       split2a(i27)
+        1       split2a(i28)
+        1       split2a(i29)
+        1       split2a(i30)
+        1       mean
+
+
+---- s2  
+
+s2(i1,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split2a(i1)
+        1       split2b(i1)
+       -1       obj3
+
+s2(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       split2a(i1)
+        1       split2c(i1)
+       -1       obj3
+
+s2(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       split2a(i2)
+        1       split2b(i2)
+       -1       obj3
+
+REMAINING 57 ENTRIES SKIPPED
+
+---- b  
+
+b(i1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -2.5     split2b(i1)
+        2.5     split2c(i1)
+
+b(i2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -2.5     split2b(i2)
+        2.5     split2c(i2)
+
+b(i3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -2.5     split2b(i3)
+        2.5     split2c(i3)
+
+REMAINING 27 ENTRIES SKIPPED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m3 Using MIP From line 152
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.500E+00, 3.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 5.000E-01, 3.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 3.333E-02, 2.500E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m3 Using MIP From line 152
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           6     SINGLE EQUATIONS           93
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES          122
+NON ZERO ELEMENTS           362     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m3 Using MIP From line 152
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m3                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  152
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE               37.3196
+
+ RESOURCE USAGE, LIMIT          0.625      1000.000
+ ITERATION COUNT, LIMIT     84000    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.52 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 0.61sec (det. 328.05 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.34 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:           37.319643    (84000 iterations, 14307 nodes)
+Final Solve:            37.319643    (31 iterations)
+
+Best possible:          37.323374
+Absolute gap:            0.003731
+Relative gap:            0.000100
+
+
+---- EQU split2a  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .              .             1.0000      
+i2           .              .              .            -1.0000      
+i3           .              .              .            -1.0000      
+i4           .              .              .             1.0000      
+i5           .              .              .             1.0000      
+i6           .              .              .             1.0000      
+i7           .              .              .             1.0000      
+i8           .              .              .            -1.0000      
+i9           .              .              .             1.0000      
+i10          .              .              .            -1.0000      
+i11          .              .              .            -1.0000      
+i12          .              .              .            -1.0000      
+i13          .              .              .            -1.0000      
+i14          .              .              .            -1.0000      
+i15          .              .              .             1.0000      
+i16          .              .              .            -1.0000      
+i17          .              .              .             1.0000      
+i18          .              .              .             1.0000      
+i19          .              .              .            -1.0000      
+i20          .              .              .            -1.0000      
+i21          .              .              .             1.0000      
+i22          .              .              .             1.0000      
+i23          .              .              .             1.0000      
+i24          .              .              .             1.0000      
+i25          .              .              .            -1.0000      
+i26          .              .              .            -1.0000      
+i27          .              .              .             1.0000      
+i28          .              .              .            -1.0000      
+i29          .              .              .            -1.0000      
+i30          .              .              .            -1.0000      
+
+---- EQU split2b  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF           -1.1662          .              .          
+i2         -INF             .              .             2.0000      
+i3         -INF             .              .             2.0000      
+i4         -INF           -1.1662          .              .          
+i5         -INF           -1.1662          .              .          
+i6         -INF           -1.1662          .              .          
+i7         -INF           -1.1662          .              .          
+i8         -INF             .              .             2.0000      
+i9         -INF           -1.1662          .              .          
+i10        -INF             .              .             2.0000      
+i11        -INF             .              .             2.0000      
+i12        -INF             .              .             2.0000      
+i13        -INF             .              .             2.0000      
+i14        -INF             .              .             2.0000      
+i15        -INF           -1.1662          .              .          
+i16        -INF             .              .             2.0000      
+i17        -INF           -1.1662          .              .          
+i18        -INF           -1.1662          .              .          
+i19        -INF             .              .             2.0000      
+i20        -INF             .              .             2.0000      
+i21        -INF           -1.1791          .              .          
+i22        -INF           -1.1662          .              .          
+i23        -INF           -1.1662          .              .          
+i24        -INF           -1.1662          .              .          
+i25        -INF             .              .             2.0000      
+i26        -INF             .              .             2.0000      
+i27        -INF           -1.1662          .              .          
+i28        -INF             .              .             2.0000      
+i29        -INF             .              .             2.0000      
+i30        -INF             .              .             2.0000      
+
+---- EQU split2c  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1         -INF            2.5000         2.5000         2.0000      
+i2         -INF            1.1662         2.5000          .          
+i3         -INF            1.1662         2.5000          .          
+i4         -INF            2.5000         2.5000         2.0000      
+i5         -INF            2.5000         2.5000         2.0000      
+i6         -INF            2.5000         2.5000         2.0000      
+i7         -INF            2.5000         2.5000         2.0000      
+i8         -INF            1.1662         2.5000          .          
+i9         -INF            2.5000         2.5000         2.0000      
+i10        -INF            1.1662         2.5000          .          
+i11        -INF            1.1662         2.5000          .          
+i12        -INF            1.1662         2.5000          .          
+i13        -INF            1.1662         2.5000          .          
+i14        -INF            1.1662         2.5000          .          
+i15        -INF            2.5000         2.5000         2.0000      
+i16        -INF            1.1662         2.5000          .          
+i17        -INF            2.5000         2.5000         2.0000      
+i18        -INF            2.5000         2.5000         2.0000      
+i19        -INF            1.1662         2.5000          .          
+i20        -INF            1.1662         2.5000          .          
+i21        -INF            2.5000         2.5000         2.0000      
+i22        -INF            2.5000         2.5000         2.0000      
+i23        -INF            2.5000         2.5000         2.0000      
+i24        -INF            2.5000         2.5000         2.0000      
+i25        -INF            1.1662         2.5000          .          
+i26        -INF            1.1662         2.5000          .          
+i27        -INF            2.5000         2.5000         2.0000      
+i28        -INF            1.1662         2.5000          .          
+i29        -INF            1.1662         2.5000          .          
+i30        -INF            1.1662         2.5000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj3                .              .              .             1.0000      
+---- EQU e                 30.0000        30.0000        30.0000         1.4827      
+---- EQU mean                .              .              .             2.0000      
+
+  e  side constraint
+  mean  average
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1          0.5000         3.0000         3.0000         0.5574      
+i2          0.5000         0.5000         3.0000        -3.4340      
+i3          0.5000         0.5000         3.0000        -2.5654      
+i4          0.5000         3.0000         3.0000         0.1737      
+i5          0.5000         3.0000         3.0000         0.2001      
+i6          0.5000         3.0000         3.0000         0.4023      
+i7          0.5000         3.0000         3.0000         0.0293      
+i8          0.5000         0.5000         3.0000        -3.4725      
+i9          0.5000         3.0000         3.0000         0.8676      
+i10         0.5000         0.5000         3.0000        -2.4167      
+i11         0.5000         0.5000         3.0000        -3.8932      
+i12         0.5000         0.5000         3.0000        -2.6495      
+i13         0.5000         0.5000         3.0000        -3.8725      
+i14         0.5000         0.5000         3.0000        -3.1937      
+i15         0.5000         3.0000         3.0000         0.6791      
+i16         0.5000         0.5000         3.0000        -2.8304      
+i17         0.5000         3.0000         3.0000         0.5936      
+i18         0.5000         3.0000         3.0000         0.3251      
+i19         0.5000         0.5000         3.0000        -2.9170      
+i20         0.5000         0.5000         3.0000        -2.2244      
+i21         0.5000         2.9872         3.0000          .          
+i22         0.5000         3.0000         3.0000         0.0245      
+i23         0.5000         3.0000         3.0000         0.6767      
+i24         0.5000         3.0000         3.0000         0.6216      
+i25         0.5000         0.5000         3.0000        -2.6803      
+i26         0.5000         0.5000         3.0000        -3.3973      
+i27         0.5000         3.0000         3.0000         0.3822      
+i28         0.5000         0.5000         3.0000        -2.9075      
+i29         0.5000         0.5000         3.0000        -3.2341      
+i30         0.5000         0.5000         3.0000        -1.8338      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           37.3196        +INF             .          
+---- VAR mu                -INF            1.6662        +INF             .          
+
+  z  obj
+  mu  mean
+
+---- VAR s2  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .             1.3338        +INF             .          
+i1 .-          .              .            +INF             .          
+i2 .+          .              .            +INF             .          
+i2 .-          .             1.1662        +INF             .          
+i3 .+          .              .            +INF             .          
+i3 .-          .             1.1662        +INF             .          
+i4 .+          .             1.3338        +INF             .          
+i4 .-          .              .            +INF             .          
+i5 .+          .             1.3338        +INF             .          
+i5 .-          .              .            +INF             .          
+i6 .+          .             1.3338        +INF             .          
+i6 .-          .              .            +INF             .          
+i7 .+          .             1.3338        +INF             .          
+i7 .-          .              .            +INF             .          
+i8 .+          .              .            +INF             .          
+i8 .-          .             1.1662        +INF             .          
+i9 .+          .             1.3338        +INF             .          
+i9 .-          .              .            +INF             .          
+i10.+          .              .            +INF             .          
+i10.-          .             1.1662        +INF             .          
+i11.+          .              .            +INF             .          
+i11.-          .             1.1662        +INF             .          
+i12.+          .              .            +INF             .          
+i12.-          .             1.1662        +INF             .          
+i13.+          .              .            +INF             .          
+i13.-          .             1.1662        +INF             .          
+i14.+          .              .            +INF             .          
+i14.-          .             1.1662        +INF             .          
+i15.+          .             1.3338        +INF             .          
+i15.-          .              .            +INF             .          
+i16.+          .              .            +INF             .          
+i16.-          .             1.1662        +INF             .          
+i17.+          .             1.3338        +INF             .          
+i17.-          .              .            +INF             .          
+i18.+          .             1.3338        +INF             .          
+i18.-          .              .            +INF             .          
+i19.+          .              .            +INF             .          
+i19.-          .             1.1662        +INF             .          
+i20.+          .              .            +INF             .          
+i20.-          .             1.1662        +INF             .          
+i21.+          .             1.3209        +INF             .          
+i21.-          .              .            +INF             .          
+i22.+          .             1.3338        +INF             .          
+i22.-          .              .            +INF             .          
+i23.+          .             1.3338        +INF             .          
+i23.-          .              .            +INF             .          
+i24.+          .             1.3338        +INF             .          
+i24.-          .              .            +INF             .          
+i25.+          .              .            +INF             .          
+i25.-          .             1.1662        +INF             .          
+i26.+          .              .            +INF             .          
+i26.-          .             1.1662        +INF             .          
+i27.+          .             1.3338        +INF             .          
+i27.-          .              .            +INF             .          
+i28.+          .              .            +INF             .          
+i28.-          .             1.1662        +INF             .          
+i29.+          .              .            +INF             .          
+i29.-          .             1.1662        +INF             .          
+i30.+          .              .            +INF             .          
+i30.-          .             1.1662        +INF             .          
+
+---- VAR b  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .             1.0000         1.0000        -5.0000      
+i2           .              .             1.0000         5.0000      
+i3           .              .             1.0000         5.0000      
+i4           .             1.0000         1.0000        -5.0000      
+i5           .             1.0000         1.0000        -5.0000      
+i6           .             1.0000         1.0000        -5.0000      
+i7           .             1.0000         1.0000        -5.0000      
+i8           .              .             1.0000         5.0000      
+i9           .             1.0000         1.0000        -5.0000      
+i10          .              .             1.0000         5.0000      
+i11          .              .             1.0000         5.0000      
+i12          .              .             1.0000         5.0000      
+i13          .              .             1.0000         5.0000      
+i14          .              .             1.0000         5.0000      
+i15          .             1.0000         1.0000        -5.0000      
+i16          .              .             1.0000         5.0000      
+i17          .             1.0000         1.0000        -5.0000      
+i18          .             1.0000         1.0000        -5.0000      
+i19          .              .             1.0000         5.0000      
+i20          .              .             1.0000         5.0000      
+i21          .             1.0000         1.0000        -5.0000      
+i22          .             1.0000         1.0000        -5.0000      
+i23          .             1.0000         1.0000        -5.0000      
+i24          .             1.0000         1.0000        -5.0000      
+i25          .              .             1.0000         5.0000      
+i26          .              .             1.0000         5.0000      
+i27          .             1.0000         1.0000        -5.0000      
+i28          .              .             1.0000         5.0000      
+i29          .              .             1.0000         5.0000      
+i30          .              .             1.0000         5.0000      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    154 PARAMETER results  
+
+              GlobalQP        SOS1    SOS1/bnd      Binary
+
+i1               3.000       3.000       3.000       3.000
+i2               0.500       0.500       0.500       0.500
+i3               0.500       0.500       0.500       0.500
+i4               3.000       0.500       3.000       3.000
+i5               3.000       3.000       3.000       3.000
+i6               3.000       3.000       3.000       3.000
+i7               3.000       3.000       3.000       3.000
+i8               0.500       0.500       0.500       0.500
+i9               3.000       3.000       3.000       3.000
+i10              0.500       0.500       0.500       0.500
+i11              0.500       0.500       0.500       0.500
+i12              0.500       0.500       0.500       0.500
+i13              0.500       0.500       0.500       0.500
+i14              0.500       0.500       0.500       0.500
+i15              3.000       3.000       3.000       3.000
+i16              0.500       0.500       0.500       0.500
+i17              3.000       3.000       3.000       3.000
+i18              3.000       3.000       3.000       3.000
+i19              0.500       0.500       0.500       0.500
+i20              0.500       0.500       0.500       0.500
+i21              2.987       2.970       2.987       2.987
+i22              3.000       3.000       3.000       3.000
+i23              3.000       3.000       3.000       3.000
+i24              3.000       3.000       3.000       3.000
+i25              0.500       0.500       0.500       0.500
+i26              0.500       0.500       0.500       0.500
+i27              3.000       3.000       3.000       3.000
+i28              0.500       0.500       0.500       0.500
+i29              0.500       0.500       0.500       0.500
+i30              0.500       3.000       0.500       0.500
+status         Optimal   TimeLimit     Optimal     Optimal
+obj             46.633      37.301      37.320      37.320
+mu               1.666       1.666       1.666       1.666
+stdev            1.268       1.267       1.268       1.268
+time             0.110    1000.094       0.594       0.625
+nodes          613.000 1.807728E+8   14163.000   14307.000
+iterations   10691.000 3.464183E+8   69873.000   84000.000
+
+
+
+EXECUTION TIME       =     1001.531 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MaxStdev\MaxStdev.gms
+Output     C:\projects\OptimizationModels\MaxStdev\MaxStdev.lst
