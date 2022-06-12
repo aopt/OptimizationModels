@@ -1,4 +1,4 @@
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 1
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -125,37 +125,47 @@ C o m p i l a t i o n
  125  z.up = range*card(i);
  126  solve m2 maximizing z using mip;
  127   
- 128   results(i,'SOS1/bnd') = x.l(i); results('status','SOS1/bnd')= m2.solvestat; results('status','SOS1/bnd')$(m2.solvestat=1) = Optimal; results('status','SOS1/bnd')$(m2.solvestat=3) = TimeLimit; results('obj','SOS1/bnd') = z.l; results('mu','SOS1/bnd') = mu.l; results('stdev','SOS1/bnd') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','SOS1/bnd') = m2.resusd; results('nodes','SOS1/bnd') = m2.nodusd; results('iterations','SOS1/bnd') = m2.iterusd; display results;
+ 128   results(i,'SOS1/bnd1') = x.l(i); results('status','SOS1/bnd1')= m2.solvestat; results('status','SOS1/bnd1')$(m2.solvestat=1) = Optimal; results('status','SOS1/bnd1')$(m2.solvestat=3) = TimeLimit; results('obj','SOS1/bnd1') = z.l; results('mu','SOS1/bnd1') = mu.l; results('stdev','SOS1/bnd1') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','SOS1/bnd1') = m2.resusd; results('nodes','SOS1/bnd1') = m2.nodusd; results('iterations','SOS1/bnd1') = m2.iterusd; display results;
  129   
  130  z.up = INF;
  131   
  132  *------------------------------------------------------------------
- 133  * model using binary variables
+ 133  * SOS1 with bound on the s(i,+/-) variables
  134  *------------------------------------------------------------------
  135   
- 136  positive variable s2(i,pm);
- 137  binary variable b(i);
+ 136  s.up(i,pm) = range;
+ 137  solve m2 maximizing z using mip;
  138   
- 139  Equations
- 140     split2a
- 141     split2b
- 142     split2c
- 143     obj3
- 144     ;
+ 139   results(i,'SOS1/bnd2') = x.l(i); results('status','SOS1/bnd2')= m2.solvestat; results('status','SOS1/bnd2')$(m2.solvestat=1) = Optimal; results('status','SOS1/bnd2')$(m2.solvestat=3) = TimeLimit; results('obj','SOS1/bnd2') = z.l; results('mu','SOS1/bnd2') = mu.l; results('stdev','SOS1/bnd2') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','SOS1/bnd2') = m2.resusd; results('nodes','SOS1/bnd2') = m2.nodusd; results('iterations','SOS1/bnd2') = m2.iterusd; display results;
+ 140   
+ 141   
+ 142  *------------------------------------------------------------------
+ 143  * model using binary variables
+ 144  *------------------------------------------------------------------
  145   
- 146  split2a(i).. s2(i,'+')-s2(i,'-') =e= x(i)-mu;
- 147  split2b(i).. s2(i,'+') =l= b(i)*range;
- 148  split2c(i).. s2(i,'-') =l= (1-b(i))*range;
- 149  obj3.. z =e= sum((i,pm),s2(i,pm));
- 150   
- 151  model m3 /split2a,split2b,split2c,obj3,e,mean/;
- 152  solve m3 maximizing z using mip;
- 153   
- 154   results(i,'Binary') = x.l(i); results('status','Binary')= m3.solvestat; results('status','Binary')$(m3.solvestat=1) = Optimal; results('status','Binary')$(m3.solvestat=3) = TimeLimit; results('obj','Binary') = z.l; results('mu','Binary') = mu.l; results('stdev','Binary') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','Binary') = m3.resusd; results('nodes','Binary') = m3.nodusd; results('iterations','Binary') = m3.iterusd; display results;
+ 146  positive variable s2(i,pm);
+ 147  binary variable b(i);
+ 148   
+ 149  Equations
+ 150     split2a
+ 151     split2b
+ 152     split2c
+ 153     obj3
+ 154     ;
+ 155   
+ 156  split2a(i).. s2(i,'+')-s2(i,'-') =e= x(i)-mu;
+ 157  split2b(i).. s2(i,'+') =l= b(i)*range;
+ 158  split2c(i).. s2(i,'-') =l= (1-b(i))*range;
+ 159  obj3.. z =e= sum((i,pm),s2(i,pm));
+ 160   
+ 161  model m3 /split2a,split2b,split2c,obj3,e,mean/;
+ 162  solve m3 maximizing z using mip;
+ 163   
+ 164   results(i,'Binary') = x.l(i); results('status','Binary')= m3.solvestat; results('status','Binary')$(m3.solvestat=1) = Optimal; results('status','Binary')$(m3.solvestat=3) = TimeLimit; results('obj','Binary') = z.l; results('mu','Binary') = mu.l; results('stdev','Binary') = sqrt(sum(i,sqr(x.l(i)-mu.l))/(card(i)-1)); results('time','Binary') = m3.resusd; results('nodes','Binary') = m3.nodusd; results('iterations','Binary') = m3.iterusd; display results;
 
 
-COMPILATION TIME     =        0.016 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m1 Using QCP From line 88
 
@@ -174,7 +184,7 @@ obj..  - (1)*x(i1) - (1)*x(i2) - (1)*x(i3) - (1)*x(i4) - (1)*x(i5) - (1)*x(i6) -
 
 mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = -0.5, INFES = 0.5 ****)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 3
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m1 Using QCP From line 88
 
@@ -218,7 +228,7 @@ mu
       (30)      obj
         1       mean
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 4
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m1 Using QCP From line 88
 
@@ -229,7 +239,7 @@ RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
 Bound     [min, max] : [ 5.000E-01, 3.000E+00]
 Matrix    [min, max] : [ 3.333E-02, 3.000E+01]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 5
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m1 Using QCP From line 88
 
@@ -242,8 +252,8 @@ NON ZERO ELEMENTS            93     NON LINEAR N-Z             31
 CODE LENGTH                 122     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 6
+GENERATION TIME      =        0.015 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m1 Using QCP From line 88
 
@@ -258,7 +268,7 @@ Solution Report     SOLVE m1 Using QCP From line 88
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE               46.6326
 
- RESOURCE USAGE, LIMIT          0.110 10000000000.000
+ RESOURCE USAGE, LIMIT          0.140 10000000000.000
  ITERATION COUNT, LIMIT     10691    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
@@ -276,7 +286,7 @@ Finished reading from "C:\projects\OptimizationModels\MaxStdev\cplex.opt"
 
 
 --- MIQP status (102): integer optimal, tolerance.
---- Cplex Time: 0.09sec (det. 44.03 ticks)
+--- Cplex Time: 0.14sec (det. 44.03 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 
@@ -347,7 +357,7 @@ i30         0.5000         0.5000         3.0000
                              0  UNBOUNDED
                              0     ERRORS
                             12  PROJECTED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 7
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -390,11 +400,11 @@ status         Optimal
 obj             46.633
 mu               1.666
 stdev            1.268
-time             0.110
+time             0.140
 nodes          613.000
 iterations   10691.000
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 8
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m2 Using MIP From line 117
 
@@ -424,7 +434,7 @@ e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i
 
 mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 9
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m2 Using MIP From line 117
 
@@ -513,7 +523,7 @@ s(i2,+)
        -1       obj2
 
 REMAINING 57 ENTRIES SKIPPED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 10
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m2 Using MIP From line 117
 
@@ -524,7 +534,7 @@ RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
 Bound     [min, max] : [ 5.000E-01, 3.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 3.333E-02, 1.996E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 11
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m2 Using MIP From line 117
 
@@ -536,8 +546,8 @@ BLOCKS OF VARIABLES           4     SINGLE VARIABLES           92
 NON ZERO ELEMENTS           242
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 12
+GENERATION TIME      =        0.016 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m2 Using MIP From line 117
 
@@ -552,8 +562,8 @@ Solution Report     SOLVE m2 Using MIP From line 117
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE               37.3010
 
- RESOURCE USAGE, LIMIT       1000.094      1000.000
- ITERATION COUNT, LIMIT 346418268    2147483647
+ RESOURCE USAGE, LIMIT       1000.031      1000.000
+ ITERATION COUNT, LIMIT 338991021    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
 --- GMO memory 0.51 Mb (peak 0.51 Mb)
@@ -563,7 +573,7 @@ Solution Report     SOLVE m2 Using MIP From line 117
 
 
 --- MIP status (107): time limit exceeded.
---- Cplex Time: 1000.08sec (det. 433740.04 ticks)
+--- Cplex Time: 1000.02sec (det. 424660.81 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -573,7 +583,7 @@ Solution Report     SOLVE m2 Using MIP From line 117
 
 
 Resource limit exceeded
-MIP Solution:           37.300956    (346418268 iterations, 180772829 nodes)
+MIP Solution:           37.300956    (338991021 iterations, 176809057 nodes)
 Final Solve:            37.300956    (32 iterations)
 
 Best possible:               +inf
@@ -737,7 +747,7 @@ i30.-          .              .            +INF            2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 13
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -780,11 +790,11 @@ status         Optimal   TimeLimit
 obj             46.633      37.301
 mu               1.666       1.666
 stdev            1.268       1.267
-time             0.110    1000.094
-nodes          613.000 1.807728E+8
-iterations   10691.000 3.464183E+8
+time             0.140    1000.031
+nodes          613.000 1.768091E+8
+iterations   10691.000 3.389910E+8
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 14
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m2 Using MIP From line 126
 
@@ -814,7 +824,7 @@ e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i
 
 mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 15
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m2 Using MIP From line 126
 
@@ -903,7 +913,7 @@ s(i2,+)
        -1       obj2
 
 REMAINING 57 ENTRIES SKIPPED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 16
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m2 Using MIP From line 126
 
@@ -914,7 +924,7 @@ RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
 Bound     [min, max] : [ 5.000E-01, 7.500E+01] - Zero values observed as well
 Matrix    [min, max] : [ 3.333E-02, 1.996E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 17
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m2 Using MIP From line 126
 
@@ -927,7 +937,7 @@ NON ZERO ELEMENTS           242
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 18
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m2 Using MIP From line 126
 
@@ -942,7 +952,7 @@ Solution Report     SOLVE m2 Using MIP From line 126
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE               37.3196
 
- RESOURCE USAGE, LIMIT          0.594      1000.000
+ RESOURCE USAGE, LIMIT          0.579      1000.000
  ITERATION COUNT, LIMIT     69873    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -953,7 +963,7 @@ Solution Report     SOLVE m2 Using MIP From line 126
 
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 0.59sec (det. 337.12 ticks)
+--- Cplex Time: 0.58sec (det. 337.12 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -1127,14 +1137,14 @@ i30.-          .             1.1662        +INF            EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 19
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 19
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
 ----    128 PARAMETER results  
 
-              GlobalQP        SOS1    SOS1/bnd
+              GlobalQP        SOS1   SOS1/bnd1
 
 i1               3.000       3.000       3.000
 i2               0.500       0.500       0.500
@@ -1170,13 +1180,403 @@ status         Optimal   TimeLimit     Optimal
 obj             46.633      37.301      37.320
 mu               1.666       1.666       1.666
 stdev            1.268       1.267       1.268
-time             0.110    1000.094       0.594
-nodes          613.000 1.807728E+8   14163.000
-iterations   10691.000 3.464183E+8   69873.000
+time             0.140    1000.031       0.579
+nodes          613.000 1.768091E+8   14163.000
+iterations   10691.000 3.389910E+8   69873.000
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 20
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 20
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m3 Using MIP From line 152
+Equation Listing    SOLVE m2 Using MIP From line 137
+
+
+---- split  =E=  
+
+split(i1)..  - x(i1) + mu + s(i1,+) - s(i1,-) =E= 0 ; (LHS = 0)
+     
+split(i2)..  - x(i2) + mu + s(i2,+) - s(i2,-) =E= 0 ; (LHS = 0)
+     
+split(i3)..  - x(i3) + mu + s(i3,+) - s(i3,-) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- obj2  =E=  
+
+obj2..  z - s(i1,+) - s(i1,-) - s(i2,+) - s(i2,-) - s(i3,+) - s(i3,-) - s(i4,+) - s(i4,-) - s(i5,+) - s(i5,-) - s(i6,+) - s(i6,-) - s(i7,+) - s(i7,-) - s(i8,+) - s(i8,-) - s(i9,+) - s(i9,-) - s(i10,+) - s(i10,-) - s(i11,+) - s(i11,-) - s(i12,+) - s(i12,-) - s(i13,+) - s(i13,-) - s(i14,+) - s(i14,-) - s(i15,+) - s(i15,-) - s(i16,+) - s(i16,-) - s(i17,+) - s(i17,-) - s(i18,+) - s(i18,-) - s(i19,+) - s(i19,-) - s(i20,+) - s(i20,-) - s(i21,+) - s(i21,-) - s(i22,+) - s(i22,-) - s(i23,+) - s(i23,-) - s(i24,+) - s(i24,-) - s(i25,+) - s(i25,-) - s(i26,+) - s(i26,-) - s(i27,+) - s(i27,-) - s(i28,+) - s(i28,-) - s(i29,+) - s(i29,-) - s(i30,+) - s(i30,-) =E= 0 ; (LHS = 0)
+     
+
+---- e  =E=  side constraint
+
+e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i4) + 0.584424234*x(i5) + 0.448105734*x(i6) + 0.699661008*x(i7) + 1.712540694*x(i8) + 0.134227446*x(i9) + 1.000421338*x(i10) + 1.996235254*x(i11) + 1.157466756*x(i12) + 1.982266078*x(i13) + 1.524500934*x(i14) + 0.261384966*x(i15) + 1.279437518*x(i16) + 0.319035728*x(i17) + 0.500161066*x(i18) + 1.337857218*x(i19) + 0.870712762*x(i20) + 0.719400532*x(i21) + 0.702882736*x(i22) + 0.26298318*x(i23) + 0.300203576*x(i24) + 1.1782273*x(i25) + 1.661785624*x(i26) + 0.461631476*x(i27) + 1.33146892*x(i28) + 1.551715212*x(i29) + 0.607316954*x(i30) =E= 30 ; (LHS = 30)
+     
+
+---- mean  =E=  average
+
+mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 137
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 0.5, 3, 3, 0.557362231512315)
+       -1       split(i1)
+        0.3435  e
+       -0.0333  mean
+
+x(i2)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -3.43398338437704)
+       -1       split(i2)
+        1.6865  e
+       -0.0333  mean
+
+x(i3)
+                (.LO, .L, .UP, .M = 0.5, 0.5, 3, -2.56543400684243)
+       -1       split(i3)
+        1.1008  e
+       -0.0333  mean
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  obj
+
+z
+                (.LO, .L, .UP, .M = -INF, 37.3196425166576, +INF, 0)
+        1       obj2
+
+
+---- mu  mean
+
+mu
+                (.LO, .L, .UP, .M = -INF, 1.66623882864555, +INF, 0)
+        1       split(i1)
+        1       split(i2)
+        1       split(i3)
+        1       split(i4)
+        1       split(i5)
+        1       split(i6)
+        1       split(i7)
+        1       split(i8)
+        1       split(i9)
+        1       split(i10)
+        1       split(i11)
+        1       split(i12)
+        1       split(i13)
+        1       split(i14)
+        1       split(i15)
+        1       split(i16)
+        1       split(i17)
+        1       split(i18)
+        1       split(i19)
+        1       split(i20)
+        1       split(i21)
+        1       split(i22)
+        1       split(i23)
+        1       split(i24)
+        1       split(i25)
+        1       split(i26)
+        1       split(i27)
+        1       split(i28)
+        1       split(i29)
+        1       split(i30)
+        1       mean
+
+
+---- s  
+
+s(i1,+)
+                (.LO, .L, .UP, .M = 0, 1.33376117135445, 2.5, EPS)
+        1       split(i1)
+       -1       obj2
+
+s(i1,-)
+                (.LO, .L, .UP, .M = 0, 0, 2.5, 2)
+       -1       split(i1)
+       -1       obj2
+
+s(i2,+)
+                (.LO, .L, .UP, .M = 0, 0, 2.5, 2)
+        1       split(i2)
+       -1       obj2
+
+REMAINING 57 ENTRIES SKIPPED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 137
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 3.000E+01, 3.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 5.000E-01, 3.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 3.333E-02, 1.996E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 137
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           33
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           92
+NON ZERO ELEMENTS           242
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 137
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  137
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE               37.3196
+
+ RESOURCE USAGE, LIMIT          0.547      1000.000
+ ITERATION COUNT, LIMIT     56874    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 0.55sec (det. 313.06 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.30 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:           37.319643    (56874 iterations, 11404 nodes)
+Final Solve:            37.319643    (31 iterations)
+
+Best possible:          37.322693
+Absolute gap:            0.003050
+Relative gap:            0.000082
+
+
+---- EQU split  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1           .              .              .             1.0000      
+i2           .              .              .            -1.0000      
+i3           .              .              .            -1.0000      
+i4           .              .              .             1.0000      
+i5           .              .              .             1.0000      
+i6           .              .              .             1.0000      
+i7           .              .              .             1.0000      
+i8           .              .              .            -1.0000      
+i9           .              .              .             1.0000      
+i10          .              .              .            -1.0000      
+i11          .              .              .            -1.0000      
+i12          .              .              .            -1.0000      
+i13          .              .              .            -1.0000      
+i14          .              .              .            -1.0000      
+i15          .              .              .             1.0000      
+i16          .              .              .            -1.0000      
+i17          .              .              .             1.0000      
+i18          .              .              .             1.0000      
+i19          .              .              .            -1.0000      
+i20          .              .              .            -1.0000      
+i21          .              .              .             1.0000      
+i22          .              .              .             1.0000      
+i23          .              .              .             1.0000      
+i24          .              .              .             1.0000      
+i25          .              .              .            -1.0000      
+i26          .              .              .            -1.0000      
+i27          .              .              .             1.0000      
+i28          .              .              .            -1.0000      
+i29          .              .              .            -1.0000      
+i30          .              .              .            -1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj2                .              .              .             1.0000      
+---- EQU e                 30.0000        30.0000        30.0000         1.4827      
+---- EQU mean                .              .              .             2.0000      
+
+  e  side constraint
+  mean  average
+
+---- VAR x  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+i1          0.5000         3.0000         3.0000         0.5574      
+i2          0.5000         0.5000         3.0000        -3.4340      
+i3          0.5000         0.5000         3.0000        -2.5654      
+i4          0.5000         3.0000         3.0000         0.1737      
+i5          0.5000         3.0000         3.0000         0.2001      
+i6          0.5000         3.0000         3.0000         0.4023      
+i7          0.5000         3.0000         3.0000         0.0293      
+i8          0.5000         0.5000         3.0000        -3.4725      
+i9          0.5000         3.0000         3.0000         0.8676      
+i10         0.5000         0.5000         3.0000        -2.4167      
+i11         0.5000         0.5000         3.0000        -3.8932      
+i12         0.5000         0.5000         3.0000        -2.6495      
+i13         0.5000         0.5000         3.0000        -3.8725      
+i14         0.5000         0.5000         3.0000        -3.1937      
+i15         0.5000         3.0000         3.0000         0.6791      
+i16         0.5000         0.5000         3.0000        -2.8304      
+i17         0.5000         3.0000         3.0000         0.5936      
+i18         0.5000         3.0000         3.0000         0.3251      
+i19         0.5000         0.5000         3.0000        -2.9170      
+i20         0.5000         0.5000         3.0000        -2.2244      
+i21         0.5000         2.9872         3.0000          .          
+i22         0.5000         3.0000         3.0000         0.0245      
+i23         0.5000         3.0000         3.0000         0.6767      
+i24         0.5000         3.0000         3.0000         0.6216      
+i25         0.5000         0.5000         3.0000        -2.6803      
+i26         0.5000         0.5000         3.0000        -3.3973      
+i27         0.5000         3.0000         3.0000         0.3822      
+i28         0.5000         0.5000         3.0000        -2.9075      
+i29         0.5000         0.5000         3.0000        -3.2341      
+i30         0.5000         0.5000         3.0000        -1.8338      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           37.3196        +INF             .          
+---- VAR mu                -INF            1.6662        +INF             .          
+
+  z  obj
+  mu  mean
+
+---- VAR s  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+i1 .+          .             1.3338         2.5000         EPS         
+i1 .-          .              .             2.5000         2.0000      
+i2 .+          .              .             2.5000         2.0000      
+i2 .-          .             1.1662         2.5000         EPS         
+i3 .+          .              .             2.5000         2.0000      
+i3 .-          .             1.1662         2.5000         EPS         
+i4 .+          .             1.3338         2.5000         EPS         
+i4 .-          .              .             2.5000         2.0000      
+i5 .+          .             1.3338         2.5000         EPS         
+i5 .-          .              .             2.5000         2.0000      
+i6 .+          .             1.3338         2.5000         EPS         
+i6 .-          .              .             2.5000         2.0000      
+i7 .+          .             1.3338         2.5000         EPS         
+i7 .-          .              .             2.5000         2.0000      
+i8 .+          .              .             2.5000         2.0000      
+i8 .-          .             1.1662         2.5000         EPS         
+i9 .+          .             1.3338         2.5000         EPS         
+i9 .-          .              .             2.5000         2.0000      
+i10.+          .              .             2.5000         2.0000      
+i10.-          .             1.1662         2.5000         EPS         
+i11.+          .              .             2.5000         2.0000      
+i11.-          .             1.1662         2.5000         EPS         
+i12.+          .              .             2.5000         2.0000      
+i12.-          .             1.1662         2.5000         EPS         
+i13.+          .              .             2.5000         2.0000      
+i13.-          .             1.1662         2.5000         EPS         
+i14.+          .              .             2.5000         2.0000      
+i14.-          .             1.1662         2.5000         EPS         
+i15.+          .             1.3338         2.5000         EPS         
+i15.-          .              .             2.5000         2.0000      
+i16.+          .              .             2.5000         2.0000      
+i16.-          .             1.1662         2.5000         EPS         
+i17.+          .             1.3338         2.5000         EPS         
+i17.-          .              .             2.5000         2.0000      
+i18.+          .             1.3338         2.5000         EPS         
+i18.-          .              .             2.5000         2.0000      
+i19.+          .              .             2.5000         2.0000      
+i19.-          .             1.1662         2.5000         EPS         
+i20.+          .              .             2.5000         2.0000      
+i20.-          .             1.1662         2.5000         EPS         
+i21.+          .             1.3209         2.5000         EPS         
+i21.-          .              .             2.5000         2.0000      
+i22.+          .             1.3338         2.5000         EPS         
+i22.-          .              .             2.5000         2.0000      
+i23.+          .             1.3338         2.5000         EPS         
+i23.-          .              .             2.5000         2.0000      
+i24.+          .             1.3338         2.5000         EPS         
+i24.-          .              .             2.5000         2.0000      
+i25.+          .              .             2.5000         2.0000      
+i25.-          .             1.1662         2.5000         EPS         
+i26.+          .              .             2.5000         2.0000      
+i26.-          .             1.1662         2.5000         EPS         
+i27.+          .             1.3338         2.5000         EPS         
+i27.-          .              .             2.5000         2.0000      
+i28.+          .              .             2.5000         2.0000      
+i28.-          .             1.1662         2.5000         EPS         
+i29.+          .              .             2.5000         2.0000      
+i29.-          .             1.1662         2.5000         EPS         
+i30.+          .              .             2.5000         2.0000      
+i30.-          .             1.1662         2.5000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    139 PARAMETER results  
+
+              GlobalQP        SOS1   SOS1/bnd1   SOS1/bnd2
+
+i1               3.000       3.000       3.000       3.000
+i2               0.500       0.500       0.500       0.500
+i3               0.500       0.500       0.500       0.500
+i4               3.000       0.500       3.000       3.000
+i5               3.000       3.000       3.000       3.000
+i6               3.000       3.000       3.000       3.000
+i7               3.000       3.000       3.000       3.000
+i8               0.500       0.500       0.500       0.500
+i9               3.000       3.000       3.000       3.000
+i10              0.500       0.500       0.500       0.500
+i11              0.500       0.500       0.500       0.500
+i12              0.500       0.500       0.500       0.500
+i13              0.500       0.500       0.500       0.500
+i14              0.500       0.500       0.500       0.500
+i15              3.000       3.000       3.000       3.000
+i16              0.500       0.500       0.500       0.500
+i17              3.000       3.000       3.000       3.000
+i18              3.000       3.000       3.000       3.000
+i19              0.500       0.500       0.500       0.500
+i20              0.500       0.500       0.500       0.500
+i21              2.987       2.970       2.987       2.987
+i22              3.000       3.000       3.000       3.000
+i23              3.000       3.000       3.000       3.000
+i24              3.000       3.000       3.000       3.000
+i25              0.500       0.500       0.500       0.500
+i26              0.500       0.500       0.500       0.500
+i27              3.000       3.000       3.000       3.000
+i28              0.500       0.500       0.500       0.500
+i29              0.500       0.500       0.500       0.500
+i30              0.500       3.000       0.500       0.500
+status         Optimal   TimeLimit     Optimal     Optimal
+obj             46.633      37.301      37.320      37.320
+mu               1.666       1.666       1.666       1.666
+stdev            1.268       1.267       1.268       1.268
+time             0.140    1000.031       0.579       0.547
+nodes          613.000 1.768091E+8   14163.000   11404.000
+iterations   10691.000 3.389910E+8   69873.000   56874.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m3 Using MIP From line 162
 
 
 ---- split2a  =E=  
@@ -1214,7 +1614,7 @@ REMAINING 27 ENTRIES SKIPPED
 
 ---- obj3  =E=  
 
-obj3..  z - s2(i1,+) - s2(i1,-) - s2(i2,+) - s2(i2,-) - s2(i3,+) - s2(i3,-) - s2(i4,+) - s2(i4,-) - s2(i5,+) - s2(i5,-) - s2(i6,+) - s2(i6,-) - s2(i7,+) - s2(i7,-) - s2(i8,+) - s2(i8,-) - s2(i9,+) - s2(i9,-) - s2(i10,+) - s2(i10,-) - s2(i11,+) - s2(i11,-) - s2(i12,+) - s2(i12,-) - s2(i13,+) - s2(i13,-) - s2(i14,+) - s2(i14,-) - s2(i15,+) - s2(i15,-) - s2(i16,+) - s2(i16,-) - s2(i17,+) - s2(i17,-) - s2(i18,+) - s2(i18,-) - s2(i19,+) - s2(i19,-) - s2(i20,+) - s2(i20,-) - s2(i21,+) - s2(i21,-) - s2(i22,+) - s2(i22,-) - s2(i23,+) - s2(i23,-) - s2(i24,+) - s2(i24,-) - s2(i25,+) - s2(i25,-) - s2(i26,+) - s2(i26,-) - s2(i27,+) - s2(i27,-) - s2(i28,+) - s2(i28,-) - s2(i29,+) - s2(i29,-) - s2(i30,+) - s2(i30,-) =E= 0 ; (LHS = 37.3196425166576, INFES = 37.3196425166576 ****)
+obj3..  z - s2(i1,+) - s2(i1,-) - s2(i2,+) - s2(i2,-) - s2(i3,+) - s2(i3,-) - s2(i4,+) - s2(i4,-) - s2(i5,+) - s2(i5,-) - s2(i6,+) - s2(i6,-) - s2(i7,+) - s2(i7,-) - s2(i8,+) - s2(i8,-) - s2(i9,+) - s2(i9,-) - s2(i10,+) - s2(i10,-) - s2(i11,+) - s2(i11,-) - s2(i12,+) - s2(i12,-) - s2(i13,+) - s2(i13,-) - s2(i14,+) - s2(i14,-) - s2(i15,+) - s2(i15,-) - s2(i16,+) - s2(i16,-) - s2(i17,+) - s2(i17,-) - s2(i18,+) - s2(i18,-) - s2(i19,+) - s2(i19,-) - s2(i20,+) - s2(i20,-) - s2(i21,+) - s2(i21,-) - s2(i22,+) - s2(i22,-) - s2(i23,+) - s2(i23,-) - s2(i24,+) - s2(i24,-) - s2(i25,+) - s2(i25,-) - s2(i26,+) - s2(i26,-) - s2(i27,+) - s2(i27,-) - s2(i28,+) - s2(i28,-) - s2(i29,+) - s2(i29,-) - s2(i30,+) - s2(i30,-) =E= 0 ; (LHS = 37.3196425166577, INFES = 37.3196425166577 ****)
      
 
 ---- e  =E=  side constraint
@@ -1226,9 +1626,9 @@ e..  0.343494264*x(i1) + 1.686533416*x(i2) + 1.100750712*x(i3) + 0.602275808*x(i
 
 mean..  - 0.0333333333333333*x(i1) - 0.0333333333333333*x(i2) - 0.0333333333333333*x(i3) - 0.0333333333333333*x(i4) - 0.0333333333333333*x(i5) - 0.0333333333333333*x(i6) - 0.0333333333333333*x(i7) - 0.0333333333333333*x(i8) - 0.0333333333333333*x(i9) - 0.0333333333333333*x(i10) - 0.0333333333333333*x(i11) - 0.0333333333333333*x(i12) - 0.0333333333333333*x(i13) - 0.0333333333333333*x(i14) - 0.0333333333333333*x(i15) - 0.0333333333333333*x(i16) - 0.0333333333333333*x(i17) - 0.0333333333333333*x(i18) - 0.0333333333333333*x(i19) - 0.0333333333333333*x(i20) - 0.0333333333333333*x(i21) - 0.0333333333333333*x(i22) - 0.0333333333333333*x(i23) - 0.0333333333333333*x(i24) - 0.0333333333333333*x(i25) - 0.0333333333333333*x(i26) - 0.0333333333333333*x(i27) - 0.0333333333333333*x(i28) - 0.0333333333333333*x(i29) - 0.0333333333333333*x(i30) + mu =E= 0 ; (LHS = 0)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 21
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 27
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m3 Using MIP From line 152
+Column Listing      SOLVE m3 Using MIP From line 162
 
 
 ---- x  
@@ -1256,7 +1656,7 @@ REMAINING 27 ENTRIES SKIPPED
 ---- z  obj
 
 z
-                (.LO, .L, .UP, .M = -INF, 37.3196425166576, +INF, 0)
+                (.LO, .L, .UP, .M = -INF, 37.3196425166577, +INF, 0)
         1       obj3
 
 
@@ -1337,9 +1737,9 @@ b(i3)
         2.5     split2c(i3)
 
 REMAINING 27 ENTRIES SKIPPED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 22
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 28
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m3 Using MIP From line 152
+Range Statistics    SOLVE m3 Using MIP From line 162
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -1348,9 +1748,9 @@ RHS       [min, max] : [ 2.500E+00, 3.000E+01] - Zero values observed as well
 Bound     [min, max] : [ 5.000E-01, 3.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 3.333E-02, 2.500E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 23
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 29
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m3 Using MIP From line 152
+Model Statistics    SOLVE m3 Using MIP From line 162
 
 
 MODEL STATISTICS
@@ -1361,22 +1761,22 @@ NON ZERO ELEMENTS           362     DISCRETE VARIABLES         30
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 24
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 30
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m3 Using MIP From line 152
+Solution Report     SOLVE m3 Using MIP From line 162
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m3                  OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  152
+     SOLVER  CPLEX               FROM LINE  162
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE               37.3196
 
- RESOURCE USAGE, LIMIT          0.625      1000.000
+ RESOURCE USAGE, LIMIT          0.594      1000.000
  ITERATION COUNT, LIMIT     84000    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -1387,13 +1787,13 @@ Solution Report     SOLVE m3 Using MIP From line 152
 
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 0.61sec (det. 328.05 ticks)
+--- Cplex Time: 0.59sec (det. 328.05 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.02sec (det. 0.34 ticks)
+--- Cplex Time: 0.00sec (det. 0.34 ticks)
 
 
 Solution satisfies tolerances
@@ -1666,56 +2066,56 @@ i30          .              .             1.0000         5.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/09/22 20:30:10 Page 25
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/12/22 05:55:49 Page 31
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    154 PARAMETER results  
+----    164 PARAMETER results  
 
-              GlobalQP        SOS1    SOS1/bnd      Binary
+              GlobalQP        SOS1   SOS1/bnd1   SOS1/bnd2      Binary
 
-i1               3.000       3.000       3.000       3.000
-i2               0.500       0.500       0.500       0.500
-i3               0.500       0.500       0.500       0.500
-i4               3.000       0.500       3.000       3.000
-i5               3.000       3.000       3.000       3.000
-i6               3.000       3.000       3.000       3.000
-i7               3.000       3.000       3.000       3.000
-i8               0.500       0.500       0.500       0.500
-i9               3.000       3.000       3.000       3.000
-i10              0.500       0.500       0.500       0.500
-i11              0.500       0.500       0.500       0.500
-i12              0.500       0.500       0.500       0.500
-i13              0.500       0.500       0.500       0.500
-i14              0.500       0.500       0.500       0.500
-i15              3.000       3.000       3.000       3.000
-i16              0.500       0.500       0.500       0.500
-i17              3.000       3.000       3.000       3.000
-i18              3.000       3.000       3.000       3.000
-i19              0.500       0.500       0.500       0.500
-i20              0.500       0.500       0.500       0.500
-i21              2.987       2.970       2.987       2.987
-i22              3.000       3.000       3.000       3.000
-i23              3.000       3.000       3.000       3.000
-i24              3.000       3.000       3.000       3.000
-i25              0.500       0.500       0.500       0.500
-i26              0.500       0.500       0.500       0.500
-i27              3.000       3.000       3.000       3.000
-i28              0.500       0.500       0.500       0.500
-i29              0.500       0.500       0.500       0.500
-i30              0.500       3.000       0.500       0.500
-status         Optimal   TimeLimit     Optimal     Optimal
-obj             46.633      37.301      37.320      37.320
-mu               1.666       1.666       1.666       1.666
-stdev            1.268       1.267       1.268       1.268
-time             0.110    1000.094       0.594       0.625
-nodes          613.000 1.807728E+8   14163.000   14307.000
-iterations   10691.000 3.464183E+8   69873.000   84000.000
+i1               3.000       3.000       3.000       3.000       3.000
+i2               0.500       0.500       0.500       0.500       0.500
+i3               0.500       0.500       0.500       0.500       0.500
+i4               3.000       0.500       3.000       3.000       3.000
+i5               3.000       3.000       3.000       3.000       3.000
+i6               3.000       3.000       3.000       3.000       3.000
+i7               3.000       3.000       3.000       3.000       3.000
+i8               0.500       0.500       0.500       0.500       0.500
+i9               3.000       3.000       3.000       3.000       3.000
+i10              0.500       0.500       0.500       0.500       0.500
+i11              0.500       0.500       0.500       0.500       0.500
+i12              0.500       0.500       0.500       0.500       0.500
+i13              0.500       0.500       0.500       0.500       0.500
+i14              0.500       0.500       0.500       0.500       0.500
+i15              3.000       3.000       3.000       3.000       3.000
+i16              0.500       0.500       0.500       0.500       0.500
+i17              3.000       3.000       3.000       3.000       3.000
+i18              3.000       3.000       3.000       3.000       3.000
+i19              0.500       0.500       0.500       0.500       0.500
+i20              0.500       0.500       0.500       0.500       0.500
+i21              2.987       2.970       2.987       2.987       2.987
+i22              3.000       3.000       3.000       3.000       3.000
+i23              3.000       3.000       3.000       3.000       3.000
+i24              3.000       3.000       3.000       3.000       3.000
+i25              0.500       0.500       0.500       0.500       0.500
+i26              0.500       0.500       0.500       0.500       0.500
+i27              3.000       3.000       3.000       3.000       3.000
+i28              0.500       0.500       0.500       0.500       0.500
+i29              0.500       0.500       0.500       0.500       0.500
+i30              0.500       3.000       0.500       0.500       0.500
+status         Optimal   TimeLimit     Optimal     Optimal     Optimal
+obj             46.633      37.301      37.320      37.320      37.320
+mu               1.666       1.666       1.666       1.666       1.666
+stdev            1.268       1.267       1.268       1.268       1.268
+time             0.140    1000.031       0.579       0.547       0.594
+nodes          613.000 1.768091E+8   14163.000   11404.000   14307.000
+iterations   10691.000 3.389910E+8   69873.000   56874.000   84000.000
 
 
 
-EXECUTION TIME       =     1001.531 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+EXECUTION TIME       =     1002.078 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
 
 
 USER: Eval License                                   G211206|0002CO-GEN

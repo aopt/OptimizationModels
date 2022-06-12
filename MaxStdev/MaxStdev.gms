@@ -125,9 +125,19 @@ report(m2,'SOS1')
 z.up = range*card(i);
 solve m2 maximizing z using mip;
 
-report(m2,'SOS1/bnd')
+report(m2,'SOS1/bnd1')
 
 z.up = INF;
+
+*------------------------------------------------------------------
+* SOS1 with bound on the s(i,+/-) variables
+*------------------------------------------------------------------
+
+s.up(i,pm) = range;
+solve m2 maximizing z using mip;
+
+report(m2,'SOS1/bnd2')
+
 
 *------------------------------------------------------------------
 * model using binary variables
