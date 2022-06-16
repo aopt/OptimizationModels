@@ -1,5 +1,5 @@
 
---- Job MaxDiCut.gms Start 06/16/22 10:52:17 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
+--- Job MaxDiCut.gms Start 06/16/22 16:46:24 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\39\gmsprmNT.txt
 --- GAMS Parameters defined
@@ -21,13 +21,13 @@ Licensee: Eval License                                   G211206|0002CO-GEN
 Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
 GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
 --- Starting compilation
---- MaxDiCut.gms(88) 3 Mb
+--- MaxDiCut.gms(86) 3 Mb
 --- $echo File C:\projects\OptimizationModels\MaxCut\cplex.opt
---- MaxDiCut.gms(133) 3 Mb
---- Starting execution: elapsed 0:00:00.012
---- MaxDiCut.gms(73) 4 Mb
+--- MaxDiCut.gms(131) 3 Mb
+--- Starting execution: elapsed 0:00:00.004
+--- MaxDiCut.gms(71) 4 Mb
 --- Generating MIQCP model maxcut1
---- MaxDiCut.gms(74) 6 Mb
+--- MaxDiCut.gms(72) 6 Mb
 ---   1 rows  61 columns  61 non-zeroes
 ---   5,265 nl-code  60 nl-non-zeroes
 ---   60 discrete-columns
@@ -35,8 +35,8 @@ GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
 --- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.000E+00, 1.208E+01]
---- MaxDiCut.gms(74) 4 Mb
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.016
+--- MaxDiCut.gms(72) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.009
 
 IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
 
@@ -548,24 +548,24 @@ Iteration      Dual Objective            In Variable           Out Variable
    468             218.330768                   x305             c244 slack
    469             218.283858                   x466             c248 slack
    470             218.128830              x(node11)                   x793
-Root relaxation solution time = 0.00 sec. (2.39 ticks)
+Root relaxation solution time = 0.02 sec. (2.39 ticks)
 
         Nodes                                         Cuts/
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
 
 *     0+    0                            0.0000      436.2577              --- 
-Found incumbent of value 0.000000 after 0.00 sec. (5.80 ticks)
+Found incumbent of value 0.000000 after 0.02 sec. (5.80 ticks)
 *     0+    0                          160.6256      436.2577           171.60%
-Found incumbent of value 160.625622 after 0.00 sec. (5.81 ticks)
+Found incumbent of value 160.625622 after 0.02 sec. (5.81 ticks)
       0     0      218.1288    60      160.6256      218.1288      470   35.80%
       0     0      213.0042    92      160.6256     Cuts: 257      568   32.61%
       0     0      208.4055   116      160.6256     Cuts: 288      669   29.75%
       0     0      204.2528   139      160.6256 ZeroHalf: 288      796   27.16%
       0     0      202.4094   161      160.6256 ZeroHalf: 259      859   26.01%
 *     0+    0                          161.2193      202.4094            25.55%
-Found incumbent of value 161.219347 after 0.14 sec. (101.39 ticks)
+Found incumbent of value 161.219347 after 0.16 sec. (101.39 ticks)
 *     0+    0                          161.6034      202.4094            25.25%
-Found incumbent of value 161.603403 after 0.14 sec. (106.40 ticks)
+Found incumbent of value 161.603403 after 0.16 sec. (106.40 ticks)
       0     0      198.9380   170      161.6034 ZeroHalf: 278      985   19.63%
       0     0      197.3566   192      161.6034     Cuts: 283     1095   19.63%
       0     0      195.1048   212      161.6034 ZeroHalf: 205     1222   19.63%
@@ -603,7 +603,7 @@ Found incumbent of value 161.603403 after 0.14 sec. (106.40 ticks)
       0     0      164.6351   625      161.6034  ZeroHalf: 30     8555    1.88%
       0     0      164.5835   617      161.6034  ZeroHalf: 14     8663    1.84%
       0     2      164.5835   617      161.6034      164.5835     8663    1.84%
-Elapsed time = 2.34 sec. (1670.11 ticks, tree = 0.02 MB)
+Elapsed time = 2.55 sec. (1670.11 ticks, tree = 0.02 MB)
      13     5      162.0136   561      161.6034      164.5800    11484    1.84%
                                                  ZeroHalf: 92                  
 
@@ -611,16 +611,16 @@ Zero-half cuts applied:  537
 Gomory fractional cuts applied:  5
 
 Root node processing (before b&c):
-  Real time             =    2.33 sec. (1669.20 ticks)
+  Real time             =    2.53 sec. (1669.20 ticks)
 Parallel b&c, 16 threads:
   Real time             =    0.17 sec. (308.45 ticks)
   Sync time (average)   =    0.12 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    2.50 sec. (1977.66 ticks)
+Total (root+branch&cut) =    2.70 sec. (1977.66 ticks)
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 2.50sec (det. 1977.66 ticks)
+--- Cplex Time: 2.70sec (det. 1977.66 ticks)
 
 --- Fixing integer variables and solving final QP...
 
@@ -657,10 +657,10 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model maxcut1
---- Executing after solve: elapsed 0:00:02.540
---- MaxDiCut.gms(92) 4 Mb
+--- Executing after solve: elapsed 0:00:02.765
+--- MaxDiCut.gms(90) 4 Mb
 --- Generating MIQCP model maxcut1
---- MaxDiCut.gms(93) 6 Mb
+--- MaxDiCut.gms(91) 6 Mb
 ---   1 rows  61 columns  61 non-zeroes
 ---   5,265 nl-code  60 nl-non-zeroes
 ---   60 discrete-columns
@@ -668,8 +668,8 @@ Relative gap:            0.000000
 --- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.053E-01, 5.181E+00]
---- MaxDiCut.gms(93) 4 Mb
---- Executing CPLEX (Solvelink=2): elapsed 0:00:02.553
+--- MaxDiCut.gms(91) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.769
 
 IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
 
@@ -792,16 +792,16 @@ Found incumbent of value 161.420647 after 0.00 sec. (5.45 ticks)
 *     0+    0                          161.6034      167.7427             3.80%
 Found incumbent of value 161.603403 after 0.02 sec. (9.10 ticks)
       0     2      167.7427    35      161.6034      167.2731       11    3.51%
-Elapsed time = 0.03 sec. (10.15 ticks, tree = 0.02 MB)
+Elapsed time = 0.02 sec. (10.15 ticks, tree = 0.02 MB)
 
 Root node processing (before b&c):
   Real time             =    0.02 sec. (9.87 ticks)
 Parallel b&c, 16 threads:
-  Real time             =    0.11 sec. (36.05 ticks)
+  Real time             =    0.09 sec. (36.05 ticks)
   Sync time (average)   =    0.04 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    0.13 sec. (45.92 ticks)
+Total (root+branch&cut) =    0.11 sec. (45.92 ticks)
 
 --- MIQP status (102): integer optimal, tolerance.
 --- Cplex Time: 0.12sec (det. 45.92 ticks)
@@ -842,17 +842,17 @@ Absolute gap:            0.015721
 Relative gap:            0.000097
 
 --- Reading solution for model maxcut1
---- Executing after solve: elapsed 0:00:02.689
---- MaxDiCut.gms(94) 4 Mb
+--- Executing after solve: elapsed 0:00:02.911
+--- MaxDiCut.gms(92) 4 Mb
 --- Generating MIP model maxcut2
---- MaxDiCut.gms(117) 5 Mb
+--- MaxDiCut.gms(115) 5 Mb
 ---   1,755 rows  938 columns  4,386 non-zeroes
 ---   937 discrete-columns
 --- Range statistics (absolute non-zero finite values)
 --- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 2.291E-03, 1.000E+00]
---- Executing CPLEX (Solvelink=2): elapsed 0:00:02.693
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.916
 
 IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
 
@@ -883,7 +883,7 @@ Tried aggregator 1 time.
 Detecting symmetries...
 Reduced MIP has 1720 rows, 920 columns, and 3440 nonzeros.
 Reduced MIP has 920 binaries, 0 generals, 0 SOSs, and 0 indicators.
-Presolve time = 0.00 sec. (3.26 ticks)
+Presolve time = 0.02 sec. (3.26 ticks)
 Probing time = 0.00 sec. (2.15 ticks)
 Clique table members: 2703.
 MIP emphasis: balance optimality and feasibility.
@@ -896,7 +896,7 @@ Parallel mode: deterministic, using up to 13 threads for concurrent optimization
  * Starting primal Simplex on 1 thread...
 Tried aggregator 1 time.
 No LP presolve or aggregator reductions.
-Presolve time = 0.02 sec. (0.57 ticks)
+Presolve time = 0.00 sec. (0.57 ticks)
 
 Iteration log . . .
 Iteration:     1   Dual objective     =           436.257660
@@ -916,48 +916,48 @@ Root relaxation solution time = 0.02 sec. (13.54 ticks)
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
 
 *     0+    0                            0.0000      436.2577              --- 
-Found incumbent of value 0.000000 after 0.02 sec. (26.47 ticks)
+Found incumbent of value 0.000000 after 0.03 sec. (26.47 ticks)
 *     0+    0                          119.4631      436.2577           265.18%
-Found incumbent of value 119.463134 after 0.02 sec. (26.49 ticks)
+Found incumbent of value 119.463134 after 0.03 sec. (26.49 ticks)
 *     0+    0                          122.6249      436.2577           255.77%
-Found incumbent of value 122.624944 after 0.02 sec. (26.49 ticks)
+Found incumbent of value 122.624944 after 0.03 sec. (26.49 ticks)
 *     0+    0                          130.5631      436.2577           234.14%
-Found incumbent of value 130.563111 after 0.02 sec. (26.50 ticks)
+Found incumbent of value 130.563111 after 0.03 sec. (26.50 ticks)
 *     0+    0                          134.7853      436.2577           223.67%
-Found incumbent of value 134.785293 after 0.02 sec. (26.50 ticks)
+Found incumbent of value 134.785293 after 0.03 sec. (26.50 ticks)
       0     0      218.1288   920      134.7853      218.1288     1191   61.83%
       0     0      212.3381   897      134.7853     Cuts: 374     1315   57.54%
 *     0+    0                          157.2823      212.3381            35.00%
-Found incumbent of value 157.282319 after 0.14 sec. (121.48 ticks)
+Found incumbent of value 157.282319 after 0.16 sec. (121.48 ticks)
       0     0      208.2403   882      157.2823     Cuts: 283     1437   29.30%
       0     0      206.4973   879      157.2823 ZeroHalf: 299     1520   29.30%
       0     0      203.9278   877      157.2823 ZeroHalf: 334     1631   29.30%
 *     0+    0                          158.6754      203.3658            28.16%
-Found incumbent of value 158.675394 after 0.28 sec. (249.29 ticks)
+Found incumbent of value 158.675394 after 0.33 sec. (249.29 ticks)
       0     0      202.8236   885      158.6754 ZeroHalf: 277     1720   19.23%
 Detecting symmetries...
       0     0      200.9320   889      158.6754 ZeroHalf: 255     1835   19.23%
 *     0+    0                          159.2843      189.1850            18.77%
-Found incumbent of value 159.284283 after 0.45 sec. (408.47 ticks)
+Found incumbent of value 159.284283 after 0.53 sec. (408.47 ticks)
       0     0      199.3766   888      159.2843 ZeroHalf: 230     1949   16.69%
       0     0      198.1579   884      159.2843 ZeroHalf: 288     2090   16.69%
 *     0+    0                          160.1327      185.8721            16.07%
-Found incumbent of value 160.132731 after 0.64 sec. (587.77 ticks)
+Found incumbent of value 160.132731 after 0.75 sec. (587.77 ticks)
 Detecting symmetries...
       0     2      198.1579   884      160.1327      181.8451     2090   13.56%
-Elapsed time = 0.69 sec. (597.89 ticks, tree = 0.02 MB)
+Elapsed time = 0.78 sec. (597.89 ticks, tree = 0.02 MB)
      94    39      181.0319   744      160.1327      181.8451    10623   13.56%
                                                     Cuts: 113                  
     377   230      167.8887   660      160.1327      181.8451    63026   13.56%
                                                   ZeroHalf: 7                  
 *   618   375      integral     0      160.5469      181.1700   102556   12.85%
                                                   ZeroHalf: 9                  
-Found incumbent of value 160.546942 after 1.38 sec. (1312.20 ticks)
+Found incumbent of value 160.546942 after 1.52 sec. (1312.20 ticks)
 *   620   394      integral     0      160.5911      181.1700   108679   12.81%
-Found incumbent of value 160.591129 after 1.38 sec. (1315.18 ticks)
+Found incumbent of value 160.591129 after 1.52 sec. (1315.18 ticks)
 *   772   456      integral     0      161.6034      181.1700   128946   12.11%
                                                  ZeroHalf: 15                  
-Found incumbent of value 161.603403 after 1.50 sec. (1454.39 ticks)
+Found incumbent of value 161.603403 after 1.66 sec. (1454.39 ticks)
     874   494      167.2440   674      161.6034      177.6046   144985    9.90%
                                                   ZeroHalf: 2                  
    1159   595      164.0213   690      161.6034      174.1332   185433    7.75%
@@ -972,7 +972,7 @@ Found incumbent of value 161.603403 after 1.50 sec. (1454.39 ticks)
                                                   ZeroHalf: 8                  
    3855  1071      164.6696   718      161.6034      167.3259   554957    3.54%
                                                  ZeroHalf: 14                  
-Elapsed time = 3.73 sec. (3702.37 ticks, tree = 1.78 MB)
+Elapsed time = 4.08 sec. (3702.37 ticks, tree = 1.78 MB)
 
 Clique cuts applied:  6
 Zero-half cuts applied:  456
@@ -980,16 +980,16 @@ Lift and project cuts applied:  2
 Gomory fractional cuts applied:  6
 
 Root node processing (before b&c):
-  Real time             =    0.67 sec. (597.00 ticks)
+  Real time             =    0.77 sec. (597.00 ticks)
 Parallel b&c, 16 threads:
-  Real time             =    4.11 sec. (3921.42 ticks)
-  Sync time (average)   =    0.71 sec.
+  Real time             =    4.41 sec. (3921.42 ticks)
+  Sync time (average)   =    0.72 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    4.78 sec. (4518.42 ticks)
+Total (root+branch&cut) =    5.17 sec. (4518.42 ticks)
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 4.80sec (det. 4518.42 ticks)
+--- Cplex Time: 5.17sec (det. 4518.42 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -1016,10 +1016,10 @@ Absolute gap:            0.001501
 Relative gap:            0.000009
 
 --- Reading solution for model maxcut2
---- Executing after solve: elapsed 0:00:07.514
---- MaxDiCut.gms(130) 5 Mb
+--- Executing after solve: elapsed 0:00:08.114
+--- MaxDiCut.gms(128) 5 Mb
 --- Generating MIP model maxcut2
---- MaxDiCut.gms(131) 5 Mb
+--- MaxDiCut.gms(129) 5 Mb
 ---   1,755 rows  938 columns  4,386 non-zeroes
 ---   60 discrete-columns
 ***   877 relaxed-columns WARNING
@@ -1027,7 +1027,7 @@ Relative gap:            0.000009
 --- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 2.291E-03, 1.000E+00]
---- Executing CPLEX (Solvelink=2): elapsed 0:00:07.519
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:08.120
 
 IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
 
@@ -1059,7 +1059,7 @@ Detecting symmetries...
 Reduced MIP has 1720 rows, 920 columns, and 3440 nonzeros.
 Reduced MIP has 920 binaries, 0 generals, 0 SOSs, and 0 indicators.
 Presolve time = 0.00 sec. (3.26 ticks)
-Probing time = 0.00 sec. (2.15 ticks)
+Probing time = 0.02 sec. (2.15 ticks)
 Clique table members: 2703.
 MIP emphasis: balance optimality and feasibility.
 MIP search method: dynamic search.
@@ -1103,36 +1103,36 @@ Found incumbent of value 134.785293 after 0.02 sec. (25.48 ticks)
       0     0      218.1288   920      134.7853      218.1288     1191   61.83%
       0     0      212.3381   897      134.7853     Cuts: 374     1315   57.54%
 *     0+    0                          157.2823      212.3381            35.00%
-Found incumbent of value 157.282319 after 0.14 sec. (120.47 ticks)
+Found incumbent of value 157.282319 after 0.16 sec. (120.47 ticks)
       0     0      208.2403   882      157.2823     Cuts: 283     1437   29.30%
       0     0      206.4973   879      157.2823 ZeroHalf: 299     1520   29.30%
       0     0      203.9278   877      157.2823 ZeroHalf: 334     1631   29.30%
 *     0+    0                          158.6754      203.3658            28.16%
-Found incumbent of value 158.675394 after 0.30 sec. (248.28 ticks)
+Found incumbent of value 158.675394 after 0.31 sec. (248.28 ticks)
       0     0      202.8236   885      158.6754 ZeroHalf: 277     1720   19.23%
 Detecting symmetries...
       0     0      200.9320   889      158.6754 ZeroHalf: 255     1835   19.23%
 *     0+    0                          159.2843      189.1850            18.77%
-Found incumbent of value 159.284283 after 0.47 sec. (407.45 ticks)
+Found incumbent of value 159.284283 after 0.52 sec. (407.45 ticks)
       0     0      199.3766   888      159.2843 ZeroHalf: 230     1949   16.69%
       0     0      198.1579   884      159.2843 ZeroHalf: 288     2090   16.69%
 *     0+    0                          160.1327      185.8721            16.07%
-Found incumbent of value 160.132731 after 0.66 sec. (586.75 ticks)
+Found incumbent of value 160.132731 after 0.70 sec. (586.75 ticks)
 Detecting symmetries...
       0     2      198.1579   884      160.1327      181.8451     2090   13.56%
-Elapsed time = 0.69 sec. (596.87 ticks, tree = 0.02 MB)
+Elapsed time = 0.75 sec. (596.87 ticks, tree = 0.02 MB)
      94    39      181.0319   744      160.1327      181.8451    10623   13.56%
                                                     Cuts: 113                  
     377   230      167.8887   660      160.1327      181.8451    63026   13.56%
                                                   ZeroHalf: 7                  
 *   618   375      integral     0      160.5469      181.1700   102556   12.85%
                                                   ZeroHalf: 9                  
-Found incumbent of value 160.546942 after 1.39 sec. (1311.18 ticks)
+Found incumbent of value 160.546942 after 1.48 sec. (1311.18 ticks)
 *   620   394      integral     0      160.5911      181.1700   108679   12.81%
-Found incumbent of value 160.591129 after 1.39 sec. (1314.17 ticks)
+Found incumbent of value 160.591129 after 1.48 sec. (1314.17 ticks)
 *   772   456      integral     0      161.6034      181.1700   128946   12.11%
                                                  ZeroHalf: 15                  
-Found incumbent of value 161.603403 after 1.52 sec. (1453.37 ticks)
+Found incumbent of value 161.603403 after 1.64 sec. (1453.37 ticks)
     874   494      167.2440   674      161.6034      177.6046   144985    9.90%
                                                   ZeroHalf: 2                  
    1159   595      164.0213   690      161.6034      174.1332   185433    7.75%
@@ -1147,7 +1147,7 @@ Found incumbent of value 161.603403 after 1.52 sec. (1453.37 ticks)
                                                   ZeroHalf: 8                  
    3855  1071      164.6696   718      161.6034      167.3259   554957    3.54%
                                                  ZeroHalf: 14                  
-Elapsed time = 3.81 sec. (3701.36 ticks, tree = 1.78 MB)
+Elapsed time = 4.09 sec. (3701.36 ticks, tree = 1.78 MB)
 
 Clique cuts applied:  6
 Zero-half cuts applied:  456
@@ -1155,16 +1155,16 @@ Lift and project cuts applied:  2
 Gomory fractional cuts applied:  6
 
 Root node processing (before b&c):
-  Real time             =    0.69 sec. (595.98 ticks)
+  Real time             =    0.73 sec. (595.98 ticks)
 Parallel b&c, 16 threads:
-  Real time             =    4.20 sec. (3921.42 ticks)
-  Sync time (average)   =    0.66 sec.
+  Real time             =    4.49 sec. (3921.42 ticks)
+  Sync time (average)   =    0.71 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    4.89 sec. (4517.40 ticks)
+Total (root+branch&cut) =    5.22 sec. (4517.40 ticks)
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 4.89sec (det. 4517.41 ticks)
+--- Cplex Time: 5.24sec (det. 4517.41 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -1191,7 +1191,7 @@ Absolute gap:            0.001501
 Relative gap:            0.000009
 
 --- Reading solution for model maxcut2
---- Executing after solve: elapsed 0:00:12.435
---- MaxDiCut.gms(132) 5 Mb
+--- Executing after solve: elapsed 0:00:13.379
+--- MaxDiCut.gms(130) 5 Mb
 *** Status: Normal completion
---- Job MaxDiCut.gms Stop 06/16/22 10:52:29 elapsed 0:00:12.435
+--- Job MaxDiCut.gms Stop 06/16/22 16:46:38 elapsed 0:00:13.380

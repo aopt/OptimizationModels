@@ -1,161 +1,159 @@
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 1
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
        
          MAX DIRECTED CUT (MAX CUT for directed graphs)
-         
+       
    6   
-   7   
-   8   
-   9  *---------------------------------------------------------
-  10  * directed graph
-  11  *---------------------------------------------------------
-  12   
+   7  * allow all cores to be used
+   8  option threads=0;
+   9   
+  10  *---------------------------------------------------------
+  11  * directed graph
+  12  *---------------------------------------------------------
   13   
-  14  set
-  15    i 'nodes' /node1*node60/
-  16    a(i,i) 'arcs'
-  17  ;
-  18  alias (i,j);
-  19   
-  20  a(i,j) = uniform(0,1)<0.25;
-  21   
-  22   
-  23  parameter w(i,j) 'weights';
-  24  w(a) = uniform(0,1);
-  25   
-  26  display$(card(i)<=50) i,a,w;
-  27   
-  28  *------------------------------------------------------------------
-  29  * reporting macros
-  30  *------------------------------------------------------------------
-  31   
-  32  parameter results(*,*);
-  33   
-  34  acronym Optimal;
-  35   
-  36  * macros for reporting
-  37  $macro report(m,label)  \
-  38      results('|i|',label) = card(i);  \
-  39      results('|a|',label) = card(a);  \
-  40      results('variables',label)  = m.numvar;  \
-  41      results(' discrete',label)  = m.numdvar;  \
-  42      results('equations',label)  = m.numequ;  \
-  43      results('status',label)= m.solvestat; \
-  44      results('status',label)$(m.solvestat=1) = Optimal; \
-  45      results('obj',label) = z.l; \
-  46      results('time',label) = m.resusd; \
-  47      results('nodes',label) = m.nodusd; \
-  48      results('iterations',label) = m.iterusd; \
-  49      display results;
-  50   
+  14   
+  15  set
+  16    i 'nodes' /node1*node60/
+  17    a(i,i) 'arcs'
+  18  ;
+  19  alias (i,j);
+  20   
+  21  * sparse graph
+  22  a(i,j) = uniform(0,1)<0.25;
+  23   
+  24  parameter w(i,j) 'weights';
+  25  w(a) = uniform(0,1);
+  26   
+  27  display$(card(i)<=50) i,a,w;
+  28   
+  29  *------------------------------------------------------------------
+  30  * reporting macros
+  31  *------------------------------------------------------------------
+  32   
+  33  parameter results(*,*);
+  34   
+  35  acronym Optimal;
+  36   
+  37  * macros for reporting
+  38  $macro report(m,label)  \
+  39      results('|i|',label) = card(i);  \
+  40      results('|a|',label) = card(a);  \
+  41      results('variables',label)  = m.numvar;  \
+  42      results(' discrete',label)  = m.numdvar;  \
+  43      results('equations',label)  = m.numequ;  \
+  44      results('status',label)= m.solvestat; \
+  45      results('status',label)$(m.solvestat=1) = Optimal; \
+  46      results('obj',label) = z.l; \
+  47      results('time',label) = m.resusd; \
+  48      results('nodes',label) = m.nodusd; \
+  49      results('iterations',label) = m.iterusd; \
+  50      display results;
   51   
-  52  option threads=0;
-  53   
-  54   
+  52   
+  53  *---------------------------------------------------------
+  54  * maxcut model 1
   55  *---------------------------------------------------------
-  56  * maxcut model 1
-  57  *---------------------------------------------------------
-  58   
-  59  binary variables
-  60     x(i) 'node is in set S'
-  61  ;
+  56   
+  57  binary variables
+  58     x(i) 'node is in set S'
+  59  ;
+  60   
+  61  variable z 'objective';
   62   
-  63  variable z 'objective';
-  64   
-  65  equations
-  66     obj1
-  67  ;
+  63  equations
+  64     obj1  'Quadratic objective'
+  65  ;
+  66   
+  67  obj1.. z =e= sum(a(i,j),w(i,j)*x(i)*(1-x(j)));
   68   
-  69  obj1.. z =e= sum(a(i,j),w(i,j)*x(i)*(1-x(j)));
-  70   
-  71   
-  72  model maxcut1 /obj1/;
-  73  option miqcp=cplex;
-  74  solve maxcut1 maximizing z using miqcp;
-  75   
-  76  parameter ecut(i,j) 'maximum cut';
-  77  ecut(a(i,j)) = x.l(i)*(1-x.l(j));
-  78   
-  79  option x:0,ecut:0;
-  80  display x.l,ecut,z.l;
-  81   
-  82   results('|i|',"miqp") = card(i);  results('|a|',"miqp") = card(a);  results('variables',"miqp")  = maxcut1.numvar
+  69   
+  70  model maxcut1 /obj1/;
+  71  option miqcp=cplex;
+  72  solve maxcut1 maximizing z using miqcp;
+  73   
+  74  parameter ecut(i,j) 'maximum cut';
+  75  ecut(a(i,j)) = x.l(i)*(1-x.l(j));
+  76   
+  77  option x:0,ecut:0;
+  78  display x.l,ecut,z.l;
+  79   
+  80   results('|i|',"miqp") = card(i);  results('|a|',"miqp") = card(a);  results('variables',"miqp")  = maxcut1.numvar
       ;  results(' discrete',"miqp")  = maxcut1.numdvar;  results('equations',"miqp")  = maxcut1.numequ;  results('statu
       s',"miqp")= maxcut1.solvestat; results('status',"miqp")$(maxcut1.solvestat=1) = Optimal; results('obj',"miqp") = z
       .l; results('time',"miqp") = maxcut1.resusd; results('nodes',"miqp") = maxcut1.nodusd; results('iterations',"miqp"
       ) = maxcut1.iterusd; display results;
-  83   
+  81   
+  82  *---------------------------------------------------------
+  83  * as maxcut model 2 but prevent automatic linearlization
   84  *---------------------------------------------------------
-  85  * as maxcut model 2 but prevent automatic linearlization
-  86  *---------------------------------------------------------
-  87   
-  91   
-  92  maxcut1.optfile=1;
-  93  solve maxcut1 maximizing z using miqcp;
-  94   results('|i|',"miqp/nolin") = card(i);  results('|a|',"miqp/nolin") = card(a);  results('variables',"miqp/nolin")
+  85   
+  89   
+  90  maxcut1.optfile=1;
+  91  solve maxcut1 maximizing z using miqcp;
+  92   results('|i|',"miqp/nolin") = card(i);  results('|a|',"miqp/nolin") = card(a);  results('variables',"miqp/nolin")
         = maxcut1.numvar;  results(' discrete',"miqp/nolin")  = maxcut1.numdvar;  results('equations',"miqp/nolin")  = m
       axcut1.numequ;  results('status',"miqp/nolin")= maxcut1.solvestat; results('status',"miqp/nolin")$(maxcut1.solvest
       at=1) = Optimal; results('obj',"miqp/nolin") = z.l; results('time',"miqp/nolin") = maxcut1.resusd; results('nodes'
       ,"miqp/nolin") = maxcut1.nodusd; results('iterations',"miqp/nolin") = maxcut1.iterusd; display results;
-  95   
+  93   
+  94  *---------------------------------------------------------
+  95  * maxcut model 2
   96  *---------------------------------------------------------
-  97  * maxcut model 2
-  98  *---------------------------------------------------------
-  99   
- 100  binary variables
- 101     e(i,i) 'arc e is part of cut'
- 102  ;
- 103   
- 104   
- 105  equations
- 106     obj2
- 107     e1
- 108     e2
- 109  ;
- 110   
- 111  obj2.. z =e= sum(a,w(a)*e(a));
- 112  e1(a(i,j)).. e(i,j)=l=x(i);
- 113  e2(a(i,j)).. e(i,j)=l=1-x(j);
- 114   
- 115   
- 116  model maxcut2 /obj2,e1,e2/;
- 117  solve maxcut2 maximizing z using mip;
- 118   
- 119  option e:0;
- 120  display x.l,e.l,z.l;
- 121   
- 122   results('|i|',"mip") = card(i);  results('|a|',"mip") = card(a);  results('variables',"mip")  = maxcut2.numvar;  
+  97   
+  98  binary variables
+  99     e(i,i) 'arc e is part of cut'
+ 100  ;
+ 101   
+ 102   
+ 103  equations
+ 104     obj2    'linear objective'
+ 105     e1(i,j) 'x(i)=0 ==> e(i,j)=0'
+ 106     e2(i,j) 'x(j)=1 ==> e(i,j)=0'
+ 107  ;
+ 108   
+ 109  obj2.. z =e= sum(a,w(a)*e(a));
+ 110  e1(a(i,j)).. e(i,j)=l=x(i);
+ 111  e2(a(i,j)).. e(i,j)=l=1-x(j);
+ 112   
+ 113   
+ 114  model maxcut2 /obj2,e1,e2/;
+ 115  solve maxcut2 maximizing z using mip;
+ 116   
+ 117  option e:0;
+ 118  display x.l,e.l,z.l;
+ 119   
+ 120   results('|i|',"mip") = card(i);  results('|a|',"mip") = card(a);  results('variables',"mip")  = maxcut2.numvar;  
       results(' discrete',"mip")  = maxcut2.numdvar;  results('equations',"mip")  = maxcut2.numequ;  results('status',"m
       ip")= maxcut2.solvestat; results('status',"mip")$(maxcut2.solvestat=1) = Optimal; results('obj',"mip") = z.l; resu
       lts('time',"mip") = maxcut2.resusd; results('nodes',"mip") = maxcut2.nodusd; results('iterations',"mip") = maxcut2
       .iterusd; display results;
- 123   
- 124   
+ 121   
+ 122   
+ 123  *---------------------------------------------------------
+ 124  * as maxcut model 2 but relax e to be continuous
  125  *---------------------------------------------------------
- 126  * as maxcut model 2 but relax e to be continuous
- 127  *---------------------------------------------------------
- 128   
- 129   
- 130  e.prior(a) = +inf;
- 131  solve maxcut2 maximizing z using mip;
- 132   results('|i|',"mip/relax") = card(i);  results('|a|',"mip/relax") = card(a);  results('variables',"mip/relax")  =
+ 126   
+ 127   
+ 128  e.prior(a) = +inf;
+ 129  solve maxcut2 maximizing z using mip;
+ 130   results('|i|',"mip/relax") = card(i);  results('|a|',"mip/relax") = card(a);  results('variables',"mip/relax")  =
        maxcut2.numvar;  results(' discrete',"mip/relax")  = maxcut2.numdvar;  results('equations',"mip/relax")  = maxcut
       2.numequ;  results('status',"mip/relax")= maxcut2.solvestat; results('status',"mip/relax")$(maxcut2.solvestat=1) =
        Optimal; results('obj',"mip/relax") = z.l; results('time',"mip/relax") = maxcut2.resusd; results('nodes',"mip/rel
       ax") = maxcut2.nodusd; results('iterations',"mip/relax") = maxcut2.iterusd; display results;
- 133   
+ 131   
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 2
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE maxcut1 Using MIQCP From line 74
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 72
 
 
----- obj1  =E=  
+---- obj1  =E=  Quadratic objective
 
 obj1..  - (7.624196487)*x(node1) - (11.664237625)*x(node2) - (9.911957056)*x(node3) - (7.573319813)*x(node4)
      
@@ -189,9 +187,9 @@ obj1..  - (7.624196487)*x(node1) - (11.664237625)*x(node2) - (9.911957056)*x(nod
      
       (LHS = 0)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 3
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE maxcut1 Using MIQCP From line 74
+Column Listing      SOLVE maxcut1 Using MIQCP From line 72
 
 
 ---- x  node is in set S
@@ -216,9 +214,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj1
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 4
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE maxcut1 Using MIQCP From line 74
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 72
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -227,9 +225,9 @@ RHS       [min, max] : [        NA,        NA] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.208E+01]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 5
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE maxcut1 Using MIQCP From line 74
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 72
 
 
 MODEL STATISTICS
@@ -241,22 +239,22 @@ CODE LENGTH               5,265     CONSTANT POOL             893     DISCRETE V
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 6
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE maxcut1 Using MIQCP From line 74
+Solution Report     SOLVE maxcut1 Using MIQCP From line 72
 
 
                S O L V E      S U M M A R Y
 
      MODEL   maxcut1             OBJECTIVE  z
      TYPE    MIQCP               DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  74
+     SOLVER  CPLEX               FROM LINE  72
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              161.6034
 
- RESOURCE USAGE, LIMIT          2.500 10000000000.000
+ RESOURCE USAGE, LIMIT          2.718 10000000000.000
  ITERATION COUNT, LIMIT     16405    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
@@ -268,7 +266,7 @@ Solution Report     SOLVE maxcut1 Using MIQCP From line 74
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 2.50sec (det. 1977.66 ticks)
+--- Cplex Time: 2.70sec (det. 1977.66 ticks)
 
 --- Fixing integer variables and solving final QP...
 
@@ -289,6 +287,8 @@ Relative gap:            0.000000
                            LOWER          LEVEL          UPPER         MARGINAL
 
 ---- EQU obj1                .              .              .             1.0000      
+
+  obj1  Quadratic objective
 
 ---- VAR x  node is in set S
 
@@ -366,12 +366,12 @@ node60          .              .             1.0000        -4.0831
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 7
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     80 VARIABLE x.L  node is in set S
+----     78 VARIABLE x.L  node is in set S
 
 node1  1,    node2  1,    node3  1,    node5  1,    node10 1,    node11 1,    node14 1,    node16 1,    node18 1
 node19 1,    node22 1,    node25 1,    node26 1,    node29 1,    node30 1,    node31 1,    node33 1,    node34 1
@@ -379,7 +379,7 @@ node35 1,    node36 1,    node37 1,    node39 1,    node42 1,    node44 1,    no
 node55 1,    node56 1,    node57 1
 
 
-----     80 PARAMETER ecut  maximum cut
+----     78 PARAMETER ecut  maximum cut
 
              node4       node6       node7       node8       node9      node12      node13      node15      node17
 
@@ -504,9 +504,9 @@ node56                       1
 node57                       1
 
 
-----     80 VARIABLE z.L                   =      161.603  objective
+----     78 VARIABLE z.L                   =      161.603  objective
 
-----     82 PARAMETER results  
+----     80 PARAMETER results  
 
                   miqp
 
@@ -517,16 +517,16 @@ variables       61.000
 equations        1.000
 status         Optimal
 obj            161.603
-time             2.500
+time             2.718
 nodes           23.000
 iterations   16405.000
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 8
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE maxcut1 Using MIQCP From line 93
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 91
 
 
----- obj1  =E=  
+---- obj1  =E=  Quadratic objective
 
 obj1..  - (3.135872554)*x(node1) - (0.2299105)*x(node2) - (1.764133075)*x(node3) + (1.646366337)*x(node4)
      
@@ -559,9 +559,9 @@ obj1..  - (3.135872554)*x(node1) - (0.2299105)*x(node2) - (1.764133075)*x(node3)
       + (0.698081554000001)*x(node57) + (3.074444449)*x(node58) + (3.753943489)*x(node59) + (4.08312956)*x(node60) + z
       =E= 0 ; (LHS = 0)
      
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 9
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE maxcut1 Using MIQCP From line 93
+Column Listing      SOLVE maxcut1 Using MIQCP From line 91
 
 
 ---- x  node is in set S
@@ -586,9 +586,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 161.603402886, +INF, 0)
         1       obj1
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 10
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE maxcut1 Using MIQCP From line 93
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 91
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -597,9 +597,9 @@ RHS       [min, max] : [        NA,        NA] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.053E-01, 5.181E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 11
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE maxcut1 Using MIQCP From line 93
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 91
 
 
 MODEL STATISTICS
@@ -610,17 +610,17 @@ NON ZERO ELEMENTS            61     NON LINEAR N-Z             60
 CODE LENGTH               5,265     CONSTANT POOL             893     DISCRETE VARIABLES         60
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 12
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE maxcut1 Using MIQCP From line 93
+Solution Report     SOLVE maxcut1 Using MIQCP From line 91
 
 
                S O L V E      S U M M A R Y
 
      MODEL   maxcut1             OBJECTIVE  z
      TYPE    MIQCP               DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  93
+     SOLVER  CPLEX               FROM LINE  91
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      8 Integer Solution
@@ -664,6 +664,8 @@ Relative gap:            0.000097
                            LOWER          LEVEL          UPPER         MARGINAL
 
 ---- EQU obj1                .              .              .             1.0000      
+
+  obj1  Quadratic objective
 
 ---- VAR x  node is in set S
 
@@ -741,12 +743,12 @@ node60          .              .             1.0000        -4.0831
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 13
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     94 PARAMETER results  
+----     92 PARAMETER results  
 
                   miqp  miqp/nolin
 
@@ -757,16 +759,16 @@ variables       61.000      61.000
 equations        1.000       1.000
 status         Optimal     Optimal
 obj            161.603     161.603
-time             2.500       0.125
+time             2.718       0.125
 nodes           23.000    5989.000
 iterations   16405.000   14100.000
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 14
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE maxcut2 Using MIP From line 117
+Equation Listing    SOLVE maxcut2 Using MIP From line 115
 
 
----- obj2  =E=  
+---- obj2  =E=  linear objective
 
 obj2..  z - 0.224542789*e(node1,node1) - 0.951927333*e(node1,node6) - 0.534796974*e(node1,node9)
      
@@ -1355,7 +1357,7 @@ obj2..  z - 0.224542789*e(node1,node1) - 0.951927333*e(node1,node6) - 0.53479697
       (LHS = 161.603402886, INFES = 161.603402886 ****)
      
 
----- e1  =L=  
+---- e1  =L=  x(i)=0 ==> e(i,j)=0
 
 e1(node1,node1)..  - x(node1) + e(node1,node1) =L= 0 ; (LHS = -1)
      
@@ -1366,7 +1368,7 @@ e1(node1,node9)..  - x(node1) + e(node1,node9) =L= 0 ; (LHS = -1)
 REMAINING 874 ENTRIES SKIPPED
 
 
----- e2  =L=  
+---- e2  =L=  x(j)=1 ==> e(i,j)=0
 
 e2(node1,node1)..  x(node1) + e(node1,node1) =L= 1 ; (LHS = 1)
      
@@ -1376,9 +1378,9 @@ e2(node1,node9)..  x(node9) + e(node1,node9) =L= 1 ; (LHS = 0)
      
 REMAINING 874 ENTRIES SKIPPED
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 15
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE maxcut2 Using MIP From line 117
+Column Listing      SOLVE maxcut2 Using MIP From line 115
 
 
 ---- x  node is in set S
@@ -1526,9 +1528,9 @@ e(node1,node9)
         1       e2(node1,node9)
 
 REMAINING 874 ENTRIES SKIPPED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 16
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE maxcut2 Using MIP From line 117
+Range Statistics    SOLVE maxcut2 Using MIP From line 115
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -1537,9 +1539,9 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 2.291E-03, 1.000E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 17
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE maxcut2 Using MIP From line 117
+Model Statistics    SOLVE maxcut2 Using MIP From line 115
 
 
 MODEL STATISTICS
@@ -1549,23 +1551,23 @@ BLOCKS OF VARIABLES           3     SINGLE VARIABLES          938
 NON ZERO ELEMENTS         4,386     DISCRETE VARIABLES        937
 
 
-GENERATION TIME      =        0.015 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 18
+GENERATION TIME      =        0.000 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE maxcut2 Using MIP From line 117
+Solution Report     SOLVE maxcut2 Using MIP From line 115
 
 
                S O L V E      S U M M A R Y
 
      MODEL   maxcut2             OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  117
+     SOLVER  CPLEX               FROM LINE  115
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE              161.6034
 
- RESOURCE USAGE, LIMIT          4.797 10000000000.000
+ RESOURCE USAGE, LIMIT          5.172 10000000000.000
  ITERATION COUNT, LIMIT    739951    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -1578,7 +1580,7 @@ Solution Report     SOLVE maxcut2 Using MIP From line 117
 
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 4.80sec (det. 4518.42 ticks)
+--- Cplex Time: 5.17sec (det. 4518.42 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -1600,7 +1602,9 @@ Relative gap:            0.000009
 
 ---- EQU obj2                .              .              .             1.0000      
 
----- EQU e1  
+  obj2  linear objective
+
+---- EQU e1  x(i)=0 ==> e(i,j)=0
 
                      LOWER          LEVEL          UPPER         MARGINAL
 
@@ -2482,7 +2486,7 @@ node60.node44        -INF             .              .              .
 node60.node46        -INF             .              .              .          
 node60.node59        -INF             .              .              .          
 
----- EQU e2  
+---- EQU e2  x(j)=1 ==> e(i,j)=0
 
                      LOWER          LEVEL          UPPER         MARGINAL
 
@@ -4321,12 +4325,12 @@ node60.node59          .              .             1.0000         0.5997
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 19
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 19
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    120 VARIABLE x.L  node is in set S
+----    118 VARIABLE x.L  node is in set S
 
 node1  1,    node2  1,    node3  1,    node5  1,    node10 1,    node11 1,    node14 1,    node16 1,    node18 1
 node19 1,    node22 1,    node25 1,    node26 1,    node29 1,    node30 1,    node31 1,    node33 1,    node34 1
@@ -4334,7 +4338,7 @@ node35 1,    node36 1,    node37 1,    node39 1,    node42 1,    node44 1,    no
 node55 1,    node56 1,    node57 1
 
 
-----    120 VARIABLE e.L  arc e is part of cut
+----    118 VARIABLE e.L  arc e is part of cut
 
              node4       node6       node7       node8       node9      node12      node13      node15      node17
 
@@ -4459,9 +4463,9 @@ node56                       1
 node57                       1
 
 
-----    120 VARIABLE z.L                   =      161.603  objective
+----    118 VARIABLE z.L                   =      161.603  objective
 
-----    122 PARAMETER results  
+----    120 PARAMETER results  
 
                   miqp  miqp/nolin         mip
 
@@ -4472,16 +4476,16 @@ variables       61.000      61.000     938.000
 equations        1.000       1.000    1755.000
 status         Optimal     Optimal     Optimal
 obj            161.603     161.603     161.603
-time             2.500       0.125       4.797
+time             2.718       0.125       5.172
 nodes           23.000    5989.000    6451.000
 iterations   16405.000   14100.000  739951.000
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 20
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 20
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE maxcut2 Using MIP From line 131
+Equation Listing    SOLVE maxcut2 Using MIP From line 129
 
 
----- obj2  =E=  
+---- obj2  =E=  linear objective
 
 obj2..  z - 0.224542789*e(node1,node1) - 0.951927333*e(node1,node6) - 0.534796974*e(node1,node9)
      
@@ -5068,7 +5072,7 @@ obj2..  z - 0.224542789*e(node1,node1) - 0.951927333*e(node1,node6) - 0.53479697
       - 0.062671056*e(node60,node44) - 0.086961382*e(node60,node46) - 0.599660075*e(node60,node59) =E= 0 ; (LHS = 0)
      
 
----- e1  =L=  
+---- e1  =L=  x(i)=0 ==> e(i,j)=0
 
 e1(node1,node1)..  - x(node1) + e(node1,node1) =L= 0 ; (LHS = -1)
      
@@ -5079,7 +5083,7 @@ e1(node1,node9)..  - x(node1) + e(node1,node9) =L= 0 ; (LHS = 0)
 REMAINING 874 ENTRIES SKIPPED
 
 
----- e2  =L=  
+---- e2  =L=  x(j)=1 ==> e(i,j)=0
 
 e2(node1,node1)..  x(node1) + e(node1,node1) =L= 1 ; (LHS = 1)
      
@@ -5089,9 +5093,9 @@ e2(node1,node9)..  x(node9) + e(node1,node9) =L= 1 ; (LHS = 1)
      
 REMAINING 874 ENTRIES SKIPPED
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 21
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 21
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE maxcut2 Using MIP From line 131
+Column Listing      SOLVE maxcut2 Using MIP From line 129
 
 
 ---- x  node is in set S
@@ -5239,9 +5243,9 @@ e(node1,node9)
         1       e2(node1,node9)
 
 REMAINING 874 ENTRIES SKIPPED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 22
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 22
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE maxcut2 Using MIP From line 131
+Range Statistics    SOLVE maxcut2 Using MIP From line 129
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -5250,9 +5254,9 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 2.291E-03, 1.000E+00]
 
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 23
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 23
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE maxcut2 Using MIP From line 131
+Model Statistics    SOLVE maxcut2 Using MIP From line 129
 
 
 MODEL STATISTICS
@@ -5263,23 +5267,23 @@ NON ZERO ELEMENTS         4,386     DISCRETE VARIABLES         60
                                     RELAXED VARIABLES         877 ****
 
 
-GENERATION TIME      =        0.015 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 24
+GENERATION TIME      =        0.000 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 24
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE maxcut2 Using MIP From line 131
+Solution Report     SOLVE maxcut2 Using MIP From line 129
 
 
                S O L V E      S U M M A R Y
 
      MODEL   maxcut2             OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  131
+     SOLVER  CPLEX               FROM LINE  129
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE              161.6034
 
- RESOURCE USAGE, LIMIT          4.891 10000000000.000
+ RESOURCE USAGE, LIMIT          5.235 10000000000.000
  ITERATION COUNT, LIMIT    739951    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -5292,7 +5296,7 @@ Solution Report     SOLVE maxcut2 Using MIP From line 131
 
 
 --- MIP status (102): integer optimal, tolerance.
---- Cplex Time: 4.89sec (det. 4517.41 ticks)
+--- Cplex Time: 5.24sec (det. 4517.41 ticks)
 
 --- Fixing integer variables and solving final LP...
 
@@ -5314,7 +5318,9 @@ Relative gap:            0.000009
 
 ---- EQU obj2                .              .              .             1.0000      
 
----- EQU e1  
+  obj2  linear objective
+
+---- EQU e1  x(i)=0 ==> e(i,j)=0
 
                      LOWER          LEVEL          UPPER         MARGINAL
 
@@ -6196,7 +6202,7 @@ node60.node44        -INF             .              .             0.0627
 node60.node46        -INF             .              .             0.0870      
 node60.node59        -INF             .              .             0.5997      
 
----- EQU e2  
+---- EQU e2  x(j)=1 ==> e(i,j)=0
 
                      LOWER          LEVEL          UPPER         MARGINAL
 
@@ -8035,12 +8041,12 @@ node60.node59          .              .             1.0000          .
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 10:52:17 Page 25
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 16:46:24 Page 25
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    132 PARAMETER results  
+----    130 PARAMETER results  
 
                   miqp  miqp/nolin         mip   mip/relax
 
@@ -8051,13 +8057,13 @@ variables       61.000      61.000     938.000     938.000
 equations        1.000       1.000    1755.000    1755.000
 status         Optimal     Optimal     Optimal     Optimal
 obj            161.603     161.603     161.603     161.603
-time             2.500       0.125       4.797       4.891
+time             2.718       0.125       5.172       5.235
 nodes           23.000    5989.000    6451.000    6451.000
 iterations   16405.000   14100.000  739951.000  739951.000
 
 
 
-EXECUTION TIME       =       12.422 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
+EXECUTION TIME       =       13.390 SECONDS      5 MB  39.2.0 e0c5072f WEX-WEI
 
 
 USER: Eval License                                   G211206|0002CO-GEN

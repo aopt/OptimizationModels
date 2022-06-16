@@ -1,0 +1,183 @@
+
+--- Job PlotMaxDiCut.gms Start 06/16/22 10:27:12 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\39\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input C:\projects\OptimizationModels\MaxCut\PlotMaxDiCut.gms
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\MaxCut\225b\
+    SysDir C:\GAMS\39\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
+--- Starting compilation
+--- PlotMaxDiCut.gms(142) 3 Mb
+--- $echo File C:\projects\OptimizationModels\MaxCut\network.html
+--- PlotMaxDiCut.gms(202) 3 Mb
+--- . win32.gms(69) 3 Mb
+--- PlotMaxDiCut.gms(204) 3 Mb
+--- Starting execution: elapsed 0:00:00.005
+--- PlotMaxDiCut.gms(85) 4 Mb
+--- Generating MIQCP model maxcut1
+--- PlotMaxDiCut.gms(86) 6 Mb
+---   1 rows  26 columns  26 non-zeroes
+---   261 nl-code  25 nl-non-zeroes
+---   25 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 5.548E-02, 2.692E+00] - Zero values observed as well
+--- PlotMaxDiCut.gms(86) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.009
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 9 columns.
+MIP Presolve added 56 rows and 28 columns.
+Reduced MIP has 56 rows, 45 columns, and 112 nonzeros.
+Reduced MIP has 45 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.02 ticks)
+Probing time = 0.00 sec. (0.01 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 30 rows and 16 columns.
+MIP Presolve modified 1 coefficients.
+Reduced MIP has 26 rows, 29 columns, and 65 nonzeros.
+Reduced MIP has 29 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.08 ticks)
+Probing time = 0.00 sec. (0.01 ticks)
+Tried aggregator 2 times.
+Aggregator did 1 substitutions.
+Reduced MIP has 25 rows, 28 columns, and 63 nonzeros.
+Reduced MIP has 28 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.06 ticks)
+Classifier predicts products in MIQP should be linearized.
+Probing time = 0.00 sec. (0.01 ticks)
+Clique table members: 12.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.01 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1              19.044699                    x27               c1 slack
+     2              18.565642               x(node2)               c2 slack
+     3              18.510164               x(node5)               c6 slack
+     4              18.059545                    x34               c8 slack
+     5              18.002760               x(node6)               c9 slack
+     6              17.238647                    x37              c11 slack
+     7              16.958300              x(node24)              c12 slack
+     8              16.503815              x(node12)              c13 slack
+     9              15.771201                    x40              c14 slack
+    10              15.678395                    x41              c15 slack
+    11              15.467057               x(node9)              c16 slack
+    12              15.405239              x(node13)              c17 slack
+    13              14.750310                    x44              c18 slack
+    14              14.729962              x(node10)              c19 slack
+    15              14.459309              x(node15)              c20 slack
+    16              14.371087              x(node11)              c21 slack
+    17              13.774357              x(node18)              c24 slack
+    18              13.158592              x(node21)                    x40
+    19              13.141939                    x42              c22 slack
+    20              13.070370              c21 slack                    x44
+    21              12.799717              c20 slack                    x27
+    22              12.799552                    x29               c3 slack
+    23              12.664436               c1 slack               c5 slack
+    24              12.581327                    x53                    x41
+    25              12.575723              c18 slack              c23 slack
+    26              12.566798              x(node23)               c7 slack
+    27              12.566715               c3 slack                    x29
+Root relaxation solution time = 0.00 sec. (0.05 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            3.4617       19.4506           461.87%
+Found incumbent of value 3.461743 after 0.00 sec. (0.29 ticks)
+      0     0       12.5667     6        3.4617       12.5667       27  263.02%
+*     0+    0                           12.4199       12.5667             1.18%
+Found incumbent of value 12.419937 after 0.00 sec. (0.33 ticks)
+*     0     0      integral     0       12.4690       12.4690       29    0.00%
+Elapsed time = 0.00 sec. (0.39 ticks, tree = 0.01 MB)
+Found incumbent of value 12.468995 after 0.00 sec. (0.39 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.00 sec. (0.39 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.00 sec. (0.39 ticks)
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 0.39 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 40
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.00 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 25
+  Integer space required    = 28
+  Total non-zeros in factor = 222
+  Total FP ops to factor    = 2904
+Note: Q in objective is not positive semi-definite.
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 26 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.02 ticks)
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:           12.468995    (29 iterations, 0 nodes)
+Final Solve:            12.468995    (0 iterations)
+
+Best possible:          12.468995
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxcut1
+--- Executing after solve: elapsed 0:00:00.045
+--- PlotMaxDiCut.gms(242) 4 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+--- Putfile fln C:\projects\OptimizationModels\MaxCut\networkdata.js
+*** Status: Normal completion
+--- Job PlotMaxDiCut.gms Stop 06/16/22 10:27:12 elapsed 0:00:00.177
