@@ -1,0 +1,1475 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         MAX CUT (undirected graphs)
+         
+   6   
+   7  option threads=0;
+   8   
+   9  *---------------------------------------------------------
+  10  * undirected graph
+  11  *---------------------------------------------------------
+  12   
+  13   
+  14  set
+  15    i 'nodes' /node1*node70/
+  16    a(i,i) 'arcs'
+  17  ;
+  18  alias (i,j);
+  19   
+  20  a(i,j)$(ord(i)<ord(j)) = uniform(0,1)<0.2;
+  21   
+  22   
+  23  parameter w(i,j) 'weights';
+  24  w(a) = uniform(0,1);
+  25   
+  26  display$(card(i)<=50) i,a,w;
+  27   
+  28   
+  29  *------------------------------------------------------------------
+  30  * reporting macros
+  31  *------------------------------------------------------------------
+  32   
+  33  parameter results(*,*);
+  34   
+  35  acronym Optimal;
+  36   
+  37  * macros for reporting
+  38  $macro report(m,label)  \
+  39      results('|i|',label) = card(i); \
+  40      results('|a|',label) = card(a); \
+  41      results('variables',label)  = m.numvar;  \
+  42      results(' discrete',label)  = m.numdvar;  \
+  43      results('equations',label)  = m.numequ;  \
+  44      results('status',label)= m.solvestat; \
+  45      results('status',label)$(m.solvestat=1) = Optimal; \
+  46      results('obj',label) = z.l; \
+  47      results('time',label) = m.resusd; \
+  48      results('nodes',label) = m.nodusd; \
+  49      results('iterations',label) = m.iterusd; \
+  50      display results;
+  51   
+  52  *---------------------------------------------------------
+  53  * maxcut model 1: MIQP
+  54  *---------------------------------------------------------
+  55   
+  56  binary variables
+  57     x(i) 'node is in S'
+  58  ;
+  59   
+  60  variable z 'objective';
+  61   
+  62  equations
+  63     obj1
+  64  ;
+  65   
+  66  obj1.. z =e= sum(a(i,j),w(i,j)*sqr(x(i)-x(j)));
+  67   
+  68   
+  69  model maxcut1 /obj1/;
+  70  option miqcp=cplex;
+  71  solve maxcut1 maximizing z using miqcp;
+  72   
+  73  parameter ecut(i,j) 'maximum cut';
+  74  ecut(a(i,j)) = w(i,j)*sqr(x.l(i)-x.l(j));
+  75   
+  76  option x:0;
+  77  display x.l,ecut,z.l;
+  78   
+  79   results('|i|',"miqp") = card(i); results('|a|',"miqp") = card(a); results('variables',"miqp")  = maxcut1.numvar; 
+       results(' discrete',"miqp")  = maxcut1.numdvar;  results('equations',"miqp")  = maxcut1.numequ;  results('status'
+      ,"miqp")= maxcut1.solvestat; results('status',"miqp")$(maxcut1.solvestat=1) = Optimal; results('obj',"miqp") = z.l
+      ; results('time',"miqp") = maxcut1.resusd; results('nodes',"miqp") = maxcut1.nodusd; results('iterations',"miqp") 
+      = maxcut1.iterusd; display results;
+  80   
+  81  *---------------------------------------------------------
+  82  * as maxcut model 1 but prevent automatic linearization
+  83  *---------------------------------------------------------
+  84   
+  88   
+  89  maxcut1.optfile=1;
+  90  solve maxcut1 maximizing z using miqcp;
+  91   results('|i|',"miqp/nolin") = card(i); results('|a|',"miqp/nolin") = card(a); results('variables',"miqp/nolin")  
+      = maxcut1.numvar;  results(' discrete',"miqp/nolin")  = maxcut1.numdvar;  results('equations',"miqp/nolin")  = max
+      cut1.numequ;  results('status',"miqp/nolin")= maxcut1.solvestat; results('status',"miqp/nolin")$(maxcut1.solvestat
+      =1) = Optimal; results('obj',"miqp/nolin") = z.l; results('time',"miqp/nolin") = maxcut1.resusd; results('nodes',"
+      miqp/nolin") = maxcut1.nodusd; results('iterations',"miqp/nolin") = maxcut1.iterusd; display results;
+  92   
+  93   
+  94  *---------------------------------------------------------
+  95  * maxcut model 2:
+  96  *---------------------------------------------------------
+  97   
+  98  binary variables
+  99     e(i,i) 'arc e is in cut'
+ 100  ;
+ 101   
+ 102   
+ 103  equations
+ 104     obj2
+ 105     e1
+ 106     e2
+ 107  ;
+ 108   
+ 109  obj2.. z =e= sum(a,w(a)*e(a));
+ 110  e1(a(i,j)).. e(i,j)=l=x(i)+x(j);
+ 111  e2(a(i,j)).. e(i,j)=l=2-x(i)-x(j);
+ 112   
+ 113   
+ 114  model maxcut2 /obj2,e1,e2/;
+ 115  solve maxcut2 maximizing z using mip;
+ 116   
+ 117  option e:0;
+ 118  display x.l,e.l,z.l;
+ 119   
+ 120   results('|i|',"mip") = card(i); results('|a|',"mip") = card(a); results('variables',"mip")  = maxcut2.numvar;  re
+      sults(' discrete',"mip")  = maxcut2.numdvar;  results('equations',"mip")  = maxcut2.numequ;  results('status',"mip
+      ")= maxcut2.solvestat; results('status',"mip")$(maxcut2.solvestat=1) = Optimal; results('obj',"mip") = z.l; result
+      s('time',"mip") = maxcut2.resusd; results('nodes',"mip") = maxcut2.nodusd; results('iterations',"mip") = maxcut2.i
+      terusd; display results;
+ 121   
+ 122  *---------------------------------------------------------
+ 123  * as model 2 but relax variables e
+ 124  *---------------------------------------------------------
+ 125   
+ 126   
+ 127  e.prior(a) = +inf;
+ 128  solve maxcut2 maximizing z using mip;
+ 129   results('|i|',"mip/relax") = card(i); results('|a|',"mip/relax") = card(a); results('variables',"mip/relax")  = m
+      axcut2.numvar;  results(' discrete',"mip/relax")  = maxcut2.numdvar;  results('equations',"mip/relax")  = maxcut2.
+      numequ;  results('status',"mip/relax")= maxcut2.solvestat; results('status',"mip/relax")$(maxcut2.solvestat=1) = O
+      ptimal; results('obj',"mip/relax") = z.l; results('time',"mip/relax") = maxcut2.resusd; results('nodes',"mip/relax
+      ") = maxcut2.nodusd; results('iterations',"mip/relax") = maxcut2.iterusd; display results;
+ 130  e.prior(a) = 1;
+ 131   
+ 132  *---------------------------------------------------------
+ 133  * as model 2 but add: number of x(i) <= n/2
+ 134  *---------------------------------------------------------
+ 135   
+ 136  equation extra;
+ 137  extra.. sum(i, x(i)) =l= sum(i, 1-x(i));
+ 138   
+ 139  model maxcut3 /maxcut2,extra/;
+ 140  solve maxcut2 maximizing z using mip;
+ 141   
+ 142  option e:0;
+ 143  display x.l,e.l,z.l;
+ 144   
+ 145   results('|i|',"mip/extra") = card(i); results('|a|',"mip/extra") = card(a); results('variables',"mip/extra")  = m
+      axcut2.numvar;  results(' discrete',"mip/extra")  = maxcut2.numdvar;  results('equations',"mip/extra")  = maxcut2.
+      numequ;  results('status',"mip/extra")= maxcut2.solvestat; results('status',"mip/extra")$(maxcut2.solvestat=1) = O
+      ptimal; results('obj',"mip/extra") = z.l; results('time',"mip/extra") = maxcut2.resusd; results('nodes',"mip/extra
+      ") = maxcut2.nodusd; results('iterations',"mip/extra") = maxcut2.iterusd; display results;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 71
+
+
+---- obj1  =E=  
+
+obj1..  (0)*x(node1) + (0)*x(node2) + (0)*x(node3) + (0)*x(node4) + (0)*x(node5) + (0)*x(node6) + (0)*x(node7)
+     
+      + (0)*x(node8) + (0)*x(node9) + (0)*x(node10) + (0)*x(node11) + (0)*x(node12) + (0)*x(node13) + (0)*x(node14)
+     
+      + (0)*x(node15) + (0)*x(node16) + (0)*x(node17) + (0)*x(node18) + (0)*x(node19) + (0)*x(node20) + (0)*x(node21)
+     
+      + (0)*x(node22) + (0)*x(node23) + (0)*x(node24) + (0)*x(node25) + (0)*x(node26) + (0)*x(node27) + (0)*x(node28)
+     
+      + (0)*x(node29) + (0)*x(node30) + (0)*x(node31) + (0)*x(node32) + (0)*x(node33) + (0)*x(node34) + (0)*x(node35)
+     
+      + (0)*x(node36) + (0)*x(node37) + (0)*x(node38) + (0)*x(node39) + (0)*x(node40) + (0)*x(node41) + (0)*x(node42)
+     
+      + (0)*x(node43) + (0)*x(node44) + (0)*x(node45) + (0)*x(node46) + (0)*x(node47) + (0)*x(node48) + (0)*x(node49)
+     
+      + (0)*x(node50) + (0)*x(node51) + (0)*x(node52) + (0)*x(node53) + (0)*x(node54) + (0)*x(node55) + (0)*x(node56)
+     
+      + (0)*x(node57) + (0)*x(node58) + (0)*x(node59) + (0)*x(node60) + (0)*x(node61) + (0)*x(node62) + (0)*x(node63)
+     
+      + (0)*x(node64) + (0)*x(node65) + (0)*x(node66) + (0)*x(node67) + (0)*x(node68) + (0)*x(node69) + (0)*x(node70)
+     
+      + z =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut1 Using MIQCP From line 71
+
+
+---- x  node is in S
+
+x(node1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+REMAINING 67 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 71
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 71
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           71
+NON ZERO ELEMENTS            71     NON LINEAR N-Z             70
+CODE LENGTH               2,060     CONSTANT POOL             530     DISCRETE VARIABLES         70
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE maxcut1 Using MIQCP From line 71
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   maxcut1             OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  71
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE              186.2317
+
+ RESOURCE USAGE, LIMIT          4.094 10000000000.000
+ ITERATION COUNT, LIMIT    152218    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.54 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIQP status (102): integer optimal, tolerance.
+--- Cplex Time: 4.09sec (det. 3778.51 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.21 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          186.231676    (152218 iterations, 364 nodes)
+Final Solve:           186.231676    (0 iterations)
+
+Best possible:         186.243461
+Absolute gap:            0.011785
+Relative gap:            0.000063
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+
+---- VAR x  node is in S
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1           .              .             1.0000       -12.0386      
+node2           .             1.0000         1.0000        10.8732      
+node3           .              .             1.0000       -12.9534      
+node4           .             1.0000         1.0000        11.5300      
+node5           .              .             1.0000        -9.5961      
+node6           .             1.0000         1.0000        11.8580      
+node7           .             1.0000         1.0000         2.6660      
+node8           .              .             1.0000       -10.9300      
+node9           .              .             1.0000        -9.4985      
+node10          .              .             1.0000       -15.7986      
+node11          .              .             1.0000        -7.8905      
+node12          .              .             1.0000        -8.3847      
+node13          .             1.0000         1.0000        13.4619      
+node14          .             1.0000         1.0000         6.5518      
+node15          .              .             1.0000        -7.3546      
+node16          .              .             1.0000       -10.7655      
+node17          .             1.0000         1.0000        10.7412      
+node18          .              .             1.0000        -9.5368      
+node19          .              .             1.0000        -7.6959      
+node20          .              .             1.0000        -6.2194      
+node21          .              .             1.0000        -9.4159      
+node22          .              .             1.0000       -14.9967      
+node23          .             1.0000         1.0000         7.2955      
+node24          .             1.0000         1.0000         9.7921      
+node25          .             1.0000         1.0000        15.8867      
+node26          .             1.0000         1.0000        10.1645      
+node27          .              .             1.0000       -10.1195      
+node28          .             1.0000         1.0000        10.5912      
+node29          .             1.0000         1.0000         6.6487      
+node30          .              .             1.0000        -5.7352      
+node31          .             1.0000         1.0000         9.4542      
+node32          .             1.0000         1.0000        14.4497      
+node33          .              .             1.0000        -9.1648      
+node34          .             1.0000         1.0000        18.4248      
+node35          .              .             1.0000       -16.3557      
+node36          .             1.0000         1.0000         5.5221      
+node37          .              .             1.0000        -6.2848      
+node38          .              .             1.0000        -8.8356      
+node39          .              .             1.0000        -7.1553      
+node40          .             1.0000         1.0000        10.1424      
+node41          .              .             1.0000       -10.8468      
+node42          .              .             1.0000        -8.1027      
+node43          .             1.0000         1.0000        15.7375      
+node44          .             1.0000         1.0000        12.1691      
+node45          .             1.0000         1.0000         9.3387      
+node46          .             1.0000         1.0000        12.6519      
+node47          .             1.0000         1.0000        13.2966      
+node48          .             1.0000         1.0000        12.3520      
+node49          .              .             1.0000        -7.6618      
+node50          .              .             1.0000       -10.1914      
+node51          .             1.0000         1.0000        16.2843      
+node52          .              .             1.0000        -6.9997      
+node53          .              .             1.0000       -18.6023      
+node54          .              .             1.0000        -8.9996      
+node55          .              .             1.0000        -6.9118      
+node56          .             1.0000         1.0000         7.2814      
+node57          .              .             1.0000       -10.9508      
+node58          .              .             1.0000        -9.7994      
+node59          .             1.0000         1.0000         6.1205      
+node60          .              .             1.0000       -13.3900      
+node61          .             1.0000         1.0000         8.5979      
+node62          .             1.0000         1.0000        15.5521      
+node63          .              .             1.0000        -5.2671      
+node64          .              .             1.0000        -9.3452      
+node65          .             1.0000         1.0000        11.7262      
+node66          .             1.0000         1.0000        15.2876      
+node67          .             1.0000         1.0000        13.5701      
+node68          .              .             1.0000       -12.5711      
+node69          .             1.0000         1.0000        16.4433      
+node70          .              .             1.0000       -16.0976      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          186.2317        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                             8  PROJECTED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     77 VARIABLE x.L  node is in S
+
+node2  1,    node4  1,    node6  1,    node7  1,    node13 1,    node14 1,    node17 1,    node23 1,    node24 1
+node25 1,    node26 1,    node28 1,    node29 1,    node31 1,    node32 1,    node34 1,    node36 1,    node40 1
+node43 1,    node44 1,    node45 1,    node46 1,    node47 1,    node48 1,    node51 1,    node56 1,    node59 1
+node61 1,    node62 1,    node65 1,    node66 1,    node67 1,    node69 1
+
+
+----     77 PARAMETER ecut  maximum cut
+
+             node2       node6       node8       node9      node10      node11      node12      node13      node14
+
+node1        0.914
+node2                                                                    0.124
+node3                    0.705                                                                               0.258
+node4                                            0.806                               0.564
+node5                    0.586                                                                   0.559
+node6                                0.864       0.545                   0.039
+node7                                                        0.497
+node8                                                                                            0.336
+node9                                                                                                        0.712
+node10                                                                                           0.613
+
+     +      node15      node17      node18      node19      node21      node23      node24      node25      node26
+
+node1                                                                                0.100       0.912
+node2        0.282                   0.171       0.553
+node3                                                                                0.420
+node4                                                        0.707
+node5                                                                                            0.980
+node6        0.146                   0.528
+node7                                                        0.556
+node8                    0.459                                                       0.998
+node9                                                                                0.208                   0.626
+node10                   0.679                                                                   0.503
+node11                   0.891                                           0.407
+node12                                                                               0.840
+node14       0.381
+node15                   0.098                                           0.867
+node16                   0.908                                                                               0.969
+node17                               0.404
+node19                                                                                           0.954
+node20                                                                                           0.810
+node22                                                                   0.899                               0.320
+
+     +      node27      node28      node29      node30      node31      node32      node33      node34      node35
+
+node1                                                                    0.268                   0.550
+node2                                            0.138                                                       0.742
+node3                                                        0.859       0.444                   0.555
+node4        0.947                                                                   0.553
+node5                                0.263
+node6                                                                                0.804
+node8                                                                                            0.291
+node9                    0.434                                                                   0.612
+node10                                                       0.508
+node12                                                       0.280
+node14                                                                               0.120
+node15                                                                   0.942
+node16                   0.259
+node17                                                                                                       0.894
+node18                   0.998                               0.259
+node19                               0.169                                                       0.831
+node21                               0.556
+node24                                                                               0.122
+node25                                           0.084                                                       0.954
+node27                                                                                           0.962
+node29                                                                                                       0.297
+node30                                                                   0.945                   0.854
+node31                                                                               0.285                   0.919
+
+     +      node36      node37      node38      node39      node40      node41      node42      node43      node44
+
+node1                                                                                            0.811
+node2                                                                                0.516
+node3        0.092
+node5                                                                                            0.583
+node6                                                                    0.768       0.035
+node7                                                                                0.125
+node8        0.056
+node9                                                        0.137
+node10       0.966
+node12                                                                                                       0.877
+node13                   0.468                   0.996                   0.494
+node14                                                                   0.339
+node15       0.703                                           0.257
+node16       0.220                                                                               0.976
+node17                                                                   0.263
+node19                                                                                                       0.039
+node21                                                       0.720
+node22                                                       0.758                               0.670       0.505
+node24                   0.702                                           0.992
+node25                               0.720                               0.801       0.118
+node26                               0.699
+node27                                                                                                       0.970
+node28                   0.498                   0.927
+node29                               0.167                                           0.079
+node30                                                                                           0.846
+node32                               0.644
+node33                                                       0.123
+node34                                                                               0.617
+node35       0.186                                           0.767                                           0.744
+node36                                                                   0.029       0.509
+node37                                                                                                       0.638
+node38                                                       0.597
+node41                                                                                                       0.565
+node42                                                                                           0.975
+
+     +      node45      node46      node47      node48      node49      node50      node51      node52      node53
+
+node1        0.098                   0.184
+node2                                                                    0.452                   0.303
+node3        0.555       0.249       0.627       0.778
+node4                                                                                                        0.910
+node5                                            0.519
+node7                                                        0.155
+node10       0.221
+node11                               0.868
+node12                                                                               0.988
+node13                                                                                           0.300       0.657
+node16       0.433       0.079       0.058
+node18                   0.569                   0.938
+node19                                           0.061
+node20                                                                               0.373
+node21                                                                               0.596
+node22                   0.458                   0.725                               0.521
+node25                                                                                                       0.859
+node26                                                                                                       0.469
+node27       0.654       0.747       0.157       0.319
+node28                                                                   0.304                               0.626
+node32                                                                                           0.883       0.954
+node33                   0.910
+node34                                                       0.798                                           0.816
+node37                                                                               0.310
+node38                               0.348
+node39                   0.626
+node40                                                                   0.893
+node42                                                                               0.672
+node43                                                       0.458                                           0.971
+node45                                                                   0.781                               0.804
+node46                                                       0.760
+node47                                                       0.360       0.927
+node48                                                                                           0.801       0.919
+node50                                                                               0.469
+node51                                                                                           0.721       0.653
+
+     +      node54      node55      node56      node57      node58      node59      node60      node61      node62
+
+node1                                0.825                                                                   0.142
+node2        0.027                               0.543       0.233
+node4                                                                                0.434
+node8                                                                                            0.741
+node9                                                                                                        0.357
+node10                                                                                           0.875       0.964
+node11                                                                                                       0.841
+node12                                                                   0.271
+node13                                                       0.854
+node16                                                                                                       0.199
+node17                                                       0.558
+node18                                                                   0.261                               0.580
+node20                                                                   0.375                   0.779       0.773
+node21                                                                   0.664
+node22                               0.924
+node23                                           0.121       0.528
+node26       0.435       0.099                   0.337                               0.990
+node27                                                                   0.304
+node28                                           0.906
+node29       0.969       0.825
+node32       0.725       0.745
+node33                               0.070                                                       0.374       0.422
+node34                                           0.984
+node35                                                                                                       0.867
+node37                               0.095                                                                   0.431
+node38                                                                                           0.287
+node40                                                       0.460
+node41                                                                   0.267
+node42                               0.406
+node43                                                                               0.892
+node44       0.644
+node45                                                                               0.764
+node46                                                       0.968                   0.960
+node47                                                       0.702                   0.500
+node48       0.114                                                                   0.316
+node49                               0.006                                                                   0.365
+node50                               0.883
+node51                                           0.625                               0.847
+node52                                                                   0.176
+node53                                                                                           0.663
+node55                                                                   0.033
+node56                                           0.177       0.253
+node57                                                                                                       0.844
+node60                                                                                                       0.992
+
+     +      node63      node64      node65      node66      node67      node68      node69      node70
+
+node1                                            0.595       0.622
+node2                                                                                            0.440
+node3                                                                                0.936
+node4                    0.843
+node5                                0.348       0.116       0.843
+node6                    0.908
+node8                                            0.725                               0.995
+node9                                0.112       0.199
+node10                               1.000       0.857       0.215
+node11                               0.580                   0.196
+node12                               0.373
+node13                   0.516                                                                   0.938
+node14                   0.480                                           0.987
+node16                               0.443                   0.838
+node17                                                                                           0.215
+node18                                                       0.060
+node19                                           0.661       0.581
+node21                                                       0.223                   0.685
+node22                               0.484                   0.572                   0.662
+node23                                                                   0.824
+node24                                                                                           0.514
+node25                                                                   0.250
+node26       0.139
+node28                   0.344
+node31       0.806                                                       0.811
+node32       0.674
+node33                                           0.799
+node34                                                                   0.746                   0.596
+node35                               0.228       0.937       0.642
+node38                                                       0.957
+node39                                           0.161                               0.867
+node40                                                                   0.359
+node41                                           0.452                               0.454
+node43                                                                                           0.687
+node44       0.381                                                                               0.724
+node45                                                                                           0.359
+node47                                                                   0.948                   0.971
+node48                                                                                           0.685
+node49                               0.414       0.516
+node50                               0.282                   0.106
+node51                   0.423                                                                   0.945
+node52                                                                               0.317
+node54                               0.592                                           0.995
+node55                                           0.652       0.278                   0.824
+node57                               0.938
+node58                                                                               0.343
+node59                                                                   0.708
+node61                   0.581
+node63                                                                               0.635
+node64                               0.069                                           0.509
+node66                                                                                           0.975
+node67                                                                   0.652
+
+
+----     77 VARIABLE z.L                   =      186.232  objective
+
+----     79 PARAMETER results  
+
+                  miqp
+
+|i|             70.000
+|a|            514.000
+variables       71.000
+ discrete       70.000
+equations        1.000
+status         Optimal
+obj            186.232
+time             4.094
+nodes          364.000
+iterations  152218.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 90
+
+
+---- obj1  =E=  
+
+obj1..  (12.03861424)*x(node1) - (10.873211954)*x(node2) + (12.953448742)*x(node3) - (11.52999367)*x(node4)
+     
+      + (9.596100458)*x(node5) - (11.857951122)*x(node6) - (2.665979564)*x(node7) + (10.930001102)*x(node8)
+     
+      + (9.498454714)*x(node9) + (15.798624342)*x(node10) + (7.89047542)*x(node11) + (8.38465161)*x(node12)
+     
+      - (13.461864342)*x(node13) - (6.55179204)*x(node14) + (7.354587858)*x(node15) + (10.765535526)*x(node16)
+     
+      - (10.741172072)*x(node17) + (9.536784478)*x(node18) + (7.695870124)*x(node19) + (6.219398358)*x(node20)
+     
+      + (9.415907316)*x(node21) + (14.996666632)*x(node22) - (7.295535332)*x(node23) - (9.792105848)*x(node24)
+     
+      - (15.886717546)*x(node25) - (10.164504662)*x(node26) + (10.119514716)*x(node27) - (10.591242206)*x(node28)
+     
+      - (6.648705126)*x(node29) + (5.735238552)*x(node30) - (9.4542492)*x(node31) - (14.449726062)*x(node32)
+     
+      + (9.164766648)*x(node33) - (18.424823488)*x(node34) + (16.355681462)*x(node35) - (5.52210719)*x(node36)
+     
+      + (6.284784048)*x(node37) + (8.8355712)*x(node38) + (7.155313826)*x(node39) - (10.142420758)*x(node40)
+     
+      + (10.846778726)*x(node41) + (8.102729202)*x(node42) - (15.737520016)*x(node43) - (12.169119144)*x(node44)
+     
+      - (9.3387307)*x(node45) - (12.65188349)*x(node46) - (13.296584254)*x(node47) - (12.351988454)*x(node48)
+     
+      + (7.661788378)*x(node49) + (10.191396504)*x(node50) - (16.28431675)*x(node51) + (6.999713926)*x(node52)
+     
+      + (18.602337504)*x(node53) + (8.99964671)*x(node54) + (6.911798628)*x(node55) - (7.281363094)*x(node56)
+     
+      + (10.95079715)*x(node57) + (9.799399184)*x(node58) - (6.120469456)*x(node59) + (13.390011412)*x(node60)
+     
+      - (8.597949634)*x(node61) - (15.552073212)*x(node62) + (5.26708769)*x(node63) + (9.345223682)*x(node64)
+     
+      - (11.726208078)*x(node65) - (15.287575224)*x(node66) - (13.570135418)*x(node67) + (12.571075526)*x(node68)
+     
+      - (16.443333388)*x(node69) + (16.0975769)*x(node70) + z =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut1 Using MIQCP From line 90
+
+
+---- x  node is in S
+
+x(node1)
+                (.LO, .L, .UP, .M = 0, 0, 1, -12.03861424)
+      (12.0386) obj1
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 1, 1, 10.873211954)
+     (-10.8732) obj1
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, -12.953448742)
+      (12.9534) obj1
+
+REMAINING 67 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 186.231676247, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 90
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.860E+01]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 90
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           71
+NON ZERO ELEMENTS            71     NON LINEAR N-Z             70
+CODE LENGTH               2,060     CONSTANT POOL             530     DISCRETE VARIABLES         70
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE maxcut1 Using MIQCP From line 90
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   maxcut1             OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  90
+
+**** SOLVER STATUS     8 User Interrupt
+**** MODEL STATUS      8 Integer Solution
+**** OBJECTIVE VALUE              186.2317
+
+ RESOURCE USAGE, LIMIT          5.063 10000000000.000
+ ITERATION COUNT, LIMIT   1190966    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\projects\OptimizationModels\MaxCut\cplex.opt"
+>>  qtolin 0
+Finished reading from "C:\projects\OptimizationModels\MaxCut\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.54 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIQP status (113): aborted.
+--- Cplex Time: 5.06sec (det. 3455.64 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.21 ticks)
+
+
+Problem aborted
+MIP Solution:          186.231676    (1190966 iterations, 444124 nodes)
+Final Solve:           186.231676    (0 iterations)
+
+Best possible:         189.747804
+Absolute gap:            3.516128
+Relative gap:            0.018531
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+
+---- VAR x  node is in S
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1           .             1.0000         1.0000        12.0386      
+node2           .              .             1.0000       -10.8732      
+node3           .             1.0000         1.0000        12.9534      
+node4           .              .             1.0000       -11.5300      
+node5           .             1.0000         1.0000         9.5961      
+node6           .              .             1.0000       -11.8580      
+node7           .              .             1.0000        -2.6660      
+node8           .             1.0000         1.0000        10.9300      
+node9           .             1.0000         1.0000         9.4985      
+node10          .             1.0000         1.0000        15.7986      
+node11          .             1.0000         1.0000         7.8905      
+node12          .             1.0000         1.0000         8.3847      
+node13          .              .             1.0000       -13.4619      
+node14          .              .             1.0000        -6.5518      
+node15          .             1.0000         1.0000         7.3546      
+node16          .             1.0000         1.0000        10.7655      
+node17          .              .             1.0000       -10.7412      
+node18          .             1.0000         1.0000         9.5368      
+node19          .             1.0000         1.0000         7.6959      
+node20          .             1.0000         1.0000         6.2194      
+node21          .             1.0000         1.0000         9.4159      
+node22          .             1.0000         1.0000        14.9967      
+node23          .              .             1.0000        -7.2955      
+node24          .              .             1.0000        -9.7921      
+node25          .              .             1.0000       -15.8867      
+node26          .              .             1.0000       -10.1645      
+node27          .             1.0000         1.0000        10.1195      
+node28          .              .             1.0000       -10.5912      
+node29          .              .             1.0000        -6.6487      
+node30          .             1.0000         1.0000         5.7352      
+node31          .              .             1.0000        -9.4542      
+node32          .              .             1.0000       -14.4497      
+node33          .             1.0000         1.0000         9.1648      
+node34          .              .             1.0000       -18.4248      
+node35          .             1.0000         1.0000        16.3557      
+node36          .              .             1.0000        -5.5221      
+node37          .             1.0000         1.0000         6.2848      
+node38          .             1.0000         1.0000         8.8356      
+node39          .             1.0000         1.0000         7.1553      
+node40          .              .             1.0000       -10.1424      
+node41          .             1.0000         1.0000        10.8468      
+node42          .             1.0000         1.0000         8.1027      
+node43          .              .             1.0000       -15.7375      
+node44          .              .             1.0000       -12.1691      
+node45          .              .             1.0000        -9.3387      
+node46          .              .             1.0000       -12.6519      
+node47          .              .             1.0000       -13.2966      
+node48          .              .             1.0000       -12.3520      
+node49          .             1.0000         1.0000         7.6618      
+node50          .             1.0000         1.0000        10.1914      
+node51          .              .             1.0000       -16.2843      
+node52          .             1.0000         1.0000         6.9997      
+node53          .             1.0000         1.0000        18.6023      
+node54          .             1.0000         1.0000         8.9996      
+node55          .             1.0000         1.0000         6.9118      
+node56          .              .             1.0000        -7.2814      
+node57          .             1.0000         1.0000        10.9508      
+node58          .             1.0000         1.0000         9.7994      
+node59          .              .             1.0000        -6.1205      
+node60          .             1.0000         1.0000        13.3900      
+node61          .              .             1.0000        -8.5979      
+node62          .              .             1.0000       -15.5521      
+node63          .             1.0000         1.0000         5.2671      
+node64          .             1.0000         1.0000         9.3452      
+node65          .              .             1.0000       -11.7262      
+node66          .              .             1.0000       -15.2876      
+node67          .              .             1.0000       -13.5701      
+node68          .             1.0000         1.0000        12.5711      
+node69          .              .             1.0000       -16.4433      
+node70          .             1.0000         1.0000        16.0976      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF          186.2317        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     91 PARAMETER results  
+
+                  miqp  miqp/nolin
+
+|i|             70.000      70.000
+|a|            514.000     514.000
+variables       71.000      71.000
+ discrete       70.000      70.000
+equations        1.000       1.000
+status         Optimal       8.000
+obj            186.232     186.232
+time             4.094       5.063
+nodes          364.000  444124.000
+iterations  152218.000 1190966.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut2 Using MIP From line 115
+
+
+---- obj2  =E=  
+
+obj2..  z - 0.913543387*e(node1,node2) - 0.556776347*e(node1,node10) - 0.517179335*e(node1,node16)
+     
+      - 0.305054478*e(node1,node18) - 0.100364543*e(node1,node24) - 0.911919538*e(node1,node25)
+     
+      - 0.26824041*e(node1,node32) - 0.550392537*e(node1,node34) - 0.810934627*e(node1,node43)
+     
+      - 0.098040996*e(node1,node45) - 0.183506931*e(node1,node47) - 0.824627071*e(node1,node56)
+     
+      - 0.699570872*e(node1,node57) - 0.346774294*e(node1,node60) - 0.141663156*e(node1,node62)
+     
+      - 0.647319806*e(node1,node63) - 0.594570656*e(node1,node66) - 0.621503268*e(node1,node67)
+     
+      - 0.154766243*e(node2,node6) - 0.123622771*e(node2,node11) - 0.471729915*e(node2,node13)
+     
+      - 0.281689612*e(node2,node15) - 0.171100981*e(node2,node18) - 0.553029162*e(node2,node19)
+     
+      - 0.138457083*e(node2,node30) - 0.919719683*e(node2,node32) - 0.135178809*e(node2,node34)
+     
+      - 0.742269632*e(node2,node35) - 0.515774392*e(node2,node42) - 0.450691859*e(node2,node45)
+     
+      - 0.45180669*e(node2,node50) - 0.302544468*e(node2,node52) - 0.026666621*e(node2,node54)
+     
+      - 0.543461012*e(node2,node57) - 0.232893887*e(node2,node58) - 0.437170278*e(node2,node61)
+     
+      - 0.439746279*e(node2,node70) - 0.704795526*e(node3,node6) - 0.257630662*e(node3,node14)
+     
+      - 0.614936083*e(node3,node18) - 0.865739676*e(node3,node19) - 0.218831782*e(node3,node21)
+     
+      - 0.419980466*e(node3,node24) - 0.278507858*e(node3,node30) - 0.859136599*e(node3,node31)
+     
+      - 0.443611444*e(node3,node32) - 0.55518996*e(node3,node34) - 0.091730115*e(node3,node36)
+     
+      - 0.177210052*e(node3,node41) - 0.555006796*e(node3,node45) - 0.248763369*e(node3,node46)
+     
+      - 0.626712856*e(node3,node47) - 0.778094588*e(node3,node48) - 0.273908254*e(node3,node49)
+     
+      - 0.888588353*e(node3,node50) - 0.597876252*e(node3,node53) - 0.082049868*e(node3,node54)
+     
+      - 0.133237157*e(node3,node60) - 0.93607199*e(node3,node69) - 0.806495563*e(node4,node9)
+     
+      - 0.564034952*e(node4,node12) - 0.151992911*e(node4,node17) - 0.707267238*e(node4,node21)
+     
+      - 0.946598191*e(node4,node27) - 0.552638332*e(node4,node33) - 0.144415402*e(node4,node43)
+     
+      - 0.678177964*e(node4,node45) - 0.171744131*e(node4,node47) - 0.910219178*e(node4,node53)
+     
+      - 0.434425031*e(node4,node60) - 0.84331835*e(node4,node64) - 0.826871976*e(node4,node67)
+     
+      - 0.586178417*e(node5,node6) - 0.559412848*e(node5,node13) - 0.544685785*e(node5,node18)
+     
+      - 0.95936761*e(node5,node22) - 0.979741324*e(node5,node25) - 0.263230827*e(node5,node29)
+     
+      - 0.055869703*e(node5,node39) - 0.582750299*e(node5,node43) - 0.51947913*e(node5,node48)
+     
+      - 0.010038211*e(node5,node54) - 0.587286691*e(node5,node57) - 0.019369416*e(node5,node60)
+     
+      - 0.347884586*e(node5,node65) - 0.116247499*e(node5,node66) - 0.843125299*e(node5,node67)
+     
+      - 0.864336436*e(node6,node8) - 0.545402664*e(node6,node9) - 0.039091529*e(node6,node11)
+     
+      - 0.146449107*e(node6,node15) - 0.527826741*e(node6,node18) - 0.436555116*e(node6,node28)
+     
+      - 0.707238125*e(node6,node31) - 0.804001456*e(node6,node33) - 0.76769868*e(node6,node41)
+     
+      - 0.035324851*e(node6,node42) - 0.595353395*e(node6,node46) - 0.578936986*e(node6,node51)
+     
+      - 0.512362305*e(node6,node59) - 0.301948288*e(node6,node62) - 0.907870154*e(node6,node64)
+     
+      - 0.497159459*e(node7,node10) - 0.555706784*e(node7,node21) - 0.400240553*e(node7,node25)
+     
+      - 0.125140598*e(node7,node42) - 0.154982941*e(node7,node49) - 0.496404976*e(node7,node51)
+     
+      - 0.102807273*e(node7,node65) - 0.335559191*e(node8,node13) - 0.459419169*e(node8,node17)
+     
+      - 0.162330185*e(node8,node22) - 0.998058348*e(node8,node24) - 0.193802358*e(node8,node27)
+     
+      - 0.290721171*e(node8,node34) - 0.055726812*e(node8,node36) - 0.3154349*e(node8,node49)
+     
+      - 0.740810809*e(node8,node61) - 0.72511281*e(node8,node66) - 0.995255805*e(node8,node69)
+     
+      - 0.71183954*e(node9,node14) - 0.803080612*e(node9,node15) - 0.207952342*e(node9,node24)
+     
+      - 0.625656973*e(node9,node26) - 0.434454144*e(node9,node28) - 0.985915085*e(node9,node33)
+     
+      - 0.611811628*e(node9,node34) - 0.695268968*e(node9,node35) - 0.642237417*e(node9,node37)
+     
+      - 0.13749293*e(node9,node40) - 0.357224483*e(node9,node62) - 0.112218067*e(node9,node65)
+     
+      - 0.198679023*e(node9,node66) - 0.38558222*e(node10,node11) - 0.613221932*e(node10,node13)
+     
+      - 0.678651425*e(node10,node17) - 0.429583398*e(node10,node20) - 0.39167136*e(node10,node22)
+     
+      - 0.502705764*e(node10,node25) - 0.50830814*e(node10,node31) - 0.836558011*e(node10,node35)
+     
+      - 0.966456429*e(node10,node36) - 0.221485381*e(node10,node45) - 0.557382527*e(node10,node53)
+     
+      - 0.432575862*e(node10,node57) - 0.875097352*e(node10,node61) - 0.963791789*e(node10,node62)
+     
+      - 0.284562205*e(node10,node64) - 0.999970887*e(node10,node65) - 0.857403265*e(node10,node66)
+     
+      - 0.215060348*e(node10,node67) - 0.890909449*e(node11,node17) - 0.917175431*e(node11,node20)
+     
+      - 0.407192855*e(node11,node23) - 0.602143127*e(node11,node41) - 0.867523257*e(node11,node47)
+     
+      - 0.064551804*e(node11,node49) - 0.670287483*e(node11,node52) - 0.969528367*e(node11,node53)
+     
+      - 0.840827705*e(node11,node62) - 0.580454813*e(node11,node65) - 0.195615331*e(node11,node67)
+     
+      - 0.516663652*e(node12,node15) - 0.839576446*e(node12,node24) - 0.279689488*e(node12,node31)
+     
+      - 0.87666887*e(node12,node44) - 0.642851055*e(node12,node49) - 0.988020137*e(node12,node51)
+     
+      - 0.606515667*e(node12,node53) - 0.271351755*e(node12,node59) - 0.188316095*e(node12,node63)
+     
+      - 0.372984157*e(node12,node65) - 0.037801318*e(node13,node29) - 0.467827059*e(node13,node37)
+     
+      - 0.996310017*e(node13,node39) - 0.494107985*e(node13,node41) - 0.696629251*e(node13,node48)
+     
+      - 0.299887365*e(node13,node52) - 0.656529668*e(node13,node53) - 0.175294066*e(node13,node56)
+     
+      - 0.85362463*e(node13,node58) - 0.392007085*e(node13,node59) - 0.516199059*e(node13,node64)
+     
+      - 0.528142598*e(node13,node69) - 0.938252417*e(node13,node70) - 0.380738329*e(node14,node15)
+     
+      - 0.679148954*e(node14,node32) - 0.120042304*e(node14,node33) - 0.327106365*e(node14,node40)
+     
+      - 0.338962533*e(node14,node41) - 0.480061137*e(node14,node64) - 0.986621515*e(node14,node68)
+     
+      - 0.553280512*e(node14,node69) - 0.098260179*e(node15,node17) - 0.867410717*e(node15,node23)
+     
+      - 0.942450743*e(node15,node32) - 0.703009491*e(node15,node36) - 0.257285751*e(node15,node40)
+     
+      - 0.998945788*e(node15,node42) - 0.217731555*e(node15,node52) - 0.106451361*e(node15,node55)
+     
+      - 0.908064977*e(node16,node17) - 0.969127305*e(node16,node26) - 0.259160078*e(node16,node28)
+     
+      - 0.132290455*e(node16,node33) - 0.219804543*e(node16,node36) - 0.179069909*e(node16,node38)
+     
+      - 0.114094819*e(node16,node39) - 0.199240513*e(node16,node42) - 0.976486154*e(node16,node43)
+     
+      - 0.433069113*e(node16,node45) - 0.078636719*e(node16,node46) - 0.058475855*e(node16,node47)
+     
+      - 0.274259399*e(node16,node57) - 0.198590288*e(node16,node62) - 0.442961883*e(node16,node65)
+     
+      - 0.838390848*e(node16,node67) - 0.404445585*e(node17,node18) - 0.640897423*e(node17,node24)
+     
+      - 0.894107268*e(node17,node35) - 0.263446938*e(node17,node41) - 0.96419963*e(node17,node43)
+     
+      - 0.558436739*e(node17,node58) - 0.214844307*e(node17,node70) - 0.768645991*e(node18,node19)
+     
+      - 0.841760497*e(node18,node22) - 0.997534317*e(node18,node28) - 0.259276232*e(node18,node31)
+     
+      - 0.694679801*e(node18,node38) - 0.569179453*e(node18,node46) - 0.937940225*e(node18,node48)
+     
+      - 0.260563702*e(node18,node59) - 0.580138483*e(node18,node62) - 0.06038652*e(node18,node67)
+     
+      - 0.953935306*e(node19,node25) - 0.189161234*e(node19,node27) - 0.168512559*e(node19,node29)
+     
+      - 0.831237135*e(node19,node34) - 0.11067703*e(node19,node42) - 0.038899269*e(node19,node44)
+     
+      - 0.060781843*e(node19,node48) - 0.421373907*e(node19,node57) - 0.895030215*e(node19,node64)
+     
+      - 0.660637595*e(node19,node66) - 0.580902193*e(node19,node67) - 0.809613447*e(node20,node25)
+     
+      - 0.481912049*e(node20,node30) - 0.095627993*e(node20,node50) - 0.372963548*e(node20,node51)
+     
+      - 0.346555598*e(node20,node53) - 0.37544984*e(node20,node59) - 0.778525086*e(node20,node61)
+     
+      - 0.773147258*e(node20,node62) - 0.427130564*e(node20,node64) - 0.55616776*e(node21,node29)
+     
+      - 0.436065549*e(node21,node38) - 0.719748882*e(node21,node40) - 0.596143148*e(node21,node51)
+     
+      - 0.22135876*e(node21,node53) - 0.664463396*e(node21,node59) - 0.223494526*e(node21,node67)
+     
+      - 0.684961924*e(node21,node69) - 0.417465568*e(node21,node70) - 0.899353148*e(node22,node23)
+     
+      - 0.319956486*e(node22,node26) - 0.257775047*e(node22,node27) - 0.225012089*e(node22,node35)
+     
+      - 0.66646877*e(node22,node37) - 0.75806034*e(node22,node40) - 0.67044769*e(node22,node43)
+     
+      - 0.504709466*e(node22,node44) - 0.457652519*e(node22,node46) - 0.725296631*e(node22,node48)
+     
+      - 0.520855119*e(node22,node51) - 0.567000903*e(node22,node55) - 0.924484405*e(node22,node56)
+     
+      - 0.484138493*e(node22,node65) - 0.571815224*e(node22,node67) - 0.661563795*e(node22,node69)
+     
+      - 0.670385812*e(node23,node25) - 0.121029803*e(node23,node57) - 0.528447785*e(node23,node58)
+     
+      - 0.824333358*e(node23,node68) - 0.596057589*e(node23,node69) - 0.231952064*e(node24,node26)
+     
+      - 0.947708267*e(node24,node28) - 0.121920417*e(node24,node33) - 0.702150098*e(node24,node37)
+     
+      - 0.461777689*e(node24,node40) - 0.991852778*e(node24,node41) - 0.219377639*e(node24,node59)
+     
+      - 0.514197486*e(node24,node70) - 0.084215436*e(node25,node30) - 0.953775164*e(node25,node35)
+     
+      - 0.719684604*e(node25,node38) - 0.801211877*e(node25,node41) - 0.117534166*e(node25,node42)
+     
+      - 0.85917936*e(node25,node53) - 0.162681384*e(node25,node59) - 0.654078988*e(node25,node62)
+     
+      - 0.249842787*e(node25,node68) - 0.016101852*e(node26,node28) - 0.698757317*e(node26,node38)
+     
+      - 0.069040824*e(node26,node45) - 0.720730694*e(node26,node47) - 0.469086532*e(node26,node53)
+     
+      - 0.434942874*e(node26,node54) - 0.098622212*e(node26,node55) - 0.337227389*e(node26,node57)
+     
+      - 0.990231958*e(node26,node60) - 0.138643285*e(node26,node63) - 0.877988385*e(node26,node67)
+     
+      - 0.598608831*e(node26,node69) - 0.962082528*e(node27,node34) - 0.969783595*e(node27,node44)
+     
+      - 0.654315073*e(node27,node45) - 0.747021699*e(node27,node46) - 0.156901866*e(node27,node47)
+     
+      - 0.319214665*e(node27,node48) - 0.259569966*e(node27,node57) - 0.303839741*e(node27,node59)
+     
+      - 0.035850855*e(node27,node60) - 0.497956211*e(node28,node37) - 0.926823205*e(node28,node39)
+     
+      - 0.55977066*e(node28,node43) - 0.465810197*e(node28,node44) - 0.396870676*e(node28,node46)
+     
+      - 0.303922724*e(node28,node50) - 0.625824904*e(node28,node53) - 0.906363308*e(node28,node57)
+     
+      - 0.343582212*e(node28,node64) - 0.674525046*e(node28,node65) - 0.089903175*e(node28,node66)
+     
+      - 0.565935802*e(node29,node31) - 0.297422264*e(node29,node35) - 0.166944653*e(node29,node38)
+     
+      - 0.803043177*e(node29,node40) - 0.078893708*e(node29,node42) - 0.922117636*e(node29,node51)
+     
+      - 0.968525998*e(node29,node54) - 0.824654794*e(node29,node55) - 0.211658572*e(node29,node65)
+     
+      - 0.945191516*e(node30,node32) - 0.391616643*e(node30,node33) - 0.854103608*e(node30,node34)
+     
+      - 0.845651633*e(node30,node43) - 0.091834477*e(node30,node50) - 0.284902004*e(node31,node33)
+     
+      - 0.918793715*e(node31,node35) - 0.102620037*e(node31,node45) - 0.0034196*e(node31,node59)
+     
+      - 0.805547203*e(node31,node63) - 0.042706144*e(node31,node66) - 0.178922659*e(node31,node67)
+     
+      - 0.811471219*e(node31,node68) - 0.643847291*e(node32,node38) - 0.269976259*e(node32,node45)
+     
+      - 0.103098518*e(node32,node47) - 0.882652266*e(node32,node52) - 0.95408515*e(node32,node53)
+     
+      - 0.725404608*e(node32,node54) - 0.74543965*e(node32,node55) - 0.673939953*e(node32,node63)
+     
+      - 0.263426066*e(node32,node66) - 0.123053473*e(node33,node40) - 0.910261845*e(node33,node46)
+     
+      - 0.756958582*e(node33,node49) - 0.070161046*e(node33,node56) - 0.13774917*e(node33,node60)
+     
+      - 0.373726006*e(node33,node61) - 0.422363009*e(node33,node62) - 0.799313432*e(node33,node66)
+     
+      - 0.034981449*e(node33,node70) - 0.617064567*e(node34,node42) - 0.797792277*e(node34,node49)
+     
+      - 0.311986963*e(node34,node51) - 0.816473216*e(node34,node53) - 0.983758725*e(node34,node57)
+     
+      - 0.842607769*e(node34,node61) - 0.605995496*e(node34,node62) - 0.746125593*e(node34,node68)
+     
+      - 0.595658799*e(node34,node70) - 0.186388558*e(node35,node36) - 0.766645544*e(node35,node40)
+     
+      - 0.743681924*e(node35,node44) - 0.689503224*e(node35,node52) - 0.424682259*e(node35,node53)
+     
+      - 0.073801323*e(node35,node55) - 0.867178485*e(node35,node62) - 0.22838144*e(node35,node65)
+     
+      - 0.936798903*e(node35,node66) - 0.642397834*e(node35,node67) - 0.211486063*e(node35,node70)
+     
+      - 0.029012651*e(node36,node41) - 0.508924996*e(node36,node42) - 0.465681288*e(node36,node46)
+     
+      - 0.647125901*e(node36,node56) - 0.355177587*e(node36,node62) - 0.124498774*e(node36,node65)
+     
+      - 0.795248146*e(node36,node67) - 0.394043263*e(node37,node39) - 0.637997466*e(node37,node44)
+     
+      - 0.310243366*e(node37,node51) - 0.095470838*e(node37,node56) - 0.430746986*e(node37,node62)
+     
+      - 0.597243966*e(node38,node40) - 0.347663848*e(node38,node47) - 0.071884561*e(node38,node57)
+     
+      - 0.286998411*e(node38,node61) - 0.253765454*e(node38,node63) - 0.95664551*e(node38,node67)
+     
+      - 0.626470703*e(node39,node46) - 0.510859319*e(node39,node52) - 0.501810911*e(node39,node55)
+     
+      - 0.23014575*e(node39,node57) - 0.160645343*e(node39,node66) - 0.867407645*e(node39,node69)
+     
+      - 0.893104985*e(node40,node50) - 0.459601002*e(node40,node58) - 0.358973506*e(node40,node68)
+     
+      - 0.564532671*e(node41,node44) - 0.590013929*e(node41,node54) - 0.267117869*e(node41,node59)
+     
+      - 0.058855462*e(node41,node63) - 0.45160837*e(node41,node66) - 0.453837011*e(node41,node69)
+     
+      - 0.974658638*e(node42,node43) - 0.823322877*e(node42,node50) - 0.671873051*e(node42,node51)
+     
+      - 0.406175634*e(node42,node56) - 0.457883355*e(node43,node49) - 0.970821583*e(node43,node53)
+     
+      - 0.891924248*e(node43,node60) - 0.557705765*e(node43,node67) - 0.687201781*e(node43,node70)
+     
+      - 0.643505556*e(node44,node54) - 0.592239199*e(node44,node62) - 0.380841355*e(node44,node63)
+     
+      - 0.7239394*e(node44,node70) - 0.564759265*e(node45,node46) - 0.878032005*e(node45,node47)
+     
+      - 0.780834968*e(node45,node50) - 0.803825064*e(node45,node53) - 0.764079967*e(node45,node60)
+     
+      - 0.345729174*e(node45,node66) - 0.358707992*e(node45,node70) - 0.759513345*e(node46,node49)
+     
+      - 0.968344969*e(node46,node58) - 0.960097124*e(node46,node60) - 0.226678355*e(node46,node62)
+     
+      - 0.35992843*e(node47,node49) - 0.926511493*e(node47,node50) - 0.701962561*e(node47,node58)
+     
+      - 0.499778739*e(node47,node60) - 0.947878747*e(node47,node68) - 0.971447544*e(node47,node70)
+     
+      - 0.693085451*e(node48,node51) - 0.801266016*e(node48,node52) - 0.919273862*e(node48,node53)
+     
+      - 0.114051522*e(node48,node54) - 0.315567106*e(node48,node60) - 0.685028639*e(node48,node70)
+     
+      - 0.495106241*e(node49,node50) - 0.033071629*e(node49,node53) - 0.006303055*e(node49,node56)
+     
+      - 0.364914567*e(node49,node62) - 0.413712133*e(node49,node65) - 0.515864086*e(node49,node66)
+     
+      - 0.468633404*e(node50,node51) - 0.578090911*e(node50,node52) - 0.882884489*e(node50,node56)
+     
+      - 0.243141094*e(node50,node57) - 0.068915527*e(node50,node64) - 0.282246641*e(node50,node65)
+     
+      - 0.105752858*e(node50,node67) - 0.720614408*e(node51,node52) - 0.653215026*e(node51,node53)
+     
+      - 0.624720035*e(node51,node57) - 0.847369399*e(node51,node60) - 0.422595719*e(node51,node64)
+     
+      - 0.944912015*e(node51,node70) - 0.50897735*e(node52,node54) - 0.176196976*e(node52,node59)
+     
+      - 0.316695464*e(node52,node69) - 0.28167686*e(node53,node57) - 0.662635209*e(node53,node61)
+     
+      - 0.57677832*e(node53,node64) - 0.253926782*e(node54,node57) - 0.247462399*e(node54,node60)
+     
+      - 0.591730943*e(node54,node65) - 0.21275857*e(node54,node68) - 0.994995233*e(node54,node69)
+     
+      - 0.033177507*e(node55,node59) - 0.652054839*e(node55,node66) - 0.277760854*e(node55,node67)
+     
+      - 0.624266551*e(node55,node68) - 0.824189458*e(node55,node69) - 0.177354361*e(node56,node57)
+     
+      - 0.253220648*e(node56,node58) - 0.843918263*e(node57,node62) - 0.937565679*e(node57,node65)
+     
+      - 0.121318081*e(node58,node60) - 0.343167371*e(node58,node69) - 0.350456488*e(node59,node67)
+     
+      - 0.708073942*e(node59,node68) - 0.991532134*e(node60,node62) - 0.581181944*e(node61,node64)
+     
+      - 0.407455527*e(node61,node65) - 0.634572049*e(node63,node69) - 0.068854317*e(node64,node65)
+     
+      - 0.508948949*e(node64,node69) - 0.974851791*e(node66,node70) - 0.652217096*e(node67,node68)
+     
+      - 0.669588379*e(node68,node70) =E= 0 ; (LHS = 186.231676247, INFES = 186.231676247 ****)
+     
+
+---- e1  =L=  
+
+e1(node1,node2)..  - x(node1) - x(node2) + e(node1,node2) =L= 0 ; (LHS = -1)
+     
+e1(node1,node10)..  - x(node1) - x(node10) + e(node1,node10) =L= 0 ; (LHS = -2)
+     
+e1(node1,node16)..  - x(node1) - x(node16) + e(node1,node16) =L= 0 ; (LHS = -2)
+     
+REMAINING 511 ENTRIES SKIPPED
+
+
+---- e2  =L=  
+
+e2(node1,node2)..  x(node1) + x(node2) + e(node1,node2) =L= 2 ; (LHS = 1)
+     
+e2(node1,node10)..  x(node1) + x(node10) + e(node1,node10) =L= 2 ; (LHS = 2)
+     
+e2(node1,node16)..  x(node1) + x(node16) + e(node1,node16) =L= 2 ; (LHS = 2)
+     
+REMAINING 511 ENTRIES SKIPPED
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut2 Using MIP From line 115
+
+
+---- x  node is in S
+
+x(node1)
+                (.LO, .L, .UP, .M = 0, 1, 1, 12.03861424)
+       -1       e1(node1,node2)
+       -1       e1(node1,node10)
+       -1       e1(node1,node16)
+       -1       e1(node1,node18)
+       -1       e1(node1,node24)
+       -1       e1(node1,node25)
+       -1       e1(node1,node32)
+       -1       e1(node1,node34)
+       -1       e1(node1,node43)
+       -1       e1(node1,node45)
+       -1       e1(node1,node47)
+       -1       e1(node1,node56)
+       -1       e1(node1,node57)
+       -1       e1(node1,node60)
+       -1       e1(node1,node62)
+       -1       e1(node1,node63)
+       -1       e1(node1,node66)
+       -1       e1(node1,node67)
+        1       e2(node1,node2)
+        1       e2(node1,node10)
+        1       e2(node1,node16)
+        1       e2(node1,node18)
+        1       e2(node1,node24)
+        1       e2(node1,node25)
+        1       e2(node1,node32)
+        1       e2(node1,node34)
+        1       e2(node1,node43)
+        1       e2(node1,node45)
+        1       e2(node1,node47)
+        1       e2(node1,node56)
+        1       e2(node1,node57)
+        1       e2(node1,node60)
+        1       e2(node1,node62)
+        1       e2(node1,node63)
+        1       e2(node1,node66)
+        1       e2(node1,node67)
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, -10.873211954)
+       -1       e1(node1,node2)
+       -1       e1(node2,node6)
+       -1       e1(node2,node11)
+       -1       e1(node2,node13)
+       -1       e1(node2,node15)
+       -1       e1(node2,node18)
+       -1       e1(node2,node19)
+       -1       e1(node2,node30)
+       -1       e1(node2,node32)
+       -1       e1(node2,node34)
+       -1       e1(node2,node35)
+       -1       e1(node2,node42)
+       -1       e1(node2,node45)
+       -1       e1(node2,node50)
+       -1       e1(node2,node52)
+       -1       e1(node2,node54)
+       -1       e1(node2,node57)
+       -1       e1(node2,node58)
+       -1       e1(node2,node61)
+       -1       e1(node2,node70)
+        1       e2(node1,node2)
+        1       e2(node2,node6)
+        1       e2(node2,node11)
+        1       e2(node2,node13)
+        1       e2(node2,node15)
+        1       e2(node2,node18)
+        1       e2(node2,node19)
+        1       e2(node2,node30)
+        1       e2(node2,node32)
+        1       e2(node2,node34)
+        1       e2(node2,node35)
+        1       e2(node2,node42)
+        1       e2(node2,node45)
+        1       e2(node2,node50)
+        1       e2(node2,node52)
+        1       e2(node2,node54)
+        1       e2(node2,node57)
+        1       e2(node2,node58)
+        1       e2(node2,node61)
+        1       e2(node2,node70)
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 1, 1, 12.953448742)
+       -1       e1(node3,node6)
+       -1       e1(node3,node14)
+       -1       e1(node3,node18)
+       -1       e1(node3,node19)
+       -1       e1(node3,node21)
+       -1       e1(node3,node24)
+       -1       e1(node3,node30)
+       -1       e1(node3,node31)
+       -1       e1(node3,node32)
+       -1       e1(node3,node34)
+       -1       e1(node3,node36)
+       -1       e1(node3,node41)
+       -1       e1(node3,node45)
+       -1       e1(node3,node46)
+       -1       e1(node3,node47)
+       -1       e1(node3,node48)
+       -1       e1(node3,node49)
+       -1       e1(node3,node50)
+       -1       e1(node3,node53)
+       -1       e1(node3,node54)
+       -1       e1(node3,node60)
+       -1       e1(node3,node69)
+        1       e2(node3,node6)
+        1       e2(node3,node14)
+        1       e2(node3,node18)
+        1       e2(node3,node19)
+        1       e2(node3,node21)
+        1       e2(node3,node24)
+        1       e2(node3,node30)
+        1       e2(node3,node31)
+        1       e2(node3,node32)
+        1       e2(node3,node34)
+        1       e2(node3,node36)
+        1       e2(node3,node41)
+        1       e2(node3,node45)
+        1       e2(node3,node46)
+        1       e2(node3,node47)
+        1       e2(node3,node48)
+        1       e2(node3,node49)
+        1       e2(node3,node50)
+        1       e2(node3,node53)
+        1       e2(node3,node54)
+        1       e2(node3,node60)
+        1       e2(node3,node69)
+
+REMAINING 67 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 186.231676247, +INF, 0)
+        1       obj2
+
+
+---- e  arc e is in cut
+
+e(node1,node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.9135  obj2
+        1       e1(node1,node2)
+        1       e2(node1,node2)
+
+e(node1,node10)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.5568  obj2
+        1       e1(node1,node10)
+        1       e2(node1,node10)
+
+e(node1,node16)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -0.5172  obj2
+        1       e1(node1,node16)
+        1       e2(node1,node16)
+
+REMAINING 511 ENTRIES SKIPPED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut2 Using MIP From line 115
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.000E+00, 2.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 3.420E-03, 1.000E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut2 Using MIP From line 115
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS        1,029
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          585
+NON ZERO ELEMENTS         3,599     DISCRETE VARIABLES        584
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/16/22 09:26:17 Page 
