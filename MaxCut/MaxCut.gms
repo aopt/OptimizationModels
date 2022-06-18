@@ -141,7 +141,16 @@ extra.. sum(i, x(i)) =l= sum(i, 1-x(i));
 model maxcut3 /maxcut2,extra/;
 solve maxcut2 maximizing z using mip;
 
-option e:0;
 display x.l,e.l,z.l;
 
 report(maxcut2,"mip/extra")
+
+*---------------------------------------------------------
+* as model 2 but fix node 1
+*---------------------------------------------------------
+
+x.fx('node1') = 1;
+solve maxcut2 maximizing z using mip;
+display x.l,e.l,z.l;
+
+report(maxcut2,"mip/fix")
