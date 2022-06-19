@@ -1,13 +1,16 @@
-$onText
+$ontext
 
    MAX CUT (undirected graphs)
 
-   Random graphs
+   Use random sparse graphs
+
+   Reference:
+   http://yetanothermathprogrammingconsultant.blogspot.com/2022/06/max-cut.html
 
 $offtext
 
-* allow all cores to be used
-option threads=0;
+* allow all cores to be used, and look for optimal solution
+option threads=0,optcr=0;
 
 *---------------------------------------------------------
 * undirected graph
@@ -53,11 +56,12 @@ $macro report(m,label)  \
     display results;
 
 *---------------------------------------------------------
-* maxcut model 1: MIQP
+* maxcut model 1: unconstrained MIQP
+* may be linearized by Cplex
 *---------------------------------------------------------
 
 binary variables
-   x(i) 'node is in S'
+   x(i) '1: node is in S, 0: node is not in S'
 ;
 
 variable z 'objective';
@@ -67,7 +71,6 @@ equations
 ;
 
 obj1.. z =e= sum(a(i,j),w(i,j)*sqr(x(i)-x(j)));
-
 
 model maxcut1 /obj1/;
 option miqcp=cplex;
@@ -98,20 +101,17 @@ report(maxcut1,"miqp/nolin")
 * maxcut model 2:
 *---------------------------------------------------------
 
-binary variables
-   e(i,i) 'arc e is in cut'
-;
-
+binary variables e(i,i) 'arc e has one node in S and one not in S';
 
 equations
    obj2     'linear objective'
-   e1(i,j)  'x(i)=x(j)=0 ==> e(i,j)=0'
-   e2(i,j)  'x(i)=x(j)=1 ==> e(i,j)=0'
+   e1(i,j)  'implication: x(i)=x(j)=0 ==> e(i,j)=0'
+   e2(i,j)  'implication: x(i)=x(j)=1 ==> e(i,j)=0'
 ;
 
 obj2.. z =e= sum(a,w(a)*e(a));
-e1(a(i,j)).. e(i,j)=l=x(i)+x(j);
-e2(a(i,j)).. e(i,j)=l=2-x(i)-x(j);
+e1(a(i,j)).. e(i,j) =l= x(i)+x(j);
+e2(a(i,j)).. e(i,j) =l= 2-x(i)-x(j);
 
 
 model maxcut2 /obj2,e1,e2/;
@@ -132,21 +132,21 @@ report(maxcut2,"mip/relax")
 e.prior(a) = 1;
 
 *---------------------------------------------------------
-* as model 2 but add: number of x(i) <= n/2
+* as model 2 but add: sum(x) <= floor(n/2)
+* same as sum(x)<=sum(1-x)
 *---------------------------------------------------------
 
 equation extra;
 extra.. sum(i, x(i)) =l= sum(i, 1-x(i));
+* extra.. sum(i,x(i)) =l= floor(card(i)/2);
 
-model maxcut3 /maxcut2,extra/;
-solve maxcut2 maximizing z using mip;
+model maxcut2e /maxcut2,extra/;
+solve maxcut2e maximizing z using mip;
 
-display x.l,e.l,z.l;
-
-report(maxcut2,"mip/extra")
+report(maxcut2e,"mip/extra")
 
 *---------------------------------------------------------
-* as model 2 but fix node 1
+* as model 2 but fix node1 to 1
 *---------------------------------------------------------
 
 x.fx('node1') = 1;
@@ -154,3 +154,48 @@ solve maxcut2 maximizing z using mip;
 display x.l,e.l,z.l;
 
 report(maxcut2,"mip/fix")
+
+* to unfix do:
+*x.lo('node1') = 0;
+*x.up('node1') = 1;
+* let's keep it fixed
+
+*---------------------------------------------------------
+* model 3: different quadratic formulation
+*---------------------------------------------------------
+
+equations
+   obj3 'model 3 quadratic objective'
+;
+
+obj3.. z =e= sum(a(i,j),w(i,j)*(x(i)+x(j)-2*x(i)*x(j)));
+
+model maxcut3 /obj3/;
+solve maxcut3 maximizing z using miqcp;
+
+display x.l,z.l;
+
+report(maxcut3,"miqp2/fix")
+
+
+*---------------------------------------------------------
+* model 4: linearization of model 3
+*---------------------------------------------------------
+
+equations
+   obj4 'linearization of obj3'
+   e4(i,j) 'x(i)=x(j)=1 => e(i,j)=1'
+;
+
+obj4.. z =e= sum(a(i,j),w(i,j)*(x(i)+x(j)-2*e(i,j)));
+e4(a(i,j)).. e(i,j) =g= x(i)+x(j)-1;
+
+model maxcut4 /obj4,e4/;
+solve maxcut4 maximizing z using mip;
+
+ecut(a(i,j)) = w(i,j)*sqr(x.l(i)-x.l(j));
+
+display x.l,e.l,z.l;
+
+report(maxcut4,"mip2/fix")
+

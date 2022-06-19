@@ -1,11 +1,17 @@
-$onText
+$ontext
 
    MAX DIRECTED CUT (MAX CUT for directed graphs)
 
+   Use random sparse graphs
+
+   Reference:
+   http://yetanothermathprogrammingconsultant.blogspot.com/2022/06/max-cut.html
+
+
 $offtext
 
-* allow all cores to be used
-option threads=0;
+* allow all cores to be used, and look for optimal solution
+option threads=0,optcr=0;
 
 *---------------------------------------------------------
 * directed graph
@@ -13,13 +19,13 @@ option threads=0;
 
 
 set
-  i 'nodes' /node1*node60/
+  i 'nodes' /node1*node70/
   a(i,i) 'arcs'
 ;
 alias (i,j);
 
 * sparse graph
-a(i,j) = uniform(0,1)<0.25;
+a(i,j) = uniform(0,1)<0.2;
 
 parameter w(i,j) 'weights';
 w(a) = uniform(0,1);
@@ -95,10 +101,7 @@ report(maxcut1,"miqp/nolin")
 * maxcut model 2
 *---------------------------------------------------------
 
-binary variables
-   e(i,i) 'arc e is part of cut'
-;
-
+binary variables e(i,i) 'arc e is part of cut';
 
 equations
    obj2    'linear objective'
@@ -109,7 +112,6 @@ equations
 obj2.. z =e= sum(a,w(a)*e(a));
 e1(a(i,j)).. e(i,j)=l=x(i);
 e2(a(i,j)).. e(i,j)=l=1-x(j);
-
 
 model maxcut2 /obj2,e1,e2/;
 solve maxcut2 maximizing z using mip;
@@ -128,4 +130,24 @@ report(maxcut2,"mip")
 e.prior(a) = +inf;
 solve maxcut2 maximizing z using mip;
 report(maxcut2,"mip/relax")
+e.prior(a) = 1;
+
+
+*---------------------------------------------------------
+* model 3: linearize x(i)*x(j)
+*---------------------------------------------------------
+
+equations
+   obj3     'alternative linearization'
+   e3(i,j)  'x(i)=x(j)=1 ==> e(i,j)=1'
+;
+
+obj3.. z =e= sum(a(i,j),w(i,j)*(x(i)-e(i,j)));
+e3(a(i,j)).. e(i,j) =g= x(i)+x(j)-1;
+model maxcut3 /obj3,e3/;
+solve maxcut3 maximizing z using mip;
+
+display x.l,e.l,z.l;
+
+report(maxcut3,"mip2")
 
