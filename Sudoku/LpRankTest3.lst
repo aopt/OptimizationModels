@@ -1,0 +1,407 @@
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  Set i /i1*i9/; alias(i,j);
+   2  Set ZZ /z1*z5/;
+   3  Set ZZZ(ZZ) /z1*z4/;
+   4  Set iz(zz,i);
+   5  Parameter X(i), R(i) Rank;
+   6  Parameter Rankings(j),Rnumber,MedianRnumber,AverageRanking,MaxX,cuts(zz),RankBcut(zz),Membercut(zz);
+   7  Variable Z;
+   8  Positive variable  estimate(i,j);
+   9  *Integer variable Rank(i);
+  10  Positive variable Rank(i);
+  11  Positive variable RankC(zzz,i);
+  12  equations ObjectiveRank,Unequal,ranksom,Ranks;
+  13   
+  14  Option limrow=100;
+  15   
+  16  *$exit
+  17   
+  18  X("i1")=0.010; X("i2")=0.06; X("i3")=0.08; X("i4")=0.03; X("i5")=0.09; X("i6")=0.019; X("i7")=0.03; X("i8")=0.011; X("i9")=0
+      .05;
+  19   
+  20  Rankings(j)=ord(j);
+  21  Rnumber=card(j);
+  22  MedianRnumber=(Rnumber+1)/2;
+  23  AverageRanking=sum(j, Rankings(j))/Rnumber;
+  24   
+  25  *Do some scaling and data preparation:
+  26  MaxX=Smax(i, X(i));
+  27  X(i)=Rnumber*X(i)/MaxX;
+  28   
+  29  MaxX=Smax(i, X(i));
+  30  cuts(zz)=(ord(zz)-1)*MaxX/(card(zz)-1);
+  31  cuts(zz)$(ord(zz)=card(zz))=MaxX+1;
+  32  RankBcut(zz)=sum(i$(X(i)<cuts(zz)), 1);
+  33  Membercut(zz)=sum(i$((X(i)>cuts(zz))and(X(i)<cuts(zz+1))), 1);
+  34  iz(zz,i)$((X(i)>cuts(zz))and(X(i)<cuts(zz+1)))=yes;
+  35   
+  36  *Membercut("Z4")=sum(i$((X(i)>cuts("Z4"))and(X(i)<cuts("Z5"))), 1);
+  37   
+  38   
+  39  display X,Rnumber,MaxX,cuts,RankBcut,Membercut,iz,ZZZ;
+  40  *$exit
+  41   
+  42   
+  43  *Prevent equal numbers
+  44  *loop((i,j)$(X(i)=X(j)), X(i)$(ord(i)>ord(j))=X(i)+uniform(0.005,0.02););
+  45  display X;
+  46  *$exit
+  47   
+  48  *Equations
+  49   
+  50  ranksom..                  sum(i, Rank(i)) =e= sum(i, Rankings(i));
+  51  Unequal(zzz,i,j)$(iz(zzz,i)and iz(zzz,j) and (X(i)>X(j))).. RankC(zzz,i)-RankC(zzz,j) =g= 1;
+  52   
+  53  Ranks(zzz,i)$iz(zzz,i)..      Rank(i)=e= RankC(zzz,i)+RankBcut(zzz);
+  54   
+  55  *ObjectiveRank..     Z*AverageRanking*sum(i, X(i)) =e=  sum(i, Rank(i)*X(i));
+  56  ObjectiveRank..     Z =e=  1;
+  57   
+  58   
+  59  *Model Rankmodel /unequal,ObjectiveRank,Ranks,ranksom/;
+  60  Model Rankmodel /unequal,ObjectiveRank,Ranks,ranksom/;
+  61  *Model Rankmodel /ObjectiveRank/;
+  62   
+  63  *Lets fix the ranking options:
+  64   
+  65  RankC.lo(zzz,i)$iz(zzz,i)=1;
+  66  RankC.up(zzz,i)$iz(zzz,i)=Membercut(zzz);
+  67   
+  68  Rank.lo(i)=1;
+  69  Rank.up(i)=Rnumber;
+  70   
+  71   
+  72  Rank.l("i1")=1.000;Rank.l("i2")=7.000;Rank.l("i3")=8.000;Rank.l("i4")=5.000;Rank.l("i5")=9.000;Rank.l("i6")=3.000;
+  73  Rank.l("i7")=4.000;Rank.l("i8")=2.000;Rank.l("i9")=6.000;
+  74   
+  75  *RankC.l(zzz,i)=RankBcut(zzz)-Rank.l(i);
+  76   
+  77  Solve RankModel using Lp maximizing Z;
+  78   
+  79  display rankings,rnumber,medianrnumber,averageranking;
+  80  display X Rank.l RankC.l Z.l rankings ;
+  81  execute_unload 'testrankings.gdx', X Rank Z rankings estimate;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  38.2.1 96226ea8 WEX-WEI
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     39 PARAMETER X  
+
+i1 1.000,    i2 6.000,    i3 8.000,    i4 3.000,    i5 9.000,    i6 1.900,    i7 3.000,    i8 1.100,    i9 5.000
+
+
+----     39 PARAMETER Rnumber              =        9.000  
+            PARAMETER MaxX                 =        9.000  
+
+----     39 PARAMETER cuts  
+
+z2  2.250,    z3  4.500,    z4  6.750,    z5 10.000
+
+
+----     39 PARAMETER RankBcut  
+
+z2 3.000,    z3 5.000,    z4 7.000,    z5 9.000
+
+
+----     39 PARAMETER Membercut  
+
+z1 3.000,    z2 2.000,    z3 2.000,    z4 2.000
+
+
+----     39 SET iz  
+
+            i1          i2          i3          i4          i5          i6          i7          i8          i9
+
+z1         YES                                                         YES                     YES
+z2                                             YES                                 YES
+z3                     YES                                                                                 YES
+z4                                 YES                     YES
+
+
+----     39 SET ZZZ  
+
+z1,    z2,    z3,    z4
+
+
+----     45 PARAMETER X  
+
+i1 1.000,    i2 6.000,    i3 8.000,    i4 3.000,    i5 9.000,    i6 1.900,    i7 3.000,    i8 1.100,    i9 5.000
+
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Rankmodel Using LP From line 77
+
+
+---- Unequal  =G=  
+
+Unequal(z1,i6,i1)..  - RankC(z1,i1) + RankC(z1,i6) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Unequal(z1,i6,i8)..  RankC(z1,i6) - RankC(z1,i8) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Unequal(z1,i8,i1)..  - RankC(z1,i1) + RankC(z1,i8) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Unequal(z3,i2,i9)..  RankC(z3,i2) - RankC(z3,i9) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Unequal(z4,i5,i3)..  - RankC(z4,i3) + RankC(z4,i5) =G= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- ObjectiveRank  =E=  
+
+ObjectiveRank..  Z =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- Ranks  =E=  
+
+Ranks(z1,i1)..  Rank(i1) - RankC(z1,i1) =E= 0 ; (LHS = 0)
+     
+Ranks(z1,i6)..  Rank(i6) - RankC(z1,i6) =E= 0 ; (LHS = 2, INFES = 2 ****)
+     
+Ranks(z1,i8)..  Rank(i8) - RankC(z1,i8) =E= 0 ; (LHS = 1, INFES = 1 ****)
+     
+Ranks(z2,i4)..  Rank(i4) - RankC(z2,i4) =E= 3 ; (LHS = 4, INFES = 1 ****)
+     
+Ranks(z2,i7)..  Rank(i7) - RankC(z2,i7) =E= 3 ; (LHS = 3)
+     
+Ranks(z3,i2)..  Rank(i2) - RankC(z3,i2) =E= 5 ; (LHS = 6, INFES = 1 ****)
+     
+Ranks(z3,i9)..  Rank(i9) - RankC(z3,i9) =E= 5 ; (LHS = 5)
+     
+Ranks(z4,i3)..  Rank(i3) - RankC(z4,i3) =E= 7 ; (LHS = 7)
+     
+Ranks(z4,i5)..  Rank(i5) - RankC(z4,i5) =E= 7 ; (LHS = 8, INFES = 1 ****)
+     
+
+---- ranksom  =E=  
+
+ranksom..  Rank(i1) + Rank(i2) + Rank(i3) + Rank(i4) + Rank(i5) + Rank(i6) + Rank(i7) + Rank(i8) + Rank(i9) =E= 45 ; (LHS = 45)
+     
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Rankmodel Using LP From line 77
+
+
+---- Z  
+
+Z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       ObjectiveRank
+
+
+---- Rank  
+
+Rank(i1)
+                (.LO, .L, .UP, .M = 1, 1, 9, 0)
+        1       Ranks(z1,i1)
+        1       ranksom
+
+Rank(i2)
+                (.LO, .L, .UP, .M = 1, 7, 9, 0)
+        1       Ranks(z3,i2)
+        1       ranksom
+
+Rank(i3)
+                (.LO, .L, .UP, .M = 1, 8, 9, 0)
+        1       Ranks(z4,i3)
+        1       ranksom
+
+REMAINING 6 ENTRIES SKIPPED
+
+---- RankC  
+
+RankC(z1,i1)
+                (.LO, .L, .UP, .M = 1, 1, 3, 0)
+       -1       Unequal(z1,i6,i1)
+       -1       Unequal(z1,i8,i1)
+       -1       Ranks(z1,i1)
+        0       (OLD LEVEL ****)
+
+RankC(z1,i6)
+                (.LO, .L, .UP, .M = 1, 1, 3, 0)
+        1       Unequal(z1,i6,i1)
+        1       Unequal(z1,i6,i8)
+       -1       Ranks(z1,i6)
+        0       (OLD LEVEL ****)
+
+RankC(z1,i8)
+                (.LO, .L, .UP, .M = 1, 1, 3, 0)
+       -1       Unequal(z1,i6,i8)
+        1       Unequal(z1,i8,i1)
+       -1       Ranks(z1,i8)
+        0       (OLD LEVEL ****)
+
+REMAINING 6 ENTRIES SKIPPED
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Rankmodel Using LP From line 77
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           19  9 projected
+NON ZERO ELEMENTS            38
+
+
+GENERATION TIME      =        0.062 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Rankmodel Using LP From line 77
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Rankmodel           OBJECTIVE  Z
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  77
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                1.0000
+
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ ITERATION COUNT, LIMIT         2    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 20.1.0.1 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.05sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:            1.000000
+
+
+---- EQU Unequal  
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+z1.i6.i1         1.0000         2.0000        +INF             .          
+z1.i6.i8         1.0000         1.0000        +INF            EPS         
+z1.i8.i1         1.0000         1.0000        +INF             .          
+z3.i2.i9         1.0000         1.0000        +INF             .          
+z4.i5.i3         1.0000         1.0000        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Objective~         1.0000         1.0000         1.0000         1.0000      
+
+---- EQU Ranks  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+z1.i1          .              .              .             EPS         
+z1.i6          .              .              .             EPS         
+z1.i8          .              .              .             EPS         
+z2.i4         3.0000         3.0000         3.0000         EPS         
+z2.i7         3.0000         3.0000         3.0000         EPS         
+z3.i2         5.0000         5.0000         5.0000         EPS         
+z3.i9         5.0000         5.0000         5.0000         EPS         
+z4.i3         7.0000         7.0000         7.0000         EPS         
+z4.i5         7.0000         7.0000         7.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU ranksom           45.0000        45.0000        45.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR Z                 -INF            1.0000        +INF             .          
+
+---- VAR Rank  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1         1.0000         1.0000         9.0000          .          
+i2         1.0000         7.0000         9.0000          .          
+i3         1.0000         8.0000         9.0000          .          
+i4         1.0000         5.0000         9.0000          .          
+i5         1.0000         9.0000         9.0000         EPS         
+i6         1.0000         3.0000         9.0000          .          
+i7         1.0000         4.0000         9.0000          .          
+i8         1.0000         2.0000         9.0000          .          
+i9         1.0000         6.0000         9.0000          .          
+
+---- VAR RankC  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+z1.i1         1.0000         1.0000         3.0000         EPS         
+z1.i6         1.0000         3.0000         3.0000         EPS         
+z1.i8         1.0000         2.0000         3.0000          .          
+z2.i4         1.0000         2.0000         2.0000          .          
+z2.i7         1.0000         1.0000         2.0000         EPS         
+z3.i2         1.0000         2.0000         2.0000         EPS         
+z3.i9         1.0000         1.0000         2.0000         EPS         
+z4.i3         1.0000         1.0000         2.0000         EPS         
+z4.i5         1.0000         2.0000         2.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 38.2.1  96226ea8 Feb 19, 2022          WEX-WEI x86 64bit/MS Windows - 05/09/22 15:47:52 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     79 PARAMETER Rankings  
+
+i1 1.000,    i2 2.000,    i3 3.000,    i4 4.000,    i5 5.000,    i6 6.000,    i7 7.000,    i8 8.000,    i9 9.000
+
+
+----     79 PARAMETER Rnumber              =        9.000  
+            PARAMETER MedianRnumber        =        5.000  
+            PARAMETER AverageRanking       =        5.000  
+
+----     80 PARAMETER X  
+
+i1 1.000,    i2 6.000,    i3 8.000,    i4 3.000,    i5 9.000,    i6 1.900,    i7 3.000,    i8 1.100,    i9 5.000
+
+
+----     80 VARIABLE Rank.L  
+
+i1 1.000,    i2 7.000,    i3 8.000,    i4 5.000,    i5 9.000,    i6 3.000,    i7 4.000,    i8 2.000,    i9 6.000
+
+
+----     80 VARIABLE RankC.L  
+
+            i1          i2          i3          i4          i5          i6          i7          i8          i9
+
+z1       1.000                                                       3.000                   2.000
+z2                                           2.000                               1.000
+z3                   2.000                                                                               1.000
+z4                               1.000                   2.000
+
+
+----     80 VARIABLE Z.L                   =        1.000  
+
+----     80 PARAMETER Rankings  
+
+i1 1.000,    i2 2.000,    i3 3.000,    i4 4.000,    i5 5.000,    i6 6.000,    i7 7.000,    i8 8.000,    i9 9.000
+
+
+
+EXECUTION TIME       =        0.266 SECONDS      4 MB  38.2.1 96226ea8 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\LpRankTest3.gms
+Output     C:\projects\OptimizationModels\Sudoku\LpRankTest3.lst

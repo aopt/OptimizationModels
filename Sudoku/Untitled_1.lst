@@ -1,0 +1,93 @@
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/10/22 02:27:49 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   2   
+   3  set i /i1*i10/;
+   4  *set i /i1*i10000000/;
+   5   
+   6  parameter x(i),rank(i);
+   7  x(i) = normal(0,1);
+   8   
+   9   
+  10  embeddedCode Python:
+  11  import gamstransfer as gt
+  12  import numpy as np
+  13   
+  14  print("\n### calculating rank")
+  15   
+  16  # read GAMS data
+  17  c = gt.Container()
+  18  c.read(gams.db, symbols=["i","x","rank"])
+  19  x = c.data["x"].toDense()
+  20  print(f"len(x) = {len(x)}")
+  21   
+  22  # ranking
+  23  rank = np.argsort(np.argsort(x))+1
+  24  print(rank)
+  25   
+  26  # pass results back to GAMS
+  27  c.data["rank"].setRecords(rank)
+  28  c.write(gams.db, ["rank"])
+  29   
+  30  endEmbeddedCode rank
+  31   
+  32  option rank:0;
+  33  display$(card(x)<50) x, rank;
+  34   
+  35  parameter res(i,*);
+  36  res(i,'x') = x(i);
+  37  res(i,'rank') = rank(i);
+  38  display$(card(x)<50) res;
+
+
+COMPILATION TIME     =        0.063 SECONDS      3 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/10/22 02:27:49 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     33 PARAMETER x  
+
+i1       -0.313,    i2        0.328,    i3        0.464,    i4       -1.830,    i5       -0.732,    i6       -0.972
+i7       -0.394,    i8        0.935,    i9       -0.759,    i10 3.695204E-4
+
+
+----     33 PARAMETER rank  
+
+i1   6,    i2   8,    i3   9,    i4   1,    i5   4,    i6   2,    i7   5,    i8  10,    i9   3,    i10  7
+
+
+----     38 PARAMETER res  
+
+              x        rank
+
+i1       -0.313       6.000
+i2        0.328       8.000
+i3        0.464       9.000
+i4       -1.830       1.000
+i5       -0.732       4.000
+i6       -0.972       2.000
+i7       -0.394       5.000
+i8        0.935      10.000
+i9       -0.759       3.000
+i10 3.695204E-4       7.000
+
+
+**** REPORT FILE SUMMARY
+
+ pyScript C:\projects\OptimizationModels\Sudoku\225a\myEmb.dat
+
+
+EXECUTION TIME       =        0.515 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Sudoku\Untitled_1.gms
+Output     C:\projects\OptimizationModels\Sudoku\Untitled_1.lst

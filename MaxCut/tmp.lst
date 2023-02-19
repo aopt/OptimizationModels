@@ -1,0 +1,718 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  Sets
+   2  k   sample number /1,2,3,4,5,6,7,8,9,10,11,12/
+   3  j   criterion /1,2,3,4/
+   4  n   class1 /1, 2, 3/
+   5  t   class2 /1, 2, 3/
+   6  nk(n,k) / 1.(1*4), 2.(5*8), 3.(9*12) /
+   7  tk(t,k) / 1.(1*4), 2.(5*8), 3.(9*12) /;
+   8   
+   9  Table a(k,j)
+  10      1   2   3   4
+  11  1   1   1   1   3
+  12  2   1   1   2   2
+  13  3   1   2   1   3
+  14  4   1   2   2   1
+  15  5   1   1   1   3
+  16  6   1   1   2   2
+  17  7   1   2   1   3
+  18  8   1   2   2   1
+  19  9   1   1   1   3
+  20  10  1   1   2   3
+  21  11  1   2   1   3
+  22  12  1   2   2   1;
+  23   
+  24  Parameters p /2/;
+  25   
+  26  Parameters r /0.000001/;
+  27   
+  28  Parameters y(n,j);
+  29  y(n,j) = sum(nk(n,k), a(k,j))/sum(nk(n,k), 1);
+  30   
+  31  Parameters m(t,j);
+  32  m(t,j) = sum(tk(t,k), a(k,j))/sum(tk(t,k), 1);
+  33   
+  34  Variables
+  35  e(k)
+  36  w(j)
+  37  z;
+  38   
+  39  Positive Variable
+  40  e(k)
+  41  w(j);
+  42   
+  43  Equations
+  44  constraint1
+  45  constraint2
+  46  constraint3
+  47  objective;
+  48   
+  49  objective..z=e=sum(k,e(k));
+  50  constraint1(k,n,t)$(ord(n)<>ord(t))..rPower(sum(j,w(j)*power(((a(k,j))-y(n,j)),p)),(1/p))-e(k)=l=rPower(sum(j,w(j)*power(((a(k,j))-m(t,j)),p)),(1/p))-r;
+  51  constraint2..sum(j,w(j))=e=1;
+  52  constraint3(j)..w(j)=g=0.00000001;
+  53   
+  54  Model nonrobust / all /;
+  55  Option nlp=baron, limrow=100;
+  56   
+  57  solve nonrobust minimizing z using nlp;
+  58   
+  59  display z.l, e.l, w.l , m, y, a;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE nonrobust Using NLP From line 57
+
+
+---- constraint1  =L=  
+
+constraint1(1,1,2)..  - e(1) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(1,1,3)..  - e(1) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(1,2,1)..  - e(1) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(1,2,3)..  - e(1) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(1,3,1)..  - e(1) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(1,3,2)..  - e(1) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,1,2)..  - e(2) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,1,3)..  - e(2) + (0)*w(2) + (0)*w(3) - (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,2,1)..  - e(2) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,2,3)..  - e(2) + (0)*w(2) + (0)*w(3) - (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,3,1)..  - e(2) + (0)*w(2) + (0)*w(3) + (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(2,3,2)..  - e(2) + (0)*w(2) + (0)*w(3) + (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,1,2)..  - e(3) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,1,3)..  - e(3) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,2,1)..  - e(3) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,2,3)..  - e(3) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,3,1)..  - e(3) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(3,3,2)..  - e(3) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,1,2)..  - e(4) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,1,3)..  - e(4) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,2,1)..  - e(4) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,2,3)..  - e(4) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,3,1)..  - e(4) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(4,3,2)..  - e(4) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,1,2)..  - e(5) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,1,3)..  - e(5) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,2,1)..  - e(5) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,2,3)..  - e(5) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,3,1)..  - e(5) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(5,3,2)..  - e(5) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,1,2)..  - e(6) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,1,3)..  - e(6) + (0)*w(2) + (0)*w(3) - (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,2,1)..  - e(6) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,2,3)..  - e(6) + (0)*w(2) + (0)*w(3) - (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,3,1)..  - e(6) + (0)*w(2) + (0)*w(3) + (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(6,3,2)..  - e(6) + (0)*w(2) + (0)*w(3) + (1875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,1,2)..  - e(7) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,1,3)..  - e(7) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,2,1)..  - e(7) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,2,3)..  - e(7) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,3,1)..  - e(7) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(7,3,2)..  - e(7) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,1,2)..  - e(8) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,1,3)..  - e(8) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,2,1)..  - e(8) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,2,3)..  - e(8) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,3,1)..  - e(8) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(8,3,2)..  - e(8) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,1,2)..  - e(9) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,1,3)..  - e(9) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,2,1)..  - e(9) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,2,3)..  - e(9) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,3,1)..  - e(9) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(9,3,2)..  - e(9) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,1,2)..  - e(10) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,1,3)..  - e(10) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,2,1)..  - e(10) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,2,3)..  - e(10) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,3,1)..  - e(10) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(10,3,2)..  - e(10) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,1,2)..  - e(11) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,1,3)..  - e(11) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,2,1)..  - e(11) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,2,3)..  - e(11) + (0)*w(2) + (0)*w(3) + (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,3,1)..  - e(11) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(11,3,2)..  - e(11) + (0)*w(2) + (0)*w(3) - (3125000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,1,2)..  - e(12) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,1,3)..  - e(12) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,2,1)..  - e(12) + (0)*w(2) + (0)*w(3) + (0)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,2,3)..  - e(12) + (0)*w(2) + (0)*w(3) - (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,3,1)..  - e(12) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+constraint1(12,3,2)..  - e(12) + (0)*w(2) + (0)*w(3) + (6875000000)*w(4) =L= -1E-6 ; (LHS = 0, INFES = 1E-6 ****)
+     
+
+---- constraint2  =E=  
+
+constraint2..  w(1) + w(2) + w(3) + w(4) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- constraint3  =G=  
+
+constraint3(1)..  w(1) =G= 1E-8 ; (LHS = 0, INFES = 1E-8 ****)
+     
+constraint3(2)..  w(2) =G= 1E-8 ; (LHS = 0, INFES = 1E-8 ****)
+     
+constraint3(3)..  w(3) =G= 1E-8 ; (LHS = 0, INFES = 1E-8 ****)
+     
+constraint3(4)..  w(4) =G= 1E-8 ; (LHS = 0, INFES = 1E-8 ****)
+     
+
+---- objective  =E=  
+
+objective..  - e(1) - e(2) - e(3) - e(4) - e(5) - e(6) - e(7) - e(8) - e(9) - e(10) - e(11) - e(12) + z =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE nonrobust Using NLP From line 57
+
+
+---- e  
+
+e(1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       constraint1(1,1,2)
+       -1       constraint1(1,1,3)
+       -1       constraint1(1,2,1)
+       -1       constraint1(1,2,3)
+       -1       constraint1(1,3,1)
+       -1       constraint1(1,3,2)
+       -1       objective
+
+e(2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       constraint1(2,1,2)
+       -1       constraint1(2,1,3)
+       -1       constraint1(2,2,1)
+       -1       constraint1(2,2,3)
+       -1       constraint1(2,3,1)
+       -1       constraint1(2,3,2)
+       -1       objective
+
+e(3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       constraint1(3,1,2)
+       -1       constraint1(3,1,3)
+       -1       constraint1(3,2,1)
+       -1       constraint1(3,2,3)
+       -1       constraint1(3,3,1)
+       -1       constraint1(3,3,2)
+       -1       objective
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- w  
+
+w(1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       constraint2
+        1       constraint3(1)
+
+w(2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      constraint1(1,1,2)
+       (0)      constraint1(1,1,3)
+       (0)      constraint1(1,2,1)
+       (0)      constraint1(1,2,3)
+       (0)      constraint1(1,3,1)
+       (0)      constraint1(1,3,2)
+       (0)      constraint1(2,1,2)
+       (0)      constraint1(2,1,3)
+       (0)      constraint1(2,2,1)
+       (0)      constraint1(2,2,3)
+       (0)      constraint1(2,3,1)
+       (0)      constraint1(2,3,2)
+       (0)      constraint1(3,1,2)
+       (0)      constraint1(3,1,3)
+       (0)      constraint1(3,2,1)
+       (0)      constraint1(3,2,3)
+       (0)      constraint1(3,3,1)
+       (0)      constraint1(3,3,2)
+       (0)      constraint1(4,1,2)
+       (0)      constraint1(4,1,3)
+       (0)      constraint1(4,2,1)
+       (0)      constraint1(4,2,3)
+       (0)      constraint1(4,3,1)
+       (0)      constraint1(4,3,2)
+       (0)      constraint1(5,1,2)
+       (0)      constraint1(5,1,3)
+       (0)      constraint1(5,2,1)
+       (0)      constraint1(5,2,3)
+       (0)      constraint1(5,3,1)
+       (0)      constraint1(5,3,2)
+       (0)      constraint1(6,1,2)
+       (0)      constraint1(6,1,3)
+       (0)      constraint1(6,2,1)
+       (0)      constraint1(6,2,3)
+       (0)      constraint1(6,3,1)
+       (0)      constraint1(6,3,2)
+       (0)      constraint1(7,1,2)
+       (0)      constraint1(7,1,3)
+       (0)      constraint1(7,2,1)
+       (0)      constraint1(7,2,3)
+       (0)      constraint1(7,3,1)
+       (0)      constraint1(7,3,2)
+       (0)      constraint1(8,1,2)
+       (0)      constraint1(8,1,3)
+       (0)      constraint1(8,2,1)
+       (0)      constraint1(8,2,3)
+       (0)      constraint1(8,3,1)
+       (0)      constraint1(8,3,2)
+       (0)      constraint1(9,1,2)
+       (0)      constraint1(9,1,3)
+       (0)      constraint1(9,2,1)
+       (0)      constraint1(9,2,3)
+       (0)      constraint1(9,3,1)
+       (0)      constraint1(9,3,2)
+       (0)      constraint1(10,1,2)
+       (0)      constraint1(10,1,3)
+       (0)      constraint1(10,2,1)
+       (0)      constraint1(10,2,3)
+       (0)      constraint1(10,3,1)
+       (0)      constraint1(10,3,2)
+       (0)      constraint1(11,1,2)
+       (0)      constraint1(11,1,3)
+       (0)      constraint1(11,2,1)
+       (0)      constraint1(11,2,3)
+       (0)      constraint1(11,3,1)
+       (0)      constraint1(11,3,2)
+       (0)      constraint1(12,1,2)
+       (0)      constraint1(12,1,3)
+       (0)      constraint1(12,2,1)
+       (0)      constraint1(12,2,3)
+       (0)      constraint1(12,3,1)
+       (0)      constraint1(12,3,2)
+        1       constraint2
+        1       constraint3(2)
+
+w(3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      constraint1(1,1,2)
+       (0)      constraint1(1,1,3)
+       (0)      constraint1(1,2,1)
+       (0)      constraint1(1,2,3)
+       (0)      constraint1(1,3,1)
+       (0)      constraint1(1,3,2)
+       (0)      constraint1(2,1,2)
+       (0)      constraint1(2,1,3)
+       (0)      constraint1(2,2,1)
+       (0)      constraint1(2,2,3)
+       (0)      constraint1(2,3,1)
+       (0)      constraint1(2,3,2)
+       (0)      constraint1(3,1,2)
+       (0)      constraint1(3,1,3)
+       (0)      constraint1(3,2,1)
+       (0)      constraint1(3,2,3)
+       (0)      constraint1(3,3,1)
+       (0)      constraint1(3,3,2)
+       (0)      constraint1(4,1,2)
+       (0)      constraint1(4,1,3)
+       (0)      constraint1(4,2,1)
+       (0)      constraint1(4,2,3)
+       (0)      constraint1(4,3,1)
+       (0)      constraint1(4,3,2)
+       (0)      constraint1(5,1,2)
+       (0)      constraint1(5,1,3)
+       (0)      constraint1(5,2,1)
+       (0)      constraint1(5,2,3)
+       (0)      constraint1(5,3,1)
+       (0)      constraint1(5,3,2)
+       (0)      constraint1(6,1,2)
+       (0)      constraint1(6,1,3)
+       (0)      constraint1(6,2,1)
+       (0)      constraint1(6,2,3)
+       (0)      constraint1(6,3,1)
+       (0)      constraint1(6,3,2)
+       (0)      constraint1(7,1,2)
+       (0)      constraint1(7,1,3)
+       (0)      constraint1(7,2,1)
+       (0)      constraint1(7,2,3)
+       (0)      constraint1(7,3,1)
+       (0)      constraint1(7,3,2)
+       (0)      constraint1(8,1,2)
+       (0)      constraint1(8,1,3)
+       (0)      constraint1(8,2,1)
+       (0)      constraint1(8,2,3)
+       (0)      constraint1(8,3,1)
+       (0)      constraint1(8,3,2)
+       (0)      constraint1(9,1,2)
+       (0)      constraint1(9,1,3)
+       (0)      constraint1(9,2,1)
+       (0)      constraint1(9,2,3)
+       (0)      constraint1(9,3,1)
+       (0)      constraint1(9,3,2)
+       (0)      constraint1(10,1,2)
+       (0)      constraint1(10,1,3)
+       (0)      constraint1(10,2,1)
+       (0)      constraint1(10,2,3)
+       (0)      constraint1(10,3,1)
+       (0)      constraint1(10,3,2)
+       (0)      constraint1(11,1,2)
+       (0)      constraint1(11,1,3)
+       (0)      constraint1(11,2,1)
+       (0)      constraint1(11,2,3)
+       (0)      constraint1(11,3,1)
+       (0)      constraint1(11,3,2)
+       (0)      constraint1(12,1,2)
+       (0)      constraint1(12,1,3)
+       (0)      constraint1(12,2,1)
+       (0)      constraint1(12,2,3)
+       (0)      constraint1(12,3,1)
+       (0)      constraint1(12,3,2)
+        1       constraint2
+        1       constraint3(3)
+
+REMAINING ENTRY SKIPPED
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE nonrobust Using NLP From line 57
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E-08, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 6.875E+09] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE nonrobust Using NLP From line 57
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           78
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           17
+NON ZERO ELEMENTS           309     NON LINEAR N-Z            216
+CODE LENGTH               1,368     CONSTANT POOL              20
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE nonrobust Using NLP From line 57
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   nonrobust           OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  BARON               FROM LINE  57
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.230 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS              0             0
+
+GAMS/BARON       39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+BARON is a product of The Optimization Firm, LLC. http://www.minlp.com/
+Parts of the BARON software were created at the
+University of Illinois at Urbana-Champaign.
+
+
+===========================================================================
+ BARON version 22.3.21. Built: WIN-64 Mon Mar 21 21:02:36 EDT 2022
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Khajavirad, A. and N. V. Sahinidis,
+ A hybrid LP/NLP paradigm for global optimization relaxations,
+ Mathematical Programming Computation, 10, 383-421, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+
+Solution      = 1.2E-5  best solution found during preprocessing
+Best possible = 1.2E-5
+Absolute gap  = 1.6940658945086E-21  optca = 1E-9
+Relative gap  = 1.41172157875717E-16  optcr = 0.0001
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+
+---- EQU constraint1  
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+1 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+1 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+1 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+1 .2.3        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+1 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+1 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+2 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+2 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+2 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+2 .2.3        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+2 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+2 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+3 .1.2        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+3 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+3 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+3 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+3 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+3 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+4 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+4 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+4 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+4 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+4 .3.1        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+4 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+5 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+5 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+5 .2.1        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+5 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+5 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+5 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+6 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+6 .1.3        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+6 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+6 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+6 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+6 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+7 .1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+7 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+7 .2.1        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+7 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+7 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+7 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+8 .1.2        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+8 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+8 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+8 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+8 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+8 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+9 .1.2        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+9 .1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+9 .2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+9 .2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+9 .3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+9 .3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+10.1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+10.1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+10.2.1        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+10.2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+10.3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+10.3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+11.1.2        -INF      -1.000000E-6   -1.000000E-6        -1.0000      
+11.1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+11.2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+11.2.3        -INF      -1.000000E-6   -1.000000E-6          .          
+11.3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+11.3.2        -INF      -1.000000E-6   -1.000000E-6          .          
+12.1.2        -INF      -1.000000E-6   -1.000000E-6          .          
+12.1.3        -INF      -1.000000E-6   -1.000000E-6          .          
+12.2.1        -INF      -1.000000E-6   -1.000000E-6          .          
+12.2.3        -INF      -1.000000E-6   -1.000000E-6        -0.9545      
+12.3.1        -INF      -1.000000E-6   -1.000000E-6          .          
+12.3.2        -INF      -1.000000E-6   -1.000000E-6        -0.0455      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU constrain~         1.0000         1.0000         1.0000          .          
+
+---- EQU constraint3  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1   1.0000000E-8         0.3755        +INF             .          
+2   1.0000000E-8         0.3122        +INF             .          
+3   1.0000000E-8         0.3122        +INF             .          
+4   1.0000000E-8   1.0000000E-8        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+---- VAR e  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1           .       1.0000000E-6        +INF             .          
+2           .       1.0000000E-6        +INF             .          
+3           .       1.0000000E-6        +INF             .          
+4           .       1.0000000E-6        +INF             .          
+5           .       1.0000000E-6        +INF             .          
+6           .       1.0000000E-6        +INF             .          
+7           .       1.0000000E-6        +INF             .          
+8           .       1.0000000E-6        +INF             .          
+9           .       1.0000000E-6        +INF             .          
+10          .       1.0000000E-6        +INF             .          
+11          .       1.0000000E-6        +INF             .          
+12          .       1.0000000E-6        +INF             .          
+
+---- VAR w  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+1          .             0.3755        +INF             .          
+2          .             0.3122        +INF             .          
+3          .             0.3122        +INF             .          
+4          .              .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF      1.2000000E-5        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+                            49  PROJECTED
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/14/22 15:03:25 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     59 VARIABLE z.L                   =  1.200000E-5  
+
+----     59 VARIABLE e.L  
+
+1  1.000000E-6,    2  1.000000E-6,    3  1.000000E-6,    4  1.000000E-6,    5  1.000000E-6,    6  1.000000E-6,    7  1.000000E-6,    8  1.000000E-6,    9  1.000000E-6,    10 1.000000E-6,    11 1.000000E-6,    12 1.000000E-6
+
+
+----     59 VARIABLE w.L  
+
+1 0.376,    2 0.312,    3 0.312
+
+
+----     59 PARAMETER m  
+
+            1           2           3           4
+
+1       1.000       1.500       1.500       2.250
+2       1.000       1.500       1.500       2.250
+3       1.000       1.500       1.500       2.500
+
+
+----     59 PARAMETER y  
+
+            1           2           3           4
+
+1       1.000       1.500       1.500       2.250
+2       1.000       1.500       1.500       2.250
+3       1.000       1.500       1.500       2.500
+
+
+----     59 PARAMETER a  
+
+             1           2           3           4
+
+1        1.000       1.000       1.000       3.000
+2        1.000       1.000       2.000       2.000
+3        1.000       2.000       1.000       3.000
+4        1.000       2.000       2.000       1.000
+5        1.000       1.000       1.000       3.000
+6        1.000       1.000       2.000       2.000
+7        1.000       2.000       1.000       3.000
+8        1.000       2.000       2.000       1.000
+9        1.000       1.000       1.000       3.000
+10       1.000       1.000       2.000       3.000
+11       1.000       2.000       1.000       3.000
+12       1.000       2.000       2.000       1.000
+
+
+
+EXECUTION TIME       =        0.468 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MaxCut\tmp.gms
+Output     C:\projects\OptimizationModels\MaxCut\tmp.lst

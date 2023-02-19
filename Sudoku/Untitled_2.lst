@@ -1,0 +1,56 @@
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/09/22 23:19:04 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set i / i1*i1000 /;
+   2  alias(i,j);
+   3   
+   4  parameter a(i,j);
+   5  a(i,j) = 1 / (ord(i)+ord(j) - 1);
+   6  a(i,i) = 1;
+   7   
+   8   
+   9  embeddedCode Python:
+  10  import gamstransfer as gt
+  11  import numpy as np
+  12  import time
+  13   
+  14  gams.printLog("")
+  15  s = time.time()
+  16  m = gt.Container(gams.db)
+  17  gams.printLog(f"read data: {round(time.time() - s, 3)} sec")
+  18   
+  19  s = time.time()
+  20  A = m.data["a"].toDense()
+  21  gams.printLog(f"create matrix A: {round(time.time() - s, 3)} sec")
+  22   
+  23  s = time.time()
+  24  invA = np.linalg.inv(A)
+  25  gams.printLog(f"generate inv(A): {round(time.time() - s, 3)} sec")
+  26   
+  27  endEmbeddedCode
+
+
+COMPILATION TIME     =        0.047 SECONDS      3 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/09/22 23:19:04 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+**** REPORT FILE SUMMARY
+
+ pyScript C:\projects\OptimizationModels\Sudoku\225a\myEmb.dat
+
+
+EXECUTION TIME       =        1.234 SECONDS     36 MB  39.1.0 5f04cd76 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Sudoku\Untitled_2.gms
+Output     C:\projects\OptimizationModels\Sudoku\Untitled_2.lst

@@ -1,4 +1,4 @@
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 1
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -103,7 +103,7 @@ C o m p i l a t i o n
  100  sum1(i)..      sum(k, delta(i,k)) =e= 1;
  101  order(k+1)..   a(k,'const.term') =g= a(k+1,'const.term');
  102   
- 103  option optcr=0, threads=8, mip=cplex, miqcp=cplex;
+ 103  option optcr=0, threads=0, mip=cplex, miqcp=cplex;
  104  model m1 /all/;
  105  solve m1 minimizing z using miqcp;
  106   
@@ -118,93 +118,78 @@ C o m p i l a t i o n
  115  report1('total','points') = card(i);
  116  display report1;
  117   
- 118  *---------------------------------------------------------
- 119  * model 2: multiple line LAD regression
- 120  *---------------------------------------------------------
- 121   
- 122  positive variables
- 123     rplus(i)   'positive residuals'
- 124     rmin(i)    'negative residuals'
- 125  ;
- 126   
- 127  equation
- 128    fit2(i,k)  'LAD fit'
- 129    obj2       'LAD obj'
- 130  ;
- 131   
- 132  obj2..  z =e= sum(i, rplus(i)+rmin(i));
- 133  fit2(i,k)..  rplus(i) - rmin(i) =e= y(i) - a(k,'const.term') -  a(k,'slope')*x(i) + s(i,k);
- 134   
- 135  model m2 /obj2,fit2,impl1,impl2,sum1,order/;
- 136  solve m2 minimizing z using mip;
- 137   
- 138  * reporting
- 139  parameter report2(*,*) 'least absolute deviations results';
- 140  report2(k,f) = a.l(k,f);
- 141  report2(k,'points') = sum(i$(delta.l(i,k)>0.5),1);
- 142  report2(k,'sum(r^2)') = sum(i$(delta.l(i,k)>0.5),sqr(rplus.l(i)-rmin.l(i)));
- 143  report2(k,'sum|r|') = sum(i$(delta.l(i,k)>0.5),rplus.l(i)+rmin.l(i));
- 144  report2('total','sum(r^2)') = sum(i,sqr(rplus.l(i)-rmin.l(i)));
- 145  report2('total','sum|r|') = sum(i,rplus.l(i)+rmin.l(i));
- 146  report2('total','points') = card(i);
- 147  display report2;
- 148   
+ 118  parameter plotdata1(i,*);
+ 119  plotdata1(i,'x') = x(i);
+ 120  plotdata1(i,'y') = y(i);
+ 121  plotdata1(i,'color') = round(sum(k, delta.l(i,k)*ord(k)));
+ 122  display plotdata1;
+ 123   
+ 124   
+ 125  *---------------------------------------------------------
+ 126  * model 2: multiple line LAD regression
+ 127  *---------------------------------------------------------
+ 128   
+ 129  positive variables
+ 130     rplus(i)   'positive residuals'
+ 131     rmin(i)    'negative residuals'
+ 132  ;
+ 133   
+ 134  equation
+ 135    fit2(i,k)  'LAD fit'
+ 136    obj2       'LAD obj'
+ 137  ;
+ 138   
+ 139  obj2..  z =e= sum(i, rplus(i)+rmin(i));
+ 140  fit2(i,k)..  rplus(i) - rmin(i) =e= y(i) - a(k,'const.term') -  a(k,'slope')*x(i) + s(i,k);
+ 141   
+ 142  model m2 /obj2,fit2,impl1,impl2,sum1,order/;
+ 143  solve m2 minimizing z using mip;
+ 144   
+ 145  * reporting
+ 146  parameter report2(*,*) 'least absolute deviations results';
+ 147  report2(k,f) = a.l(k,f);
+ 148  report2(k,'points') = sum(i$(delta.l(i,k)>0.5),1);
+ 149  report2(k,'sum(r^2)') = sum(i$(delta.l(i,k)>0.5),sqr(rplus.l(i)-rmin.l(i)));
+ 150  report2(k,'sum|r|') = sum(i$(delta.l(i,k)>0.5),rplus.l(i)+rmin.l(i));
+ 151  report2('total','sum(r^2)') = sum(i,sqr(rplus.l(i)-rmin.l(i)));
+ 152  report2('total','sum|r|') = sum(i,rplus.l(i)+rmin.l(i));
+ 153  report2('total','points') = card(i);
+ 154  display report2;
+ 155   
 
 
-COMPILATION TIME     =        0.047 SECONDS      3 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
 ----     70 PARAMETER x  
 
-i1  20.202,    i2   0.507,    i3  26.961,    i4  49.985,    i5  15.129,    i6  17.417,    i7  33.064,    i8  31.691
-i9  32.209,    i10 96.398,    i11 99.360,    i12 36.990,    i13 37.289,    i14 77.198,    i15 39.668,    i16 91.310
-i17 11.958,    i18 73.548,    i19  5.542,    i20 57.630,    i21  5.141,    i22  0.601,    i23 40.123,    i24 51.988
-i25 62.888,    i26 22.575,    i27 39.612,    i28 27.601,    i29 15.237,    i30 93.632,    i31 42.266,    i32 13.466
-i33 38.606,    i34 37.463,    i35 26.848,    i36 94.837,    i37 18.894,    i38 29.751,    i39  7.455,    i40 40.135
+i1  20.202,    i2   0.507,    i3  26.961,    i4  49.985,    i5  15.129,    i6  17.417,    i7  33.064,    i8  31.691,    i9  32.209,    i10 96.398,    i11 99.360,    i12 36.990,    i13 37.289,    i14 77.198,    i15 39.668,    i16 91.310,    i17 11.958,    i18 73.548,    i19  5.542,    i20 57.630,    i21  5.141,    i22  0.601,    i23 40.123,    i24 51.988,    i25 62.888,    i26 22.575,    i27 39.612,    i28 27.601,    i29 15.237,    i30 93.632,    i31 42.266,    i32 13.466,    i33 38.606,    i34 37.463,    i35 26.848,    i36 94.837,    i37 18.894,    i38 29.751,    i39  7.455,    i40 40.135
 
 
 ----     70 PARAMETER y  
 
-i1  85.162,    i2   2.103,    i3  55.969,    i4  44.690,    i5  86.515,    i6  79.866,    i7  56.328,    i8  29.422
-i9  64.021,    i10 85.191,    i11 68.235,    i12 57.516,    i13 25.884,    i14 56.157,    i15 58.398,    i16 66.205
-i17 93.742,    i18 28.178,    i19  5.788,    i20 60.830,    i21 53.988,    i22 42.559,    i23 61.928,    i24 42.984
-i25 58.308,    i26  4.414,    i27 67.282,    i28 56.445,    i29  0.218,    i30 11.896,    i31 60.515,    i32 51.721
-i33 65.392,    i34 16.978,    i35 74.588,    i36 -0.803,    i37 60.060,    i38 14.005,    i39 60.066,    i40 62.898
+i1  85.162,    i2   2.103,    i3  55.969,    i4  44.690,    i5  86.515,    i6  79.866,    i7  56.328,    i8  29.422,    i9  64.021,    i10 85.191,    i11 68.235,    i12 57.516,    i13 25.884,    i14 56.157,    i15 58.398,    i16 66.205,    i17 93.742,    i18 28.178,    i19  5.788,    i20 60.830,    i21 53.988,    i22 42.559,    i23 61.928,    i24 42.984,    i25 58.308,    i26  4.414,    i27 67.282,    i28 56.445,    i29  0.218,    i30 11.896,    i31 60.515,    i32 51.721,    i33 65.392,    i34 16.978,    i35 74.588,    i36 -0.803,    i37 60.060,    i38 14.005,    i39 60.066,    i40 62.898
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 3
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m1 Using MIQCP From line 105
 
 
 ---- obj  =E=  
 
-obj..  (0)*r(i1) + (0)*r(i2) + (0)*r(i3) + (0)*r(i4) + (0)*r(i5) + (0)*r(i6) + (0)*r(i7) + (0)*r(i8) + (0)*r(i9)
-     
-      + (0)*r(i10) + (0)*r(i11) + (0)*r(i12) + (0)*r(i13) + (0)*r(i14) + (0)*r(i15) + (0)*r(i16) + (0)*r(i17)
-     
-      + (0)*r(i18) + (0)*r(i19) + (0)*r(i20) + (0)*r(i21) + (0)*r(i22) + (0)*r(i23) + (0)*r(i24) + (0)*r(i25)
-     
-      + (0)*r(i26) + (0)*r(i27) + (0)*r(i28) + (0)*r(i29) + (0)*r(i30) + (0)*r(i31) + (0)*r(i32) + (0)*r(i33)
-     
-      + (0)*r(i34) + (0)*r(i35) + (0)*r(i36) + (0)*r(i37) + (0)*r(i38) + (0)*r(i39) + (0)*r(i40) + z =E= 0 ; (LHS = 0)
+obj..  (0)*r(i1) + (0)*r(i2) + (0)*r(i3) + (0)*r(i4) + (0)*r(i5) + (0)*r(i6) + (0)*r(i7) + (0)*r(i8) + (0)*r(i9) + (0)*r(i10) + (0)*r(i11) + (0)*r(i12) + (0)*r(i13) + (0)*r(i14) + (0)*r(i15) + (0)*r(i16) + (0)*r(i17) + (0)*r(i18) + (0)*r(i19) + (0)*r(i20) + (0)*r(i21) + (0)*r(i22) + (0)*r(i23) + (0)*r(i24) + (0)*r(i25) + (0)*r(i26) + (0)*r(i27) + (0)*r(i28) + (0)*r(i29) + (0)*r(i30) + (0)*r(i31) + (0)*r(i32) + (0)*r(i33) + (0)*r(i34) + (0)*r(i35) + (0)*r(i36) + (0)*r(i37) + (0)*r(i38) + (0)*r(i39) + (0)*r(i40) + z =E= 0 ; (LHS = 0)
      
 
 ---- fit  =E=  standard linear fit + slack
 
-fit(i1,line1)..  r(i1) - s(i1,line1) + a(line1,const.term) + 20.202*a(line1,slope) =E= 85.162 ;
+fit(i1,line1)..  r(i1) - s(i1,line1) + a(line1,const.term) + 20.202*a(line1,slope) =E= 85.162 ; (LHS = 0, INFES = 85.162 ****)
      
-      (LHS = 0, INFES = 85.162 ****)
+fit(i1,line2)..  r(i1) - s(i1,line2) + a(line2,const.term) + 20.202*a(line2,slope) =E= 85.162 ; (LHS = 0, INFES = 85.162 ****)
      
-fit(i1,line2)..  r(i1) - s(i1,line2) + a(line2,const.term) + 20.202*a(line2,slope) =E= 85.162 ;
-     
-      (LHS = 0, INFES = 85.162 ****)
-     
-fit(i1,line3)..  r(i1) - s(i1,line3) + a(line3,const.term) + 20.202*a(line3,slope) =E= 85.162 ;
-     
-      (LHS = 0, INFES = 85.162 ****)
+fit(i1,line3)..  r(i1) - s(i1,line3) + a(line3,const.term) + 20.202*a(line3,slope) =E= 85.162 ; (LHS = 0, INFES = 85.162 ****)
      
 REMAINING 117 ENTRIES SKIPPED
 
@@ -248,7 +233,7 @@ order(line2)..  a(line1,const.term) - a(line2,const.term) =G= 0 ; (LHS = 0)
      
 order(line3)..  a(line2,const.term) - a(line3,const.term) =G= 0 ; (LHS = 0)
      
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 4
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m1 Using MIQCP From line 105
 
@@ -464,7 +449,18 @@ delta(i1,line3)
         1       sum1(i1)
 
 REMAINING 117 ENTRIES SKIPPED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 5
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using MIQCP From line 105
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.180E-01, 1.000E+03] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 5.070E-01, 1.000E+03] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m1 Using MIQCP From line 105
 
@@ -477,8 +473,8 @@ NON ZERO ELEMENTS         1,125     NON LINEAR N-Z             40
 CODE LENGTH                 122     CONSTANT POOL              16     DISCRETE VARIABLES        120
 
 
-GENERATION TIME      =        0.562 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 6
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m1 Using MIQCP From line 105
 
@@ -493,31 +489,31 @@ Solution Report     SOLVE m1 Using MIQCP From line 105
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              932.5363
 
- RESOURCE USAGE, LIMIT          8.781 10000000000.000
- ITERATION COUNT, LIMIT    169452    2147483647
+ RESOURCE USAGE, LIMIT          2.125 10000000000.000
+ ITERATION COUNT, LIMIT    230308    2147483647
  EVALUATION ERRORS             NA             0
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
---- GMO setup time: 0.02s
+--- GMO setup time: 0.00s
 --- Space for names approximately 0.01 Mb
 --- Use option 'names no' to turn use of names off
 --- GMO memory 0.62 Mb (peak 0.62 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 20.1.0.1 link memory 0.01 Mb (peak 0.04 Mb)
+--- Cplex 22.1.0.0 link memory 0.01 Mb (peak 0.04 Mb)
 --- Starting Cplex
 
 
 --- MIQP status (101): integer optimal solution.
---- Cplex Time: 7.95sec (det. 1946.99 ticks)
+--- Cplex Time: 2.11sec (det. 1739.89 ticks)
 
 --- Fixing integer variables and solving final QP...
 
 
 --- Fixed MIQP status (1): optimal.
---- Cplex Time: 0.06sec (det. 2.26 ticks)
+--- Cplex Time: 0.02sec (det. 2.26 ticks)
 
 
 Proven optimal solution
-MIP Solution:          932.536291    (169452 iterations, 23629 nodes)
+MIP Solution:          932.536291    (230308 iterations, 36242 nodes)
 Final Solve:           932.536291    (208 iterations)
 
 Best possible:         932.536291
@@ -1273,7 +1269,7 @@ i40.line3          .              .             1.0000         EPS
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 7
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -1287,47 +1283,69 @@ line2      51.738       0.158      14.000     184.930      31.032
 line3      -6.663       0.879      11.000     521.717      70.506
 total                              40.000     932.536     150.039
 
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 8
+
+----    122 PARAMETER plotdata1  
+
+              x           y       color
+
+i1       20.202      85.162       1.000
+i2        0.507       2.103       3.000
+i3       26.961      55.969       2.000
+i4       49.985      44.690       1.000
+i5       15.129      86.515       1.000
+i6       17.417      79.866       1.000
+i7       33.064      56.328       2.000
+i8       31.691      29.422       3.000
+i9       32.209      64.021       1.000
+i10      96.398      85.191       3.000
+i11      99.360      68.235       2.000
+i12      36.990      57.516       2.000
+i13      37.289      25.884       3.000
+i14      77.198      56.157       3.000
+i15      39.668      58.398       2.000
+i16      91.310      66.205       2.000
+i17      11.958      93.742       1.000
+i18      73.548      28.178       1.000
+i19       5.542       5.788       3.000
+i20      57.630      60.830       2.000
+i21       5.141      53.988       2.000
+i22       0.601      42.559       2.000
+i23      40.123      61.928       1.000
+i24      51.988      42.984       3.000
+i25      62.888      58.308       2.000
+i26      22.575       4.414       3.000
+i27      39.612      67.282       1.000
+i28      27.601      56.445       2.000
+i29      15.237       0.218       3.000
+i30      93.632      11.896       1.000
+i31      42.266      60.515       1.000
+i32      13.466      51.721       2.000
+i33      38.606      65.392       1.000
+i34      37.463      16.978       3.000
+i35      26.848      74.588       1.000
+i36      94.837      -0.803       1.000
+i37      18.894      60.060       2.000
+i38      29.751      14.005       3.000
+i39       7.455      60.066       2.000
+i40      40.135      62.898       1.000
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m2 Using MIP From line 136
+Equation Listing    SOLVE m2 Using MIP From line 143
 
 
 ---- obj2  =E=  LAD obj
 
-obj2..  z - rplus(i1) - rplus(i2) - rplus(i3) - rplus(i4) - rplus(i5) - rplus(i6) - rplus(i7) - rplus(i8) - rplus(i9)
-     
-      - rplus(i10) - rplus(i11) - rplus(i12) - rplus(i13) - rplus(i14) - rplus(i15) - rplus(i16) - rplus(i17)
-     
-      - rplus(i18) - rplus(i19) - rplus(i20) - rplus(i21) - rplus(i22) - rplus(i23) - rplus(i24) - rplus(i25)
-     
-      - rplus(i26) - rplus(i27) - rplus(i28) - rplus(i29) - rplus(i30) - rplus(i31) - rplus(i32) - rplus(i33)
-     
-      - rplus(i34) - rplus(i35) - rplus(i36) - rplus(i37) - rplus(i38) - rplus(i39) - rplus(i40) - rmin(i1) - rmin(i2)
-     
-      - rmin(i3) - rmin(i4) - rmin(i5) - rmin(i6) - rmin(i7) - rmin(i8) - rmin(i9) - rmin(i10) - rmin(i11) - rmin(i12)
-     
-      - rmin(i13) - rmin(i14) - rmin(i15) - rmin(i16) - rmin(i17) - rmin(i18) - rmin(i19) - rmin(i20) - rmin(i21)
-     
-      - rmin(i22) - rmin(i23) - rmin(i24) - rmin(i25) - rmin(i26) - rmin(i27) - rmin(i28) - rmin(i29) - rmin(i30)
-     
-      - rmin(i31) - rmin(i32) - rmin(i33) - rmin(i34) - rmin(i35) - rmin(i36) - rmin(i37) - rmin(i38) - rmin(i39)
-     
-      - rmin(i40) =E= 0 ; (LHS = 932.536291304747, INFES = 932.536291304747 ****)
+obj2..  z - rplus(i1) - rplus(i2) - rplus(i3) - rplus(i4) - rplus(i5) - rplus(i6) - rplus(i7) - rplus(i8) - rplus(i9) - rplus(i10) - rplus(i11) - rplus(i12) - rplus(i13) - rplus(i14) - rplus(i15) - rplus(i16) - rplus(i17) - rplus(i18) - rplus(i19) - rplus(i20) - rplus(i21) - rplus(i22) - rplus(i23) - rplus(i24) - rplus(i25) - rplus(i26) - rplus(i27) - rplus(i28) - rplus(i29) - rplus(i30) - rplus(i31) - rplus(i32) - rplus(i33) - rplus(i34) - rplus(i35) - rplus(i36) - rplus(i37) - rplus(i38) - rplus(i39) - rplus(i40) - rmin(i1) - rmin(i2) - rmin(i3) - rmin(i4) - rmin(i5) - rmin(i6) - rmin(i7) - rmin(i8) - rmin(i9) - rmin(i10) - rmin(i11) - rmin(i12) - rmin(i13) - rmin(i14) - rmin(i15) - rmin(i16) - rmin(i17) - rmin(i18) - rmin(i19) - rmin(i20) - rmin(i21) - rmin(i22) - rmin(i23) - rmin(i24) - rmin(i25) - rmin(i26) - rmin(i27) - rmin(i28) - rmin(i29) - rmin(i30) - rmin(i31) - rmin(i32) - rmin(i33) - rmin(i34) - rmin(i35) - rmin(i36) - rmin(i37) - rmin(i38) - rmin(i39) - rmin(i40) =E= 0 ; (LHS = 932.536291304747, INFES = 932.536291304747 ****)
      
 
 ---- fit2  =E=  LAD fit
 
-fit2(i1,line1)..  - s(i1,line1) + a(line1,const.term) + 20.202*a(line1,slope) + rplus(i1) - rmin(i1) =E= 85.162 ;
+fit2(i1,line1)..  - s(i1,line1) + a(line1,const.term) + 20.202*a(line1,slope) + rplus(i1) - rmin(i1) =E= 85.162 ; (LHS = 82.0258672731847, INFES = 3.13613272681535 ****)
      
-      (LHS = 82.0258672731847, INFES = 3.13613272681535 ****)
+fit2(i1,line2)..  - s(i1,line2) + a(line2,const.term) + 20.202*a(line2,slope) + rplus(i1) - rmin(i1) =E= 85.162 ; (LHS = 82.0258672731847, INFES = 3.13613272681528 ****)
      
-fit2(i1,line2)..  - s(i1,line2) + a(line2,const.term) + 20.202*a(line2,slope) + rplus(i1) - rmin(i1) =E= 85.162 ;
-     
-      (LHS = 82.0258672731847, INFES = 3.13613272681528 ****)
-     
-fit2(i1,line3)..  - s(i1,line3) + a(line3,const.term) + 20.202*a(line3,slope) + rplus(i1) - rmin(i1) =E= 85.162 ;
-     
-      (LHS = 82.0258672731847, INFES = 3.13613272681526 ****)
+fit2(i1,line3)..  - s(i1,line3) + a(line3,const.term) + 20.202*a(line3,slope) + rplus(i1) - rmin(i1) =E= 85.162 ; (LHS = 82.0258672731847, INFES = 3.13613272681526 ****)
      
 REMAINING 117 ENTRIES SKIPPED
 
@@ -1371,9 +1389,9 @@ order(line2)..  a(line1,const.term) - a(line2,const.term) =G= 0 ; (LHS = 51.1589
      
 order(line3)..  a(line2,const.term) - a(line3,const.term) =G= 0 ; (LHS = 58.4004183266574)
      
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 9
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m2 Using MIP From line 136
+Column Listing      SOLVE m2 Using MIP From line 143
 
 
 ---- s  slack (to turn off a fit equation)
@@ -1612,9 +1630,20 @@ rmin(i3)
        -1       fit2(i3,line3)
 
 REMAINING 37 ENTRIES SKIPPED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 10
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m2 Using MIP From line 136
+Range Statistics    SOLVE m2 Using MIP From line 143
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.180E-01, 1.000E+03] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 5.070E-01, 1.000E+03]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 143
 
 
 MODEL STATISTICS
@@ -1624,46 +1653,46 @@ BLOCKS OF VARIABLES           6     SINGLE VARIABLES          327
 NON ZERO ELEMENTS         1,285     DISCRETE VARIABLES        120
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 11
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m2 Using MIP From line 136
+Solution Report     SOLVE m2 Using MIP From line 143
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m2                  OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  136
+     SOLVER  CPLEX               FROM LINE  143
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              143.1632
 
- RESOURCE USAGE, LIMIT         30.375 10000000000.000
- ITERATION COUNT, LIMIT   2389586    2147483647
+ RESOURCE USAGE, LIMIT         10.407 10000000000.000
+ ITERATION COUNT, LIMIT   2737128    2147483647
 --- GAMS/Cplex Link licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
 --- Space for names approximately 0.02 Mb
 --- Use option 'names no' to turn use of names off
 --- GMO memory 0.58 Mb (peak 0.59 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 20.1.0.1 link memory 0.01 Mb (peak 0.05 Mb)
+--- Cplex 22.1.0.0 link memory 0.01 Mb (peak 0.05 Mb)
 --- Starting Cplex
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 30.33sec (det. 9557.89 ticks)
+--- Cplex Time: 10.41sec (det. 5511.02 ticks)
 
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.01sec (det. 0.77 ticks)
+--- Cplex Time: 0.00sec (det. 0.77 ticks)
 
 
 Proven optimal solution
-MIP Solution:          143.163226    (2389586 iterations, 613502 nodes)
+MIP Solution:          143.163226    (2737128 iterations, 634436 nodes)
 Final Solve:           143.163226    (42 iterations)
 
 Best possible:         143.163226
@@ -2465,12 +2494,12 @@ i40          .              .            +INF            2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 36.1.0  r2c0a44a Released Aug  2, 2021 WEX-WEI x86 64bit/MS Windows - 09/20/21 17:09:40 Page 12
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/08/22 08:18:41 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    147 PARAMETER report2  least absolute deviations results
+----    154 PARAMETER report2  least absolute deviations results
 
        const.term       slope      points    sum(r^2)      sum|r|
 
@@ -2481,14 +2510,14 @@ total                              40.000     988.076     143.163
 
 
 
-EXECUTION TIME       =       41.062 SECONDS      4 MB  36.1.0 r2c0a44a WEX-WEI
+EXECUTION TIME       =       12.593 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
 
 
-USER: Eval License                                   S201210/0001CO-GEN
+USER: Eval License                                   G211206|0002CO-GEN
       Amsterdam Optimization Modeling Group,                     DCE378
 
 
 **** FILE SUMMARY
 
-Input      D:\projects\OptimizationModels\MultipleLineRegression\MultipleLineRegression.gms
-Output     D:\projects\OptimizationModels\MultipleLineRegression\MultipleLineRegression.lst
+Input      C:\projects\OptimizationModels\MultipleLineRegression\MultipleLineRegression.gms
+Output     C:\projects\OptimizationModels\MultipleLineRegression\MultipleLineRegression.lst

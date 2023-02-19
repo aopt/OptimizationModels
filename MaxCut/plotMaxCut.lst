@@ -1,0 +1,570 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         MAX-CUT Problem with Visualization
+       
+         No weights: each arc counts as 1
+       
+   8   
+   9   
+  10  *-----------------------------------------------------------
+  11  * undirected network topology
+  12  * randomly generated data
+  13  *-----------------------------------------------------------
+  14   
+  15  set
+  16    i 'nodes' /node1*node35/
+  17    a(i,i) 'arcs'
+  18  ;
+  19  alias (i,j,n);
+  20   
+  21  *-----------------------------------------------------------
+  22  * random coordinates
+  23  * for plotting
+  24  *-----------------------------------------------------------
+  25   
+  26  set xy /x,y/;
+  27  parameter coord(n,xy) 'x-y coordinates';
+  28  coord(n,xy) = uniform(0,100);
+  29  display coord;
+  30   
+  31  *-----------------------------------------------------------
+  32  * points that are close get a higher probability to get a link
+  33  * may be that makes the graph a bit prettier.
+  34  *-----------------------------------------------------------
+  35   
+  36  set lt(i,j) 'we populate only upper-triangular part';
+  37  lt(i,j) = ord(i)<ord(j);
+  38   
+  39  parameter
+  40     dist(i,j) 'distance'
+  41     maxdist 'maximum distance we can have'
+  42  ;
+  43  dist(lt(i,j)) = sqrt(sum(xy,sqr(coord(i,xy)-coord(j,xy))));
+  44  maxdist = smax(lt,dist(lt));
+  45  * select short arcs with higher probability than long ones.
+  46  a(lt)$(dist(lt)<maxdist/5) = uniform(0,1)<0.5;
+  47  a(lt)$(dist(lt)>=maxdist/5) = uniform(0,1)<0.05;
+  48   
+  49  display$(card(i)<=50) i,a;
+  50   
+  51   
+  52  *-----------------------------------------------------------
+  53  * summary of the data
+  54  *-----------------------------------------------------------
+  55   
+  56  scalar
+  57    numnodes 'number of nodes'
+  58    numarcs 'number of arcs';
+  59  numnodes = card(i);
+  60  numarcs = card(a);
+  61  display numnodes,numarcs;
+  62   
+  63   
+  64  *-----------------------------------------------------------
+  65  * MAX-CUT Model
+  66  *-----------------------------------------------------------
+  67   
+  68  binary variables
+  69     x(i) 'node is in S'
+  70  ;
+  71   
+  72  variable z 'objective';
+  73   
+  74  equations
+  75     obj1
+  76  ;
+  77   
+  78  obj1.. z =e= sum(a(i,j),sqr(x(i)-x(j)));
+  79   
+  80   
+  81  model maxcut1 /obj1/;
+  82  option miqcp=cplex;
+  83  solve maxcut1 maximizing z using miqcp;
+  84   
+  85   
+  86  * remove possible noise
+  87  x.l(i) = round(x.l(i));
+  88   
+  89  set ecut(i,j) 'maximum cut';
+  90  ecut(a(i,j)) = x.l(i)<>x.l(j);
+  91   
+  92  option x:0;
+  93  display x.l,ecut,z.l;
+  94   
+  95  *-----------------------------------------------------------
+  96  * Plot network using put statement
+  97  * We generate some JavaScript code to hold the data
+  98  * For documentation on plotting library, see:
+  99  * https://js.cytoscape.org/
+ 100  *-----------------------------------------------------------
+ 101   
+ 104   
+ 105  file fln /networkdata.js/;
+ 106  put fln;
+ 107  put 'networkdata=['/;
+ 108  loop(n,
+ 109      put$(ord(n)>1) ",";
+ 110      put "{data:{id:",(ord(n)):0:0;
+ 111      put$(x.l(n)=0) ",color:'green'";
+ 112      put$(x.l(n)=1) ",color:'blue'";
+ 113      put ",size:2";
+ 114      put "},position:{x:",coord(n,'x'):0:3;
+ 115      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 116  );
+ 117  loop(a(i,j),
+ 118      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 119      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 120      put$ecut(a) ",color:'red',width:0.1";
+ 121      put$(not ecut(a)) ",color:'grey',width:0.1";
+ 122      put "}}"/;
+ 123  );
+ 124  put '];'/;
+ 125   
+ 126   
+ 127  put "table='<h4>GAMS MAX-CUT</h4>"
+ 128      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 129      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 130      "Cut size (red arcs): ",(card(ecut)):0:0,"<br>"
+ 131      "Grey arcs (not in cut): ",(card(a)-card(ecut)):0:0,"<br>"
+ 132  put "';";
+ 133  putclose;
+ 134   
+       
+      With an internet connection you can use:
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
+      Without use a local .js file:
+        <script src="cytoscape.min.js"></script>
+       
+ 143   
+ 201   
+LIBINCLUDE C:\GAMS\39\inclib\win32.gms
+ 203  *
+ 204  * LibInclude file to provide functionality of old utilities ShellExecute, MSAppAvail, XLSTalk via EmbeddedCode and cscript
+ 205  * -c runs this at compile time, -e at execution time (default)
+ 206  *
+ 207  * Usage: $libInclude win32 [-c|-e] ShellExecute [-dir=working_directory] [-verb=open|edit|find|print|...] [-showcmd=0..11] f
+      ilename arguments
+ 208  *        This allows you to spawn an external program based on the file type of the document to open.
+ 209  *        The optional argument verb specifies the action to be performed. The allowed actions are application dependent.
+ 210  *        Open is the default. Some commonly available verbs include:
+ 211  *          -edit:       Launches an editor and opens the document for editing.
+ 212  *          -find:       Initiates a search starting from the specified directory.
+ 213  *          -open:       Launches an application. If this file is not an executable file, its associated application is launc
+      hed.
+ 214  *          -print:      Prints the document file.
+ 215  *          -properties: Displays the object's properties.
+ 216  *        The optional argument showcmd specifies how an application is to be displayed when it is opened. The map between
+ 217  *        numerical values 0 to 11 and symbolic names can be found here:
+ 218  *        https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
+ 219  *
+ 220  * Usage: $libInclude win32 [-c|-e] MSAppAvail Application
+ 221  *        Returns errorlevel=0 if Application is available
+ 222  *
+ 223  * Usage: $libInclude win32 [-c|-e] XLSTalk command filename
+ 224  *        Performs command on an Excel workbook specified by filename. The following commands are recognized:
+ 225  *          -close:        Close workbook ignoring changes
+ 226  *          -saveAndclose: Ask Excel to save & close the workbook
+ 227  *
+ 231  *
+ 242  $EmbeddedCode Python:
+ 243  try:
+ 244    import ctypes
+ 245    ctypes.windll.shell32.ShellExecuteW(None, r'open', r'network.html', r'', None, 0)
+ 246  except Exception as _einst:
+ 247    gams.printLog(str(_einst))
+ 248  $endEmbeddedCode
+EXIT C:\GAMS\39\inclib\win32.gms
+ 250  * for older gams systems use:
+ 251  *execute 'shellexecute "%htmlfile%"';
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\projects\OptimizationModels\MaxCut\plotMaxCut.gms
+     2      202 LIBINCLUDE     1     202  .C:\GAMS\39\inclib\win32.gms
+     3      249 EXIT           2      69  .C:\GAMS\39\inclib\win32.gms
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     29 PARAMETER coord  x-y coordinates
+
+                 x           y
+
+node1       17.175      84.327
+node2       55.038      30.114
+node3       29.221      22.405
+node4       34.983      85.627
+node5        6.711      50.021
+node6       99.812      57.873
+node7       99.113      76.225
+node8       13.069      63.972
+node9       15.952      25.008
+node10      66.893      43.536
+node11      35.970      35.144
+node12      13.149      15.010
+node13      58.911      83.089
+node14      23.082      66.573
+node15      77.586      30.366
+node16      11.049      50.238
+node17      16.017      87.246
+node18      26.511      28.581
+node19      59.396      72.272
+node20      62.825      46.380
+node21      41.331      11.770
+node22      31.421       4.655
+node23      33.855      18.210
+node24      64.573      56.075
+node25      76.996      29.781
+node26      66.111      75.582
+node27      62.745      28.386
+node28       8.642      10.251
+node29      64.125      54.531
+node30       3.152      79.236
+node31       7.277      17.566
+node32      52.563      75.021
+node33      17.812       3.414
+node34      58.513      62.123
+node35      38.936      35.871
+
+
+----     49 SET i  nodes
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35
+
+
+----     49 SET a  arcs
+
+             node4       node5       node7       node8       node9      node11      node12      node13      node14      node16
+
+node1          YES         YES                     YES                                                         YES
+node2                                                                      YES
+node3                                  YES                     YES         YES         YES                                 YES
+node5                                              YES
+node6                                  YES
+node7                                                                                              YES         YES
+node8                                                                                                                      YES
+node9                                                                                  YES
+node11                                                                                             YES
+node14                                                                                                                     YES
+
+     +      node17      node18      node19      node20      node21      node22      node23      node24      node25      node26
+
+node1                                  YES                                                                     YES
+node2          YES                                 YES
+node3                      YES                                 YES         YES         YES
+node4                      YES                                                                                 YES
+node7                                              YES
+node8                                  YES
+node9                                                                                  YES
+node10                                             YES                                             YES         YES
+node11                     YES                                                         YES
+node12         YES         YES                     YES                                 YES
+node13                                 YES                                                                                 YES
+node14                                                         YES                     YES
+node15                                                                                                         YES
+node18                                                                                                         YES
+node20                                                                                                         YES
+node21                                                                                                         YES
+node22                                                                                 YES
+
+     +      node27      node28      node29      node30      node31      node32      node33      node34      node35
+
+node1                      YES                     YES                     YES
+node2          YES                                                                                 YES         YES
+node3                                                                                  YES
+node4                                                                      YES
+node5                      YES                                             YES
+node6                                  YES
+node8                                                                                  YES
+node9                      YES         YES                     YES
+node10         YES                                                                                 YES
+node11                                                                                                         YES
+node12                     YES                                 YES                     YES
+node13                                                                     YES                     YES
+node14                                                                                                         YES
+node17                                                         YES                     YES                     YES
+node18                                                                     YES                                 YES
+node19                                                                     YES
+node20                                 YES                                             YES
+node22                     YES                                                         YES
+node23                                                                                 YES                     YES
+node24                                                                                             YES
+node25         YES
+node26                                 YES                                 YES
+node27                                                                     YES         YES
+node28                                                                                 YES
+node29                                                                                             YES
+
+
+----     61 PARAMETER numnodes             =       35.000  number of nodes
+            PARAMETER numarcs              =       93.000  number of arcs
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 83
+
+
+---- obj1  =E=  
+
+obj1..  (0)*x(node1) + (0)*x(node2) + (0)*x(node3) + (0)*x(node4) + (0)*x(node5) + (0)*x(node6) + (0)*x(node7) + (0)*x(node8)
+     
+      + (0)*x(node9) + (0)*x(node10) + (0)*x(node11) + (0)*x(node12) + (0)*x(node13) + (0)*x(node14) + (0)*x(node15)
+     
+      + (0)*x(node16) + (0)*x(node17) + (0)*x(node18) + (0)*x(node19) + (0)*x(node20) + (0)*x(node21) + (0)*x(node22)
+     
+      + (0)*x(node23) + (0)*x(node24) + (0)*x(node25) + (0)*x(node26) + (0)*x(node27) + (0)*x(node28) + (0)*x(node29)
+     
+      + (0)*x(node30) + (0)*x(node31) + (0)*x(node32) + (0)*x(node33) + (0)*x(node34) + (0)*x(node35) + z =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut1 Using MIQCP From line 83
+
+
+---- x  node is in S
+
+x(node1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+REMAINING 32 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 83
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 83
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           36
+NON ZERO ELEMENTS            36     NON LINEAR N-Z             35
+CODE LENGTH                 375     CONSTANT POOL              16     DISCRETE VARIABLES         35
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE maxcut1 Using MIQCP From line 83
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   maxcut1             OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  83
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               71.0000
+
+ RESOURCE USAGE, LIMIT          0.187 10000000000.000
+ ITERATION COUNT, LIMIT       949    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 0.16sec (det. 20.91 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.05 ticks)
+
+
+Proven optimal solution
+MIP Solution:           71.000000    (949 iterations, 30 nodes)
+Final Solve:            71.000000    (0 iterations)
+
+Best possible:          71.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+
+---- VAR x  node is in S
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1           .              .             1.0000       -12.0000      
+node2           .             1.0000         1.0000        10.0000      
+node3           .             1.0000         1.0000        16.0000      
+node4           .              .             1.0000        -4.0000      
+node5           .              .             1.0000        -6.0000      
+node6           .              .             1.0000        -2.0000      
+node7           .              .             1.0000        -6.0000      
+node8           .             1.0000         1.0000         8.0000      
+node9           .              .             1.0000       -10.0000      
+node10          .             1.0000         1.0000         8.0000      
+node11          .              .             1.0000        -8.0000      
+node12          .             1.0000         1.0000        10.0000      
+node13          .             1.0000         1.0000        10.0000      
+node14          .             1.0000         1.0000        10.0000      
+node15          .              .             1.0000        -2.0000      
+node16          .              .             1.0000        -6.0000      
+node17          .              .             1.0000       -10.0000      
+node18          .              .             1.0000       -10.0000      
+node19          .              .             1.0000        -6.0000      
+node20          .              .             1.0000       -12.0000      
+node21          .              .             1.0000        -6.0000      
+node22          .              .             1.0000        -6.0000      
+node23          .              .             1.0000       -10.0000      
+node24          .              .             1.0000        -2.0000      
+node25          .             1.0000         1.0000        14.0000      
+node26          .              .             1.0000        -6.0000      
+node27          .              .             1.0000       -10.0000      
+node28          .             1.0000         1.0000         8.0000      
+node29          .             1.0000         1.0000        10.0000      
+node30          .             1.0000         1.0000         2.0000      
+node31          .             1.0000         1.0000         4.0000      
+node32          .             1.0000         1.0000        14.0000      
+node33          .             1.0000         1.0000        10.0000      
+node34          .              .             1.0000        -8.0000      
+node35          .             1.0000         1.0000         8.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           71.0000        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 21:24:33 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     93 VARIABLE x.L  node is in S
+
+node2  1,    node3  1,    node8  1,    node10 1,    node12 1,    node13 1,    node14 1,    node25 1,    node28 1,    node29 1
+node30 1,    node31 1,    node32 1,    node33 1,    node35 1
+
+
+----     93 SET ecut  maximum cut
+
+             node7       node8       node9      node11      node12      node13      node14      node16      node17      node18
+
+node1                      YES                                                         YES
+node2                                              YES                                                         YES
+node3          YES                     YES         YES                                             YES                     YES
+node5                      YES
+node7                                                                      YES         YES
+node8                                                                                              YES
+node9                                                          YES
+node11                                                                     YES
+node12                                                                                                         YES         YES
+node14                                                                                             YES
+
+     +      node19      node20      node21      node22      node23      node24      node25      node26      node27      node28
+
+node1                                                                                  YES                                 YES
+node2                      YES                                                                                 YES
+node3                                  YES         YES         YES
+node4                                                                                  YES
+node5                                                                                                                      YES
+node8          YES
+node9                                                                                                                      YES
+node10                     YES                                             YES                                 YES
+node12                     YES                                 YES
+node13         YES                                                                                 YES
+node14                                 YES                     YES
+node15                                                                                 YES
+node18                                                                                 YES
+node20                                                                                 YES
+node21                                                                                 YES
+node22                                                                                                                     YES
+node25                                                                                                         YES
+
+     +      node29      node30      node31      node32      node33      node34      node35
+
+node1                      YES                     YES
+node2                                                                      YES
+node4                                              YES
+node5                                              YES
+node6          YES
+node9          YES                     YES
+node10                                                                     YES
+node11                                                                                 YES
+node13                                                                     YES
+node17                                 YES                     YES                     YES
+node18                                             YES                                 YES
+node19                                             YES
+node20         YES                                             YES
+node22                                                         YES
+node23                                                         YES                     YES
+node26         YES                                 YES
+node27                                             YES         YES
+node29                                                                     YES
+
+
+----     93 VARIABLE z.L                   =       71.000  objective
+
+**** REPORT FILE SUMMARY
+
+fln C:\projects\OptimizationModels\MaxCut\networkdata.js
+ pyScript C:\projects\OptimizationModels\MaxCut\225a\myEmb.dat
+
+
+EXECUTION TIME       =        0.344 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MaxCut\plotMaxCut.gms
+Output     C:\projects\OptimizationModels\MaxCut\plotMaxCut.lst

@@ -1,0 +1,468 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         MAX-CUT Problem with Visualization
+       
+         No weights: each arc counts as 1
+         
+   8   
+   9   
+  10  *---------------------------------------------------------
+  11  * directed graph
+  12  *---------------------------------------------------------
+  13   
+  14   
+  15  set
+  16    i 'nodes' /node1*node25/
+  17    a(i,i) 'arcs'
+  18  ;
+  19  alias (i,j,n);
+  20   
+  21   
+  22  *-----------------------------------------------------------
+  23  * random coordinates
+  24  * for plotting
+  25  *-----------------------------------------------------------
+  26   
+  27  set xy /x,y/;
+  28  parameter coord(i,xy) 'x-y coordinates';
+  29  coord(i,xy) = uniform(0,100);
+  30  display coord;
+  31   
+  32  *-----------------------------------------------------------
+  33  * remove some of the long links
+  34  *-----------------------------------------------------------
+  35   
+  36   
+  37  a(i,j)$(ord(i)<>ord(j)) = uniform(0,1)<0.15;
+  38   
+  39  parameter
+  40     dist(i,j) 'distance'
+  41     maxdist
+  42     prob(i,j) 'probability of link'
+  43  ;
+  44  dist(a(i,j)) = sqrt(sum(xy,sqr(coord(i,xy)-coord(j,xy))));
+  45  maxdist = smax(a,dist(a))/2;
+  46  a(i,j)$(dist(i,j)>maxdist) = no;
+  47   
+  48  display$(card(i)<=50) i,a;
+  49   
+  50   
+  51  parameter w(i,j) 'weights';
+  52  w(a) = uniform(0,1);
+  53   
+  54   
+  55  *-----------------------------------------------------------
+  56  * summary of the data
+  57  *-----------------------------------------------------------
+  58   
+  59  scalar
+  60    numnodes 'number of nodes'
+  61    numarcs 'number of arcs';
+  62  numnodes = card(i);
+  63  numarcs = card(a);
+  64  display numnodes,numarcs;
+  65   
+  66   
+  67  *-----------------------------------------------------------
+  68  * MAX-CUT Model
+  69  *-----------------------------------------------------------
+  70   
+  71  binary variables
+  72     x(i) 'node is in set S'
+  73  ;
+  74   
+  75  variable z 'objective';
+  76   
+  77  equations
+  78     obj1
+  79  ;
+  80   
+  81  obj1.. z =e= sum(a(i,j),w(i,j)*x(i)*(1-x(j)));
+  82   
+  83   
+  84  model maxcut1 /obj1/;
+  85  option miqcp=cplex;
+  86  solve maxcut1 maximizing z using miqcp;
+  87   
+  88  x.l(i) = round(x.l(i));
+  89   
+  90  parameter ecut(i,j) 'maximum cut';
+  91  ecut(a(i,j)) = x.l(i)*(1-x.l(j));
+  92   
+  93  *-----------------------------------------------------------
+  94  * Plot network using put statement
+  95  * We generate some JavaScript code to hold the data
+  96  * For documentation on plotting library, see:
+  97  * https://js.cytoscape.org/
+  98  *-----------------------------------------------------------
+  99   
+ 102   
+ 103  file fln /networkdata.js/;
+ 104  put fln;
+ 105  put 'networkdata=['/;
+ 106  loop(n,
+ 107      put$(ord(n)>1) ",";
+ 108      put "{data:{id:",(ord(n)):0:0;
+ 109      put$(x.l(n)=0) ",color:'green'";
+ 110      put$(x.l(n)=1) ",color:'blue'";
+ 111      put ",size:2";
+ 112      put "},position:{x:",coord(n,'x'):0:3;
+ 113      put ",y:",coord(n,'y'):0:3,"}}"/;
+ 114  );
+ 115  loop(a(i,j),
+ 116      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 117      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 118      put$ecut(a) ",color:'red',width:0.1";
+ 119      put$(not ecut(a)) ",color:'grey',width:0.1";
+ 120      put "}}"/;
+ 121  );
+ 122  put '];'/;
+ 123   
+ 124   
+ 125  put "table='<h4>GAMS MAX-CUT</h4>"
+ 126      "Number of nodes: ",(card(n)):0:0,"<br>"
+ 127      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 128      "Cut size (red arcs): ",(card(ecut)):0:0,"<br>"
+ 129      "Grey arcs (not in cut): ",(card(a)-card(ecut)):0:0,"<br>"
+ 130  put "';";
+ 131  putclose;
+ 132   
+       
+      With an internet connection you can use:
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.20.0/cytoscape.min.js"></script>
+      Without use a local .js file:
+        <script src="cytoscape.min.js"></script>
+       
+ 141   
+ 201   
+LIBINCLUDE C:\GAMS\39\inclib\win32.gms
+ 203  *
+ 204  * LibInclude file to provide functionality of old utilities ShellExecute, MSAppAvail, XLSTalk via EmbeddedCode and cscript
+ 205  * -c runs this at compile time, -e at execution time (default)
+ 206  *
+ 207  * Usage: $libInclude win32 [-c|-e] ShellExecute [-dir=working_directory] [-verb=open|edit|find|print|...] [-showcmd=0..11] f
+      ilename arguments
+ 208  *        This allows you to spawn an external program based on the file type of the document to open.
+ 209  *        The optional argument verb specifies the action to be performed. The allowed actions are application dependent.
+ 210  *        Open is the default. Some commonly available verbs include:
+ 211  *          -edit:       Launches an editor and opens the document for editing.
+ 212  *          -find:       Initiates a search starting from the specified directory.
+ 213  *          -open:       Launches an application. If this file is not an executable file, its associated application is launc
+      hed.
+ 214  *          -print:      Prints the document file.
+ 215  *          -properties: Displays the object's properties.
+ 216  *        The optional argument showcmd specifies how an application is to be displayed when it is opened. The map between
+ 217  *        numerical values 0 to 11 and symbolic names can be found here:
+ 218  *        https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow
+ 219  *
+ 220  * Usage: $libInclude win32 [-c|-e] MSAppAvail Application
+ 221  *        Returns errorlevel=0 if Application is available
+ 222  *
+ 223  * Usage: $libInclude win32 [-c|-e] XLSTalk command filename
+ 224  *        Performs command on an Excel workbook specified by filename. The following commands are recognized:
+ 225  *          -close:        Close workbook ignoring changes
+ 226  *          -saveAndclose: Ask Excel to save & close the workbook
+ 227  *
+ 231  *
+ 242  $EmbeddedCode Python:
+ 243  try:
+ 244    import ctypes
+ 245    ctypes.windll.shell32.ShellExecuteW(None, r'open', r'network.html', r'', None, 0)
+ 246  except Exception as _einst:
+ 247    gams.printLog(str(_einst))
+ 248  $endEmbeddedCode
+EXIT C:\GAMS\39\inclib\win32.gms
+ 250  * for older gams systems use:
+ 251  *execute 'shellexecute "%htmlfile%"';
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\projects\OptimizationModels\MaxCut\PlotMaxDiCut.gms
+     2      202 LIBINCLUDE     1     202  .C:\GAMS\39\inclib\win32.gms
+     3      249 EXIT           2      69  .C:\GAMS\39\inclib\win32.gms
+
+
+COMPILATION TIME     =        0.063 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     30 PARAMETER coord  x-y coordinates
+
+                 x           y
+
+node1       17.175      84.327
+node2       55.038      30.114
+node3       29.221      22.405
+node4       34.983      85.627
+node5        6.711      50.021
+node6       99.812      57.873
+node7       99.113      76.225
+node8       13.069      63.972
+node9       15.952      25.008
+node10      66.893      43.536
+node11      35.970      35.144
+node12      13.149      15.010
+node13      58.911      83.089
+node14      23.082      66.573
+node15      77.586      30.366
+node16      11.049      50.238
+node17      16.017      87.246
+node18      26.511      28.581
+node19      59.396      72.272
+node20      62.825      46.380
+node21      41.331      11.770
+node22      31.421       4.655
+node23      33.855      18.210
+node24      64.573      56.075
+node25      76.996      29.781
+
+
+----     48 SET i  nodes
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25
+
+
+----     48 SET a  arcs
+
+             node2       node3       node5       node6       node8       node9      node10      node11      node12      node13
+
+node2                                                                      YES
+node3                                  YES
+node7                                                                                  YES
+node8                      YES
+node9                      YES                                                                                 YES
+node10                                                                                                                     YES
+node12                                 YES
+node13                                             YES
+node14                                                         YES                                                         YES
+node15         YES
+node18                                                                     YES
+node19                                             YES         YES
+node21                                                                     YES                     YES
+node23         YES         YES
+node25         YES                                 YES                                 YES         YES
+
+     +      node14      node15      node16      node17      node18      node19      node20      node21      node22      node23
+
+node1                                              YES
+node3                                                                                                          YES
+node4                                                                      YES
+node5                                                                                                                      YES
+node6                      YES
+node8                                  YES
+node9                                                                                                                      YES
+node10                                                         YES
+node11                     YES
+node12                                                         YES
+node13                                                                                 YES
+node18                                                                                             YES
+node20         YES
+node21                                                         YES
+node23                                                                                                         YES
+node24                                                         YES
+
+     +      node24      node25
+
+node2          YES
+node7          YES
+node10                     YES
+node18         YES
+
+
+----     64 PARAMETER numnodes             =       25.000  number of nodes
+            PARAMETER numarcs              =       43.000  number of arcs
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 86
+
+
+---- obj1  =E=  
+
+obj1..  - (0.101061085)*x(node1) - (0.884991554)*x(node2) - (0.65463354)*x(node3) - (0.885281305)*x(node4)
+     
+      - (0.055478358)*x(node5) - (0.507403592)*x(node6) - (1.743115403)*x(node7) - (1.592363636)*x(node8) - (1.897176814)*x(node9)
+     
+      - (1.501208785)*x(node10) - (0.358874791)*x(node11) - (0.50996283)*x(node12) - (1.395473769)*x(node13)
+     
+      - (0.384016623)*x(node14) - (0.80649476)*x(node15) + (0)*x(node16) + (0)*x(node17) - (1.984273452)*x(node18)
+     
+      - (0.256925145)*x(node19) - (0.883036523)*x(node20) - (1.393522823)*x(node21) + (0)*x(node22) - (0.861771179)*x(node23)
+     
+      - (0.280347043)*x(node24) - (2.691832613)*x(node25) + z =E= 0 ; (LHS = 0)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut1 Using MIQCP From line 86
+
+
+---- x  node is in set S
+
+x(node1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      (-0.1011) obj1
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      (-0.885)  obj1
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      (-0.6546) obj1
+
+REMAINING 22 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 86
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 5.548E-02, 2.692E+00] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 86
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           26
+NON ZERO ELEMENTS            26     NON LINEAR N-Z             25
+CODE LENGTH                 261     CONSTANT POOL              59     DISCRETE VARIABLES         25
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE maxcut1 Using MIQCP From line 86
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   maxcut1             OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  86
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               12.4690
+
+ RESOURCE USAGE, LIMIT          0.125 10000000000.000
+ ITERATION COUNT, LIMIT        29    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 0.11sec (det. 0.39 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:           12.468995    (29 iterations, 0 nodes)
+Final Solve:            12.468995    (0 iterations)
+
+Best possible:          12.468995
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+
+---- VAR x  node is in set S
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1           .             1.0000         1.0000         0.1011      
+node2           .              .             1.0000        -0.9630      
+node3           .              .             1.0000        -0.5103      
+node4           .             1.0000         1.0000         0.8853      
+node5           .             1.0000         1.0000         0.0555      
+node6           .              .             1.0000        -1.0306      
+node7           .             1.0000         1.0000         1.7431      
+node8           .             1.0000         1.0000         1.5924      
+node9           .             1.0000         1.0000         1.8044      
+node10          .              .             1.0000        -1.0713      
+node11          .              .             1.0000        -1.3511      
+node12          .              .             1.0000        -0.4984      
+node13          .             1.0000         1.0000         1.3955      
+node14          .              .             1.0000   -2.08167E-17      
+node15          .             1.0000         1.0000         0.8065      
+node16          .              .             1.0000        -0.8719      
+node17          .              .             1.0000        -0.1011      
+node18          .              .             1.0000        -0.1322      
+node19          .              .             1.0000        -0.6755      
+node20          .              .             1.0000        -0.0618      
+node21          .             1.0000         1.0000         1.3007      
+node22          .              .             1.0000         EPS         
+node23          .              .             1.0000        -0.0375      
+node24          .              .             1.0000        -0.6987      
+node25          .             1.0000         1.0000         2.6918      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           12.4690        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 07/02/22 20:41:34 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+**** REPORT FILE SUMMARY
+
+fln C:\projects\OptimizationModels\MaxCut\networkdata.js
+ pyScript C:\projects\OptimizationModels\MaxCut\225a\myEmb.dat
+
+
+EXECUTION TIME       =        0.297 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MaxCut\PlotMaxDiCut.gms
+Output     C:\projects\OptimizationModels\MaxCut\PlotMaxDiCut.lst

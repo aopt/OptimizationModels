@@ -3,7 +3,7 @@ $ontext
    MAX-CUT Problem with Visualization
 
    No weights: each arc counts as 1
-   
+
 $offtext
 
 
@@ -29,23 +29,22 @@ coord(n,xy) = uniform(0,100);
 display coord;
 
 *-----------------------------------------------------------
-* most likely to have a link when points are close
+* points that are close get a higher probability to get a link
+* may be that makes the graph a bit prettier.
 *-----------------------------------------------------------
 
-set lt(i,j);
+set lt(i,j) 'we populate only upper-triangular part';
 lt(i,j) = ord(i)<ord(j);
 
 parameter
    dist(i,j) 'distance'
-   maxdist
-   norm_dist(i,j) 'normalized distance'
-   prob(i,j) 'probability of link'
+   maxdist 'maximum distance we can have'
 ;
 dist(lt(i,j)) = sqrt(sum(xy,sqr(coord(i,xy)-coord(j,xy))));
 maxdist = smax(lt,dist(lt));
-norm_dist(lt) = dist(lt)/maxdist; 
-prob(lt) = 0.3*(1-norm_dist(lt));
-a(lt) = uniform(0,1)<prob(lt);
+* select short arcs with higher probability than long ones.
+a(lt)$(dist(lt)<maxdist/5) = uniform(0,1)<0.5;
+a(lt)$(dist(lt)>=maxdist/5) = uniform(0,1)<0.05;
 
 display$(card(i)<=50) i,a;
 
@@ -125,7 +124,7 @@ loop(a(i,j),
 put '];'/;
 
 
-put "table='<h4>GAMS MAX-CUT</h4>" 
+put "table='<h4>GAMS MAX-CUT</h4>"
     "Number of nodes: ",(card(n)):0:0,"<br>"
     "Number of arcs: ",(card(a)):0:0,"<br><br>"
     "Cut size (red arcs): ",(card(ecut)):0:0,"<br>"

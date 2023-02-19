@@ -7,7 +7,7 @@ $offtext
 
 
 $set inc words.inc
-$set url xxx
+$set url https://raw.githubusercontent.com/aopt/OptimizationModels/main/Wordle/%inc%
 
 
 *-------------------------------------------------
@@ -64,7 +64,7 @@ solve m maximizing count using mip;
 display x.l,count.l;
 
 * remove if you want to see all solutions
-$stop
+*$stop
 
 *-------------------------------------------------
 * How many solutions?
@@ -85,8 +85,6 @@ option threads=0;
 count.fx = round(count.l);
 
 Solve m using mip maximizing count ;
-
-
 
 set
   index0 'superset of solution indices' /soln_m_p1*soln_m_p10000/

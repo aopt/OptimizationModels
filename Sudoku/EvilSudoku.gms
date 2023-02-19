@@ -40,6 +40,10 @@ r8  8              1  6     4
 r9                       7
 ;
 
+scalar nGiven 'number of given values';
+nGiven = card(v0);
+display nGiven;
+
 *
 * MIP model
 *

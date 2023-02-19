@@ -1,0 +1,2623 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+   2   
+  21   
+  23   
+  24   
+  25   
+  26  set i;
+  27  parameter w(i,i);
+INCLUDE    C:\projects\OptimizationModels\MaxCut\g05_100.inc
+  29  set i /node1*node100/;
+  30  parameter w(i,i) /
+  31  node1.node74 1
+  32  node1.node59 1
+  33  node1.node24 1
+  34  node1.node52 1
+  35  node1.node20 1
+  36  node1.node47 1
+  37  node1.node39 1
+  38  node1.node12 1
+  39  node1.node99 1
+  40  node1.node61 1
+  41  node1.node46 1
+  42  node1.node70 1
+  43  node1.node92 1
+  44  node1.node16 1
+  45  node1.node67 1
+  46  node1.node79 1
+  47  node1.node37 1
+  48  node1.node76 1
+  49  node1.node48 1
+  50  node1.node80 1
+  51  node1.node94 1
+  52  node1.node42 1
+  53  node1.node43 1
+  54  node1.node8 1
+  55  node1.node38 1
+  56  node1.node36 1
+  57  node1.node77 1
+  58  node1.node51 1
+  59  node1.node91 1
+  60  node1.node31 1
+  61  node1.node93 1
+  62  node1.node33 1
+  63  node1.node89 1
+  64  node1.node17 1
+  65  node1.node87 1
+  66  node1.node19 1
+  67  node1.node55 1
+  68  node1.node40 1
+  69  node1.node26 1
+  70  node1.node34 1
+  71  node1.node64 1
+  72  node1.node10 1
+  73  node1.node28 1
+  74  node1.node9 1
+  75  node1.node5 1
+  76  node1.node65 1
+  77  node1.node49 1
+  78  node1.node44 1
+  79  node1.node14 1
+  80  node1.node90 1
+  81  node2.node14 1
+  82  node2.node88 1
+  83  node2.node82 1
+  84  node2.node40 1
+  85  node2.node87 1
+  86  node2.node25 1
+  87  node2.node92 1
+  88  node2.node98 1
+  89  node2.node73 1
+  90  node2.node96 1
+  91  node2.node64 1
+  92  node2.node90 1
+  93  node2.node63 1
+  94  node2.node65 1
+  95  node2.node19 1
+  96  node2.node7 1
+  97  node2.node68 1
+  98  node2.node58 1
+  99  node2.node17 1
+ 100  node2.node89 1
+ 101  node2.node35 1
+ 102  node2.node11 1
+ 103  node2.node41 1
+ 104  node2.node49 1
+ 105  node2.node75 1
+ 106  node2.node34 1
+ 107  node2.node55 1
+ 108  node2.node16 1
+ 109  node2.node3 1
+ 110  node2.node12 1
+ 111  node2.node20 1
+ 112  node2.node31 1
+ 113  node2.node9 1
+ 114  node2.node50 1
+ 115  node2.node30 1
+ 116  node2.node60 1
+ 117  node2.node97 1
+ 118  node2.node6 1
+ 119  node2.node4 1
+ 120  node2.node13 1
+ 121  node2.node28 1
+ 122  node2.node62 1
+ 123  node2.node21 1
+ 124  node2.node52 1
+ 125  node2.node84 1
+ 126  node2.node44 1
+ 127  node2.node47 1
+ 128  node2.node74 1
+ 129  node2.node95 1
+ 130  node2.node71 1
+ 131  node2.node94 1
+ 132  node2.node69 1
+ 133  node2.node53 1
+ 134  node3.node26 1
+ 135  node3.node24 1
+ 136  node3.node51 1
+ 137  node3.node59 1
+ 138  node3.node86 1
+ 139  node3.node98 1
+ 140  node3.node35 1
+ 141  node3.node76 1
+ 142  node3.node23 1
+ 143  node3.node93 1
+ 144  node3.node99 1
+ 145  node3.node31 1
+ 146  node3.node47 1
+ 147  node3.node48 1
+ 148  node3.node95 1
+ 149  node3.node97 1
+ 150  node3.node43 1
+ 151  node3.node84 1
+ 152  node3.node5 1
+ 153  node3.node21 1
+ 154  node3.node19 1
+ 155  node3.node33 1
+ 156  node3.node32 1
+ 157  node3.node22 1
+ 158  node3.node55 1
+ 159  node3.node66 1
+ 160  node3.node16 1
+ 161  node3.node39 1
+ 162  node3.node25 1
+ 163  node3.node83 1
+ 164  node3.node15 1
+ 165  node3.node34 1
+ 166  node3.node36 1
+ 167  node3.node63 1
+ 168  node3.node8 1
+ 169  node3.node91 1
+ 170  node3.node52 1
+ 171  node3.node40 1
+ 172  node3.node88 1
+ 173  node3.node90 1
+ 174  node3.node41 1
+ 175  node3.node68 1
+ 176  node3.node53 1
+ 177  node3.node96 1
+ 178  node3.node69 1
+ 179  node3.node18 1
+ 180  node3.node72 1
+ 181  node4.node93 1
+ 182  node4.node49 1
+ 183  node4.node96 1
+ 184  node4.node58 1
+ 185  node4.node73 1
+ 186  node4.node9 1
+ 187  node4.node41 1
+ 188  node4.node54 1
+ 189  node4.node88 1
+ 190  node4.node98 1
+ 191  node4.node80 1
+ 192  node4.node47 1
+ 193  node4.node94 1
+ 194  node4.node67 1
+ 195  node4.node61 1
+ 196  node4.node16 1
+ 197  node4.node36 1
+ 198  node4.node60 1
+ 199  node4.node75 1
+ 200  node4.node71 1
+ 201  node4.node62 1
+ 202  node4.node43 1
+ 203  node4.node65 1
+ 204  node4.node95 1
+ 205  node4.node56 1
+ 206  node4.node90 1
+ 207  node4.node30 1
+ 208  node4.node72 1
+ 209  node4.node46 1
+ 210  node4.node42 1
+ 211  node4.node27 1
+ 212  node4.node23 1
+ 213  node4.node48 1
+ 214  node4.node34 1
+ 215  node4.node86 1
+ 216  node4.node17 1
+ 217  node4.node32 1
+ 218  node4.node10 1
+ 219  node4.node21 1
+ 220  node4.node97 1
+ 221  node4.node89 1
+ 222  node4.node81 1
+ 223  node4.node85 1
+ 224  node4.node74 1
+ 225  node4.node44 1
+ 226  node4.node57 1
+ 227  node4.node13 1
+ 228  node4.node28 1
+ 229  node4.node15 1
+ 230  node4.node99 1
+ 231  node4.node64 1
+ 232  node4.node82 1
+ 233  node4.node52 1
+ 234  node4.node12 1
+ 235  node5.node29 1
+ 236  node5.node50 1
+ 237  node5.node52 1
+ 238  node5.node19 1
+ 239  node5.node11 1
+ 240  node5.node74 1
+ 241  node5.node49 1
+ 242  node5.node8 1
+ 243  node5.node69 1
+ 244  node5.node33 1
+ 245  node5.node76 1
+ 246  node5.node31 1
+ 247  node5.node23 1
+ 248  node5.node22 1
+ 249  node5.node7 1
+ 250  node5.node46 1
+ 251  node5.node43 1
+ 252  node5.node26 1
+ 253  node5.node62 1
+ 254  node5.node53 1
+ 255  node5.node35 1
+ 256  node5.node65 1
+ 257  node5.node100 1
+ 258  node5.node87 1
+ 259  node5.node75 1
+ 260  node5.node56 1
+ 261  node5.node95 1
+ 262  node5.node59 1
+ 263  node5.node82 1
+ 264  node5.node18 1
+ 265  node5.node84 1
+ 266  node5.node36 1
+ 267  node5.node32 1
+ 268  node5.node98 1
+ 269  node5.node85 1
+ 270  node5.node86 1
+ 271  node5.node73 1
+ 272  node5.node42 1
+ 273  node5.node78 1
+ 274  node5.node60 1
+ 275  node5.node92 1
+ 276  node6.node91 1
+ 277  node6.node47 1
+ 278  node6.node74 1
+ 279  node6.node10 1
+ 280  node6.node73 1
+ 281  node6.node84 1
+ 282  node6.node63 1
+ 283  node6.node64 1
+ 284  node6.node34 1
+ 285  node6.node37 1
+ 286  node6.node53 1
+ 287  node6.node75 1
+ 288  node6.node46 1
+ 289  node6.node32 1
+ 290  node6.node59 1
+ 291  node6.node52 1
+ 292  node6.node21 1
+ 293  node6.node7 1
+ 294  node6.node71 1
+ 295  node6.node18 1
+ 296  node6.node22 1
+ 297  node6.node90 1
+ 298  node6.node85 1
+ 299  node6.node26 1
+ 300  node6.node88 1
+ 301  node6.node36 1
+ 302  node6.node99 1
+ 303  node6.node12 1
+ 304  node6.node87 1
+ 305  node6.node29 1
+ 306  node6.node14 1
+ 307  node6.node69 1
+ 308  node6.node19 1
+ 309  node6.node100 1
+ 310  node6.node94 1
+ 311  node6.node16 1
+ 312  node6.node68 1
+ 313  node6.node49 1
+ 314  node6.node60 1
+ 315  node6.node33 1
+ 316  node6.node8 1
+ 317  node6.node79 1
+ 318  node7.node41 1
+ 319  node7.node79 1
+ 320  node7.node69 1
+ 321  node7.node70 1
+ 322  node7.node99 1
+ 323  node7.node26 1
+ 324  node7.node35 1
+ 325  node7.node81 1
+ 326  node7.node91 1
+ 327  node7.node39 1
+ 328  node7.node97 1
+ 329  node7.node54 1
+ 330  node7.node65 1
+ 331  node7.node94 1
+ 332  node7.node62 1
+ 333  node7.node75 1
+ 334  node7.node82 1
+ 335  node7.node37 1
+ 336  node7.node55 1
+ 337  node7.node93 1
+ 338  node7.node15 1
+ 339  node7.node42 1
+ 340  node7.node57 1
+ 341  node7.node22 1
+ 342  node7.node28 1
+ 343  node7.node45 1
+ 344  node7.node18 1
+ 345  node7.node19 1
+ 346  node7.node96 1
+ 347  node7.node32 1
+ 348  node7.node87 1
+ 349  node7.node95 1
+ 350  node7.node27 1
+ 351  node7.node83 1
+ 352  node7.node48 1
+ 353  node7.node74 1
+ 354  node7.node92 1
+ 355  node7.node72 1
+ 356  node8.node26 1
+ 357  node8.node35 1
+ 358  node8.node16 1
+ 359  node8.node72 1
+ 360  node8.node95 1
+ 361  node8.node29 1
+ 362  node8.node24 1
+ 363  node8.node78 1
+ 364  node8.node83 1
+ 365  node8.node92 1
+ 366  node8.node90 1
+ 367  node8.node65 1
+ 368  node8.node58 1
+ 369  node8.node79 1
+ 370  node8.node69 1
+ 371  node8.node57 1
+ 372  node8.node12 1
+ 373  node8.node42 1
+ 374  node8.node73 1
+ 375  node8.node81 1
+ 376  node8.node30 1
+ 377  node8.node87 1
+ 378  node8.node33 1
+ 379  node8.node46 1
+ 380  node8.node49 1
+ 381  node8.node10 1
+ 382  node8.node64 1
+ 383  node8.node28 1
+ 384  node8.node66 1
+ 385  node8.node47 1
+ 386  node8.node77 1
+ 387  node8.node15 1
+ 388  node8.node53 1
+ 389  node8.node39 1
+ 390  node8.node94 1
+ 391  node8.node70 1
+ 392  node8.node36 1
+ 393  node8.node22 1
+ 394  node8.node96 1
+ 395  node8.node23 1
+ 396  node8.node86 1
+ 397  node8.node37 1
+ 398  node8.node52 1
+ 399  node8.node51 1
+ 400  node8.node38 1
+ 401  node9.node50 1
+ 402  node9.node59 1
+ 403  node9.node95 1
+ 404  node9.node88 1
+ 405  node9.node90 1
+ 406  node9.node61 1
+ 407  node9.node94 1
+ 408  node9.node80 1
+ 409  node9.node13 1
+ 410  node9.node60 1
+ 411  node9.node99 1
+ 412  node9.node34 1
+ 413  node9.node86 1
+ 414  node9.node74 1
+ 415  node9.node57 1
+ 416  node9.node14 1
+ 417  node9.node27 1
+ 418  node9.node12 1
+ 419  node9.node23 1
+ 420  node9.node64 1
+ 421  node9.node16 1
+ 422  node9.node30 1
+ 423  node9.node72 1
+ 424  node9.node15 1
+ 425  node9.node45 1
+ 426  node9.node24 1
+ 427  node9.node81 1
+ 428  node9.node11 1
+ 429  node9.node36 1
+ 430  node9.node65 1
+ 431  node9.node63 1
+ 432  node9.node73 1
+ 433  node9.node52 1
+ 434  node10.node75 1
+ 435  node10.node15 1
+ 436  node10.node65 1
+ 437  node10.node59 1
+ 438  node10.node28 1
+ 439  node10.node34 1
+ 440  node10.node31 1
+ 441  node10.node38 1
+ 442  node10.node96 1
+ 443  node10.node64 1
+ 444  node10.node71 1
+ 445  node10.node62 1
+ 446  node10.node24 1
+ 447  node10.node13 1
+ 448  node10.node74 1
+ 449  node10.node46 1
+ 450  node10.node79 1
+ 451  node10.node45 1
+ 452  node10.node67 1
+ 453  node10.node21 1
+ 454  node10.node84 1
+ 455  node10.node47 1
+ 456  node10.node60 1
+ 457  node10.node40 1
+ 458  node10.node49 1
+ 459  node10.node81 1
+ 460  node10.node61 1
+ 461  node10.node51 1
+ 462  node10.node33 1
+ 463  node10.node98 1
+ 464  node10.node52 1
+ 465  node10.node88 1
+ 466  node10.node94 1
+ 467  node10.node19 1
+ 468  node10.node11 1
+ 469  node10.node57 1
+ 470  node10.node63 1
+ 471  node10.node18 1
+ 472  node10.node76 1
+ 473  node10.node91 1
+ 474  node10.node54 1
+ 475  node10.node73 1
+ 476  node10.node17 1
+ 477  node10.node20 1
+ 478  node10.node32 1
+ 479  node10.node89 1
+ 480  node10.node27 1
+ 481  node10.node85 1
+ 482  node11.node77 1
+ 483  node11.node91 1
+ 484  node11.node17 1
+ 485  node11.node39 1
+ 486  node11.node69 1
+ 487  node11.node52 1
+ 488  node11.node38 1
+ 489  node11.node57 1
+ 490  node11.node80 1
+ 491  node11.node20 1
+ 492  node11.node50 1
+ 493  node11.node24 1
+ 494  node11.node68 1
+ 495  node11.node78 1
+ 496  node11.node43 1
+ 497  node11.node99 1
+ 498  node11.node62 1
+ 499  node11.node51 1
+ 500  node11.node29 1
+ 501  node11.node44 1
+ 502  node11.node22 1
+ 503  node11.node93 1
+ 504  node11.node48 1
+ 505  node11.node27 1
+ 506  node11.node71 1
+ 507  node11.node76 1
+ 508  node11.node61 1
+ 509  node11.node47 1
+ 510  node11.node89 1
+ 511  node11.node18 1
+ 512  node11.node36 1
+ 513  node11.node37 1
+ 514  node11.node87 1
+ 515  node11.node66 1
+ 516  node11.node13 1
+ 517  node11.node86 1
+ 518  node11.node21 1
+ 519  node11.node46 1
+ 520  node11.node15 1
+ 521  node11.node72 1
+ 522  node11.node53 1
+ 523  node11.node85 1
+ 524  node11.node94 1
+ 525  node11.node88 1
+ 526  node11.node14 1
+ 527  node11.node74 1
+ 528  node11.node16 1
+ 529  node11.node84 1
+ 530  node11.node19 1
+ 531  node11.node60 1
+ 532  node11.node45 1
+ 533  node11.node35 1
+ 534  node11.node40 1
+ 535  node11.node32 1
+ 536  node11.node41 1
+ 537  node12.node50 1
+ 538  node12.node96 1
+ 539  node12.node31 1
+ 540  node12.node56 1
+ 541  node12.node14 1
+ 542  node12.node53 1
+ 543  node12.node75 1
+ 544  node12.node37 1
+ 545  node12.node69 1
+ 546  node12.node84 1
+ 547  node12.node17 1
+ 548  node12.node34 1
+ 549  node12.node98 1
+ 550  node12.node89 1
+ 551  node12.node87 1
+ 552  node12.node42 1
+ 553  node12.node100 1
+ 554  node12.node76 1
+ 555  node12.node23 1
+ 556  node12.node68 1
+ 557  node12.node48 1
+ 558  node12.node55 1
+ 559  node12.node92 1
+ 560  node12.node61 1
+ 561  node12.node65 1
+ 562  node12.node41 1
+ 563  node12.node78 1
+ 564  node12.node33 1
+ 565  node12.node43 1
+ 566  node12.node20 1
+ 567  node12.node86 1
+ 568  node12.node38 1
+ 569  node12.node52 1
+ 570  node12.node67 1
+ 571  node12.node47 1
+ 572  node12.node74 1
+ 573  node12.node51 1
+ 574  node12.node35 1
+ 575  node12.node19 1
+ 576  node12.node71 1
+ 577  node12.node73 1
+ 578  node12.node57 1
+ 579  node12.node77 1
+ 580  node12.node70 1
+ 581  node12.node62 1
+ 582  node13.node50 1
+ 583  node13.node87 1
+ 584  node13.node69 1
+ 585  node13.node84 1
+ 586  node13.node78 1
+ 587  node13.node23 1
+ 588  node13.node56 1
+ 589  node13.node75 1
+ 590  node13.node85 1
+ 591  node13.node82 1
+ 592  node13.node31 1
+ 593  node13.node26 1
+ 594  node13.node36 1
+ 595  node13.node30 1
+ 596  node13.node70 1
+ 597  node13.node27 1
+ 598  node13.node29 1
+ 599  node13.node83 1
+ 600  node13.node74 1
+ 601  node13.node80 1
+ 602  node13.node37 1
+ 603  node13.node55 1
+ 604  node13.node77 1
+ 605  node13.node64 1
+ 606  node13.node91 1
+ 607  node13.node61 1
+ 608  node13.node96 1
+ 609  node13.node39 1
+ 610  node13.node62 1
+ 611  node13.node22 1
+ 612  node13.node97 1
+ 613  node13.node16 1
+ 614  node13.node45 1
+ 615  node13.node76 1
+ 616  node13.node43 1
+ 617  node13.node32 1
+ 618  node13.node15 1
+ 619  node13.node65 1
+ 620  node13.node68 1
+ 621  node13.node66 1
+ 622  node13.node98 1
+ 623  node14.node83 1
+ 624  node14.node60 1
+ 625  node14.node24 1
+ 626  node14.node88 1
+ 627  node14.node100 1
+ 628  node14.node68 1
+ 629  node14.node50 1
+ 630  node14.node33 1
+ 631  node14.node23 1
+ 632  node14.node46 1
+ 633  node14.node61 1
+ 634  node14.node92 1
+ 635  node14.node80 1
+ 636  node14.node81 1
+ 637  node14.node94 1
+ 638  node14.node39 1
+ 639  node14.node65 1
+ 640  node14.node20 1
+ 641  node14.node22 1
+ 642  node14.node56 1
+ 643  node14.node90 1
+ 644  node14.node96 1
+ 645  node14.node54 1
+ 646  node14.node42 1
+ 647  node14.node82 1
+ 648  node14.node28 1
+ 649  node14.node89 1
+ 650  node14.node43 1
+ 651  node14.node59 1
+ 652  node14.node74 1
+ 653  node14.node38 1
+ 654  node14.node78 1
+ 655  node14.node95 1
+ 656  node14.node67 1
+ 657  node14.node53 1
+ 658  node14.node40 1
+ 659  node14.node51 1
+ 660  node14.node48 1
+ 661  node14.node93 1
+ 662  node14.node75 1
+ 663  node14.node58 1
+ 664  node14.node69 1
+ 665  node14.node27 1
+ 666  node14.node47 1
+ 667  node14.node35 1
+ 668  node14.node62 1
+ 669  node14.node86 1
+ 670  node14.node55 1
+ 671  node14.node98 1
+ 672  node14.node57 1
+ 673  node15.node30 1
+ 674  node15.node45 1
+ 675  node15.node78 1
+ 676  node15.node26 1
+ 677  node15.node64 1
+ 678  node15.node63 1
+ 679  node15.node57 1
+ 680  node15.node83 1
+ 681  node15.node93 1
+ 682  node15.node24 1
+ 683  node15.node27 1
+ 684  node15.node94 1
+ 685  node15.node87 1
+ 686  node15.node66 1
+ 687  node15.node95 1
+ 688  node15.node18 1
+ 689  node15.node60 1
+ 690  node15.node47 1
+ 691  node15.node39 1
+ 692  node15.node70 1
+ 693  node15.node89 1
+ 694  node15.node32 1
+ 695  node15.node71 1
+ 696  node15.node25 1
+ 697  node15.node90 1
+ 698  node15.node85 1
+ 699  node15.node73 1
+ 700  node15.node69 1
+ 701  node15.node46 1
+ 702  node15.node77 1
+ 703  node15.node22 1
+ 704  node15.node35 1
+ 705  node15.node84 1
+ 706  node15.node31 1
+ 707  node15.node72 1
+ 708  node15.node50 1
+ 709  node15.node37 1
+ 710  node15.node91 1
+ 711  node15.node42 1
+ 712  node15.node68 1
+ 713  node15.node20 1
+ 714  node15.node48 1
+ 715  node16.node20 1
+ 716  node16.node59 1
+ 717  node16.node67 1
+ 718  node16.node83 1
+ 719  node16.node27 1
+ 720  node16.node70 1
+ 721  node16.node39 1
+ 722  node16.node77 1
+ 723  node16.node35 1
+ 724  node16.node30 1
+ 725  node16.node69 1
+ 726  node16.node33 1
+ 727  node16.node37 1
+ 728  node16.node17 1
+ 729  node16.node54 1
+ 730  node16.node34 1
+ 731  node16.node36 1
+ 732  node16.node76 1
+ 733  node16.node55 1
+ 734  node16.node57 1
+ 735  node16.node45 1
+ 736  node16.node72 1
+ 737  node16.node82 1
+ 738  node16.node46 1
+ 739  node16.node71 1
+ 740  node16.node22 1
+ 741  node16.node66 1
+ 742  node16.node68 1
+ 743  node16.node49 1
+ 744  node16.node62 1
+ 745  node16.node98 1
+ 746  node16.node94 1
+ 747  node16.node92 1
+ 748  node16.node25 1
+ 749  node16.node40 1
+ 750  node16.node93 1
+ 751  node16.node29 1
+ 752  node16.node91 1
+ 753  node16.node21 1
+ 754  node16.node100 1
+ 755  node16.node47 1
+ 756  node16.node89 1
+ 757  node16.node19 1
+ 758  node16.node31 1
+ 759  node16.node81 1
+ 760  node16.node87 1
+ 761  node16.node64 1
+ 762  node16.node86 1
+ 763  node16.node56 1
+ 764  node17.node89 1
+ 765  node17.node66 1
+ 766  node17.node27 1
+ 767  node17.node21 1
+ 768  node17.node72 1
+ 769  node17.node68 1
+ 770  node17.node90 1
+ 771  node17.node87 1
+ 772  node17.node64 1
+ 773  node17.node26 1
+ 774  node17.node47 1
+ 775  node17.node20 1
+ 776  node17.node43 1
+ 777  node17.node50 1
+ 778  node17.node63 1
+ 779  node17.node84 1
+ 780  node17.node65 1
+ 781  node17.node37 1
+ 782  node17.node91 1
+ 783  node17.node73 1
+ 784  node17.node99 1
+ 785  node17.node31 1
+ 786  node17.node85 1
+ 787  node17.node53 1
+ 788  node17.node42 1
+ 789  node17.node56 1
+ 790  node17.node82 1
+ 791  node17.node98 1
+ 792  node17.node38 1
+ 793  node17.node58 1
+ 794  node17.node77 1
+ 795  node17.node22 1
+ 796  node17.node57 1
+ 797  node17.node80 1
+ 798  node17.node86 1
+ 799  node17.node74 1
+ 800  node17.node96 1
+ 801  node17.node41 1
+ 802  node17.node97 1
+ 803  node18.node43 1
+ 804  node18.node52 1
+ 805  node18.node79 1
+ 806  node18.node37 1
+ 807  node18.node57 1
+ 808  node18.node88 1
+ 809  node18.node48 1
+ 810  node18.node86 1
+ 811  node18.node53 1
+ 812  node18.node42 1
+ 813  node18.node70 1
+ 814  node18.node22 1
+ 815  node18.node50 1
+ 816  node18.node29 1
+ 817  node18.node78 1
+ 818  node18.node45 1
+ 819  node18.node61 1
+ 820  node18.node89 1
+ 821  node18.node69 1
+ 822  node18.node96 1
+ 823  node18.node74 1
+ 824  node18.node36 1
+ 825  node18.node38 1
+ 826  node18.node76 1
+ 827  node18.node58 1
+ 828  node18.node59 1
+ 829  node18.node80 1
+ 830  node18.node82 1
+ 831  node18.node98 1
+ 832  node18.node33 1
+ 833  node18.node51 1
+ 834  node18.node44 1
+ 835  node18.node100 1
+ 836  node18.node97 1
+ 837  node18.node62 1
+ 838  node18.node21 1
+ 839  node18.node40 1
+ 840  node18.node49 1
+ 841  node18.node73 1
+ 842  node18.node94 1
+ 843  node19.node45 1
+ 844  node19.node34 1
+ 845  node19.node35 1
+ 846  node19.node61 1
+ 847  node19.node77 1
+ 848  node19.node99 1
+ 849  node19.node89 1
+ 850  node19.node100 1
+ 851  node19.node83 1
+ 852  node19.node84 1
+ 853  node19.node81 1
+ 854  node19.node48 1
+ 855  node19.node27 1
+ 856  node19.node26 1
+ 857  node19.node30 1
+ 858  node19.node33 1
+ 859  node19.node43 1
+ 860  node19.node91 1
+ 861  node19.node69 1
+ 862  node19.node44 1
+ 863  node19.node87 1
+ 864  node19.node63 1
+ 865  node19.node47 1
+ 866  node19.node31 1
+ 867  node19.node57 1
+ 868  node19.node90 1
+ 869  node19.node74 1
+ 870  node19.node32 1
+ 871  node19.node52 1
+ 872  node19.node22 1
+ 873  node19.node24 1
+ 874  node19.node62 1
+ 875  node19.node23 1
+ 876  node19.node39 1
+ 877  node19.node71 1
+ 878  node19.node49 1
+ 879  node19.node94 1
+ 880  node19.node55 1
+ 881  node19.node51 1
+ 882  node19.node37 1
+ 883  node20.node99 1
+ 884  node20.node34 1
+ 885  node20.node96 1
+ 886  node20.node33 1
+ 887  node20.node78 1
+ 888  node20.node54 1
+ 889  node20.node68 1
+ 890  node20.node77 1
+ 891  node20.node93 1
+ 892  node20.node55 1
+ 893  node20.node38 1
+ 894  node20.node37 1
+ 895  node20.node63 1
+ 896  node20.node35 1
+ 897  node20.node85 1
+ 898  node20.node56 1
+ 899  node20.node21 1
+ 900  node20.node92 1
+ 901  node20.node32 1
+ 902  node20.node41 1
+ 903  node20.node48 1
+ 904  node20.node39 1
+ 905  node20.node94 1
+ 906  node20.node87 1
+ 907  node20.node40 1
+ 908  node20.node47 1
+ 909  node20.node64 1
+ 910  node20.node80 1
+ 911  node20.node89 1
+ 912  node20.node59 1
+ 913  node20.node97 1
+ 914  node20.node72 1
+ 915  node20.node46 1
+ 916  node20.node84 1
+ 917  node20.node36 1
+ 918  node20.node60 1
+ 919  node20.node44 1
+ 920  node20.node83 1
+ 921  node20.node30 1
+ 922  node20.node52 1
+ 923  node20.node66 1
+ 924  node20.node42 1
+ 925  node21.node68 1
+ 926  node21.node93 1
+ 927  node21.node26 1
+ 928  node21.node47 1
+ 929  node21.node41 1
+ 930  node21.node32 1
+ 931  node21.node66 1
+ 932  node21.node62 1
+ 933  node21.node96 1
+ 934  node21.node73 1
+ 935  node21.node22 1
+ 936  node21.node31 1
+ 937  node21.node84 1
+ 938  node21.node95 1
+ 939  node21.node78 1
+ 940  node21.node86 1
+ 941  node21.node69 1
+ 942  node21.node46 1
+ 943  node21.node83 1
+ 944  node21.node79 1
+ 945  node21.node87 1
+ 946  node21.node99 1
+ 947  node21.node45 1
+ 948  node21.node72 1
+ 949  node21.node70 1
+ 950  node21.node74 1
+ 951  node21.node38 1
+ 952  node21.node39 1
+ 953  node21.node80 1
+ 954  node21.node51 1
+ 955  node21.node57 1
+ 956  node21.node100 1
+ 957  node21.node90 1
+ 958  node21.node49 1
+ 959  node21.node77 1
+ 960  node21.node67 1
+ 961  node21.node98 1
+ 962  node21.node59 1
+ 963  node22.node66 1
+ 964  node22.node88 1
+ 965  node22.node68 1
+ 966  node22.node49 1
+ 967  node22.node94 1
+ 968  node22.node58 1
+ 969  node22.node53 1
+ 970  node22.node93 1
+ 971  node22.node92 1
+ 972  node22.node50 1
+ 973  node22.node29 1
+ 974  node22.node91 1
+ 975  node22.node25 1
+ 976  node22.node32 1
+ 977  node22.node89 1
+ 978  node22.node74 1
+ 979  node22.node87 1
+ 980  node22.node40 1
+ 981  node22.node78 1
+ 982  node22.node34 1
+ 983  node22.node75 1
+ 984  node22.node45 1
+ 985  node22.node72 1
+ 986  node22.node97 1
+ 987  node22.node23 1
+ 988  node22.node65 1
+ 989  node22.node67 1
+ 990  node22.node31 1
+ 991  node22.node51 1
+ 992  node22.node80 1
+ 993  node22.node47 1
+ 994  node22.node37 1
+ 995  node22.node62 1
+ 996  node22.node43 1
+ 997  node22.node90 1
+ 998  node22.node95 1
+ 999  node22.node42 1
+1000  node22.node85 1
+1001  node22.node35 1
+1002  node22.node82 1
+1003  node22.node70 1
+1004  node22.node33 1
+1005  node23.node38 1
+1006  node23.node74 1
+1007  node23.node28 1
+1008  node23.node48 1
+1009  node23.node94 1
+1010  node23.node25 1
+1011  node23.node50 1
+1012  node23.node95 1
+1013  node23.node37 1
+1014  node23.node42 1
+1015  node23.node46 1
+1016  node23.node91 1
+1017  node23.node45 1
+1018  node23.node93 1
+1019  node23.node82 1
+1020  node23.node31 1
+1021  node23.node70 1
+1022  node23.node87 1
+1023  node23.node98 1
+1024  node23.node39 1
+1025  node23.node62 1
+1026  node23.node92 1
+1027  node23.node24 1
+1028  node23.node32 1
+1029  node23.node85 1
+1030  node23.node77 1
+1031  node23.node40 1
+1032  node23.node36 1
+1033  node23.node57 1
+1034  node23.node64 1
+1035  node23.node34 1
+1036  node23.node66 1
+1037  node23.node41 1
+1038  node23.node67 1
+1039  node23.node69 1
+1040  node23.node76 1
+1041  node23.node52 1
+1042  node23.node60 1
+1043  node23.node79 1
+1044  node23.node83 1
+1045  node23.node26 1
+1046  node23.node80 1
+1047  node23.node29 1
+1048  node24.node46 1
+1049  node24.node55 1
+1050  node24.node61 1
+1051  node24.node63 1
+1052  node24.node88 1
+1053  node24.node73 1
+1054  node24.node71 1
+1055  node24.node60 1
+1056  node24.node68 1
+1057  node24.node95 1
+1058  node24.node67 1
+1059  node24.node69 1
+1060  node24.node74 1
+1061  node24.node42 1
+1062  node24.node50 1
+1063  node24.node91 1
+1064  node24.node89 1
+1065  node24.node70 1
+1066  node24.node90 1
+1067  node24.node87 1
+1068  node24.node41 1
+1069  node24.node82 1
+1070  node24.node35 1
+1071  node24.node81 1
+1072  node24.node49 1
+1073  node24.node38 1
+1074  node24.node80 1
+1075  node24.node76 1
+1076  node24.node78 1
+1077  node24.node84 1
+1078  node24.node62 1
+1079  node24.node85 1
+1080  node24.node40 1
+1081  node24.node75 1
+1082  node24.node86 1
+1083  node24.node33 1
+1084  node24.node31 1
+1085  node24.node99 1
+1086  node24.node64 1
+1087  node24.node56 1
+1088  node25.node74 1
+1089  node25.node63 1
+1090  node25.node84 1
+1091  node25.node80 1
+1092  node25.node49 1
+1093  node25.node69 1
+1094  node25.node31 1
+1095  node25.node33 1
+1096  node25.node68 1
+1097  node25.node38 1
+1098  node25.node100 1
+1099  node25.node50 1
+1100  node25.node90 1
+1101  node25.node76 1
+1102  node25.node66 1
+1103  node25.node83 1
+1104  node25.node60 1
+1105  node25.node81 1
+1106  node25.node62 1
+1107  node25.node95 1
+1108  node25.node57 1
+1109  node25.node94 1
+1110  node25.node56 1
+1111  node25.node30 1
+1112  node25.node87 1
+1113  node25.node29 1
+1114  node25.node54 1
+1115  node25.node43 1
+1116  node25.node37 1
+1117  node25.node41 1
+1118  node25.node92 1
+1119  node25.node72 1
+1120  node25.node32 1
+1121  node26.node45 1
+1122  node26.node42 1
+1123  node26.node62 1
+1124  node26.node88 1
+1125  node26.node32 1
+1126  node26.node44 1
+1127  node26.node54 1
+1128  node26.node63 1
+1129  node26.node75 1
+1130  node26.node31 1
+1131  node26.node37 1
+1132  node26.node46 1
+1133  node26.node36 1
+1134  node26.node57 1
+1135  node26.node65 1
+1136  node26.node96 1
+1137  node26.node66 1
+1138  node26.node58 1
+1139  node26.node68 1
+1140  node26.node83 1
+1141  node26.node52 1
+1142  node26.node71 1
+1143  node26.node92 1
+1144  node26.node51 1
+1145  node26.node77 1
+1146  node26.node28 1
+1147  node26.node59 1
+1148  node26.node53 1
+1149  node26.node30 1
+1150  node26.node27 1
+1151  node26.node40 1
+1152  node26.node73 1
+1153  node26.node94 1
+1154  node26.node74 1
+1155  node26.node43 1
+1156  node26.node97 1
+1157  node27.node90 1
+1158  node27.node60 1
+1159  node27.node65 1
+1160  node27.node95 1
+1161  node27.node46 1
+1162  node27.node33 1
+1163  node27.node48 1
+1164  node27.node40 1
+1165  node27.node28 1
+1166  node27.node52 1
+1167  node27.node62 1
+1168  node27.node81 1
+1169  node27.node43 1
+1170  node27.node44 1
+1171  node27.node61 1
+1172  node27.node77 1
+1173  node27.node39 1
+1174  node27.node37 1
+1175  node27.node88 1
+1176  node27.node86 1
+1177  node27.node49 1
+1178  node27.node87 1
+1179  node27.node29 1
+1180  node27.node51 1
+1181  node27.node70 1
+1182  node27.node75 1
+1183  node27.node100 1
+1184  node27.node82 1
+1185  node27.node76 1
+1186  node27.node34 1
+1187  node27.node31 1
+1188  node27.node85 1
+1189  node27.node97 1
+1190  node27.node42 1
+1191  node27.node45 1
+1192  node27.node72 1
+1193  node28.node40 1
+1194  node28.node50 1
+1195  node28.node70 1
+1196  node28.node43 1
+1197  node28.node54 1
+1198  node28.node77 1
+1199  node28.node93 1
+1200  node28.node66 1
+1201  node28.node39 1
+1202  node28.node76 1
+1203  node28.node60 1
+1204  node28.node29 1
+1205  node28.node72 1
+1206  node28.node64 1
+1207  node28.node31 1
+1208  node28.node68 1
+1209  node28.node58 1
+1210  node28.node89 1
+1211  node28.node47 1
+1212  node28.node91 1
+1213  node28.node34 1
+1214  node28.node32 1
+1215  node28.node53 1
+1216  node28.node74 1
+1217  node28.node69 1
+1218  node28.node86 1
+1219  node28.node78 1
+1220  node29.node95 1
+1221  node29.node50 1
+1222  node29.node70 1
+1223  node29.node30 1
+1224  node29.node87 1
+1225  node29.node46 1
+1226  node29.node41 1
+1227  node29.node74 1
+1228  node29.node58 1
+1229  node29.node63 1
+1230  node29.node38 1
+1231  node29.node94 1
+1232  node29.node88 1
+1233  node29.node75 1
+1234  node29.node93 1
+1235  node29.node34 1
+1236  node29.node67 1
+1237  node29.node39 1
+1238  node29.node84 1
+1239  node29.node47 1
+1240  node29.node54 1
+1241  node29.node61 1
+1242  node29.node37 1
+1243  node29.node92 1
+1244  node29.node36 1
+1245  node29.node91 1
+1246  node29.node31 1
+1247  node29.node68 1
+1248  node29.node64 1
+1249  node29.node71 1
+1250  node29.node57 1
+1251  node29.node45 1
+1252  node29.node73 1
+1253  node29.node60 1
+1254  node29.node32 1
+1255  node29.node53 1
+1256  node29.node42 1
+1257  node29.node96 1
+1258  node30.node64 1
+1259  node30.node85 1
+1260  node30.node80 1
+1261  node30.node47 1
+1262  node30.node73 1
+1263  node30.node60 1
+1264  node30.node86 1
+1265  node30.node69 1
+1266  node30.node78 1
+1267  node30.node76 1
+1268  node30.node71 1
+1269  node30.node52 1
+1270  node30.node56 1
+1271  node30.node41 1
+1272  node30.node38 1
+1273  node30.node31 1
+1274  node30.node93 1
+1275  node30.node66 1
+1276  node30.node95 1
+1277  node30.node32 1
+1278  node30.node99 1
+1279  node30.node46 1
+1280  node30.node48 1
+1281  node30.node70 1
+1282  node30.node36 1
+1283  node30.node77 1
+1284  node30.node82 1
+1285  node30.node57 1
+1286  node30.node88 1
+1287  node30.node44 1
+1288  node30.node97 1
+1289  node30.node39 1
+1290  node30.node72 1
+1291  node30.node55 1
+1292  node30.node34 1
+1293  node30.node74 1
+1294  node30.node45 1
+1295  node30.node75 1
+1296  node30.node51 1
+1297  node30.node58 1
+1298  node30.node100 1
+1299  node31.node72 1
+1300  node31.node66 1
+1301  node31.node81 1
+1302  node31.node39 1
+1303  node31.node94 1
+1304  node31.node76 1
+1305  node31.node36 1
+1306  node31.node50 1
+1307  node31.node54 1
+1308  node31.node69 1
+1309  node31.node90 1
+1310  node31.node84 1
+1311  node31.node47 1
+1312  node31.node100 1
+1313  node31.node91 1
+1314  node31.node73 1
+1315  node31.node63 1
+1316  node31.node61 1
+1317  node31.node48 1
+1318  node31.node99 1
+1319  node31.node85 1
+1320  node31.node74 1
+1321  node31.node75 1
+1322  node31.node92 1
+1323  node31.node67 1
+1324  node31.node96 1
+1325  node31.node80 1
+1326  node31.node79 1
+1327  node31.node42 1
+1328  node31.node71 1
+1329  node31.node44 1
+1330  node31.node88 1
+1331  node31.node49 1
+1332  node31.node51 1
+1333  node32.node100 1
+1334  node32.node96 1
+1335  node32.node49 1
+1336  node32.node83 1
+1337  node32.node57 1
+1338  node32.node55 1
+1339  node32.node78 1
+1340  node32.node67 1
+1341  node32.node34 1
+1342  node32.node52 1
+1343  node32.node53 1
+1344  node32.node62 1
+1345  node32.node38 1
+1346  node32.node46 1
+1347  node32.node39 1
+1348  node32.node60 1
+1349  node32.node69 1
+1350  node32.node50 1
+1351  node32.node82 1
+1352  node32.node64 1
+1353  node32.node42 1
+1354  node32.node73 1
+1355  node32.node89 1
+1356  node32.node54 1
+1357  node32.node91 1
+1358  node32.node48 1
+1359  node32.node51 1
+1360  node32.node41 1
+1361  node32.node92 1
+1362  node32.node66 1
+1363  node32.node77 1
+1364  node33.node51 1
+1365  node33.node78 1
+1366  node33.node74 1
+1367  node33.node43 1
+1368  node33.node71 1
+1369  node33.node53 1
+1370  node33.node38 1
+1371  node33.node100 1
+1372  node33.node81 1
+1373  node33.node48 1
+1374  node33.node62 1
+1375  node33.node82 1
+1376  node33.node99 1
+1377  node33.node46 1
+1378  node33.node61 1
+1379  node33.node90 1
+1380  node33.node55 1
+1381  node33.node65 1
+1382  node33.node92 1
+1383  node33.node63 1
+1384  node33.node95 1
+1385  node33.node76 1
+1386  node33.node39 1
+1387  node33.node54 1
+1388  node33.node58 1
+1389  node33.node86 1
+1390  node33.node36 1
+1391  node33.node42 1
+1392  node33.node64 1
+1393  node33.node91 1
+1394  node33.node98 1
+1395  node33.node73 1
+1396  node33.node94 1
+1397  node33.node96 1
+1398  node33.node56 1
+1399  node33.node70 1
+1400  node34.node75 1
+1401  node34.node48 1
+1402  node34.node41 1
+1403  node34.node98 1
+1404  node34.node50 1
+1405  node34.node73 1
+1406  node34.node86 1
+1407  node34.node59 1
+1408  node34.node88 1
+1409  node34.node100 1
+1410  node34.node58 1
+1411  node34.node63 1
+1412  node34.node51 1
+1413  node34.node39 1
+1414  node34.node67 1
+1415  node34.node64 1
+1416  node34.node36 1
+1417  node34.node81 1
+1418  node34.node80 1
+1419  node34.node52 1
+1420  node34.node97 1
+1421  node34.node43 1
+1422  node34.node56 1
+1423  node34.node37 1
+1424  node34.node40 1
+1425  node34.node89 1
+1426  node34.node93 1
+1427  node34.node78 1
+1428  node34.node74 1
+1429  node34.node87 1
+1430  node34.node72 1
+1431  node34.node46 1
+1432  node34.node92 1
+1433  node34.node57 1
+1434  node34.node82 1
+1435  node34.node45 1
+1436  node34.node54 1
+1437  node34.node84 1
+1438  node34.node95 1
+1439  node34.node47 1
+1440  node35.node86 1
+1441  node35.node52 1
+1442  node35.node62 1
+1443  node35.node91 1
+1444  node35.node39 1
+1445  node35.node77 1
+1446  node35.node59 1
+1447  node35.node36 1
+1448  node35.node43 1
+1449  node35.node38 1
+1450  node35.node100 1
+1451  node35.node64 1
+1452  node35.node89 1
+1453  node35.node94 1
+1454  node35.node47 1
+1455  node35.node61 1
+1456  node35.node97 1
+1457  node35.node80 1
+1458  node35.node69 1
+1459  node35.node68 1
+1460  node35.node41 1
+1461  node35.node66 1
+1462  node35.node84 1
+1463  node35.node72 1
+1464  node35.node46 1
+1465  node35.node57 1
+1466  node35.node42 1
+1467  node35.node67 1
+1468  node35.node79 1
+1469  node35.node92 1
+1470  node35.node54 1
+1471  node35.node88 1
+1472  node35.node75 1
+1473  node35.node76 1
+1474  node35.node81 1
+1475  node36.node64 1
+1476  node36.node73 1
+1477  node36.node58 1
+1478  node36.node69 1
+1479  node36.node54 1
+1480  node36.node91 1
+1481  node36.node70 1
+1482  node36.node45 1
+1483  node36.node53 1
+1484  node36.node41 1
+1485  node36.node50 1
+1486  node36.node85 1
+1487  node36.node80 1
+1488  node36.node90 1
+1489  node36.node55 1
+1490  node36.node83 1
+1491  node36.node38 1
+1492  node36.node81 1
+1493  node36.node42 1
+1494  node36.node56 1
+1495  node36.node82 1
+1496  node36.node79 1
+1497  node36.node47 1
+1498  node36.node88 1
+1499  node36.node44 1
+1500  node36.node100 1
+1501  node36.node61 1
+1502  node36.node62 1
+1503  node36.node92 1
+1504  node36.node78 1
+1505  node36.node97 1
+1506  node37.node68 1
+1507  node37.node63 1
+1508  node37.node60 1
+1509  node37.node49 1
+1510  node37.node100 1
+1511  node37.node83 1
+1512  node37.node86 1
+1513  node37.node38 1
+1514  node37.node74 1
+1515  node37.node93 1
+1516  node37.node55 1
+1517  node37.node66 1
+1518  node37.node71 1
+1519  node37.node89 1
+1520  node37.node80 1
+1521  node37.node72 1
+1522  node37.node39 1
+1523  node37.node79 1
+1524  node37.node46 1
+1525  node37.node91 1
+1526  node37.node54 1
+1527  node37.node82 1
+1528  node37.node61 1
+1529  node37.node48 1
+1530  node37.node56 1
+1531  node37.node67 1
+1532  node37.node73 1
+1533  node37.node88 1
+1534  node37.node85 1
+1535  node37.node87 1
+1536  node37.node42 1
+1537  node37.node75 1
+1538  node37.node41 1
+1539  node37.node44 1
+1540  node37.node92 1
+1541  node37.node76 1
+1542  node37.node58 1
+1543  node37.node81 1
+1544  node38.node62 1
+1545  node38.node81 1
+1546  node38.node88 1
+1547  node38.node69 1
+1548  node38.node77 1
+1549  node38.node86 1
+1550  node38.node78 1
+1551  node38.node61 1
+1552  node38.node43 1
+1553  node38.node54 1
+1554  node38.node89 1
+1555  node38.node58 1
+1556  node38.node46 1
+1557  node38.node83 1
+1558  node38.node57 1
+1559  node38.node71 1
+1560  node38.node70 1
+1561  node38.node80 1
+1562  node38.node66 1
+1563  node38.node95 1
+1564  node38.node50 1
+1565  node38.node60 1
+1566  node38.node94 1
+1567  node38.node67 1
+1568  node38.node91 1
+1569  node38.node63 1
+1570  node38.node79 1
+1571  node38.node97 1
+1572  node39.node44 1
+1573  node39.node43 1
+1574  node39.node86 1
+1575  node39.node67 1
+1576  node39.node88 1
+1577  node39.node100 1
+1578  node39.node99 1
+1579  node39.node82 1
+1580  node39.node74 1
+1581  node39.node52 1
+1582  node39.node53 1
+1583  node39.node57 1
+1584  node39.node40 1
+1585  node39.node48 1
+1586  node39.node89 1
+1587  node39.node78 1
+1588  node39.node80 1
+1589  node39.node92 1
+1590  node39.node93 1
+1591  node39.node61 1
+1592  node39.node76 1
+1593  node39.node85 1
+1594  node39.node50 1
+1595  node39.node64 1
+1596  node39.node55 1
+1597  node40.node85 1
+1598  node40.node78 1
+1599  node40.node62 1
+1600  node40.node49 1
+1601  node40.node67 1
+1602  node40.node60 1
+1603  node40.node57 1
+1604  node40.node71 1
+1605  node40.node87 1
+1606  node40.node63 1
+1607  node40.node66 1
+1608  node40.node84 1
+1609  node40.node69 1
+1610  node40.node79 1
+1611  node40.node92 1
+1612  node40.node55 1
+1613  node40.node59 1
+1614  node40.node93 1
+1615  node40.node89 1
+1616  node40.node95 1
+1617  node40.node72 1
+1618  node40.node50 1
+1619  node40.node96 1
+1620  node40.node43 1
+1621  node40.node58 1
+1622  node40.node99 1
+1623  node41.node49 1
+1624  node41.node94 1
+1625  node41.node57 1
+1626  node41.node99 1
+1627  node41.node74 1
+1628  node41.node96 1
+1629  node41.node70 1
+1630  node41.node62 1
+1631  node41.node97 1
+1632  node41.node77 1
+1633  node41.node91 1
+1634  node41.node76 1
+1635  node41.node48 1
+1636  node41.node64 1
+1637  node41.node93 1
+1638  node41.node68 1
+1639  node41.node56 1
+1640  node41.node90 1
+1641  node41.node71 1
+1642  node41.node52 1
+1643  node41.node43 1
+1644  node41.node73 1
+1645  node41.node69 1
+1646  node41.node82 1
+1647  node41.node58 1
+1648  node41.node72 1
+1649  node41.node55 1
+1650  node41.node47 1
+1651  node41.node83 1
+1652  node41.node80 1
+1653  node41.node65 1
+1654  node42.node90 1
+1655  node42.node74 1
+1656  node42.node76 1
+1657  node42.node98 1
+1658  node42.node56 1
+1659  node42.node67 1
+1660  node42.node43 1
+1661  node42.node96 1
+1662  node42.node46 1
+1663  node42.node94 1
+1664  node42.node61 1
+1665  node42.node60 1
+1666  node42.node77 1
+1667  node42.node58 1
+1668  node42.node64 1
+1669  node42.node59 1
+1670  node42.node93 1
+1671  node42.node70 1
+1672  node42.node75 1
+1673  node42.node65 1
+1674  node42.node62 1
+1675  node42.node99 1
+1676  node42.node48 1
+1677  node42.node54 1
+1678  node42.node91 1
+1679  node42.node95 1
+1680  node42.node92 1
+1681  node42.node51 1
+1682  node42.node55 1
+1683  node42.node47 1
+1684  node42.node63 1
+1685  node43.node66 1
+1686  node43.node98 1
+1687  node43.node76 1
+1688  node43.node72 1
+1689  node43.node71 1
+1690  node43.node94 1
+1691  node43.node61 1
+1692  node43.node51 1
+1693  node43.node100 1
+1694  node43.node73 1
+1695  node43.node52 1
+1696  node43.node65 1
+1697  node43.node69 1
+1698  node43.node59 1
+1699  node43.node79 1
+1700  node43.node48 1
+1701  node43.node60 1
+1702  node43.node93 1
+1703  node43.node45 1
+1704  node43.node49 1
+1705  node43.node58 1
+1706  node43.node87 1
+1707  node43.node67 1
+1708  node43.node50 1
+1709  node43.node70 1
+1710  node43.node54 1
+1711  node43.node96 1
+1712  node43.node92 1
+1713  node43.node81 1
+1714  node43.node90 1
+1715  node43.node64 1
+1716  node43.node82 1
+1717  node44.node50 1
+1718  node44.node68 1
+1719  node44.node100 1
+1720  node44.node57 1
+1721  node44.node67 1
+1722  node44.node53 1
+1723  node44.node99 1
+1724  node44.node84 1
+1725  node44.node61 1
+1726  node44.node60 1
+1727  node44.node62 1
+1728  node44.node65 1
+1729  node44.node98 1
+1730  node44.node83 1
+1731  node44.node87 1
+1732  node44.node69 1
+1733  node44.node97 1
+1734  node44.node73 1
+1735  node44.node59 1
+1736  node44.node76 1
+1737  node44.node71 1
+1738  node44.node89 1
+1739  node44.node85 1
+1740  node44.node58 1
+1741  node44.node66 1
+1742  node44.node48 1
+1743  node44.node93 1
+1744  node44.node45 1
+1745  node44.node74 1
+1746  node44.node75 1
+1747  node45.node54 1
+1748  node45.node94 1
+1749  node45.node81 1
+1750  node45.node72 1
+1751  node45.node78 1
+1752  node45.node64 1
+1753  node45.node96 1
+1754  node45.node79 1
+1755  node45.node88 1
+1756  node45.node68 1
+1757  node45.node66 1
+1758  node45.node82 1
+1759  node45.node95 1
+1760  node45.node89 1
+1761  node45.node91 1
+1762  node45.node52 1
+1763  node45.node73 1
+1764  node45.node75 1
+1765  node45.node59 1
+1766  node45.node76 1
+1767  node45.node97 1
+1768  node45.node55 1
+1769  node45.node56 1
+1770  node45.node49 1
+1771  node45.node69 1
+1772  node45.node60 1
+1773  node45.node86 1
+1774  node46.node100 1
+1775  node46.node52 1
+1776  node46.node67 1
+1777  node46.node89 1
+1778  node46.node49 1
+1779  node46.node66 1
+1780  node46.node55 1
+1781  node46.node53 1
+1782  node46.node91 1
+1783  node46.node70 1
+1784  node46.node97 1
+1785  node46.node75 1
+1786  node46.node99 1
+1787  node46.node95 1
+1788  node46.node54 1
+1789  node46.node77 1
+1790  node46.node86 1
+1791  node46.node68 1
+1792  node46.node79 1
+1793  node46.node47 1
+1794  node46.node73 1
+1795  node46.node78 1
+1796  node46.node59 1
+1797  node46.node82 1
+1798  node46.node80 1
+1799  node46.node93 1
+1800  node46.node85 1
+1801  node46.node58 1
+1802  node46.node60 1
+1803  node47.node82 1
+1804  node47.node93 1
+1805  node47.node78 1
+1806  node47.node88 1
+1807  node47.node60 1
+1808  node47.node71 1
+1809  node47.node74 1
+1810  node47.node62 1
+1811  node47.node59 1
+1812  node47.node83 1
+1813  node47.node72 1
+1814  node47.node49 1
+1815  node47.node52 1
+1816  node47.node84 1
+1817  node47.node81 1
+1818  node47.node90 1
+1819  node47.node57 1
+1820  node47.node61 1
+1821  node47.node73 1
+1822  node47.node75 1
+1823  node47.node65 1
+1824  node47.node91 1
+1825  node47.node70 1
+1826  node47.node99 1
+1827  node47.node86 1
+1828  node47.node56 1
+1829  node47.node89 1
+1830  node47.node66 1
+1831  node47.node98 1
+1832  node47.node92 1
+1833  node48.node63 1
+1834  node48.node64 1
+1835  node48.node82 1
+1836  node48.node55 1
+1837  node48.node87 1
+1838  node48.node77 1
+1839  node48.node62 1
+1840  node48.node49 1
+1841  node48.node98 1
+1842  node48.node70 1
+1843  node48.node95 1
+1844  node48.node89 1
+1845  node48.node75 1
+1846  node48.node83 1
+1847  node48.node99 1
+1848  node48.node80 1
+1849  node48.node81 1
+1850  node48.node57 1
+1851  node48.node96 1
+1852  node48.node73 1
+1853  node48.node74 1
+1854  node48.node54 1
+1855  node48.node50 1
+1856  node48.node69 1
+1857  node48.node58 1
+1858  node48.node94 1
+1859  node48.node51 1
+1860  node48.node66 1
+1861  node48.node76 1
+1862  node48.node53 1
+1863  node49.node56 1
+1864  node49.node61 1
+1865  node49.node57 1
+1866  node49.node100 1
+1867  node49.node58 1
+1868  node49.node69 1
+1869  node49.node84 1
+1870  node49.node55 1
+1871  node49.node50 1
+1872  node49.node90 1
+1873  node49.node83 1
+1874  node49.node68 1
+1875  node49.node54 1
+1876  node49.node98 1
+1877  node49.node94 1
+1878  node49.node87 1
+1879  node49.node86 1
+1880  node49.node60 1
+1881  node49.node67 1
+1882  node49.node89 1
+1883  node49.node93 1
+1884  node49.node66 1
+1885  node49.node96 1
+1886  node49.node79 1
+1887  node49.node77 1
+1888  node49.node59 1
+1889  node49.node75 1
+1890  node50.node88 1
+1891  node50.node74 1
+1892  node50.node53 1
+1893  node50.node60 1
+1894  node50.node78 1
+1895  node50.node67 1
+1896  node50.node62 1
+1897  node50.node96 1
+1898  node50.node68 1
+1899  node50.node87 1
+1900  node50.node95 1
+1901  node50.node64 1
+1902  node50.node98 1
+1903  node50.node93 1
+1904  node50.node97 1
+1905  node50.node59 1
+1906  node50.node61 1
+1907  node50.node66 1
+1908  node50.node77 1
+1909  node50.node58 1
+1910  node50.node92 1
+1911  node50.node85 1
+1912  node50.node91 1
+1913  node50.node75 1
+1914  node50.node82 1
+1915  node51.node93 1
+1916  node51.node68 1
+1917  node51.node80 1
+1918  node51.node73 1
+1919  node51.node77 1
+1920  node51.node71 1
+1921  node51.node57 1
+1922  node51.node54 1
+1923  node51.node67 1
+1924  node51.node72 1
+1925  node51.node61 1
+1926  node51.node75 1
+1927  node51.node76 1
+1928  node51.node78 1
+1929  node51.node82 1
+1930  node51.node63 1
+1931  node51.node69 1
+1932  node51.node65 1
+1933  node51.node56 1
+1934  node51.node99 1
+1935  node51.node83 1
+1936  node51.node74 1
+1937  node51.node97 1
+1938  node52.node91 1
+1939  node52.node80 1
+1940  node52.node90 1
+1941  node52.node83 1
+1942  node52.node65 1
+1943  node52.node56 1
+1944  node52.node97 1
+1945  node52.node53 1
+1946  node52.node59 1
+1947  node52.node79 1
+1948  node52.node89 1
+1949  node52.node76 1
+1950  node52.node63 1
+1951  node52.node96 1
+1952  node52.node62 1
+1953  node52.node94 1
+1954  node52.node92 1
+1955  node52.node78 1
+1956  node52.node72 1
+1957  node52.node87 1
+1958  node52.node54 1
+1959  node52.node84 1
+1960  node52.node85 1
+1961  node53.node79 1
+1962  node53.node62 1
+1963  node53.node55 1
+1964  node53.node94 1
+1965  node53.node70 1
+1966  node53.node71 1
+1967  node53.node90 1
+1968  node53.node89 1
+1969  node53.node69 1
+1970  node53.node99 1
+1971  node53.node86 1
+1972  node53.node84 1
+1973  node53.node74 1
+1974  node53.node73 1
+1975  node53.node61 1
+1976  node53.node58 1
+1977  node53.node97 1
+1978  node53.node72 1
+1979  node53.node75 1
+1980  node53.node82 1
+1981  node53.node85 1
+1982  node53.node66 1
+1983  node53.node54 1
+1984  node53.node78 1
+1985  node53.node63 1
+1986  node53.node60 1
+1987  node53.node92 1
+1988  node54.node83 1
+1989  node54.node58 1
+1990  node54.node69 1
+1991  node54.node93 1
+1992  node54.node90 1
+1993  node54.node70 1
+1994  node54.node91 1
+1995  node54.node74 1
+1996  node54.node84 1
+1997  node54.node68 1
+1998  node54.node59 1
+1999  node54.node98 1
+2000  node54.node88 1
+2001  node54.node64 1
+2002  node54.node87 1
+2003  node54.node82 1
+2004  node54.node57 1
+2005  node54.node62 1
+2006  node54.node89 1
+2007  node55.node74 1
+2008  node55.node82 1
+2009  node55.node68 1
+2010  node55.node65 1
+2011  node55.node67 1
+2012  node55.node92 1
+2013  node55.node77 1
+2014  node55.node88 1
+2015  node55.node87 1
+2016  node55.node78 1
+2017  node55.node97 1
+2018  node55.node100 1
+2019  node55.node80 1
+2020  node55.node91 1
+2021  node55.node90 1
+2022  node55.node66 1
+2023  node55.node98 1
+2024  node55.node72 1
+2025  node55.node70 1
+2026  node55.node59 1
+2027  node56.node69 1
+2028  node56.node59 1
+2029  node56.node74 1
+2030  node56.node70 1
+2031  node56.node96 1
+2032  node56.node62 1
+2033  node56.node88 1
+2034  node56.node83 1
+2035  node56.node94 1
+2036  node56.node66 1
+2037  node56.node90 1
+2038  node56.node80 1
+2039  node56.node57 1
+2040  node56.node92 1
+2041  node56.node87 1
+2042  node56.node68 1
+2043  node56.node95 1
+2044  node56.node58 1
+2045  node56.node78 1
+2046  node56.node61 1
+2047  node56.node97 1
+2048  node56.node82 1
+2049  node57.node70 1
+2050  node57.node85 1
+2051  node57.node82 1
+2052  node57.node83 1
+2053  node57.node72 1
+2054  node57.node71 1
+2055  node57.node98 1
+2056  node57.node90 1
+2057  node57.node60 1
+2058  node57.node93 1
+2059  node57.node64 1
+2060  node57.node95 1
+2061  node57.node81 1
+2062  node57.node84 1
+2063  node57.node69 1
+2064  node57.node99 1
+2065  node58.node79 1
+2066  node58.node94 1
+2067  node58.node77 1
+2068  node58.node68 1
+2069  node58.node95 1
+2070  node58.node86 1
+2071  node58.node100 1
+2072  node58.node89 1
+2073  node58.node67 1
+2074  node58.node80 1
+2075  node58.node71 1
+2076  node58.node90 1
+2077  node58.node64 1
+2078  node58.node63 1
+2079  node58.node97 1
+2080  node58.node70 1
+2081  node58.node81 1
+2082  node58.node74 1
+2083  node58.node82 1
+2084  node58.node91 1
+2085  node58.node60 1
+2086  node58.node92 1
+2087  node58.node85 1
+2088  node59.node66 1
+2089  node59.node95 1
+2090  node59.node73 1
+2091  node59.node98 1
+2092  node59.node81 1
+2093  node59.node93 1
+2094  node59.node91 1
+2095  node59.node72 1
+2096  node59.node94 1
+2097  node59.node67 1
+2098  node59.node65 1
+2099  node59.node63 1
+2100  node59.node85 1
+2101  node59.node96 1
+2102  node59.node88 1
+2103  node59.node97 1
+2104  node59.node83 1
+2105  node59.node69 1
+2106  node59.node71 1
+2107  node59.node92 1
+2108  node59.node64 1
+2109  node60.node77 1
+2110  node60.node65 1
+2111  node60.node85 1
+2112  node60.node99 1
+2113  node60.node66 1
+2114  node60.node81 1
+2115  node60.node82 1
+2116  node60.node78 1
+2117  node60.node63 1
+2118  node60.node73 1
+2119  node60.node80 1
+2120  node60.node69 1
+2121  node60.node70 1
+2122  node60.node74 1
+2123  node60.node87 1
+2124  node60.node71 1
+2125  node61.node84 1
+2126  node61.node80 1
+2127  node61.node95 1
+2128  node61.node94 1
+2129  node61.node87 1
+2130  node61.node62 1
+2131  node61.node78 1
+2132  node61.node82 1
+2133  node61.node89 1
+2134  node61.node67 1
+2135  node61.node75 1
+2136  node61.node86 1
+2137  node61.node79 1
+2138  node61.node72 1
+2139  node61.node64 1
+2140  node61.node93 1
+2141  node61.node63 1
+2142  node61.node83 1
+2143  node61.node96 1
+2144  node61.node66 1
+2145  node61.node97 1
+2146  node61.node100 1
+2147  node62.node93 1
+2148  node62.node77 1
+2149  node62.node63 1
+2150  node62.node69 1
+2151  node62.node87 1
+2152  node62.node96 1
+2153  node62.node68 1
+2154  node62.node82 1
+2155  node62.node65 1
+2156  node62.node79 1
+2157  node62.node92 1
+2158  node62.node78 1
+2159  node62.node95 1
+2160  node62.node97 1
+2161  node62.node71 1
+2162  node62.node86 1
+2163  node63.node80 1
+2164  node63.node68 1
+2165  node63.node75 1
+2166  node63.node65 1
+2167  node63.node100 1
+2168  node63.node69 1
+2169  node63.node86 1
+2170  node63.node74 1
+2171  node63.node77 1
+2172  node63.node98 1
+2173  node63.node73 1
+2174  node63.node71 1
+2175  node63.node79 1
+2176  node63.node76 1
+2177  node64.node67 1
+2178  node64.node84 1
+2179  node64.node82 1
+2180  node64.node100 1
+2181  node64.node98 1
+2182  node64.node68 1
+2183  node64.node81 1
+2184  node64.node75 1
+2185  node64.node91 1
+2186  node64.node66 1
+2187  node64.node74 1
+2188  node64.node95 1
+2189  node64.node99 1
+2190  node64.node96 1
+2191  node65.node81 1
+2192  node65.node73 1
+2193  node65.node66 1
+2194  node65.node68 1
+2195  node65.node70 1
+2196  node65.node79 1
+2197  node65.node75 1
+2198  node65.node86 1
+2199  node65.node92 1
+2200  node65.node84 1
+2201  node65.node96 1
+2202  node65.node91 1
+2203  node65.node85 1
+2204  node65.node71 1
+2205  node65.node94 1
+2206  node65.node90 1
+2207  node65.node98 1
+2208  node65.node67 1
+2209  node65.node69 1
+2210  node66.node68 1
+2211  node66.node98 1
+2212  node66.node71 1
+2213  node66.node90 1
+2214  node66.node88 1
+2215  node66.node81 1
+2216  node66.node93 1
+2217  node66.node89 1
+2218  node66.node84 1
+2219  node66.node82 1
+2220  node66.node96 1
+2221  node66.node69 1
+2222  node66.node91 1
+2223  node66.node73 1
+2224  node67.node69 1
+2225  node67.node73 1
+2226  node67.node71 1
+2227  node67.node79 1
+2228  node67.node74 1
+2229  node67.node96 1
+2230  node67.node78 1
+2231  node67.node86 1
+2232  node67.node98 1
+2233  node67.node87 1
+2234  node67.node83 1
+2235  node67.node84 1
+2236  node67.node88 1
+2237  node67.node100 1
+2238  node67.node85 1
+2239  node67.node92 1
+2240  node67.node95 1
+2241  node68.node94 1
+2242  node68.node98 1
+2243  node68.node74 1
+2244  node68.node81 1
+2245  node68.node76 1
+2246  node68.node82 1
+2247  node68.node100 1
+2248  node68.node91 1
+2249  node68.node73 1
+2250  node68.node95 1
+2251  node68.node97 1
+2252  node68.node93 1
+2253  node68.node72 1
+2254  node68.node75 1
+2255  node68.node79 1
+2256  node68.node77 1
+2257  node68.node87 1
+2258  node69.node83 1
+2259  node69.node91 1
+2260  node69.node94 1
+2261  node69.node89 1
+2262  node69.node73 1
+2263  node69.node86 1
+2264  node69.node96 1
+2265  node69.node98 1
+2266  node69.node87 1
+2267  node69.node76 1
+2268  node69.node71 1
+2269  node69.node90 1
+2270  node69.node77 1
+2271  node69.node70 1
+2272  node69.node72 1
+2273  node69.node88 1
+2274  node69.node80 1
+2275  node69.node95 1
+2276  node69.node78 1
+2277  node70.node80 1
+2278  node70.node96 1
+2279  node70.node100 1
+2280  node70.node97 1
+2281  node70.node95 1
+2282  node70.node94 1
+2283  node70.node71 1
+2284  node70.node88 1
+2285  node70.node76 1
+2286  node70.node73 1
+2287  node70.node90 1
+2288  node70.node75 1
+2289  node70.node93 1
+2290  node71.node75 1
+2291  node71.node89 1
+2292  node71.node95 1
+2293  node71.node99 1
+2294  node71.node80 1
+2295  node71.node85 1
+2296  node71.node100 1
+2297  node71.node90 1
+2298  node71.node78 1
+2299  node71.node93 1
+2300  node71.node88 1
+2301  node71.node84 1
+2302  node71.node97 1
+2303  node71.node73 1
+2304  node71.node79 1
+2305  node71.node86 1
+2306  node72.node87 1
+2307  node72.node92 1
+2308  node72.node79 1
+2309  node72.node80 1
+2310  node72.node100 1
+2311  node72.node81 1
+2312  node72.node93 1
+2313  node72.node97 1
+2314  node72.node73 1
+2315  node72.node77 1
+2316  node72.node76 1
+2317  node72.node85 1
+2318  node72.node86 1
+2319  node72.node78 1
+2320  node73.node91 1
+2321  node73.node76 1
+2322  node73.node87 1
+2323  node73.node81 1
+2324  node73.node80 1
+2325  node73.node97 1
+2326  node73.node100 1
+2327  node73.node75 1
+2328  node73.node94 1
+2329  node73.node77 1
+2330  node73.node74 1
+2331  node73.node89 1
+2332  node73.node95 1
+2333  node74.node88 1
+2334  node74.node77 1
+2335  node74.node75 1
+2336  node74.node97 1
+2337  node74.node85 1
+2338  node74.node99 1
+2339  node74.node79 1
+2340  node74.node84 1
+2341  node74.node83 1
+2342  node74.node76 1
+2343  node74.node96 1
+2344  node74.node92 1
+2345  node74.node90 1
+2346  node74.node80 1
+2347  node74.node94 1
+2348  node74.node89 1
+2349  node74.node100 1
+2350  node75.node91 1
+2351  node75.node79 1
+2352  node75.node99 1
+2353  node75.node88 1
+2354  node75.node98 1
+2355  node75.node77 1
+2356  node75.node90 1
+2357  node75.node84 1
+2358  node75.node82 1
+2359  node75.node80 1
+2360  node75.node83 1
+2361  node75.node92 1
+2362  node75.node86 1
+2363  node75.node94 1
+2364  node75.node78 1
+2365  node76.node98 1
+2366  node76.node82 1
+2367  node76.node100 1
+2368  node76.node78 1
+2369  node76.node96 1
+2370  node76.node97 1
+2371  node76.node90 1
+2372  node76.node88 1
+2373  node76.node81 1
+2374  node77.node95 1
+2375  node77.node92 1
+2376  node77.node99 1
+2377  node77.node81 1
+2378  node77.node78 1
+2379  node77.node84 1
+2380  node77.node96 1
+2381  node77.node97 1
+2382  node77.node93 1
+2383  node77.node88 1
+2384  node78.node85 1
+2385  node78.node83 1
+2386  node78.node93 1
+2387  node78.node99 1
+2388  node78.node97 1
+2389  node78.node90 1
+2390  node78.node92 1
+2391  node78.node98 1
+2392  node78.node79 1
+2393  node79.node92 1
+2394  node79.node81 1
+2395  node79.node84 1
+2396  node79.node97 1
+2397  node79.node85 1
+2398  node79.node90 1
+2399  node79.node89 1
+2400  node79.node95 1
+2401  node79.node88 1
+2402  node79.node98 1
+2403  node79.node91 1
+2404  node79.node83 1
+2405  node80.node85 1
+2406  node80.node98 1
+2407  node80.node83 1
+2408  node80.node86 1
+2409  node80.node96 1
+2410  node80.node88 1
+2411  node80.node87 1
+2412  node80.node100 1
+2413  node80.node90 1
+2414  node81.node93 1
+2415  node81.node85 1
+2416  node81.node82 1
+2417  node81.node89 1
+2418  node81.node98 1
+2419  node81.node99 1
+2420  node81.node88 1
+2421  node81.node83 1
+2422  node81.node87 1
+2423  node81.node92 1
+2424  node81.node97 1
+2425  node82.node86 1
+2426  node82.node97 1
+2427  node82.node87 1
+2428  node82.node98 1
+2429  node82.node84 1
+2430  node82.node91 1
+2431  node82.node88 1
+2432  node82.node92 1
+2433  node82.node94 1
+2434  node83.node97 1
+2435  node83.node98 1
+2436  node83.node91 1
+2437  node83.node90 1
+2438  node83.node89 1
+2439  node83.node88 1
+2440  node83.node96 1
+2441  node83.node94 1
+2442  node83.node99 1
+2443  node84.node89 1
+2444  node84.node85 1
+2445  node84.node86 1
+2446  node84.node93 1
+2447  node84.node88 1
+2448  node84.node100 1
+2449  node84.node91 1
+2450  node85.node88 1
+2451  node85.node99 1
+2452  node85.node89 1
+2453  node85.node98 1
+2454  node85.node93 1
+2455  node86.node90 1
+2456  node86.node89 1
+2457  node86.node94 1
+2458  node86.node92 1
+2459  node86.node88 1
+2460  node86.node96 1
+2461  node86.node97 1
+2462  node86.node87 1
+2463  node87.node88 1
+2464  node87.node95 1
+2465  node87.node93 1
+2466  node87.node94 1
+2467  node87.node96 1
+2468  node87.node100 1
+2469  node87.node92 1
+2470  node87.node91 1
+2471  node87.node99 1
+2472  node87.node90 1
+2473  node87.node97 1
+2474  node88.node94 1
+2475  node88.node96 1
+2476  node88.node89 1
+2477  node88.node95 1
+2478  node88.node99 1
+2479  node88.node97 1
+2480  node88.node91 1
+2481  node89.node94 1
+2482  node89.node93 1
+2483  node89.node92 1
+2484  node89.node99 1
+2485  node89.node96 1
+2486  node90.node100 1
+2487  node90.node94 1
+2488  node90.node98 1
+2489  node90.node97 1
+2490  node91.node99 1
+2491  node91.node95 1
+2492  node91.node100 1
+2493  node92.node96 1
+2494  node93.node95 1
+2495  node93.node99 1
+2496  node94.node98 1
+2497  node94.node100 1
+2498  node94.node99 1
+2499  node95.node98 1
+2500  node95.node100 1
+2501  node95.node96 1
+2502  node95.node97 1
+2503  node97.node98 1
+2504  node97.node99 1
+2505  node98.node99 1
+2506  /;
+2507   
+2508  alias(i,j)
+2509  set a(i,j) 'arcs';
+2510  a(i,j) = w(i,j);
+2511   
+2512  *------------------------------------------------------------------
+2513  * reporting macros
+2514  *------------------------------------------------------------------
+2515   
+2516  parameter results(*,*);
+2517   
+2518  acronym Optimal;
+2519   
+2520  * macros for reporting
+2521  $macro report(m,label)  \
+2522      results('|i|',label) = card(i); \
+2523      results('|a|',label) = card(a); \
+2524      results('variables',label)  = m.numvar;  \
+2525      results(' discrete',label)  = m.numdvar;  \
+2526      results('equations',label)  = m.numequ;  \
+2527      results('status',label)= m.solvestat; \
+2528      results('status',label)$(m.solvestat=1) = Optimal; \
+2529      results('obj',label) = z.l; \
+2530      results('time',label) = m.resusd; \
+2531      results('nodes',label) = m.nodusd; \
+2532      results('iterations',label) = m.iterusd; \
+2533      display results;
+2534   
+2535   
+2536  *---------------------------------------------------------
+2537  * maxcut model 1: MIQP
+2538  *---------------------------------------------------------
+2539   
+2540  binary variables
+2541     x(i) 'node is in S'
+2542  ;
+2543   
+2544  variable z 'objective';
+2545   
+2546  equations
+2547     obj1
+2548     obj2
+2549  ;
+2550   
+2551  obj1.. z =e= sum(a(i,j),w(i,j)*sqr(x(i)-x(j)));
+2552  obj2.. z =e= sum(a(i,j),w(i,j)*(x(i)+x(j)-2*x(i)*x(j)));
+2553   
+2554  x.fx('node1')=1;
+2555   
+2556  model maxcut1 /obj1/;
+2557  model maxcut2 /obj2/;
+2558  option miqcp=cplex,threads=0,optcr=0;
+2559  maxcut1.optfile=1;
+2560  maxcut2.optfile=1;
+2561  solve maxcut1 maximizing z using miqcp;
+2562   results('|i|',"miqp (1)") = card(i); results('|a|',"miqp (1)") = card(a); results('variables',"miqp (1)")  = maxcut1.numvar;  results(' discrete',"miqp (1)")  = maxcut1.numdvar;  results('equations',"miqp (1)")  = maxcut1.numequ;  results('status',"miqp (1)")= maxcut1.solvestat; results('status',"miqp (1)")$(maxcut1.solvestat=1) = Optimal; results('obj',"miqp (1)") = z.l; results('time',"miqp (1)") = maxcut1.resusd; results('nodes',"miqp (1)") = maxcut1.nodusd; results('iterations',"miqp (1)") = maxcut1.iterusd; display results;
+2563  solve maxcut2 maximizing z using miqcp;
+2564   results('|i|',"miqp (2)") = card(i); results('|a|',"miqp (2)") = card(a); results('variables',"miqp (2)")  = maxcut2.numvar;  results(' discrete',"miqp (2)")  = maxcut2.numdvar;  results('equations',"miqp (2)")  = maxcut2.numequ;  results('status',"miqp (2)")= maxcut2.solvestat; results('status',"miqp (2)")$(maxcut2.solvestat=1) = Optimal; results('obj',"miqp (2)") = z.l; results('time',"miqp (2)") = maxcut2.resusd; results('nodes',"miqp (2)") = maxcut2.nodusd; results('iterations',"miqp (2)") = maxcut2.iterusd; display results;
+2565   
+2566  * optimal obj should be 1430
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  C:\projects\OptimizationModels\MaxCut\new1.gms
+     2       22 CALL           1      22  awk -f translate.awk g05_100.0 > g05_100.inc
+     3       28 INCLUDE        1      28  .C:\projects\OptimizationModels\MaxCut\g05_100.inc
+
+
+COMPILATION TIME     =        0.046 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE maxcut1 Using MIQCP From line 2561
+
+
+---- obj1  =E=  
+
+obj1..  - (100)*x(node1) + (0)*x(node2) + (0)*x(node3) + (0)*x(node4) + (2)*x(node5) + (0)*x(node6) + (0)*x(node7) + (2)*x(node8) + (2)*x(node9) + (2)*x(node10) + (0)*x(node11) + (2)*x(node12) + (0)*x(node13) + (2)*x(node14) + (0)*x(node15) + (2)*x(node16) + (2)*x(node17) + (0)*x(node18) + (2)*x(node19) + (2)*x(node20) + (0)*x(node21) + (0)*x(node22) + (0)*x(node23) + (2)*x(node24) + (0)*x(node25) + (2)*x(node26) + (0)*x(node27) + (2)*x(node28) + (0)*x(node29) + (0)*x(node30) + (2)*x(node31) + (0)*x(node32) + (2)*x(node33) + (2)*x(node34) + (0)*x(node35) + (2)*x(node36) + (2)*x(node37) + (2)*x(node38) + (2)*x(node39) + (2)*x(node40) + (0)*x(node41) + (2)*x(node42) + (2)*x(node43) + (2)*x(node44) + (0)*x(node45) + (2)*x(node46) + (2)*x(node47) + (2)*x(node48) + (2)*x(node49) + (0)*x(node50) + (2)*x(node51) + (2)*x(node52) + (0)*x(node53) + (0)*x(node54) + (2)*x(node55) + (0)*x(node56) + (0)*x(node57) + (0)*x(node58) + (2)*x(node59) + (0)*x(node60) + (2)*x(node61) + (0)*x(node62) + (0)*x(node63) + (2)*x(node64) + (2)*x(node65) + (0)*x(node66) + (2)*x(node67) + (0)*x(node68) + (0)*x(node69) + (2)*x(node70) + (0)*x(node71) + (0)*x(node72) + (0)*x(node73) + (2)*x(node74) + (0)*x(node75) + (2)*x(node76) + (2)*x(node77) + (0)*x(node78) + (2)*x(node79) + (2)*x(node80) + (0)*x(node81) + (0)*x(node82) + (0)*x(node83) + (0)*x(node84) + (0)*x(node85) + (0)*x(node86) + (2)*x(node87) + (0)*x(node88) + (2)*x(node89) + (2)*x(node90) + (2)*x(node91) + (2)*x(node92) + (2)*x(node93) + (2)*x(node94) + (0)*x(node95) + (0)*x(node96) + (0)*x(node97) + (0)*x(node98) + (2)*x(node99) + (0)*x(node100) + z =E= 0 ; (LHS = -50, INFES = 50 ****)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE maxcut1 Using MIQCP From line 2561
+
+
+---- x  node is in S
+
+x(node1)
+                (.LO, .L, .UP, .M = 1, 1, 1, 0)
+    (-100)      obj1
+
+x(node2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+x(node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      obj1
+
+REMAINING 97 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE maxcut1 Using MIQCP From line 2561
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+02] - Zero values observed as well
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/20/22 08:58:05 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE maxcut1 Using MIQCP From line 2561
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS            1
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES          101
+NON ZERO ELEMENTS           101     NON LINEAR N-Z            100
+CODE LENGTH               9,903     CONSTANT POOL              

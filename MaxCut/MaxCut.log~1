@@ -1,0 +1,1596 @@
+
+--- Job MaxDiCut.gms Start 06/19/22 07:20:41 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\39\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input C:\projects\OptimizationModels\MaxCut\MaxDiCut.gms
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\MaxCut\225a\
+    SysDir C:\GAMS\39\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
+--- Starting compilation
+--- MaxDiCut.gms(86) 3 Mb
+--- $echo File C:\projects\OptimizationModels\MaxCut\cplex.opt
+--- MaxDiCut.gms(147) 3 Mb
+--- Starting execution: elapsed 0:00:00.000
+--- MaxDiCut.gms(71) 4 Mb
+--- Generating MIQCP model maxcut1
+--- MaxDiCut.gms(72) 6 Mb
+---   1 rows  71 columns  71 non-zeroes
+---   5,949 nl-code  70 nl-non-zeroes
+---   70 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.226E+01]
+--- MaxDiCut.gms(72) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.000
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.58 Mb (peak 0.59 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.01 ticks)
+Found incumbent of value 0.000000 after 0.00 sec. (0.02 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 1 columns.
+MIP Presolve added 1764 rows and 882 columns.
+Reduced MIP has 1764 rows, 952 columns, and 3528 nonzeros.
+Reduced MIP has 952 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.25 ticks)
+Probing time = 0.00 sec. (0.24 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 882 rows and 0 columns.
+Reduced MIP has 882 rows, 952 columns, and 2646 nonzeros.
+Reduced MIP has 952 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.69 ticks)
+Classifier predicts products in MIQP should be linearized.
+Probing time = 0.00 sec. (0.19 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.36 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1             487.602285                    x72               c1 slack
+     2             486.968822                    x73               c2 slack
+     3             485.934044                    x74               c3 slack
+     4             485.146010                    x75               c4 slack
+     5             485.060121                    x76               c5 slack
+     6             484.141454                    x77               c6 slack
+     7             483.661827                    x78               c7 slack
+     8             482.909303                    x79               c8 slack
+     9             481.954097                    x80               c9 slack
+    10             481.182726                    x81              c10 slack
+    11             480.533294               x(node1)              c11 slack
+    12             480.077978                    x97              c26 slack
+    13             479.685611                    x98              c27 slack
+    14             479.002457                    x99              c28 slack
+    15             478.184049                   x100              c29 slack
+    16             477.924898                   x101              c30 slack
+    17             477.135716                   x102              c31 slack
+    18             476.975062                   x103              c32 slack
+    19             476.946663                   x104              c33 slack
+    20             476.522508                   x105              c34 slack
+    21             476.265509                   x106              c35 slack
+    22             475.364758                   x107              c36 slack
+    23             474.300671                   x953             c882 slack
+    24             473.798408                   x952             c881 slack
+    25             473.377572                   x951             c880 slack
+    26             472.515554                   x950             c879 slack
+    27             471.362862                   x949             c878 slack
+    28             470.413419                   x948             c877 slack
+    29             470.014994                   x947             c876 slack
+    30             469.018570                   x946             c875 slack
+    31             468.164029                   x945             c874 slack
+    32             467.784980                   x944             c873 slack
+    33             467.077277                   x943             c872 slack
+    34             466.978038                   x942             c871 slack
+    35             466.795689                   x941             c870 slack
+    36             466.594975                   x940             c869 slack
+    37             466.263131                   x939             c868 slack
+    38             465.865125                   x938             c867 slack
+    39             464.879539                   x937             c866 slack
+    40             464.112518                   x936             c865 slack
+    41             463.987435                   x935             c864 slack
+    42             463.693820                   x934             c863 slack
+    43             462.804708                   x933             c862 slack
+    44             461.953213                   x932             c861 slack
+    45             461.026751                   x931             c860 slack
+    46             460.707426                   x930             c859 slack
+    47             459.801851                   x929             c858 slack
+    48             458.525922                   x928             c857 slack
+    49             458.290620                   x927             c856 slack
+    50             457.712687                   x926             c855 slack
+    51             457.553203                   x925             c854 slack
+    52             457.215233                   x924             c853 slack
+    53             456.867344                   x923             c852 slack
+    54             456.778992                   x922             c851 slack
+    55             456.233330                   x921             c850 slack
+    56             455.773145                   x920             c849 slack
+    57             455.208453                   x919             c848 slack
+    58             454.848108                   x918             c847 slack
+    59             453.894186                   x917             c846 slack
+    60             452.918433                   x916             c845 slack
+    61             451.942394                   x915             c844 slack
+    62             451.766601                   x914             c843 slack
+    63             451.478045                   x913             c842 slack
+    64             450.674351                   x912             c841 slack
+    65             450.595329                   x911             c840 slack
+    66             450.463784                   x910             c839 slack
+    67             450.376681              x(node68)             c838 slack
+    68             450.177841                   x892             c821 slack
+    69             450.026318                   x891             c820 slack
+    70             449.305446                   x890             c819 slack
+    71             448.347331                   x889             c818 slack
+    72             447.487768                   x888             c817 slack
+    73             446.826111                   x887             c816 slack
+    74             446.324529                   x886             c815 slack
+    75             446.217231                   x885             c814 slack
+    76             445.506978                   x884             c813 slack
+    77             444.526588                   x883             c812 slack
+    78             444.426135                   x882             c811 slack
+    79             443.234313                   x881             c810 slack
+    80             443.171289                   x880             c809 slack
+    81             442.549345                   x879             c808 slack
+    82             441.899470                   x878             c807 slack
+    83             441.620900                   x877             c806 slack
+    84             441.009358                   x876             c805 slack
+    85             440.175564                   x875             c804 slack
+    86             439.637278                   x874             c803 slack
+    87             438.963401                   x873             c802 slack
+    88             437.267900                   x872             c801 slack
+    89             436.611424                   x871             c800 slack
+    90             435.633335                   x870             c799 slack
+    91             434.879103                   x869             c798 slack
+    92             434.711584                   x868             c797 slack
+    93             434.544649                   x867             c796 slack
+    94             434.426272                   x866             c795 slack
+    95             433.722638                   x865             c794 slack
+    96             433.546438                   x864             c793 slack
+    97             432.695768                   x863             c792 slack
+    98             432.293938                   x862             c791 slack
+    99             432.270814                   x861             c790 slack
+   100             432.066957                   x860             c789 slack
+   101             431.385698                   x859             c788 slack
+   102             430.955588                   x858             c787 slack
+   103             430.873724                   x857             c786 slack
+   104             429.930501                   x856             c785 slack
+   105             429.656150                   x855             c784 slack
+   106             429.218146                   x854             c783 slack
+   107             428.698673                   x853             c782 slack
+   108             428.030290                   x852             c781 slack
+   109             427.990514                   x851             c780 slack
+   110             427.903586                   x850             c779 slack
+   111             427.038554                   x849             c778 slack
+   112             426.844044                   x848             c777 slack
+   113             426.197765                   x847             c776 slack
+   114             425.583717                   x846             c775 slack
+   115             425.374113                   x845             c774 slack
+   116             424.966399              x(node49)             c773 slack
+   117             424.576298                   x828             c757 slack
+   118             424.075908                   x827             c756 slack
+   119             423.829165                   x826             c755 slack
+   120             423.242011                   x825             c754 slack
+   121             423.061615                   x824             c753 slack
+   122             422.159223                   x823             c752 slack
+   123             421.587777                   x822             c751 slack
+   124             421.186166                   x821             c750 slack
+   125             420.215039                   x820             c749 slack
+   126             420.158412                   x819             c748 slack
+   127             419.374627                   x818             c747 slack
+   128             419.182001                   x817             c746 slack
+   129             418.419772                   x816             c745 slack
+   130             417.751333                   x815             c744 slack
+   131             417.479965                   x814             c743 slack
+   132             417.324570                   x843             c772 slack
+   133             417.279386                   x812             c741 slack
+   134             416.725492                   x811             c740 slack
+   135             416.524693                   x810             c739 slack
+   136             416.157250                   x809             c738 slack
+   137             415.950075                   x808             c737 slack
+   138             415.186503                   x807             c736 slack
+   139             414.556700                   x806             c735 slack
+   140             413.137491                   x908             c837 slack
+   141             411.570702                   x804             c733 slack
+   142             410.471549                   x803             c732 slack
+   143             410.110821                   x802             c731 slack
+   144             409.666474                   x801             c730 slack
+   145             409.200174                   x800             c729 slack
+   146             408.856674                   x799             c728 slack
+   147             408.332853                   x798             c727 slack
+   148             407.888048                   x797             c726 slack
+   149             407.803838                   x796             c725 slack
+   150             407.564767                   x795             c724 slack
+   151             407.465728                   x794             c723 slack
+   152             406.987890              x(node59)             c722 slack
+   153             406.901295                   x781             c710 slack
+   154             406.834274                   x780             c709 slack
+   155             406.570195                   x779             c708 slack
+   156             406.110134                   x109              c38 slack
+   157             405.992751              x(node52)             c706 slack
+   158             405.885528                   x761             c690 slack
+   159             405.800923                   x108              c37 slack
+   160             405.116586                   x111              c40 slack
+   161             404.367921                   x907             c836 slack
+   162             403.680243              x(node65)             c835 slack
+   163             403.552727                   x115              c44 slack
+   164             402.367377              x(node46)             c771 slack
+   165             402.191510              x(node43)             c761 slack
+   166             401.290076                   x783             c712 slack
+   167             399.954012                   x124              c53 slack
+   168             399.904826                   x776             c705 slack
+   169             398.970670                   x140              c69 slack
+   170             398.772798                   x173             c102 slack
+   171             397.978406                   x773             c702 slack
+   172             397.094954                   x772             c701 slack
+   173             397.066238                   x770             c699 slack
+   174             396.507369              x(node40)             c170 slack
+   175             396.398457                   x756             c685 slack
+   176             395.565238                   x755             c684 slack
+   177             394.955550                   x754             c683 slack
+   178             393.805943                   x382             c311 slack
+   179             393.226264                   x752             c681 slack
+   180             393.076022                   x750             c679 slack
+   181             392.833304                   x749             c678 slack
+   182             391.933486                   x748             c677 slack
+   183             391.808024                   x747             c676 slack
+   184             391.516175                   x746             c675 slack
+   185             391.356114                   x745             c674 slack
+   186             390.998125                   x744             c673 slack
+   187             390.838192                   x743             c672 slack
+   188             390.271645                   x742             c671 slack
+   189             389.818867                   x659             c588 slack
+   190             389.017154                   x740             c669 slack
+   191             388.487924                   x768             c697 slack
+   192             388.413007                   x738             c667 slack
+   193             388.204799                   x737             c666 slack
+   194             387.784589              x(node63)             c665 slack
+   195             386.956728                   x724             c653 slack
+   196             386.402101                   x723             c652 slack
+   197             386.059927                   x722             c651 slack
+   198             385.094059                   x720             c649 slack
+   199             385.019077              x(node55)             c648 slack
+   200             384.604990                   x658             c587 slack
+   201             383.665426                   x381             c310 slack
+   202             382.654467                   x656             c585 slack
+   203             381.707395                   x240             c169 slack
+   204             381.222970                   x380             c309 slack
+   205             380.425057                   x718             c647 slack
+   206             379.713136              x(node57)             c584 slack
+   207             379.046555                   x711             c640 slack
+   208             378.800097                   x710             c639 slack
+   209             378.176072                   x904             c833 slack
+   210             377.356210                   x707             c636 slack
+   211             376.910192                   x654             c583 slack
+   212             376.885508              x(node61)             c634 slack
+   213             376.805472                   x687             c616 slack
+   214             375.873995                   x686             c615 slack
+   215             375.245471                   x379             c308 slack
+   216             374.263703                   x682             c611 slack
+   217             373.730598              x(node50)             c610 slack
+   218             373.168580                   x668             c597 slack
+   219             372.684690                   x667             c596 slack
+   220             372.084584                   x665             c594 slack
+   221             371.634589                   x664             c593 slack
+   222             371.314240                   x663             c592 slack
+   223             370.754321                   x662             c591 slack
+   224             370.170903                   x661             c590 slack
+   225             370.118982                   x660             c589 slack
+   226             369.423995                   x652             c581 slack
+   227             368.804013              x(node69)             c656 slack
+   228             368.327220                   x239             c168 slack
+   229             366.768917                   x378             c307 slack
+   230             366.684421                   x650             c579 slack
+   231             366.292741              x(node29)             c578 slack
+   232             366.025930                   x377             c306 slack
+   233             365.878534                   x238             c167 slack
+   234             365.378015                   x374             c303 slack
+   235             364.730212                   x139              c68 slack
+   236             363.882233                   x171             c100 slack
+   237             362.965311                   x237             c166 slack
+   238             361.954362                   x373             c302 slack
+   239             360.987048              x(node70)             c570 slack
+   240             360.715059                   x372             c301 slack
+   241             360.150918                   x639             c568 slack
+   242             359.672384                   x236             c165 slack
+   243             359.192722                   x371             c300 slack
+   244             358.233357                   x637             c566 slack
+   245             357.680339                   x636             c565 slack
+   246             357.426993                   x370             c299 slack
+   247             356.743729                   x689             c618 slack
+   248             355.869463                   x235             c164 slack
+   249             355.357376                   x790             c719 slack
+   250             355.068211                   x627             c556 slack
+   251             354.147220                   x626             c555 slack
+   252             353.242218                   x625             c554 slack
+   253             352.341856                   x623             c552 slack
+   254             351.562363                   x622             c551 slack
+   255             350.776646                   x621             c550 slack
+   256             350.307015              x(node51)             c549 slack
+   257             350.108534                   x609             c538 slack
+   258             350.011162              x(node66)             c537 slack
+   259             349.940015                   x599             c528 slack
+   260             349.083242                   x598             c527 slack
+   261             348.997566                   x597             c526 slack
+   262             348.428296                   x596             c525 slack
+   263             347.680382                   x595             c524 slack
+   264             347.069250                   x594             c523 slack
+   265             346.785556              x(node45)             c561 slack
+   266             346.042413              x(node42)             c560 slack
+   267             345.370082                   x367             c296 slack
+   268             345.267999              x(node60)             c517 slack
+   269             344.880204                   x630             c559 slack
+   270             344.297347              x(node62)             c504 slack
+   271             343.823657                   x567             c496 slack
+   272             343.767948                   x110              c39 slack
+   273             342.990608                   x114              c43 slack
+   274             341.726668                   x121              c50 slack
+   275             341.725714                   x130              c59 slack
+   276             341.612811                   x150              c79 slack
+   277             341.271920                   x197             c126 slack
+   278             340.426018                   x488             c417 slack
+   279             339.727042                   x489             c418 slack
+   280             339.635010                   x295             c224 slack
+   281             339.024105                   x487             c416 slack
+   282             338.471211                   x486             c415 slack
+   283             337.481551                   x292             c221 slack
+   284             336.620515                   x293             c222 slack
+   285             335.688141                   x485             c414 slack
+   286             335.033613                   x483             c412 slack
+   287             333.558556                   x481             c410 slack
+   288             333.262293                   x897             c826 slack
+   289             332.270500              x(node64)             c824 slack
+   290             331.864796                   x482             c411 slack
+   291             331.501540                   x149              c78 slack
+   292             330.903485                   x290             c219 slack
+   293             330.878266              x(node67)             c770 slack
+   294             330.572798                   x833             c762 slack
+   295             329.611747                   x291             c220 slack
+   296             329.540854                   x475             c404 slack
+   297             329.449366                   x476             c405 slack
+   298             329.166764                   x190             c119 slack
+   299             328.421260                   x289             c218 slack
+   300             328.364933                   x472             c401 slack
+   301             327.779195                   x288             c217 slack
+   302             327.340915                   x467             c396 slack
+   303             326.487003                   x129              c58 slack
+   304             326.390927                   x187             c116 slack
+   305             326.328339                   x188             c117 slack
+   306             325.836680                   x287             c216 slack
+   307             324.840149                   x466             c395 slack
+   308             324.150181                   x465             c394 slack
+   309             324.116108                   x286             c215 slack
+   310             323.821554                   x464             c393 slack
+   311             323.572532                   x462             c391 slack
+   312             322.722302                   x284             c213 slack
+   313             322.608279                   x285             c214 slack
+   314             321.552348                   x760             c689 slack
+   315             320.609356                   x461             c390 slack
+   316             320.026659                   x460             c389 slack
+   317             319.226535                   x455             c384 slack
+   318             319.078900                   x147              c76 slack
+   319             318.795387                   x186             c115 slack
+   320             318.560850                   x283             c212 slack
+   321             317.606571                   x729             c658 slack
+   322             317.335287                   x728             c657 slack
+   323             316.381182                   x454             c383 slack
+   324             315.261290                   x451             c380 slack
+   325             314.460511                   x717             c646 slack
+   326             314.385319              x(node48)             c644 slack
+   327             314.245462                   x449             c378 slack
+   328             313.942544              x(node17)             c379 slack
+   329             313.644117                   x185             c114 slack
+   330             312.990497                   x703             c632 slack
+   331             312.942473               x(node2)              c48 slack
+   332             312.178645                   x128              c57 slack
+   333             311.928209              x(node47)              c75 slack
+   334             311.374681                   x184             c113 slack
+   335             310.375334                   x275             c204 slack
+   336             310.139441                   x441             c370 slack
+   337             309.212572                   x274             c203 slack
+   338             308.278794                   x440             c369 slack
+   339             307.291965                   x183             c112 slack
+   340             306.898872                   x435             c364 slack
+   341             305.925042                   x268             c197 slack
+   342             305.389844                   x629             c558 slack
+   343             304.750132                   x434             c363 slack
+   344             303.786652                   x433             c362 slack
+   345             303.765073              x(node41)             c545 slack
+   346             303.388086              x(node31)             c541 slack
+   347             303.171877                   x144              c73 slack
+   348             302.510027                   x605             c534 slack
+   349             302.139329              x(node53)             c532 slack
+   350             301.402883                   x693             c622 slack
+   351             300.432748                   x182             c111 slack
+   352             299.586211                   x267             c196 slack
+   353             299.208362                   x432             c361 slack
+   354             298.261295                   x431             c360 slack
+   355             297.899365                   x266             c195 slack
+   356             297.706770                   x430             c359 slack
+   357             297.335517              x(node39)             c510 slack
+   358             297.266727                   x429             c358 slack
+   359             296.418477                   x580             c509 slack
+   360             296.357347              x(node19)             c110 slack
+   361             296.159451                   x264             c193 slack
+   362             295.934864              x(node28)             c508 slack
+   363             295.041490                   x428             c357 slack
+   364             294.384928                   x552             c481 slack
+   365             293.671624                   x543             c472 slack
+   366             293.043584                   x542             c471 slack
+   367             293.042891              x(node58)             c474 slack
+   368             292.094471                   x263             c192 slack
+   369             291.975724                   x127              c56 slack
+   370             290.954035                   x179             c108 slack
+   371             290.830450                   x180             c109 slack
+   372             290.442825                   x262             c191 slack
+   373             289.644247                   x261             c190 slack
+   374             289.608262              x(node54)             c348 slack
+   375             289.536950                   x259             c188 slack
+   376             288.937599              x(node27)             c542 slack
+   377             288.073448                   x178             c107 slack
+   378             287.778474                   x258             c187 slack
+   379             287.367953                   x412             c341 slack
+   380             287.183819                   x411             c340 slack
+   381             286.710096               x(node8)             c186 slack
+   382             286.544636              x(node30)             c338 slack
+   383             286.308794                   x177             c106 slack
+   384             285.940121                   x407             c336 slack
+   385             284.991033                   x125              c54 slack
+   386             284.329034                   x132              c61 slack
+   387             284.262166               x(node5)             c128 slack
+   388             283.876261                   x406             c335 slack
+   389             283.393399              x(node56)             c764 slack
+   390             282.639250                   x405             c334 slack
+   391             282.601720                   x384             c313 slack
+   392             282.063089              x(node16)             c163 slack
+   393             281.709937              x(node13)             c294 slack
+   394             281.345394              x(node36)             c312 slack
+   395             281.221143              x(node38)             c693 slack
+   396             280.467857                   x242             c171 slack
+   397             280.109768              x(node33)             c642 slack
+   398             280.001131                   x133              c62 slack
+   399             279.760069                   x135              c64 slack
+   400             279.018136                   x138              c67 slack
+   401             278.735733              x(node37)              c93 slack
+   402             278.537469              x(node14)             c162 slack
+   403             278.182329               x(node7)             c161 slack
+   404             278.077230              x(node35)              c92 slack
+   405             277.142964                   x347             c276 slack
+   406             276.656913                   x161              c90 slack
+   407             276.310895                   x342             c271 slack
+   408             276.126248                   x344             c273 slack
+   409             276.081742                   x601             c530 slack
+   410             275.777826                   x333             c262 slack
+   411             275.201005               x(node3)              c63 slack
+   412             274.859361                   x158              c87 slack
+   413             274.389061                   x160              c89 slack
+   414             274.228522                   x214             c143 slack
+   415             273.727603                   x213             c142 slack
+   416             272.369474                   x211             c140 slack
+   417             272.079010                   x212             c141 slack
+   418             271.472455                   x326             c255 slack
+   419             270.720956                   x549             c478 slack
+   420             269.734427                   x324             c253 slack
+   421             269.363643                   x536             c465 slack
+   422             268.484458                   x535             c464 slack
+   423             267.773804                   x209             c138 slack
+   424             267.678141                   x531             c460 slack
+   425             267.223025                   x312             c241 slack
+   426             266.599705                   x519             c448 slack
+   427             265.734919                   x208             c137 slack
+   428             265.476612                   x311             c240 slack
+   429             264.689457                   x514             c443 slack
+   430             264.474653                   x310             c239 slack
+   431             264.102708                   x512             c441 slack
+   432             263.703248                   x308             c237 slack
+   433             263.616687                   x309             c238 slack
+   434             263.435398                   x498             c427 slack
+   435             262.636988                   x496             c425 slack
+   436             261.678907                   x497             c426 slack
+   437             261.621316              x(node44)             c628 slack
+   438             261.592601             c699 slack                   x770
+   439             261.270011                   x579             c409 slack
+   440             260.676605              x(node15)             c337 slack
+   441             260.557723              x(node26)             c407 slack
+   442             260.551124               x(node9)             c230 slack
+   443             260.525766                   x480                   x798
+   444             260.001147                   x478                   x933
+   445             259.548964                   x257                   x275
+   446             259.379878                   x134             c512 slack
+   447             259.130300                   x705             c476 slack
+   448             259.031166              x(node25)             c159 slack
+   449             258.663404                   x613                   x626
+   450             258.130233                   x345             c274 slack
+   451             258.110175             c555 slack             c428 slack
+   452             257.995260             c862 slack              c99 slack
+   453             257.819393             c761 slack             c497 slack
+   454             257.639355                   x335             c264 slack
+   455             257.262368             c541 slack             c604 slack
+   456             256.980737                   x499             c469 slack
+   457             256.915201              x(node22)             c248 slack
+   458             256.449845                   x675             c283 slack
+   459             256.432244             c644 slack              c91 slack
+   460             256.178905                   x325             c254 slack
+   461             256.001573                   x162                   x723
+   462             255.716280             c163 slack             c270 slack
+   463             255.462188                   x553             c482 slack
+   464             255.072087             c757 slack                   x828
+   465             254.912154             c672 slack                   x743
+   466             254.692372                   x354                   x823
+   467             254.547135             c727 slack             c430 slack
+   468             254.169841             c652 slack             c444 slack
+   469             254.131860              x(node24)              c95 slack
+   470             254.077250                   x337             c266 slack
+   471             253.968883                   x165              c94 slack
+   472             253.869843             c723 slack                   x794
+   473             253.626861                   x170                   x722
+   474             252.976986             c807 slack                   x878
+   475             252.872907                   x232             c446 slack
+   476             252.821588             c570 slack             c429 slack
+   477             252.760430              x(node20)             c284 slack
+   478             252.661237             c651 slack             c156 slack
+   479             252.206447             c170 slack             c160 slack
+   480             252.013004                   x230                   x927
+   481             251.964639                   x355                   x923
+   482             251.956382                   x734             c663 slack
+   483             251.888634             c610 slack             c256 slack
+   484             251.787241                   x517                   x802
+   485             251.512963                   x164                   x240
+   486             251.199005                   x341                   x433
+   487             250.939668             c731 slack             c483 slack
+   488             250.769378                   x231             c278 slack
+   489             250.534107                   x166                   x800
+   490             250.031604             c169 slack             c136 slack
+   491             249.742580                   x349                   x768
+   492             249.665434                   x554             c486 slack
+   493             249.573127              x(node23)             c150 slack
+   494             249.129171             c752 slack             c403 slack
+   495             249.005972                   x695             c624 slack
+   496             248.975289             c729 slack             c397 slack
+   497             248.937054                   x468                   x799
+   498             248.921642                   x515             c252 slack
+   499             248.822403             c871 slack                   x942
+   500             248.697319             c864 slack                   x935
+   501             248.373596                   x474                   x881
+   502             247.992116                   x323             c257 slack
+   503             247.989360                   x736             c259 slack
+   504             247.980020                   x319                   x717
+   505             247.511077                   x328             c451 slack
+   506             247.188581             c646 slack             c147 slack
+   507             247.177252                   x694             c623 slack
+   508             247.064331             c693 slack             c279 slack
+   509             246.939399                   x350                   x779
+   510             246.701949             c697 slack             c157 slack
+   511             246.602301                   x227             c148 slack
+   512             246.465641                   x218                   x711
+   513             246.292228               x(node6)             c455 slack
+   514             246.250369             c856 slack             c104 slack
+   515             246.226496              x(node32)                   x865
+   516             246.194586               x(node4)             c101 slack
+   517             246.150884                   x526             c661 slack
+   518             246.125429                   x327                   x689
+   519             246.120962              x(node34)              c20 slack
+   520             246.012112                   x522             c275 slack
+   521             245.577424              x(node21)             c458 slack
+   522             245.574785                   x346             c251 slack
+   523             245.566336              x(node11)             c281 slack
+   524             245.041434                   x322                   x869
+   525             245.033338                   x352             c392 slack
+   526             244.896181              x(node18)             c250 slack
+   527             244.814317             c786 slack                   x857
+   528             244.708225              x(node10)             c243 slack
+   529             244.550814             c429 slack             c282 slack
+   530             244.504368             c773 slack             c342 slack
+   531             244.372616             c243 slack                   x871
+   532             244.278413             c852 slack             c277 slack
+   533             244.222471                   x348                   x877
+   534             244.096358             c101 slack             c280 slack
+   535             244.016716              x(node12)             c500 slack
+Root relaxation solution time = 0.02 sec. (2.96 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      488.0334              --- 
+Found incumbent of value 0.000000 after 0.02 sec. (7.07 ticks)
+*     0+    0                          168.5413      488.0334           189.56%
+Found incumbent of value 168.541278 after 0.02 sec. (7.07 ticks)
+      0     0      244.0167    70      168.5413      244.0167      535   44.78%
+      0     0      239.0813   104      168.5413     Cuts: 320      658   41.85%
+      0     0      235.6024   127      168.5413     Cuts: 304      757   39.79%
+      0     0      232.8917   144      168.5413 ZeroHalf: 265      848   38.18%
+      0     0      229.9888   183      168.5413 ZeroHalf: 173      999   34.30%
+      0     0      226.8427   207      168.5413 ZeroHalf: 186     1126   34.30%
+      0     0      224.4228   216      168.5413 ZeroHalf: 208     1246   33.16%
+      0     0      222.7408   218      168.5413     Cuts: 287     1375   32.16%
+*     0+    0                          173.9511      222.7408            28.05%
+Found incumbent of value 173.951080 after 0.28 sec. (220.74 ticks)
+      0     0      222.1856   214      173.9511 ZeroHalf: 241     1454   25.21%
+      0     0      220.8377   215      173.9511 ZeroHalf: 284     1531   25.21%
+      0     0      219.9268   263      173.9511     Cuts: 224     1626   25.21%
+      0     0      217.4571   285      173.9511 ZeroHalf: 257     1761   22.60%
+      0     0      214.2949   274      173.9511 ZeroHalf: 320     1954   22.60%
+      0     0      213.2917   307      173.9511 ZeroHalf: 320     2113   22.60%
+      0     0      211.7841   336      173.9511     Cuts: 202     2289   20.53%
+      0     0      210.4412   333      173.9511 ZeroHalf: 320     2442   20.53%
+      0     0      209.3784   350      173.9511 ZeroHalf: 312     2649   20.37%
+      0     0      208.3200   374      173.9511 ZeroHalf: 299     2909   19.76%
+      0     0      202.8034   466      173.9511     Cuts: 320     3538   16.59%
+      0     0      200.7121   513      173.9511     Cuts: 320     3964   15.38%
+      0     0      199.0685   518      173.9511     Cuts: 320     4313   14.44%
+      0     0      196.9650   434      173.9511 ZeroHalf: 202     4645   13.23%
+      0     0      195.7568   593      173.9511     Cuts: 320     5006   12.54%
+      0     0      194.4060   648      173.9511     Cuts: 196     5450   11.76%
+      0     0      193.1619   660      173.9511 ZeroHalf: 153     5819   11.04%
+      0     0      191.3132   693      173.9511 ZeroHalf: 220     6312    9.98%
+      0     0      190.5811   700      173.9511      Cuts: 98     6695    9.56%
+      0     0      189.5516   701      173.9511 ZeroHalf: 155     7155    8.97%
+      0     0      188.7535   699      173.9511 ZeroHalf: 114     7517    8.51%
+      0     0      188.3004   709      173.9511 ZeroHalf: 119     7811    8.25%
+      0     0      187.9366   714      173.9511  ZeroHalf: 50     8104    8.04%
+      0     0      187.7022   709      173.9511  ZeroHalf: 31     8310    7.91%
+      0     0      187.3492   716      173.9511  ZeroHalf: 36     8578    7.70%
+      0     0      187.0092   726      173.9511  ZeroHalf: 29     8881    7.51%
+      0     0      186.8353   734      173.9511      Cuts: 41     9081    7.41%
+      0     0      186.6362   730      173.9511  ZeroHalf: 14     9259    7.29%
+      0     0      186.3936   722      173.9511  ZeroHalf: 25     9511    7.15%
+      0     0      186.1344   720      173.9511  ZeroHalf: 41     9737    7.00%
+      0     0      186.0796   717      173.9511  ZeroHalf: 10     9859    6.97%
+      0     0      185.9580   720      173.9511  ZeroHalf: 34    10077    6.90%
+      0     0      185.9045   725      173.9511  ZeroHalf: 19    10181    6.87%
+      0     2      185.9045   725      173.9511      185.9045    10181    6.87%
+Elapsed time = 2.89 sec. (2205.38 ticks, tree = 0.02 MB)
+      7     9      180.2597   566      173.9511      185.9029    13259    6.87%
+     55    18      181.0252   710      173.9511      184.4685    17764    6.05%
+                                                    Cuts: 268                  
+    148    54      176.0383   569      173.9511      184.0757    57657    5.82%
+                                                 ZeroHalf: 37                  
+*   221   101      integral     0      174.6524      184.0757    82301    5.40%
+                                                 ZeroHalf: 23                  
+Found incumbent of value 174.652391 after 3.64 sec. (3078.89 ticks)
+    257   101      175.3930   588      174.6524      184.0757    89195    5.40%
+                                                 ZeroHalf: 11                  
+*   262   113      integral     0      175.6502      184.0757    98534    4.80%
+                                                  ZeroHalf: 4                  
+Found incumbent of value 175.650188 after 3.75 sec. (3190.44 ticks)
+    355   100      177.0929   626      175.6502      180.5245   124184    2.77%
+                                                 ZeroHalf: 10                  
+    484    74        cutoff            175.6502      179.6478   173039    2.28%
+                                                  ZeroHalf: 3                  
+    586     8      176.9209   653      175.6502      178.2228   210502    1.46%
+                                                  ZeroHalf: 4                  
+
+Zero-half cuts applied:  867
+Lift and project cuts applied:  1
+Gomory fractional cuts applied:  11
+
+Root node processing (before b&c):
+  Real time             =    2.88 sec. (2204.34 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    1.63 sec. (1904.63 ticks)
+  Sync time (average)   =    0.37 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    4.50 sec. (4108.97 ticks)
+
+--- MIQP status (102): integer optimal, tolerance.
+--- Cplex Time: 4.50sec (det. 4108.97 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Note: Q in objective is not positive semi-definite.
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 71 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.24 ticks)
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.30 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          175.650188    (215454 iterations, 597 nodes)
+Final Solve:           175.650188    (0 iterations)
+
+Best possible:         175.655393
+Absolute gap:            0.005205
+Relative gap:            0.000030
+
+--- Reading solution for model maxcut1
+--- Executing after solve: elapsed 0:00:04.547
+--- MaxDiCut.gms(90) 4 Mb
+--- Generating MIQCP model maxcut1
+--- MaxDiCut.gms(91) 6 Mb
+---   1 rows  71 columns  71 non-zeroes
+---   5,949 nl-code  70 nl-non-zeroes
+---   70 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.887E-01, 6.765E+00]
+--- MaxDiCut.gms(91) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:04.551
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\projects\OptimizationModels\MaxCut\cplex.opt"
+>>  qtolin 0
+Finished reading from "C:\projects\OptimizationModels\MaxCut\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.58 Mb (peak 0.59 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_Preprocessing_QToLin                    0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.01 ticks)
+Found incumbent of value 0.000000 after 0.00 sec. (0.02 ticks)
+Tried aggregator 1 time.
+MIQP Presolve eliminated 0 rows and 1 columns.
+Repairing indefinite Q in the objective.
+Reduced MIQP has 0 rows, 70 columns, and 0 nonzeros.
+Reduced MIQP has 70 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 1834 nonzeros.
+Presolve time = 0.00 sec. (2.30 ticks)
+Probing time = 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+Reduced MIQP has 0 rows, 70 columns, and 0 nonzeros.
+Reduced MIQP has 70 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 1834 nonzeros.
+Presolve time = 0.00 sec. (1.29 ticks)
+Dual steepest-edge pricing selected.
+Probing time = 0.00 sec. (0.00 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Tried aggregator 1 time.
+No QP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.18 ticks)
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Tried aggregator 1 time.
+QP Presolve added 0 rows and 70 columns.
+Reduced QP has 70 rows, 140 columns, and 2034 nonzeros.
+Reduced QP objective Q matrix has 70 nonzeros.
+Presolve time = 0.00 sec. (0.33 ticks)
+Parallel mode: using up to 16 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 2357
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.10 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 16
+  Rows in Factor            = 70
+  Integer space required    = 70
+  Total non-zeros in factor = 2485
+  Total FP ops to factor    = 116795
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf          
+   0   6.6125235e+02   7.0178910e+04  1.23e+02  7.05e+01  7.17e+01
+   1   1.6637244e+02   1.8861648e+04  2.09e-14  0.00e+00  6.60e-12
+   2   1.6656955e+02   3.7912918e+02  8.71e-15  1.78e-15  2.32e-12
+   3   1.7522310e+02   2.0367125e+02  9.12e-15  1.94e-15  2.46e-13
+   4   1.8167701e+02   1.8558399e+02  1.10e-14  1.78e-15  8.66e-14
+   5   1.8276752e+02   1.8326487e+02  1.44e-14  2.04e-15  9.65e-14
+   6   1.8290396e+02   1.8292750e+02  2.25e-14  2.16e-15  1.01e-13
+   7   1.8291309e+02   1.8291437e+02  2.44e-13  2.29e-15  8.36e-14
+   8   1.8291389e+02   1.8291393e+02  1.58e-12  2.57e-15  9.65e-14
+   9   1.8291392e+02   1.8291392e+02  2.17e-12  2.71e-15  1.01e-13
+  10   1.8291392e+02   1.8291392e+02  3.21e-13  2.80e-15  9.80e-14
+Barrier time = 0.00 sec. (1.08 ticks)
+
+Total time on 16 threads = 0.00 sec. (1.26 ticks)
+Barrier time = 0.00 sec. (1.08 ticks)
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+
+QP crossover.
+  Primal and Dual:  Fixing 12 variables.
+  Primal:  Fixed no variables.
+  Dual  :  Pushed 0, exchanged 12.
+Total crossover time = 0.00 sec. (0.93 ticks)
+
+Total time on 16 threads = 0.00 sec. (2.19 ticks)
+Root relaxation solution time = 0.00 sec. (2.20 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      493.6730              --- 
+Found incumbent of value 0.000000 after 0.00 sec. (5.96 ticks)
+      0     0      182.9139    49        0.0000      182.9139       10     --- 
+*     0+    0                          170.7620      182.9139             7.12%
+Found incumbent of value 170.761995 after 0.00 sec. (7.05 ticks)
+*     0+    0                          175.2354      182.9139             4.38%
+Found incumbent of value 175.235362 after 0.00 sec. (11.03 ticks)
+      0     2      182.9139    49      175.2354      182.6913       10    4.25%
+Elapsed time = 0.02 sec. (15.46 ticks, tree = 0.02 MB)
+*  4234+ 2044                          175.6502      179.9756             2.46%
+Found incumbent of value 175.650188 after 0.09 sec. (54.27 ticks)
+
+Performing restart 1
+
+Repeating presolve.
+Tried aggregator 1 time.
+Reduced MIQP has 0 rows, 70 columns, and 0 nonzeros.
+Reduced MIQP has 70 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 1834 nonzeros.
+Presolve time = 0.00 sec. (1.29 ticks)
+Tried aggregator 1 time.
+Reduced MIQP has 0 rows, 70 columns, and 0 nonzeros.
+Reduced MIQP has 70 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQP objective Q matrix has 1834 nonzeros.
+Presolve time = 0.00 sec. (1.28 ticks)
+Represolve time = 0.00 sec. (2.80 ticks)
+Dual steepest-edge pricing selected.
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Tried aggregator 1 time.
+No QP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.18 ticks)
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Tried aggregator 1 time.
+QP Presolve added 0 rows and 70 columns.
+Reduced QP has 70 rows, 140 columns, and 2034 nonzeros.
+Reduced QP objective Q matrix has 70 nonzeros.
+Presolve time = 0.00 sec. (0.33 ticks)
+Parallel mode: using up to 16 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 2357
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.10 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 16
+  Rows in Factor            = 70
+  Integer space required    = 70
+  Total non-zeros in factor = 2485
+  Total FP ops to factor    = 116795
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf          
+   0   6.6125235e+02   7.0178910e+04  1.23e+02  7.05e+01  7.17e+01
+   1   1.6637244e+02   1.8861648e+04  2.09e-14  0.00e+00  6.60e-12
+   2   1.6656955e+02   3.7912918e+02  8.71e-15  1.78e-15  2.32e-12
+   3   1.7522310e+02   2.0367125e+02  9.12e-15  1.94e-15  2.46e-13
+   4   1.8167701e+02   1.8558399e+02  1.10e-14  1.78e-15  8.66e-14
+   5   1.8276752e+02   1.8326487e+02  1.44e-14  2.04e-15  9.65e-14
+   6   1.8290396e+02   1.8292750e+02  2.25e-14  2.16e-15  1.01e-13
+   7   1.8291309e+02   1.8291437e+02  2.44e-13  2.29e-15  8.36e-14
+   8   1.8291389e+02   1.8291393e+02  1.58e-12  2.57e-15  9.65e-14
+   9   1.8291392e+02   1.8291392e+02  2.17e-12  2.71e-15  1.01e-13
+  10   1.8291392e+02   1.8291392e+02  3.21e-13  2.80e-15  9.80e-14
+Barrier time = 0.00 sec. (1.08 ticks)
+
+Total time on 16 threads = 0.00 sec. (1.26 ticks)
+Barrier time = 0.00 sec. (1.08 ticks)
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.02 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+
+QP crossover.
+  Primal and Dual:  Fixing 12 variables.
+  Primal:  Fixed no variables.
+  Dual  :  Pushed 0, exchanged 12.
+Total crossover time = 0.02 sec. (0.93 ticks)
+
+Total time on 16 threads = 0.02 sec. (2.19 ticks)
+  25995  8946      176.1175    37      175.6502      177.4851    80140    1.04%
+  55177  5852      175.7906    31      175.6502      176.5086   170906    0.49%
+  62530  9073      175.8114    36      175.6502      176.5086   145080    0.49%
+  62560  9017      175.7689    35      175.6502      176.4927   145779    0.48%
+
+Root node processing (before b&c):
+  Real time             =    0.02 sec. (15.07 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    1.63 sec. (1535.28 ticks)
+  Sync time (average)   =    0.72 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.64 sec. (1550.35 ticks)
+
+--- MIQP status (102): integer optimal, tolerance.
+--- Cplex Time: 1.67sec (det. 1550.35 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_Preprocessing_QToLin                    0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 882
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.05 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 70
+  Integer space required    = 252
+  Total non-zeros in factor = 2082
+  Total FP ops to factor    = 81630
+Note: Q in objective is not positive semi-definite.
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 71 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.24 ticks)
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.30 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          175.650188    (191212 iterations, 62563 nodes)
+Final Solve:           175.650188    (0 iterations)
+
+Best possible:         175.667734
+Absolute gap:            0.017546
+Relative gap:            0.000100
+
+--- Reading solution for model maxcut1
+--- Executing after solve: elapsed 0:00:06.235
+--- MaxDiCut.gms(92) 4 Mb
+--- Generating MIP model maxcut2
+--- MaxDiCut.gms(111) 5 Mb
+---   1,983 rows  1,062 columns  4,956 non-zeroes
+---   1,061 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 9.535E-04, 1.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:06.238
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.07 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.85 Mb (peak 0.85 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.04 Mb (peak 0.18 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 26 rows and 14 columns.
+MIP Presolve modified 26 coefficients.
+Reduced MIP has 1956 rows, 1048 columns, and 3912 nonzeros.
+Reduced MIP has 1048 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.46 ticks)
+Probing time = 0.00 sec. (2.24 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 1956 rows, 1048 columns, and 3912 nonzeros.
+Reduced MIP has 1048 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (3.66 ticks)
+Probing time = 0.00 sec. (2.22 ticks)
+Clique table members: 3080.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 13 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 11 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.65 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           488.033433
+Iteration:   128   Dual objective     =           460.797320
+Iteration:   268   Dual objective     =           429.395153
+Iteration:   475   Dual objective     =           386.602116
+Iteration:   678   Dual objective     =           346.434774
+Iteration:   894   Dual objective     =           308.833873
+Iteration:  1094   Dual objective     =           275.752265
+Iteration:  1266   Dual objective     =           254.027233
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.02 sec. (16.90 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      488.0334              --- 
+Found incumbent of value 0.000000 after 0.03 sec. (31.01 ticks)
+*     0+    0                          145.0978      488.0334           236.35%
+Found incumbent of value 145.097821 after 0.03 sec. (31.03 ticks)
+*     0+    0                          148.0193      488.0334           229.71%
+Found incumbent of value 148.019273 after 0.03 sec. (31.03 ticks)
+      0     0      244.0167  1048      148.0193      244.0167     1376   64.85%
+      0     0      238.2559  1029      148.0193     Cuts: 394     1492   60.96%
+*     0+    0                          168.1400      238.2559            41.70%
+Found incumbent of value 168.140035 after 0.17 sec. (141.95 ticks)
+      0     0      234.1437  1010      168.1400     Cuts: 333     1595   37.93%
+      0     0      230.9835  1011      168.1400 ZeroHalf: 343     1708   37.38%
+*     0+    0                          170.5708      230.9835            35.42%
+Found incumbent of value 170.570839 after 0.30 sec. (251.33 ticks)
+      0     0      228.2923   999      170.5708 ZeroHalf: 338     1813   30.18%
+      0     0      225.6858  1013      170.5708 ZeroHalf: 413     1951   30.18%
+Detecting symmetries...
+*     0+    0                          172.4373      222.0565            28.78%
+Found incumbent of value 172.437261 after 0.45 sec. (386.82 ticks)
+      0     0      222.5568   964      172.4373 ZeroHalf: 373     2073   25.50%
+      0     0      221.5627  1011      172.4373 ZeroHalf: 374     2226   25.50%
+*     0+    0                          173.4873      216.4052            24.74%
+Found incumbent of value 173.487335 after 0.63 sec. (528.87 ticks)
+      0     0      219.2898  1013      173.4873 ZeroHalf: 454     2393   23.29%
+      0     0      218.0152  1001      173.4873 ZeroHalf: 378     2561   23.29%
+      0     0      216.8897   998      173.4873 ZeroHalf: 369     2683   23.29%
+      0     0      214.5434   977      173.4873 ZeroHalf: 431     2912   21.11%
+      0     0      213.5091   965      173.4873 ZeroHalf: 361     3042   21.11%
+      0     0      212.3804   970      173.4873 ZeroHalf: 432     3188   21.11%
+      0     0      211.3129   996      173.4873 ZeroHalf: 431     3340   21.11%
+      0     0      209.3126   984      173.4873 ZeroHalf: 364     3516   20.65%
+      0     0      208.0434   987      173.4873     Cuts: 346     3702   19.15%
+      0     0      207.0249   982      173.4873 ZeroHalf: 470     3888   19.15%
+      0     0      206.2387  1007      173.4873     Cuts: 419     4037   18.88%
+      0     0      204.5385   988      173.4873     Cuts: 326     4286   17.90%
+      0     0      203.3832  1010      173.4873 ZeroHalf: 423     4602   17.23%
+      0     0      201.9452  1000      173.4873 ZeroHalf: 381     4898   16.40%
+*     0+    0                          175.1075      201.9452            15.33%
+Found incumbent of value 175.107457 after 2.25 sec. (1863.46 ticks)
+      0     0      200.1329  1006      175.1075 ZeroHalf: 356     5238   14.29%
+      0     0      199.1271  1014      175.1075 ZeroHalf: 352     5570   13.72%
+      0     0      197.8336  1011      175.1075 ZeroHalf: 236     5935   12.98%
+      0     0      196.6491  1025      175.1075     Cuts: 322     6268   12.30%
+      0     0      195.5861  1025      175.1075     Cuts: 317     6601   11.69%
+      0     0      194.6616  1033      175.1075 ZeroHalf: 286     7002   11.17%
+      0     0      193.6446  1013      175.1075 ZeroHalf: 196     7420   10.59%
+      0     0      193.0321  1027      175.1075     Cuts: 373     7814   10.24%
+      0     0      192.0301  1034      175.1075 ZeroHalf: 135     8183    9.66%
+      0     0      191.1599  1034      175.1075 ZeroHalf: 143     8584    9.17%
+      0     0      190.2053  1027      175.1075      Cuts: 84     8962    8.62%
+      0     0      189.6529  1032      175.1075  ZeroHalf: 85     9263    8.31%
+      0     0      186.6585  1033      175.1075     Cuts: 246    10287    6.60%
+      0     0      185.2287  1031      175.1075     Cuts: 153    10920    5.78%
+      0     0      184.6608  1030      175.1075      Cuts: 84    11327    5.46%
+      0     0      184.4202  1024      175.1075  ZeroHalf: 56    11551    5.32%
+      0     0      184.1564  1026      175.1075      Cuts: 69    11806    5.17%
+      0     0      184.0340  1032      175.1075  ZeroHalf: 27    11992    5.10%
+      0     0      183.8318  1028      175.1075  ZeroHalf: 33    12222    4.98%
+      0     0      183.7409  1029      175.1075  ZeroHalf: 25    12362    4.93%
+      0     0      183.5815  1027      175.1075  ZeroHalf: 14    12574    4.84%
+      0     0      183.4498  1028      175.1075  ZeroHalf: 29    12773    4.76%
+      0     0      183.3623  1023      175.1075  ZeroHalf: 20    12923    4.71%
+      0     0      183.2953  1026      175.1075  ZeroHalf: 10    13052    4.68%
+      0     0      183.2401  1022      175.1075  ZeroHalf: 32    13189    4.64%
+Detecting symmetries...
+      0     2      183.2401  1022      175.1075      183.2401    13189    4.64%
+Elapsed time = 6.84 sec. (4550.93 ticks, tree = 0.02 MB)
+      3     5      180.3374   949      175.1075      183.2394    15081    4.64%
+     12     9        cutoff            175.1075      182.6178    20684    4.29%
+                                                    Cuts: 199                  
+     36    26        cutoff            175.1075      180.8346    39943    3.27%
+                                                     Cuts: 84                  
+     90    31        cutoff            175.1075      180.2997    50435    2.97%
+                                                 ZeroHalf: 67                  
+*   157    67      integral     0      175.6502      180.2997    93652    2.65%
+                                                     Cuts: 34                  
+Found incumbent of value 175.650188 after 7.91 sec. (5789.37 ticks)
+    226    46        cutoff            175.6502      180.2997   116725    2.65%
+                                                 ZeroHalf: 19                  
+    304    19        cutoff            175.6502      180.2997   137060    2.65%
+                                                 ZeroHalf: 10                  
+    322     9      176.2355   910      175.6502      178.8015   154899    1.79%
+    348    11      176.0782   861      175.6502      177.8507   169356    1.25%
+                                                  ZeroHalf: 5                  
+
+Clique cuts applied:  2
+Zero-half cuts applied:  1027
+Lift and project cuts applied:  1
+Gomory fractional cuts applied:  7
+
+Root node processing (before b&c):
+  Real time             =    6.81 sec. (4548.33 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    2.08 sec. (2671.71 ticks)
+  Sync time (average)   =    0.81 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    8.89 sec. (7220.03 ticks)
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 8.89sec (det. 7220.04 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 1982 rows and 1062 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.66 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 1.21 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          175.650188    (177666 iterations, 374 nodes)
+Final Solve:           175.650188    (0 iterations)
+
+Best possible:         175.652086
+Absolute gap:            0.001898
+Relative gap:            0.000011
+
+--- Reading solution for model maxcut2
+--- Executing after solve: elapsed 0:00:15.159
+--- MaxDiCut.gms(124) 5 Mb
+--- Generating MIP model maxcut2
+--- MaxDiCut.gms(125) 5 Mb
+---   1,983 rows  1,062 columns  4,956 non-zeroes
+---   70 discrete-columns
+***   991 relaxed-columns WARNING
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 9.535E-04, 1.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:15.172
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.07 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.85 Mb (peak 0.85 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.04 Mb (peak 0.18 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 26 rows and 14 columns.
+MIP Presolve modified 13 coefficients.
+Reduced MIP has 1956 rows, 1048 columns, and 3912 nonzeros.
+Reduced MIP has 70 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.18 ticks)
+Probing time = 0.02 sec. (2.24 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 1956 rows, 1048 columns, and 3912 nonzeros.
+Reduced MIP has 1048 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.66 ticks)
+Probing time = 0.00 sec. (2.22 ticks)
+Clique table members: 3080.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 13 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 11 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.65 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           488.033433
+Iteration:   128   Dual objective     =           460.797320
+Iteration:   268   Dual objective     =           429.395153
+Iteration:   475   Dual objective     =           386.602116
+Iteration:   678   Dual objective     =           346.434774
+Iteration:   894   Dual objective     =           308.833873
+Iteration:  1094   Dual objective     =           275.752265
+Iteration:  1266   Dual objective     =           254.027233
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.02 sec. (16.90 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      488.0334              --- 
+Found incumbent of value 0.000000 after 0.03 sec. (29.86 ticks)
+*     0+    0                          145.0978      488.0334           236.35%
+Found incumbent of value 145.097821 after 0.03 sec. (29.88 ticks)
+*     0+    0                          148.0193      488.0334           229.71%
+Found incumbent of value 148.019273 after 0.03 sec. (29.88 ticks)
+      0     0      244.0167  1048      148.0193      244.0167     1376   64.85%
+      0     0      238.2559  1029      148.0193     Cuts: 394     1492   60.96%
+*     0+    0                          168.1400      238.2559            41.70%
+Found incumbent of value 168.140035 after 0.17 sec. (140.80 ticks)
+      0     0      234.1437  1010      168.1400     Cuts: 333     1595   37.93%
+      0     0      230.9835  1011      168.1400 ZeroHalf: 343     1708   37.38%
+*     0+    0                          170.5708      230.9835            35.42%
+Found incumbent of value 170.570839 after 0.28 sec. (250.18 ticks)
+      0     0      228.2923   999      170.5708 ZeroHalf: 338     1813   30.18%
+      0     0      225.6858  1013      170.5708 ZeroHalf: 413     1951   30.18%
+Detecting symmetries...
+*     0+    0                          172.4373      222.0565            28.78%
+Found incumbent of value 172.437261 after 0.44 sec. (385.67 ticks)
+      0     0      222.5568   964      172.4373 ZeroHalf: 373     2073   25.50%
+      0     0      221.5627  1011      172.4373 ZeroHalf: 374     2226   25.50%
+*     0+    0                          173.4873      216.4052            24.74%
+Found incumbent of value 173.487335 after 0.61 sec. (527.72 ticks)
+      0     0      219.2898  1013      173.4873 ZeroHalf: 454     2393   23.29%
+      0     0      218.0152  1001      173.4873 ZeroHalf: 378     2561   23.29%
+      0     0      216.8897   998      173.4873 ZeroHalf: 369     2683   23.29%
+      0     0      214.5434   977      173.4873 ZeroHalf: 431     2912   21.11%
+      0     0      213.5091   965      173.4873 ZeroHalf: 361     3042   21.11%
+      0     0      212.3804   970      173.4873 ZeroHalf: 432     3188   21.11%
+      0     0      211.3129   996      173.4873 ZeroHalf: 431     3340   21.11%
+      0     0      209.3126   984      173.4873 ZeroHalf: 364     3516   20.65%
+      0     0      208.0434   987      173.4873     Cuts: 346     3702   19.15%
+      0     0      207.0249   982      173.4873 ZeroHalf: 470     3888   19.15%
+      0     0      206.2387  1007      173.4873     Cuts: 419     4037   18.88%
+      0     0      204.5385   988      173.4873     Cuts: 326     4286   17.90%
+      0     0      203.3832  1010      173.4873 ZeroHalf: 423     4602   17.23%
+      0     0      201.9452  1000      173.4873 ZeroHalf: 381     4898   16.40%
+*     0+    0                          175.1075      201.9452            15.33%
+Found incumbent of value 175.107457 after 2.31 sec. (1862.31 ticks)
+      0     0      200.1329  1006      175.1075 ZeroHalf: 356     5238   14.29%
+      0     0      199.1271  1014      175.1075 ZeroHalf: 352     5570   13.72%
+      0     0      197.8336  1011      175.1075 ZeroHalf: 236     5935   12.98%
+      0     0      196.6491  1025      175.1075     Cuts: 322     6268   12.30%
+      0     0      195.5861  1025      175.1075     Cuts: 317     6601   11.69%
+      0     0      194.6616  1033      175.1075 ZeroHalf: 286     7002   11.17%
+      0     0      193.6446  1013      175.1075 ZeroHalf: 196     7420   10.59%
+      0     0      193.0321  1027      175.1075     Cuts: 373     7814   10.24%
+      0     0      192.0301  1034      175.1075 ZeroHalf: 135     8183    9.66%
+      0     0      191.1599  1034      175.1075 ZeroHalf: 143     8584    9.17%
+      0     0      190.2053  1027      175.1075      Cuts: 84     8962    8.62%
+      0     0      189.6529  1032      175.1075  ZeroHalf: 85     9263    8.31%
+      0     0      186.6585  1033      175.1075     Cuts: 246    10287    6.60%
+      0     0      185.2287  1031      175.1075     Cuts: 153    10920    5.78%
+      0     0      184.6608  1030      175.1075      Cuts: 84    11327    5.46%
+      0     0      184.4202  1024      175.1075  ZeroHalf: 56    11551    5.32%
+      0     0      184.1564  1026      175.1075      Cuts: 69    11806    5.17%
+      0     0      184.0340  1032      175.1075  ZeroHalf: 27    11992    5.10%
+      0     0      183.8318  1028      175.1075  ZeroHalf: 33    12222    4.98%
+      0     0      183.7409  1029      175.1075  ZeroHalf: 25    12362    4.93%
+      0     0      183.5815  1027      175.1075  ZeroHalf: 14    12574    4.84%
+      0     0      183.4498  1028      175.1075  ZeroHalf: 29    12773    4.76%
+      0     0      183.3623  1023      175.1075  ZeroHalf: 20    12923    4.71%
+      0     0      183.2953  1026      175.1075  ZeroHalf: 10    13052    4.68%
+      0     0      183.2401  1022      175.1075  ZeroHalf: 32    13189    4.64%
+Detecting symmetries...
+      0     2      183.2401  1022      175.1075      183.2401    13189    4.64%
+Elapsed time = 7.05 sec. (4549.78 ticks, tree = 0.02 MB)
+      3     5      180.3374   949      175.1075      183.2394    15081    4.64%
+     12     9        cutoff            175.1075      182.6178    20684    4.29%
+                                                    Cuts: 199                  
+     36    26        cutoff            175.1075      180.8346    39943    3.27%
+                                                     Cuts: 84                  
+     90    31        cutoff            175.1075      180.2997    50435    2.97%
+                                                 ZeroHalf: 67                  
+*   157    67      integral     0      175.6502      180.2997    93652    2.65%
+                                                     Cuts: 34                  
+Found incumbent of value 175.650188 after 8.11 sec. (5788.22 ticks)
+    226    46        cutoff            175.6502      180.2997   116725    2.65%
+                                                 ZeroHalf: 19                  
+    304    19        cutoff            175.6502      180.2997   137060    2.65%
+                                                 ZeroHalf: 10                  
+    322     9      176.2355   910      175.6502      178.8015   154899    1.79%
+    348    11      176.0782   861      175.6502      177.8507   169356    1.25%
+                                                  ZeroHalf: 5                  
+
+Clique cuts applied:  2
+Zero-half cuts applied:  1027
+Lift and project cuts applied:  1
+Gomory fractional cuts applied:  7
+
+Root node processing (before b&c):
+  Real time             =    7.02 sec. (4547.18 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    2.06 sec. (2671.71 ticks)
+  Sync time (average)   =    0.80 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    9.08 sec. (7218.88 ticks)
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 9.08sec (det. 7218.89 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 1982 rows and 1062 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.68 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 1.22 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          175.650188    (177666 iterations, 374 nodes)
+Final Solve:           175.650188    (0 iterations)
+
+Best possible:         175.652086
+Absolute gap:            0.001898
+Relative gap:            0.000011
+
+--- Reading solution for model maxcut2
+--- Executing after solve: elapsed 0:00:24.274
+--- MaxDiCut.gms(127) 5 Mb
+--- Generating MIP model maxcut3
+--- MaxDiCut.gms(142) 5 Mb
+---   992 rows  1,062 columns  4,022 non-zeroes
+---   1,061 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 9.535E-04, 1.226E+01]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:24.296
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.05 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.74 Mb (peak 0.74 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.03 Mb (peak 0.14 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.02 ticks)
+Found incumbent of value 0.000000 after 0.00 sec. (0.05 ticks)
+Tried aggregator 2 times.
+MIP Presolve eliminated 96 rows and 1 columns.
+MIP Presolve modified 26 coefficients.
+Aggregator did 13 substitutions.
+Reduced MIP has 882 rows, 952 columns, and 2646 nonzeros.
+Reduced MIP has 952 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.53 ticks)
+Probing time = 0.00 sec. (0.19 ticks)
+Tried aggregator 1 time.
+Reduced MIP has 882 rows, 952 columns, and 2646 nonzeros.
+Reduced MIP has 952 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.44 ticks)
+Probing time = 0.00 sec. (0.19 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.41 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           487.602285
+Iteration:   157   Dual objective     =           402.015405
+Iteration:   279   Dual objective     =           342.202501
+Iteration:   396   Dual objective     =           285.780322
+Iteration:   502   Dual objective     =           249.503463
+Root relaxation solution time = 0.00 sec. (3.27 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      488.0334              --- 
+Found incumbent of value 0.000000 after 0.02 sec. (8.83 ticks)
+*     0+    0                          168.5413      488.0334           189.56%
+Found incumbent of value 168.541278 after 0.02 sec. (8.84 ticks)
+      0     0      244.0167    70      168.5413      244.0167      551   44.78%
+      0     0      238.5577   101      168.5413     Cuts: 291      677   41.54%
+      0     0      234.4718   120      168.5413     Cuts: 320      783   39.12%
+      0     0      232.7930   136      168.5413 ZeroHalf: 126      871   38.12%
+      0     0      230.0094   145      168.5413 ZeroHalf: 256      974   36.47%
+      0     0      227.8365   178      168.5413 ZeroHalf: 296     1070   34.31%
+      0     0      225.7728   193      168.5413 ZeroHalf: 205     1203   33.96%
+      0     0      223.8860   200      168.5413 ZeroHalf: 210     1310   32.84%
+      0     0      222.2207   209      168.5413 ZeroHalf: 304     1385   31.85%
+      0     0      220.8274   198      168.5413 ZeroHalf: 253     1468   29.20%
+      0     0      214.6935   278      168.5413     Cuts: 320     1722   27.38%
+      0     0      212.8130   315      168.5413 ZeroHalf: 272     1928   26.27%
+*     0+    0                          171.4847      212.8130            24.10%
+Found incumbent of value 171.484705 after 0.47 sec. (387.74 ticks)
+*     0+    0                          172.9311      212.8130            23.06%
+Found incumbent of value 172.931104 after 0.47 sec. (398.07 ticks)
+      0     0      210.8248   351      172.9311 ZeroHalf: 320     2119   21.91%
+      0     0      208.8118   361      172.9311 ZeroHalf: 320     2355   20.75%
+      0     0      207.1328   400      172.9311     Cuts: 251     2600   19.78%
+      0     0      205.4011   441      172.9311 ZeroHalf: 271     2865   18.78%
+      0     0      203.6119   411      172.9311 ZeroHalf: 305     3149   17.74%
+      0     0      202.0953   508      172.9311 ZeroHalf: 320     3423   16.86%
+      0     0      200.6154   496      172.9311     Cuts: 193     3698   16.01%
+      0     0      199.3318   480      172.9311 ZeroHalf: 270     4040   15.27%
+      0     0      198.2895   593      172.9311 ZeroHalf: 290     4299   14.66%
+      0     0      196.4792   598      172.9311 ZeroHalf: 224     4655   13.62%
+      0     0      194.4106   650      172.9311     Cuts: 206     5059   12.42%
+      0     0      193.0645   673      172.9311 ZeroHalf: 123     5364   11.64%
+      0     0      191.7568   705      172.9311     Cuts: 177     5763   10.89%
+      0     0      190.8774   722      172.9311 ZeroHalf: 107     6095   10.38%
+      0     0      189.7197   715      172.9311     Cuts: 116     6501    9.71%
+      0     0      189.1233   732      172.9311     Cuts: 107     6799    9.36%
+      0     0      188.6601   730      172.9311  ZeroHalf: 48     7112    9.10%
+      0     0      188.2392   719      172.9311  ZeroHalf: 48     7374    8.85%
+      0     0      187.8775   736      172.9311  ZeroHalf: 66     7657    8.64%
+      0     0      187.6732   737      172.9311  ZeroHalf: 44     7886    8.52%
+      0     0      187.4042   744      172.9311  ZeroHalf: 38     8187    8.37%
+      0     0      187.0764   751      172.9311      Cuts: 34     8505    8.18%
+      0     0      187.0086   746      172.9311  ZeroHalf: 30     8673    8.14%
+      0     0      186.8041   733      172.9311  ZeroHalf: 29     8944    8.02%
+      0     0      186.4397   725      172.9311  ZeroHalf: 58     9271    7.81%
+      0     0      186.2108   740      172.9311  ZeroHalf: 26     9530    7.68%
+      0     0      186.1175   749      172.9311  ZeroHalf: 22     9659    7.63%
+      0     0      186.0350   745      172.9311  ZeroHalf: 21     9805    7.58%
+      0     0      185.8828   738      172.9311  ZeroHalf: 12    10008    7.49%
+      0     0      185.7460   742      172.9311  ZeroHalf: 21    10188    7.41%
+      0     0      185.6617   743      172.9311  ZeroHalf: 26    10366    7.36%
+      0     0      185.5535   747      172.9311  ZeroHalf: 22    10544    7.30%
+      0     0      185.5293   749      172.9311  ZeroHalf: 18    10668    7.29%
+      0     0      185.4257   739      172.9311  ZeroHalf: 12    10839    7.23%
+      0     0      185.4043   748      172.9311  ZeroHalf: 17    10913    7.21%
+*     0+    0                          175.1178      185.4043             5.87%
+Found incumbent of value 175.117764 after 3.42 sec. (2343.42 ticks)
+      0     2      185.4043   748      175.1178      185.4043    10913    5.87%
+Elapsed time = 3.53 sec. (2421.81 ticks, tree = 0.02 MB)
+      5     7      182.0793   605      175.1178      185.4032    13760    5.87%
+     34    22      175.2667   589      175.1178      184.3003    21381    5.24%
+                                                    Cuts: 267                  
+    109    40      175.2865   595      175.1178      181.0719    54256    3.40%
+                                                 ZeroHalf: 26                  
+    187    72      176.0440   656      175.1178      181.0719    92248    3.40%
+                                                 ZeroHalf: 46                  
+*   251    76      integral     0      175.6502      179.2511   102490    2.05%
+                                                 ZeroHalf: 21                  
+Found incumbent of value 175.650188 after 4.58 sec. (3570.38 ticks)
+    381    28        cutoff            175.6502      179.2508   156735    2.05%
+                                                 ZeroHalf: 18                  
+    442     9        cutoff            175.6502      177.5950   174795    1.11%
+                                                  ZeroHalf: 3                  
+
+Zero-half cuts applied:  911
+Lift and project cuts applied:  1
+Gomory fractional cuts applied:  10
+
+Root node processing (before b&c):
+  Real time             =    3.52 sec. (2420.69 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    1.52 sec. (1653.93 ticks)
+  Sync time (average)   =    0.38 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    5.03 sec. (4074.62 ticks)
+
+--- MIP status (102): integer optimal, tolerance.
+--- Cplex Time: 5.03sec (det. 4074.62 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 991 rows and 1062 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.46 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.78 ticks)
+
+
+Solution satisfies tolerances
+MIP Solution:          175.650188    (181731 iterations, 447 nodes)
+Final Solve:           175.650188    (0 iterations)
+
+Best possible:         175.657462
+Absolute gap:            0.007274
+Relative gap:            0.000041
+
+--- Reading solution for model maxcut3
+--- Executing after solve: elapsed 0:00:29.354
+--- MaxDiCut.gms(146) 5 Mb
+*** Status: Normal completion
+--- Job MaxDiCut.gms Stop 06/19/22 07:21:10 elapsed 0:00:29.354

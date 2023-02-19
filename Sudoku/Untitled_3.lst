@@ -1,0 +1,97 @@
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/09/22 23:38:12 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  set i / i1*i10 /;
+   2  alias(i,j);
+   3   
+   4  parameter a(i,j);
+   5  a(i,j) = 1 / (ord(i)+ord(j) - 1);
+   6  a(i,i) = 1;
+   7   
+   8  parameter inv_a(i,j);
+   9  parameter ident(i,j);
+  10   
+  11  embeddedCode Python:
+  12  import gamstransfer as gt
+  13  import numpy as np
+  14  import time
+  15   
+  16  gams.printLog("")
+  17  gams.printLog("")
+  18   
+  19  s = time.time()
+  20  m = gt.Container(gams.db)
+  21  gams.printLog(f"read data: {round(time.time() - s, 3)} sec")
+  22   
+  23  s = time.time()
+  24  A = m.data["a"].toDense()
+  25  gams.printLog(f"create matrix A: {round(time.time() - s, 3)} sec")
+  26   
+  27  s = time.time()
+  28  invA = np.linalg.inv(A)
+  29  gams.printLog(f"calculate inv(A): {round(time.time() - s, 3)} sec")
+  30   
+  31  s = time.time()
+  32  m.data["inv_a"].setRecords(invA)
+  33  gams.printLog(f"convert matrix to records for inv(A): {round(time.time() - s, 3)} sec")
+  34   
+  35  s = time.time()
+  36  I = np.dot(A,invA)
+  37  tol = 1e-9
+  38  I[np.where((I<tol) & (I>-tol))] = 0
+  39  gams.printLog(f"calculate A*invA + small number cleanup: {round(time.time() - s, 3)} sec")
+  40   
+  41  s = time.time()
+  42  m.data["ident"].setRecords(I)
+  43  gams.printLog(f"convert matrix to records for I: {round(time.time() - s, 3)} sec")
+  44   
+  45  s = time.time()
+  46  m.write(gams.db, ["inv_a","ident"])
+  47  gams.printLog(f"write to GamsDatabase: {round(time.time() - s, 3)} sec")
+  48   
+  49  gams.printLog("")
+  50  endEmbeddedCode inv_a, ident
+  51   
+  52  display ident;
+
+
+COMPILATION TIME     =        0.047 SECONDS      3 MB  39.1.0 5f04cd76 WEX-WEI
+GAMS 39.1.0  5f04cd76 May 3, 2022           WEX-WEI x86 64bit/MS Windows - 05/09/22 23:38:12 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     52 PARAMETER ident  
+
+             i1          i2          i3          i4          i5          i6          i7          i8          i9         i10
+
+i1        1.000
+i2                    1.000
+i3                                1.000
+i4                                            1.000
+i5                                                        1.000
+i6                                                                    1.000
+i7                                                                                1.000
+i8                                                                                            1.000
+i9                                                                                                        1.000
+i10                                                                                                                   1.000
+
+
+**** REPORT FILE SUMMARY
+
+ pyScript C:\projects\OptimizationModels\Sudoku\225a\myEmb.dat
+
+
+EXECUTION TIME       =        0.515 SECONDS      4 MB  39.1.0 5f04cd76 WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Sudoku\Untitled_3.gms
+Output     C:\projects\OptimizationModels\Sudoku\Untitled_3.lst

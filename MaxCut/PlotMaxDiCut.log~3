@@ -1,0 +1,118 @@
+
+--- Job PlotMaxDiCut.gms Start 06/16/22 10:24:41 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\39\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input C:\projects\OptimizationModels\MaxCut\PlotMaxDiCut.gms
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\MaxCut\225b\
+    SysDir C:\GAMS\39\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
+--- Starting compilation
+--- PlotMaxDiCut.gms(142) 3 Mb
+--- $echo File C:\projects\OptimizationModels\MaxCut\network.html
+--- PlotMaxDiCut.gms(202) 3 Mb
+--- . win32.gms(69) 3 Mb
+--- PlotMaxDiCut.gms(204) 3 Mb
+--- Starting execution: elapsed 0:00:00.014
+--- PlotMaxDiCut.gms(85) 4 Mb
+--- Generating MIQCP model maxcut1
+--- PlotMaxDiCut.gms(86) 6 Mb
+---   1 rows  21 columns  21 non-zeroes
+---   213 nl-code  20 nl-non-zeroes
+---   20 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 2.136E-01, 2.102E+00] - Zero values observed as well
+--- PlotMaxDiCut.gms(86) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.018
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.00 ticks)
+Found incumbent of value 0.000000 after 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 21 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.01 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.00 sec. (0.01 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (0.00 ticks)
+                          ------------
+Total (root+branch&cut) =    0.00 sec. (0.01 ticks)
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 32
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.00 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 20
+  Integer space required    = 20
+  Total non-zeros in factor = 210
+  Total FP ops to factor    = 2870
+Note: Q in objective is not positive semi-definite.
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 21 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.02 ticks)
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:           11.526365    (0 iterations, 0 nodes)
+Final Solve:            11.526365    (0 iterations)
+
+Best possible:          11.526365
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxcut1
+--- Executing after solve: elapsed 0:00:00.049
+--- PlotMaxDiCut.gms(242) 4 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+--- Putfile fln C:\projects\OptimizationModels\MaxCut\networkdata.js
+*** Status: Normal completion
+--- Job PlotMaxDiCut.gms Stop 06/16/22 10:24:41 elapsed 0:00:00.184

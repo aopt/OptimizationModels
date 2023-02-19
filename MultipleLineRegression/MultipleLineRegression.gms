@@ -100,7 +100,7 @@ impl2(i,k)..   s(i,k) =g= -M*(1-delta(i,k));
 sum1(i)..      sum(k, delta(i,k)) =e= 1;
 order(k+1)..   a(k,'const.term') =g= a(k+1,'const.term');
 
-option optcr=0, threads=8, mip=cplex, miqcp=cplex;
+option optcr=0, threads=0, mip=cplex, miqcp=cplex;
 model m1 /all/;
 solve m1 minimizing z using miqcp;
 
@@ -114,6 +114,13 @@ report1('total','sum(r^2)') = sum(i,sqr(r.l(i)));
 report1('total','sum|r|') = sum(i,abs(r.l(i)));
 report1('total','points') = card(i);
 display report1;
+
+parameter plotdata1(i,*) 'for use in R';
+plotdata1(i,'x') = x(i);
+plotdata1(i,'y') = y(i);
+plotdata1(i,'color') = round(sum(k, delta.l(i,k)*ord(k)));
+display plotdata1;
+
 
 *---------------------------------------------------------
 * model 2: multiple line LAD regression

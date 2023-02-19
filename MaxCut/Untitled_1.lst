@@ -1,0 +1,184 @@
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+   2   
+   3  set
+   4    i /i1*i5/
+   5  ;
+   6  alias (i,j);
+   7   
+   8  parameter q(i,j);
+   9   
+  24   
+  25  display q;
+  26   
+  27   
+  28  positive variable x;
+  29  x.lo(i) = 1e-9;
+  30  x.up(i) = 1;
+  31   
+  32  variable z;
+  33   
+  34  equations
+  35     obj1
+  36     unit
+  37  ;
+  38   
+  39  obj1.. z =e= sum((i,j),x(i)*q(i,j)*x(j)) + 1.0e-10*sum(i,x(i)**0.1);
+  40  unit.. sum(i,x(i)) =e= 1;
+  41   
+  42  model m /all/;
+  43  solve m minimizing z using nlp;
+  44   
+
+
+COMPILATION TIME     =        0.219 SECONDS      3 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     25 PARAMETER q  
+
+            i1          i2          i3          i4          i5
+
+i1       2.033       1.404      -0.295       0.854      -1.925
+i2       1.404       1.483      -0.686      -0.226      -1.253
+i3      -0.295      -0.686       1.123       1.188       0.220
+i4       0.854      -0.226       1.188       2.217      -0.977
+i5      -1.925      -1.253       0.220      -0.977       1.944
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using NLP From line 43
+
+
+---- obj1  =E=  
+
+obj1..  - (0.00125892955374378)*x(i1) - (0.00125892685624356)*x(i2) - (0.001258928512512)*x(i3) - (0.00125893152249767)*x(i4)
+     
+      - (0.00125892143033363)*x(i5) + z =E= 0 ; (LHS = -6.29462759978883E-11, INFES = 6.29462759978883E-11 ****)
+     
+
+---- unit  =E=  
+
+unit..  x(i1) + x(i2) + x(i3) + x(i4) + x(i5) =E= 1 ; (LHS = 4.99999996961265E-9, INFES = 0.999999995 ****)
+     
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using NLP From line 43
+
+
+---- x  
+
+x(i1)
+                (.LO, .L, .UP, .M = 1E-9, 1E-9, 1, 0)
+      (-0.0013) obj1
+        1       unit
+        0       (OLD LEVEL ****)
+
+x(i2)
+                (.LO, .L, .UP, .M = 1E-9, 1E-9, 1, 0)
+      (-0.0013) obj1
+        1       unit
+        0       (OLD LEVEL ****)
+
+x(i3)
+                (.LO, .L, .UP, .M = 1E-9, 1E-9, 1, 0)
+      (-0.0013) obj1
+        1       unit
+        0       (OLD LEVEL ****)
+
+REMAINING 2 ENTRIES SKIPPED
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj1
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using NLP From line 43
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-09, 1.000E+00]
+Matrix    [min, max] : [ 1.259E-03, 1.000E+00]
+
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using NLP From line 43
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS            2
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES            6  5 projected
+NON ZERO ELEMENTS            11     NON LINEAR N-Z              5
+CODE LENGTH                 122     CONSTANT POOL              32
+
+
+GENERATION TIME      =        0.062 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+GAMS 39.2.0  e0c5072f Jun 2, 2022           WEX-WEI x86 64bit/MS Windows - 06/23/22 08:08:34 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using NLP From line 43
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  SNOPT               FROM LINE  43
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0249
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT        25    2147483647
+ EVALUATION ERRORS              0             0
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj1                .              .              .             1.0000      
+---- EQU unit               1.0000         1.0000         1.0000         0.0498      
+
+---- VAR x  
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1   1.0000000E-9         0.3631         1.0000   2.5285672E-7      
+i2   1.0000000E-9         0.0820         1.0000          .          
+i3   1.0000000E-9   1.0000000E-9         1.0000         0.0361      
+i4   1.0000000E-9         0.0862         1.0000   1.6887003E-5      
+i5   1.0000000E-9         0.4686         1.0000   -2.718348E-6      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0249        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+
+
+EXECUTION TIME       =        0.094 SECONDS      4 MB  39.2.0 e0c5072f WEX-WEI
+
+
+USER: Eval License                                   G211206|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MaxCut\Untitled_1.gms
+Output     C:\projects\OptimizationModels\MaxCut\Untitled_1.lst

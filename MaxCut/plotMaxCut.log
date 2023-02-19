@@ -1,0 +1,261 @@
+
+--- Job plotMaxCut.gms Start 07/02/22 21:24:33 39.2.0 e0c5072f WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\39\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input C:\projects\OptimizationModels\MaxCut\plotMaxCut.gms
+    PageWidth 130
+    PageSize 0
+    PageContr 3
+    Action CE
+    ScrDir C:\projects\OptimizationModels\MaxCut\225a\
+    SysDir C:\GAMS\39\
+    WorkDir C:\projects\OptimizationModels\MaxCut\
+    LogOption 3
+    DFormat 0
+    TFormat 0
+    ErrorLog 99
+    IDE 1
+    GDX C:\projects\OptimizationModels\MaxCut\x.gdx
+Licensee: Eval License                                   G211206|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 39.2.0   Copyright (C) 1987-2022 GAMS Development. All rights reserved
+--- Starting compilation
+--- plotMaxCut.gms(144) 3 Mb
+--- $echo File C:\projects\OptimizationModels\MaxCut\network.html
+--- plotMaxCut.gms(202) 3 Mb
+--- . win32.gms(69) 3 Mb
+--- plotMaxCut.gms(204) 3 Mb
+--- Starting execution: elapsed 0:00:00.060
+--- plotMaxCut.gms(82) 4 Mb
+--- Generating MIQCP model maxcut1
+--- plotMaxCut.gms(83) 6 Mb
+---   1 rows  36 columns  36 non-zeroes
+---   375 nl-code  35 nl-non-zeroes
+---   35 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- plotMaxCut.gms(83) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.065
+
+IBM ILOG CPLEX   39.2.0 e0c5072f Jun 2, 2022           WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.0.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.00 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 1 columns.
+MIP Presolve added 186 rows and 93 columns.
+Reduced MIP has 186 rows, 128 columns, and 372 nonzeros.
+Reduced MIP has 128 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.09 sec. (0.03 ticks)
+Probing time = 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 93 rows and 4 columns.
+MIP Presolve added 2 rows and 2 columns.
+Reduced MIP has 95 rows, 126 columns, and 281 nonzeros.
+Reduced MIP has 124 binaries, 2 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.27 ticks)
+Classifier predicts products in MIQP should be linearized.
+Probing time = 0.00 sec. (0.02 ticks)
+Clique table members: 4.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: none, using 1 thread.
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 93 rows, 124 columns, and 275 nonzeros.
+Presolve time = 0.00 sec. (0.05 ticks)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1             184.000000                    x37               c1 slack
+     2             182.000000                    x38               c2 slack
+     3             180.000000                    x39               c3 slack
+     4             178.000000                    x40               c4 slack
+     5             177.000000               x(node1)               c5 slack
+     6             175.000000                    x46              c10 slack
+     7             173.000000                    x47              c11 slack
+     8             171.000000                    x48              c12 slack
+     9             171.000000               x(node2)              c13 slack
+    10             169.000000                    x52              c16 slack
+    11             167.000000                    x53              c17 slack
+    12             165.000000                    x54              c18 slack
+    13             163.000000                    x55              c19 slack
+    14             161.000000                    x56              c20 slack
+    15             161.000000               x(node3)              c21 slack
+    16             159.000000                    x62              c26 slack
+    17             159.000000               x(node4)              c27 slack
+    18             157.000000                    x65              c29 slack
+    19             157.000000               x(node5)              c30 slack
+    20             155.000000               x(node6)              c32 slack
+    21             154.000000               x(node7)              c34 slack
+    22             153.000000              x(node16)              c37 slack
+    23             153.000000               x(node8)              c38 slack
+    24             151.000000                    x76              c40 slack
+    25             149.000000                    x77              c41 slack
+    26             149.000000               x(node9)              c42 slack
+    27             147.000000                    x81              c45 slack
+    28             145.000000              x(node24)              c46 slack
+    29             144.000000              x(node10)              c47 slack
+    30             142.000000                    x86              c50 slack
+    31             142.000000              x(node11)              c51 slack
+    32             140.000000                    x90              c54 slack
+    33             138.000000                    x91              c55 slack
+    34             137.000000              x(node12)              c56 slack
+    35             135.000000                    x97              c61 slack
+    36             134.000000              x(node13)              c62 slack
+    37             132.000000                   x102              c66 slack
+    38             130.000000                   x103              c67 slack
+    39             130.000000              x(node14)              c68 slack
+    40             129.000000              x(node15)              c69 slack
+    41             128.000000              x(node17)              c70 slack
+    42             126.000000                   x109              c73 slack
+    43             125.000000              x(node18)              c74 slack
+    44             124.000000              x(node19)              c76 slack
+    45             122.000000                   x113              c77 slack
+    46             122.000000              x(node20)              c78 slack
+    47             121.000000              x(node21)              c80 slack
+    48             119.000000                   x117              c81 slack
+    49             117.000000                   x118              c82 slack
+    50             117.000000              x(node22)              c83 slack
+    51             115.000000                   x120              c84 slack
+    52             115.000000              x(node23)              c85 slack
+    53             114.000000              x(node25)              c87 slack
+    54             112.000000                   x124              c88 slack
+    55             112.000000              x(node26)              c89 slack
+    56             110.000000                   x126              c90 slack
+    57             108.000000                   x127              c91 slack
+    58             106.000000                   x128              c92 slack
+    59             104.000000                   x129              c93 slack
+    60             103.000000               c5 slack               c7 slack
+    61             102.500000              x(node28)                    x38
+    62             102.500000              x(node27)                    x47
+    63             101.500000                   x106              c14 slack
+    64             100.500000                    x50                    x48
+    65             100.500000              x(node29)              c15 slack
+    66             100.500000              c21 slack              c25 slack
+    67             100.500000              c38 slack              c39 slack
+    68             100.500000              c51 slack              c53 slack
+    69              98.500000              c10 slack                    x46
+    70              98.500000                    x89                    x54
+    71              97.500000              c62 slack              c63 slack
+    72              97.500000                   x112                    x97
+    73              96.500000              x(node35)                   x103
+    74              96.000000              x(node30)               c8 slack
+    75              95.500000              x(node32)               c9 slack
+    76              94.500000               c3 slack                    x39
+    77              94.500000                    x75                    x65
+    78              94.500000              c42 slack              c44 slack
+    79              93.500000              x(node31)                    x53
+    80              93.500000              x(node33)                   x117
+    81              93.000000              c63 slack              c64 slack
+    82              93.000000              x(node34)               c5 slack
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.05 sec. (0.30 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000      186.0000              --- 
+Found incumbent of value 0.000000 after 0.14 sec. (0.83 ticks)
+      0     0       93.0000    37        0.0000       93.0000       82     --- 
+*     0+    0                           66.0000       93.0000            40.91%
+Found incumbent of value 66.000000 after 0.14 sec. (1.04 ticks)
+      0     0       83.7500    49       66.0000      Cuts: 31      142   26.89%
+      0     0       78.3333    57       66.0000      Cuts: 25      200   18.69%
+      0     0       77.3333    56       66.0000  ZeroHalf: 27      231   17.17%
+      0     0       77.0000    48       66.0000  ZeroHalf: 22      250   16.67%
+      0     0       77.0000    48       66.0000      Cuts: 20      270   16.67%
+Detecting symmetries...
+      0     0       77.0000    51       66.0000  ZeroHalf: 18      292   16.67%
+Detecting symmetries...
+      0     2       77.0000    51       66.0000       77.0000      292   16.67%
+Elapsed time = 0.16 sec. (13.40 ticks, tree = 0.01 MB)
+*     8     8      integral     0       68.0000       75.0000      563   10.29%
+Found incumbent of value 68.000000 after 0.16 sec. (16.21 ticks)
+*    10     8      integral     0       69.0000       75.0000      571    8.70%
+Found incumbent of value 69.000000 after 0.16 sec. (16.39 ticks)
+*    16     8      integral     0       70.0000       75.0000      667    7.14%
+Found incumbent of value 70.000000 after 0.16 sec. (17.58 ticks)
+*    21     4      integral     0       71.0000       74.0000      832    4.23%
+                                                  ZeroHalf: 1                  
+Found incumbent of value 71.000000 after 0.16 sec. (19.38 ticks)
+
+Implied bound cuts applied:  1
+Zero-half cuts applied:  39
+Gomory fractional cuts applied:  4
+
+Root node processing (before b&c):
+  Real time             =    0.16 sec. (13.40 ticks)
+Sequential b&c:
+  Real time             =    0.00 sec. (7.51 ticks)
+                          ------------
+Total (root+branch&cut) =    0.16 sec. (20.91 ticks)
+
+--- MIQP status (101): integer optimal solution.
+--- Cplex Time: 0.16sec (det. 20.91 ticks)
+
+--- Fixing integer variables and solving final QP...
+
+Version identifier: 22.1.0.0 | 2022-03-09 | 1a383f8ce
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_Threads                                 1
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Number of nonzeros in lower triangle of Q = 93
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for factor of Q:
+  Rows in Factor            = 35
+  Integer space required    = 71
+  Total non-zeros in factor = 307
+  Total FP ops to factor    = 4037
+Note: Q in objective is not positive semi-definite.
+Tried aggregator 1 time.
+QP Presolve eliminated 0 rows and 36 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.03 ticks)
+
+--- Fixed MIQP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.05 ticks)
+
+
+Proven optimal solution
+MIP Solution:           71.000000    (949 iterations, 30 nodes)
+Final Solve:            71.000000    (0 iterations)
+
+Best possible:          71.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxcut1
+--- Executing after solve: elapsed 0:00:00.272
+--- plotMaxCut.gms(242) 4 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+--- Putfile fln C:\projects\OptimizationModels\MaxCut\networkdata.js
+--- GDX File C:\projects\OptimizationModels\MaxCut\x.gdx
+*** Status: Normal completion
+--- Job plotMaxCut.gms Stop 07/02/22 21:24:33 elapsed 0:00:00.406
