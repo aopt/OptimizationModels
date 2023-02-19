@@ -1,0 +1,650 @@
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Matrix Balancing:
+         RAS vs Entropy Optimization
+         
+         http://yetanothermathprogrammingconsultant.blogspot.com/2022/08/some-matrix-balancing-experiments.html
+       
+   9   
+  10  * reduce size of listing file
+  11  option limrow=0, limcol=0, solprint=off;
+  12   
+  13  *---------------------------------------------------------------
+  14  * size of the matrix
+  15  *---------------------------------------------------------------
+  16   
+  17  set
+  18     i 'rows' /r1*r1000/
+  19     j 'columns' /c1*c1000/
+  20  ;
+  21   
+  22  *---------------------------------------------------------------
+  23  * random sparse data
+  24  *---------------------------------------------------------------
+  25   
+  26  Set P(i,j) 'sparsity pattern';
+  27  P(i,j) = uniform(0,1)<0.5;
+  28   
+  29  Parameter A0(i,j) 'inner data table';
+  30  A0(p) = uniform(0,100);
+  31   
+  32  Parameter
+  33      r(i) 'known row sums'
+  34      c(j) 'known column sums'
+  35  ;
+  36   
+  37  r(i) = sum(p(i,j), A0(p));
+  38  c(j) = sum(p(i,j), A0(p));
+  39   
+  40  *
+  41  * perturb A0
+  42  *
+  43  A0(p) = uniform(0.5,1.5)*A0(p);
+  44   
+  45  *---------------------------------------------------------------
+  46  * RAS
+  47  *---------------------------------------------------------------
+  48   
+  49  set iter 'max RAS iterations' /iter1*iter50/;
+  50  Scalars
+  51     tol    'tolerance' /1e-6/
+  52     niter  'iteration number'
+  53     diff1  'max(|rho-1|)'
+  54     diff2  'max(|sigma-1|)'
+  55     diff   'max(diff1,diff2)'
+  56     t      'time'
+  57  ;
+  58   
+  59  parameters
+  60     A(i,j) 'updated matrix using RAS method'
+  61     rho(i) 'row scaling'
+  62     sigma(j) 'column scaling'
+  63     trace(iter,*) 'RAS convergence'
+  64  ;
+  65   
+  66  t = timeElapsed;
+  67   
+  68  A(i,j) = A0(i,j);
+  69   
+  70  loop(iter,
+  71   
+  72      niter = ord(iter);
+  73   
+  74  *
+  75  * step 1 row scaling
+  76  *
+  77     rho(i) = r(i)/sum(j,A(i,j));
+  78     A(i,j) = rho(i)*A(i,j);
+  79   
+  80  *
+  81  * step 2 column scaling
+  82  *
+  83     sigma(j) = c(j)/sum(i,A(i,j));
+  84     A(i,j) =  A(i,j)*sigma(j);
+  85   
+  86  *
+  87  * converged?
+  88  *
+  89     diff1 = smax(i,abs(rho(i)-1));
+  90     diff2 = smax(j,abs(sigma(j)-1));
+  91     diff = max(diff1,diff2);
+  92     trace(iter,'||rho-1||') = diff1;
+  93     trace(iter,'||sigm-1||') = diff2;
+  94     trace(iter,'||both||') = diff;
+  95   
+  96     break$(diff < tol);
+  97   
+  98  );
+  99   
+ 100   
+ 101  option trace:8; display trace;
+ 102  if(diff < tol,
+ 103    display "RAS converged.",niter;
+ 104  else
+ 105    abort "RAS did not converge";
+ 106  );
+ 107   
+ 108  t = timeElapsed-t;
+ 109   
+ 110  parameter report 'timings of different solvers';
+ 111  report('RAS alg','obj') = sum(p,A(p)*log(A(p)/A0(p)));
+ 112  report('RAS alg','iter') = niter;
+ 113  report('RAS alg','time') = t;
+ 114   
+ 115  display report;
+ 116   
+ 117  *---------------------------------------------------------------
+ 118  * Entropy Model
+ 119  *---------------------------------------------------------------
+ 120   
+ 121  variable z 'objective';
+ 122  positive variable A2(i,j) 'updated table';
+ 123   
+ 124  * initial point
+ 125  A2.l(p) = A0(p);
+ 126  * protect log
+ 127  A2.lo(p) = 1e-5;
+ 128   
+ 129  equations
+ 130     objective  'cross-entropy objective'
+ 131     rowsum(i)  'row totals'
+ 132     colsum(j)  'column totals'
+ 133     ;
+ 134   
+ 135  objective.. z =e= sum(p,A2(p)*log(A2(p)/A0(p)));
+ 136  rowsum(i).. sum(P(i,j), A2(p)) =e= r(i);
+ 137  colsum(j).. sum(P(i,j), A2(p)) =e= c(j);
+ 138   
+ 139  model m1 /all/;
+ 140  option threads=0, nlp=conopt;
+ 141  solve m1 minimizing z using nlp;
+ 142   
+ 143  *---------------------------------------------------------------
+ 144  * Compare results
+ 145  * ||A2-A||
+ 146  *---------------------------------------------------------------
+ 147   
+ 148  scalar adiff 'max difference between solutions';
+ 149  adiff = smax((i,j),abs(A2.l(i,j)-A(i,j)));
+ 150  display adiff;
+ 151   
+ 152  *---------------------------------------------------------------
+ 153  * Try different solvers
+ 154  *---------------------------------------------------------------
+ 155   
+ 156  report('CONOPT','obj') = z.l;
+ 157  report('CONOPT','iter') = m1.iterusd;
+ 158  report('CONOPT','time') = m1.resusd;
+ 159   
+ 160  A2.l(p) = 0;
+ 161   
+ 162  option nlp=ipopt;
+ 163  solve m1 minimizing z using nlp;
+ 164   
+ 165  report('IPOPT','obj') = z.l;
+ 166  report('IPOPT','iter') = m1.iterusd;
+ 167  report('IPOPT','time') = m1.resusd;
+ 168   
+ 169  A2.l(p) = 0;
+ 170   
+ 171  option nlp=ipopth;
+ 172  solve m1 minimizing z using nlp;
+ 173   
+ 174  report('IPOPTH','obj') = z.l;
+ 175  report('IPOPTH','iter') = m1.iterusd;
+ 176  report('IPOPTH','time') = m1.resusd;
+ 177   
+ 178  A2.l(p) = 0;
+ 179   
+ 180  option nlp=knitro;
+ 181  solve m1 minimizing z using nlp;
+ 182   
+ 183  report('KNITRO','obj') = z.l;
+ 184  report('KNITRO','iter') = m1.iterusd;
+ 185  report('KNITRO','time') = m1.resusd;
+ 186   
+ 187  display report;
+ 188   
+ 189  *---------------------------------------------------------------
+ 190  * for mosek we use the exponential cone
+ 191  *---------------------------------------------------------------
+ 192   
+ 193  positive variable x1(i,j);
+ 194  variable x3(i,j);
+ 195  a2.l(p) = 1;
+ 196   
+ 197  equations
+ 198     expcone(i,j) 'exponential cone'
+ 199     obj2         'updated objective'
+ 200     defx1        'x1 = a0'
+ 201  ;
+ 202   
+ 203   
+ 204  obj2.. z =e= -sum(p,x3(p));
+ 205   
+ 206  expcone(p).. x1(p) =g= a2(p)*exp(x3(p)/a2(p));
+ 207   
+ 208  defx1(p).. x1(p) =e= a0(p);
+ 209   
+ 210   
+ 214   
+ 215  model m2 /obj2,expcone,rowsum,colsum,defx1/;
+ 216  option nlp=mosek;
+ 217  m2.optfile=1;
+ 218  solve m2 minimizing z using nlp;
+ 219   
+ 220  report('MOSEK','obj') = z.l;
+ 221  report('MOSEK','iter') = m2.iterusd;
+ 222  report('MOSEK','time') = m2.resusd;
+ 223   
+ 224  display report;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    101 PARAMETER trace  RAS convergence
+
+        ||rho-1||  ||sigm-1||    ||both||
+
+iter1  0.04499855  0.05559031  0.05559031
+iter2  0.00233051  0.00012370  0.00233051
+iter3  0.00000958  0.00000059  0.00000958
+iter4  0.00000004 3.587900E-9  0.00000004
+
+
+----    103 RAS converged.
+            PARAMETER niter                =        4.000  iteration number
+
+----    115 PARAMETER report  timings of different solvers
+
+                obj        iter        time
+
+RAS alg   -7720.083       4.000       0.878
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 141
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.107E+04, 2.859E+04] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-05, 1.000E-05]
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 141
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS        2,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES      499,249
+NON ZERO ELEMENTS     1,497,745     NON LINEAR N-Z        499,248
+CODE LENGTH           2,496,242     CONSTANT POOL         499,264
+
+
+GENERATION TIME      =        1.453 SECONDS    231 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 141
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  141
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE            -7720.0829
+
+ RESOURCE USAGE, LIMIT        606.531 10000000000.000
+ ITERATION COUNT, LIMIT       124    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T 3   version 3.17N
+    Copyright (C)   ARKI Consulting and Development A/S
+                    Bagsvaerdvej 246 A
+                    DK-2880 Bagsvaerd, Denmark
+ 
+ 
+    The model has 499249 variables and 2001 constraints
+    with 1497745 Jacobian elements, 499248 of which are nonlinear.
+    The Hessian of the Lagrangian has 499248 elements on the diagonal,
+    0 elements below the diagonal, and 499248 nonlinear variables.
+ 
+ ** Warning **  The value of LFITER is out of range.
+                LFITER is decreased from 2147483647 to 1000000000.
+ 
+                   Pre-triangular equations:   0
+                   Post-triangular equations:  1
+ 
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                          606.209 seconds
+   of which: Function evaluations             1.796 =  0.3%
+             1st Derivative evaluations       2.132 =  0.4%
+             2nd Derivative evaluations      33.066 =  5.5%
+             Directional 2nd Derivative       0.265 =  0.0%
+ 
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    150 PARAMETER adiff                =  1.253979E-7  max difference between solutions
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 163
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.107E+04, 2.859E+04] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-05, 1.000E-05]
+Matrix    [min, max] : [ 1.000E+00, 1.552E+01]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 163
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS        2,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES      499,249  499,248 projected
+NON ZERO ELEMENTS     1,497,745     NON LINEAR N-Z        499,248
+CODE LENGTH           2,496,242     CONSTANT POOL         499,264
+
+
+GENERATION TIME      =        1.813 SECONDS    234 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 163
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  IPOPT               FROM LINE  163
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE            -7720.0829
+
+ RESOURCE USAGE, LIMIT        178.154 10000000000.000
+ ITERATION COUNT, LIMIT        15    2147483647
+ EVALUATION ERRORS              0             0
+
+COIN-OR Ipopt    42.2.0 ef14ea53 Feb 16, 2023          WEI x86 64bit/MS Window
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 172
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.107E+04, 2.859E+04] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-05, 1.000E-05]
+Matrix    [min, max] : [ 1.000E+00, 1.552E+01]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 172
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS        2,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES      499,249  499,248 projected
+NON ZERO ELEMENTS     1,497,745     NON LINEAR N-Z        499,248
+CODE LENGTH           2,496,242     CONSTANT POOL         499,264
+
+
+GENERATION TIME      =        1.844 SECONDS    236 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 172
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  IPOPTH              FROM LINE  172
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE            -7720.0829
+
+ RESOURCE USAGE, LIMIT         26.041 10000000000.000
+ ITERATION COUNT, LIMIT        15    2147483647
+ EVALUATION ERRORS              0             0
+
+COIN-OR Ipopt    42.2.0 ef14ea53 Feb 16, 2023          WEI x86 64bit/MS Window
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 181
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.107E+04, 2.859E+04] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-05, 1.000E-05]
+Matrix    [min, max] : [ 1.000E+00, 1.552E+01]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 181
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS        2,001
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES      499,249  499,248 projected
+NON ZERO ELEMENTS     1,497,745     NON LINEAR N-Z        499,248
+CODE LENGTH           2,496,242     CONSTANT POOL         499,264
+
+
+GENERATION TIME      =        1.906 SECONDS    239 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 181
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  KNITRO              FROM LINE  181
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE            -7720.0829
+
+ RESOURCE USAGE, LIMIT         66.312 10000000000.000
+ ITERATION COUNT, LIMIT        10    2147483647
+ EVALUATION ERRORS              0             0
+--- Artelys Knitro Optimizer 13.2.0
+--- GMO Q Extraction (ThreePass): 0.01s
+--- GMO setup time: 0.01s
+--- Set initial levels for 499248 / 499248 variables.
+--- Set initial marginals for 499248 / 499248 variables.
+--- Set initial marginals for 2000 / 2000 equations.
+
+=======================================
+          Commercial License
+         Artelys Knitro 13.2.0
+=======================================
+
+Knitro presolve eliminated 0 variables and 0 constraints.
+
+concurrent_evals:        0
+datacheck:               0
+hessian_no_f:            1
+numthreads:             16
+Knitro shifted start point further inside presolved bounds (499248 variables).
+
+Problem Characteristics                                 (   Presolved)
+-----------------------
+Objective goal:  Minimize
+Objective type:  general
+Number of variables:                             499248 (      499248)
+    bounded below only:                          499248 (      499248)
+    bounded above only:                               0 (           0)
+    bounded below and above:                          0 (           0)
+    fixed:                                            0 (           0)
+    free:                                             0 (           0)
+Number of constraints:                             2000 (        2000)
+    linear equalities:                             2000 (        2000)
+    quadratic equalities:                             0 (           0)
+    gen. nonlinear equalities:                        0 (           0)
+    linear one-sided inequalities:                    0 (           0)
+    quadratic one-sided inequalities:                 0 (           0)
+    gen. nonlinear one-sided inequalities:            0 (           0)
+    linear two-sided inequalities:                    0 (           0)
+    quadratic two-sided inequalities:                 0 (           0)
+    gen. nonlinear two-sided inequalities:            0 (           0)
+Number of nonzeros in Jacobian:                  998496 (      998496)
+Number of nonzeros in Hessian:                   499248 (      499248)
+
+
+  Iter      Objective      FeasError   OptError    ||Step||    CGits 
+--------  --------------  ----------  ----------  ----------  -------
+       0   -1.765404e+06   2.805e+04
+      10   -7.720083e+03   8.004e-11   2.664e-10   4.576e-06        0
+
+EXIT: Locally optimal solution found.
+
+Final Statistics
+----------------
+Final objective value               =  -7.72008290074292e+03
+Final feasibility error (abs / rel) =   8.00e-11 / 2.85e-15
+Final optimality error  (abs / rel) =   2.66e-10 / 2.43e-10
+# of iterations                     =         10 
+# of CG iterations                  =          0 
+# of function evaluations           =         12
+# of gradient evaluations           =         12
+# of Hessian evaluations            =         10
+Total program time (secs)           =      65.825 (   203.641 CPU time)
+Time spent in evaluations (secs)    =       5.795
+
+===============================================================================
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    187 PARAMETER report  timings of different solvers
+
+                obj        iter        time
+
+RAS alg   -7720.083       4.000       0.878
+CONOPT    -7720.083     124.000     606.531
+IPOPT     -7720.083      15.000     178.154
+IPOPTH    -7720.083      15.000      26.041
+KNITRO    -7720.083      10.000      66.312
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using NLP From line 218
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 6.760E-04, 2.859E+04] - Zero values observed as well
+Bound     [min, max] : [ 1.000E-05, 1.000E-05] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using NLP From line 218
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS    1,000,497
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES    1,497,745
+NON ZERO ELEMENTS     3,494,737     NON LINEAR N-Z        998,496
+CODE LENGTH           3,993,984     CONSTANT POOL              16
+
+
+GENERATION TIME      =        3.625 SECONDS    506 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using NLP From line 218
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  MOSEK               FROM LINE  218
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE            -7720.0514
+
+ RESOURCE USAGE, LIMIT         10.719 10000000000.000
+ ITERATION COUNT, LIMIT        13    2147483647
+ EVALUATION ERRORS             NA             0
+GAMS/MOSEK license detected
+Reading parameter(s) from "C:\projects\OptimizationModels\MatrixBalancing\mosek.opt"
+>>  MSK_DPAR_INTPNT_CO_TOL_REL_GAP = 1.0e-5
+Finished reading from "C:\projects\OptimizationModels\MatrixBalancing\mosek.opt"
+Extraction of quadratics (ThreePass algorithm): 0.03s
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/19/23 15:47:04 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    224 PARAMETER report  timings of different solvers
+
+                obj        iter        time
+
+RAS alg   -7720.083       4.000       0.878
+CONOPT    -7720.083     124.000     606.531
+IPOPT     -7720.083      15.000     178.154
+IPOPTH    -7720.083      15.000      26.041
+KNITRO    -7720.083      10.000      66.312
+MOSEK     -7720.051      13.000      10.719
+
+
+
+EXECUTION TIME       =      909.078 SECONDS    506 MB  42.2.0 ef14ea53 WEX-WEI
+
+
+USER: Eval License                                   G221205|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\MatrixBalancing\MatrixBalancing.gms
+Output     C:\projects\OptimizationModels\MatrixBalancing\MatrixBalancing.lst
