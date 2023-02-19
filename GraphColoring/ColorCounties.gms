@@ -87,7 +87,7 @@ order(c-1).. u(c) =l= u(c-1);
 x.fx(isolated,'color1') = 1;
 
 model color /all/;
-option optcr=0, threads=16;
+option optcr=0, threads=0;
 solve color minimizing numColors using mip;
 
 
