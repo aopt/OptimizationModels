@@ -6,7 +6,7 @@ $ontext
 $offtext
 
 $set datafile g05_60.0
-$set incfile  g05_60.inc 
+$set incfile  g05_60.inc
 
 *------------------------------------------------------------------
 * convert data file to a GAMS include file
@@ -16,16 +16,13 @@ $set incfile  g05_60.inc
 $onecho > translate.awk
 {
   if (NR==1) {
+     print "* Source data: %datafile%"
      print "set i /node1*node" $1 "/;"
      print "parameter w(i,i) /"
      next
   }
 
-  n1 = $1
-  n2 = $2
-  w = $3
-
-  print "node" n1 "." "node" n2 " " w
+  print "node" $1 ".node" $2 " " $3
 
 }
 
