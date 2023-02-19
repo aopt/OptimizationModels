@@ -31,3 +31,5 @@ fig = px.choropleth(df, geojson=counties, locations='id', color='color',
                           )
 fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
 fig.show()
+# instead we can use:
+# fig.write_html("USCountyMap.html")
