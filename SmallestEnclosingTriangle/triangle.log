@@ -1,0 +1,128 @@
+--- Job triangle.gms Start 02/20/23 09:54:42 42.2.0 ef14ea53 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\42\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\projects\OptimizationModels\SmallestEnclosingTriangle\triangle.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\SmallestEnclosingTriangle\225a\
+    SysDir C:\GAMS\42\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G221205|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 42.2.0   Copyright (C) 1987-2023 GAMS Development. All rights reserved
+--- Starting compilation
+--- triangle.gms(77) 3 Mb
+--- Starting execution: elapsed 0:00:00.006
+--- triangle.gms(73) 4 Mb
+--- Generating NLP model m
+--- triangle.gms(74) 6 Mb
+---   79 rows  84 columns  390 non-zeroes
+---   568 nl-code  306 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 9.981E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+03] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- triangle.gms(74) 4 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.009
+
+GAMS/BARON       42.2.0 ef14ea53 Feb 16, 2023          WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 23.1.5. Built: WIN-64 Thu Jan 5 20:39:03 EST 2023 
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Khajavirad, A. and N. V. Sahinidis,
+ A hybrid LP/NLP paradigm for global optimization relaxations,
+ Mathematical Programming Computation, 10, 383-421, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+===========================================================================
+ Doing local search
+ Preprocessing found feasible solution with value 6902.41
+ Solving bounding LP
+ Starting multi-start local search
+ Done with local search
+===========================================================================
+  Iteration    Open nodes         Time (s)    Lower bound      Upper bound
+          1             1             0.00      0.00000          6902.41
+      17018            57            29.08      0.00000          6902.41
+      34927            58            57.98      0.00000          6902.41
+      52588            55            86.89      0.00000          6902.41
+      69652            54           115.89      0.00000          6902.41
+      85762            57           144.88      0.00000          6902.41
+      98178           131           174.09      0.00000          6902.41
+     110789           477           202.88      0.00000          6902.41
+     126494           626           231.00      0.00000          6902.41
+     146032           624           259.52      0.00000          6902.41
+     164448           629           288.06      0.00000          6902.41
+     181891           630           316.64      0.00000          6902.41
+     199304           629           345.00      0.00000          6902.41
+     209235           622           372.17      0.00000          6902.41
+     215234+          650           400.00      0.00000          6902.41
+     215988+          621           427.86      0.00000          6902.41
+     216951+          591           456.48      0.00000          6902.41
+     217900+          582           484.50      0.00000          6902.41
+     219048           571           513.11      0.00000          6902.41
+     220167           571           541.11      0.00000          6902.41
+     221039           561           568.33      0.00000          6902.41
+     222136+          554           596.69      0.00000          6902.41
+     223095           552           625.98      0.00000          6902.41
+     224122           541           655.62      0.00000          6902.41
+     225121           537           685.09      0.00000          6902.41
+     226504+          525           715.03      0.00000          6902.41
+     235480           602           744.86      0.00000          6902.41
+     242832+          705           774.75      0.00000          6902.41
+     243760+          688           804.53      0.00000          6902.41
+     244656+          664           834.33      0.00000          6902.41
+     245629           656           864.08      0.00000          6902.41
+     246578+          643           893.91      0.00000          6902.41
+     247698+          646           923.67      0.00000          6902.41
+     248549+          643           953.30      0.00000          6902.41
+     249489+          631           983.03      0.00000          6902.41
+     250111           632          1000.00      0.00000          6902.41
+
+                    *** Max. allowable time exceeded ***      
+
+ Wall clock time:                  1037.53
+ Total CPU time used:              1000.00
+
+ Total no. of BaR iterations:  250111
+ Best solution found at node:      -1
+ Max. no. of nodes in memory:     726
+ 
+  Cut type                             # generated    # added
+  ------------------------------------------------------------
+  BARON cuts                           83247583    83247583
+  USER cuts                                   0           0
+ 
+ All done
+===========================================================================
+
+Solution      = 6902.40651397184  best solution found during preprocessing
+Best possible = 0
+Absolute gap  = 6902.40651397184  optca = 1E-9
+Relative gap  = 1  optcr = 0.0001
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:17:17.619
+--- triangle.gms(77) 4 Mb
+*** Status: Normal completion
+--- Job triangle.gms Stop 02/20/23 10:12:00 elapsed 0:17:17.619
