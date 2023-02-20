@@ -1,0 +1,2066 @@
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Supplier selection problem
+        
+        We want to order quantities for different items.
+        The shipping cost is a fixed cost: any amount ordered from
+           a supplier has the same shipping cost.
+        There are also variable cost: the item cost.
+        
+        We use here random data.
+        
+        A check is added for the case that demand exceeds the availability.
+        
+        maxBuy are big-M values. We try to make them as small as possible.
+        
+        Reference:
+        http://yetanothermathprogrammingconsultant.blogspot.com/2023/02/supplier-selection-easy-mip.html
+        
+       
+  21   
+  22  *-----------------------------------------------------------------------
+  23  * size of the problem
+  24  *-----------------------------------------------------------------------
+  25   
+  26   
+  27  Sets
+  28     i 'items' /item1*item50/
+  29     s 'suppliers' /supplier1*supplier10/
+  30  ;
+  31   
+  32  *-----------------------------------------------------------------------
+  33  * random data
+  34  *-----------------------------------------------------------------------
+  35   
+  36   
+  37  Parameters
+  38     demand(i)      'demand for items'
+  39     avail(i,s)     'availability of items'
+  40     shipcost(s)    'shipping cost'
+  41     itemcost(i,s)  'cost of items'
+  42  ;
+  43   
+  44  demand(i) = uniformint(1,10);
+  45  avail(i,s) = uniformint(0,7);
+  46  shipcost(s) = uniform(10,40);
+  47  itemcost(i,s)$avail(i,s) = uniform(1,5);
+  48   
+  49  display demand,avail,shipcost,itemcost;
+  50   
+  51  *-----------------------------------------------------------------------
+  52  * derived data
+  53  *-----------------------------------------------------------------------
+  54   
+  55  Parameters
+  56     totalavail(i)  'total availability'
+  57     short(i)       'shortages'
+  58     maxbuy(i,s)    'upperbound on buy'
+  59  ;
+  60   
+  61  totalavail(i) = sum(s,avail(i,s));
+  62  short(i) = max(0, demand(i)-totalavail(i));
+  63  maxbuy(i,s) = min(demand(i),avail(i,s));
+  64   
+  65  display totalavail,short,maxbuy;
+  66   
+  67   
+  68  *-----------------------------------------------------------------------
+  69  * stop if we have shortages. That would yield an infeasible model.
+  70  *-----------------------------------------------------------------------
+  71   
+  72  abort$card(short) "not enough availability";
+  73   
+  74  *-----------------------------------------------------------------------
+  75  * model
+  76  *-----------------------------------------------------------------------
+  77   
+  78  variables
+  79      totalcost 'to be minimized'
+  80      buy(i,s)  'orders to be placed at suppliers'
+  81      use(s)    'supplier is used'
+  82  ;
+  83  integer variable buy;
+  84  binary variable use;
+  85  buy.up(i,s) = maxbuy(i,s);
+  86   
+  87  equations
+  88      objective          'minimize totalcost'
+  89      meetdemand(i)      'distribute demand over suppliers'
+  90      use_supplier(i,s)  'use=0 => buy=0'
+  91  ;
+  92   
+  93   
+  94  objective..  totalcost =e= sum(s,shipcost(s)*use(s)) + sum((i,s),itemcost(i,s)*buy(i,s));
+  95  meetdemand(i)..  sum(s, buy(i,s)) =e= demand(i);
+  96  use_supplier(i,s).. buy(i,s) =l= maxbuy(i,s)*use(s);
+  97   
+  98  model m /all/;
+  99  option threads=0;
+ 100  solve m minimizing totalcost using mip;
+ 101   
+ 102  display totalcost.l,use.l,buy.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     49 PARAMETER demand  demand for items
+
+item1   2.000,    item2   9.000,    item3   6.000,    item4   4.000,    item5   3.000,    item6   3.000,    item7   4.000
+item8   9.000,    item9   1.000,    item10  6.000,    item11 10.000,    item12  6.000,    item13 10.000,    item14  8.000
+item15  2.000,    item16  7.000,    item17  2.000,    item18  3.000,    item19  7.000,    item20  5.000,    item21  4.000
+item22  4.000,    item23  2.000,    item24  2.000,    item25  6.000,    item26  9.000,    item27  3.000,    item28  7.000
+item29  8.000,    item30  4.000,    item31  2.000,    item32  6.000,    item33  2.000,    item34  9.000,    item35  3.000
+item36  3.000,    item37  6.000,    item38  8.000,    item39  7.000,    item40  5.000,    item41  5.000,    item42  2.000
+item43  4.000,    item44  1.000,    item45  4.000,    item46  2.000,    item47  7.000,    item48  6.000,    item49  8.000
+item50  3.000
+
+
+----     49 PARAMETER avail  availability of items
+
+         supplier1   supplier2   supplier3   supplier4   supplier5   supplier6   supplier7   supplier8   supplier9  supplier10
+
+item1        5.000       6.000       5.000       2.000                               5.000       4.000                   6.000
+item2                    1.000       4.000       6.000       1.000                   4.000       4.000       3.000       2.000
+item3        1.000       1.000       1.000       7.000       3.000       6.000       2.000       1.000       5.000
+item4        1.000                   2.000       3.000       1.000       1.000       2.000       2.000       2.000       7.000
+item5        7.000       2.000       2.000       6.000       3.000       7.000                   5.000                   4.000
+item6                                3.000       4.000       5.000       1.000       3.000       2.000       1.000       7.000
+item7        3.000       1.000       3.000       2.000       2.000       7.000       1.000       2.000                   3.000
+item8                    3.000       2.000       1.000                   4.000       4.000                   6.000       7.000
+item9        4.000       4.000       2.000       4.000       5.000       4.000       1.000       5.000       4.000
+item10       7.000       1.000       5.000       6.000       7.000       1.000       2.000       1.000       1.000       5.000
+item11       5.000                   1.000       3.000       1.000       5.000       6.000       1.000       3.000       5.000
+item12       6.000       4.000       7.000                   1.000                   4.000       1.000       5.000
+item13       3.000       6.000       3.000       4.000                   4.000       3.000       7.000       1.000       1.000
+item14                   1.000                               6.000       4.000                   1.000       7.000       2.000
+item15       4.000       2.000       5.000       1.000       3.000       3.000       6.000       4.000       3.000       4.000
+item16       7.000       2.000                   7.000       4.000       2.000       7.000       6.000                   7.000
+item17       4.000       1.000       5.000       2.000       7.000       7.000                   2.000       5.000       4.000
+item18                   6.000       7.000       4.000       2.000       3.000                   6.000       4.000       5.000
+item19       5.000       5.000                   7.000       5.000       7.000       6.000       4.000       5.000       5.000
+item20       6.000       4.000                   3.000                   5.000       1.000       1.000       6.000       7.000
+item21       6.000       5.000                   2.000       6.000       6.000       6.000       1.000       3.000
+item22       2.000       3.000       2.000       1.000       6.000       3.000       1.000       3.000       2.000       7.000
+item23                   3.000       2.000       3.000       5.000       5.000       2.000                   7.000       1.000
+item24       7.000       3.000                   2.000       3.000       3.000                   6.000       6.000
+item25       3.000       2.000       7.000                   5.000       7.000       7.000       7.000       6.000       3.000
+item26       4.000       6.000       4.000                   4.000       4.000       5.000       1.000       2.000       2.000
+item27       4.000       2.000       1.000       5.000       4.000       4.000       5.000       5.000                   6.000
+item28       5.000       1.000       4.000       5.000       1.000       2.000       4.000       5.000       3.000       1.000
+item29                               7.000       7.000       7.000       6.000       1.000                   4.000       1.000
+item30       7.000       6.000       2.000                   3.000       2.000                   4.000       3.000       3.000
+item31       7.000       1.000       1.000       4.000       5.000       2.000       1.000       7.000       2.000
+item32       2.000                   6.000       1.000       3.000       2.000       3.000       5.000       4.000       1.000
+item33       1.000       2.000       4.000       2.000                   5.000       5.000       2.000       6.000       1.000
+item34       5.000       5.000       6.000       4.000       2.000       4.000       3.000                   6.000       2.000
+item35                   4.000                   5.000       7.000       4.000       3.000       5.000       4.000       7.000
+item36       6.000       1.000       2.000       5.000       3.000       7.000       7.000       7.000       2.000       3.000
+item37       4.000       7.000       1.000       5.000       6.000       4.000                   6.000       2.000       3.000
+item38       2.000       4.000       4.000       4.000       4.000       7.000       2.000       6.000       7.000       7.000
+item39       2.000       2.000       1.000       1.000       5.000       2.000       6.000       4.000       2.000       5.000
+item40                   6.000                   3.000       2.000       5.000       3.000       4.000       2.000       5.000
+item41       7.000       3.000       1.000       4.000       2.000       7.000                   4.000       3.000       1.000
+item42       4.000       4.000       2.000       2.000       4.000       4.000                   3.000       7.000       3.000
+item43       1.000       3.000       3.000       1.000       5.000                   4.000                   4.000       6.000
+item44                   6.000       2.000       1.000       3.000       2.000       4.000                   7.000
+item45       6.000       6.000       5.000       3.000       3.000       6.000       7.000       4.000       2.000       3.000
+item46       2.000       3.000                   6.000       4.000       5.000       6.000       3.000       7.000       3.000
+item47       3.000       5.000       5.000       4.000       1.000       4.000       4.000       5.000       1.000       1.000
+item48       7.000       3.000                   7.000       2.000       7.000       3.000       4.000       1.000       1.000
+item49       5.000       6.000       4.000       7.000       3.000       2.000       6.000       6.000                   7.000
+item50                   4.000                   3.000       5.000       4.000       2.000                               1.000
+
+
+----     49 PARAMETER shipcost  shipping cost
+
+supplier1  23.574,    supplier2  15.066,    supplier3  27.148,    supplier4  35.761,    supplier5  11.076,    supplier6  20.661
+supplier7  20.136,    supplier8  24.595,    supplier9  17.781,    supplier10 36.736
+
+
+----     49 PARAMETER itemcost  cost of items
+
+         supplier1   supplier2   supplier3   supplier4   supplier5   supplier6   supplier7   supplier8   supplier9  supplier10
+
+item1        4.397       3.538       4.946       4.032                               3.032       4.071                   4.329
+item2                    3.336       3.300       3.227       3.414                   4.908       3.216       4.740       2.653
+item3        4.226       1.003       2.821       2.677       1.063       1.328       3.395       3.221       3.472
+item4        4.540                   1.759       2.712       1.666       4.545       3.706       4.453       1.371       4.986
+item5        3.467       1.003       3.436       1.695       2.245       3.916                   1.339                   2.768
+item6                                3.636       2.938       2.273       4.656       1.737       4.488       2.824       2.836
+item7        1.496       1.415       1.940       2.361       4.492       4.379       4.292       2.922                   4.655
+item8                    4.717       1.432       2.402                   4.440       2.362                   1.852       4.705
+item9        2.443       4.504       1.593       2.824       2.073       2.187       1.462       2.599       4.647
+item10       2.006       1.412       1.585       2.545       1.186       1.106       1.616       1.291       4.315       2.599
+item11       2.669                   4.889       1.974       2.448       3.521       1.971       1.404       2.624       2.916
+item12       1.580       3.039       4.541                   1.222                   3.030       4.056       4.916
+item13       3.882       4.488       2.198       4.016                   4.375       2.873       3.620       2.512       2.435
+item14                   2.018                               2.022       2.802                   4.779       2.342       1.194
+item15       4.226       3.930       4.680       2.327       1.839       1.189       4.532       1.371       4.348       2.855
+item16       1.001       1.626                   3.820       2.121       3.542       3.320       4.848                   3.057
+item17       3.361       3.270       1.120       4.876       3.375       1.238                   3.176       1.509       2.682
+item18                   4.526       3.866       2.254       4.972       1.221                   3.476       4.218       2.186
+item19       4.836       3.779                   3.526       3.464       3.092       1.564       4.347       4.568       3.786
+item20       2.247       2.423                   4.044                   1.545       3.867       4.855       2.768       2.058
+item21       2.777       2.587                   2.468       3.485       4.439       4.020       4.603       2.752
+item22       1.276       4.754       4.376       4.802       3.318       1.141       2.630       1.230       3.128       1.450
+item23                   4.575       1.967       3.569       2.163       4.254       1.745                   3.003       4.755
+item24       3.726       1.741                   4.492       1.660       2.723                   4.087       4.912
+item25       4.778       1.995       4.546                   4.538       4.860       3.997       3.590       3.994       3.093
+item26       3.744       3.764       4.463                   4.183       1.870       3.358       4.690       3.412       1.143
+item27       4.644       3.260       2.299       2.560       2.197       1.876       4.287       1.611                   4.802
+item28       1.128       3.938       1.442       2.951       2.444       1.866       4.695       2.800       4.884       1.385
+item29                               2.916       3.889       2.733       1.633       1.403                   4.222       2.595
+item30       1.468       4.497       1.579                   1.711       3.181                   2.874       4.637       3.892
+item31       1.665       2.310       3.325       3.310       3.510       1.107       1.518       1.257       2.244
+item32       3.314                   4.239       3.717       3.943       2.354       1.897       4.600       4.318       2.265
+item33       4.809       2.027       3.504       4.885                   4.848       2.701       1.422       1.308       3.577
+item34       2.249       3.381       3.426       3.535       4.833       1.329       1.501                   3.421       3.966
+item35                   4.390                   2.410       3.566       4.583       2.553       2.094       4.882       2.385
+item36       2.638       4.759       3.412       4.598       2.139       1.889       3.299       3.038       3.230       2.377
+item37       2.593       4.105       1.113       2.450       4.023       2.900                   1.305       1.390       2.319
+item38       1.802       1.363       2.795       2.851       4.248       2.800       4.817       1.491       2.626       4.545
+item39       3.813       4.500       3.221       2.023       2.037       2.420       1.548       4.228       2.304       2.715
+item40                   1.036                   1.897       3.643       2.150       1.524       2.628       1.646       4.447
+item41       2.511       4.554       2.080       4.110       2.691       2.719                   1.996       2.527       1.284
+item42       3.863       3.812       1.281       4.874       2.080       2.273                   4.534       3.345       2.528
+item43       4.892       3.683       4.805       3.873       2.774                   4.519                   2.879       2.855
+item44                   2.486       1.473       4.862       4.374       3.885       4.858                   2.458
+item45       4.073       2.330       3.168       1.554       2.255       1.320       4.737       2.977       3.716       3.766
+item46       1.219       1.961                   4.531       1.402       3.713       1.406       1.171       4.014       4.948
+item47       1.059       1.587       4.964       1.529       1.342       1.744       4.161       4.458       3.992       2.558
+item48       4.180       3.484                   4.045       3.321       3.654       1.329       3.267       2.773       2.313
+item49       2.322       1.492       3.471       3.136       1.576       2.569       1.059       4.483                   1.982
+item50                   4.213                   1.336       4.949       3.233       3.728                               4.438
+
+
+----     65 PARAMETER totalavail  total availability
+
+item1  33.000,    item2  25.000,    item3  27.000,    item4  21.000,    item5  36.000,    item6  26.000,    item7  24.000
+item8  27.000,    item9  33.000,    item10 36.000,    item11 30.000,    item12 28.000,    item13 32.000,    item14 21.000
+item15 35.000,    item16 42.000,    item17 37.000,    item18 37.000,    item19 49.000,    item20 33.000,    item21 35.000
+item22 30.000,    item23 28.000,    item24 30.000,    item25 47.000,    item26 32.000,    item27 36.000,    item28 31.000
+item29 33.000,    item30 30.000,    item31 30.000,    item32 27.000,    item33 28.000,    item34 37.000,    item35 39.000
+item36 43.000,    item37 38.000,    item38 47.000,    item39 30.000,    item40 30.000,    item41 32.000,    item42 33.000
+item43 27.000,    item44 25.000,    item45 45.000,    item46 39.000,    item47 33.000,    item48 35.000,    item49 46.000
+item50 19.000
+
+
+----     65 PARAMETER short  shortages
+
+                      ( ALL       0.000 )
+
+
+----     65 PARAMETER maxbuy  upperbound on buy
+
+         supplier1   supplier2   supplier3   supplier4   supplier5   supplier6   supplier7   supplier8   supplier9  supplier10
+
+item1        2.000       2.000       2.000       2.000                               2.000       2.000                   2.000
+item2                    1.000       4.000       6.000       1.000                   4.000       4.000       3.000       2.000
+item3        1.000       1.000       1.000       6.000       3.000       6.000       2.000       1.000       5.000
+item4        1.000                   2.000       3.000       1.000       1.000       2.000       2.000       2.000       4.000
+item5        3.000       2.000       2.000       3.000       3.000       3.000                   3.000                   3.000
+item6                                3.000       3.000       3.000       1.000       3.000       2.000       1.000       3.000
+item7        3.000       1.000       3.000       2.000       2.000       4.000       1.000       2.000                   3.000
+item8                    3.000       2.000       1.000                   4.000       4.000                   6.000       7.000
+item9        1.000       1.000       1.000       1.000       1.000       1.000       1.000       1.000       1.000
+item10       6.000       1.000       5.000       6.000       6.000       1.000       2.000       1.000       1.000       5.000
+item11       5.000                   1.000       3.000       1.000       5.000       6.000       1.000       3.000       5.000
+item12       6.000       4.000       6.000                   1.000                   4.000       1.000       5.000
+item13       3.000       6.000       3.000       4.000                   4.000       3.000       7.000       1.000       1.000
+item14                   1.000                               6.000       4.000                   1.000       7.000       2.000
+item15       2.000       2.000       2.000       1.000       2.000       2.000       2.000       2.000       2.000       2.000
+item16       7.000       2.000                   7.000       4.000       2.000       7.000       6.000                   7.000
+item17       2.000       1.000       2.000       2.000       2.000       2.000                   2.000       2.000       2.000
+item18                   3.000       3.000       3.000       2.000       3.000                   3.000       3.000       3.000
+item19       5.000       5.000                   7.000       5.000       7.000       6.000       4.000       5.000       5.000
+item20       5.000       4.000                   3.000                   5.000       1.000       1.000       5.000       5.000
+item21       4.000       4.000                   2.000       4.000       4.000       4.000       1.000       3.000
+item22       2.000       3.000       2.000       1.000       4.000       3.000       1.000       3.000       2.000       4.000
+item23                   2.000       2.000       2.000       2.000       2.000       2.000                   2.000       1.000
+item24       2.000       2.000                   2.000       2.000       2.000                   2.000       2.000
+item25       3.000       2.000       6.000                   5.000       6.000       6.000       6.000       6.000       3.000
+item26       4.000       6.000       4.000                   4.000       4.000       5.000       1.000       2.000       2.000
+item27       3.000       2.000       1.000       3.000       3.000       3.000       3.000       3.000                   3.000
+item28       5.000       1.000       4.000       5.000       1.000       2.000       4.000       5.000       3.000       1.000
+item29                               7.000       7.000       7.000       6.000       1.000                   4.000       1.000
+item30       4.000       4.000       2.000                   3.000       2.000                   4.000       3.000       3.000
+item31       2.000       1.000       1.000       2.000       2.000       2.000       1.000       2.000       2.000
+item32       2.000                   6.000       1.000       3.000       2.000       3.000       5.000       4.000       1.000
+item33       1.000       2.000       2.000       2.000                   2.000       2.000       2.000       2.000       1.000
+item34       5.000       5.000       6.000       4.000       2.000       4.000       3.000                   6.000       2.000
+item35                   3.000                   3.000       3.000       3.000       3.000       3.000       3.000       3.000
+item36       3.000       1.000       2.000       3.000       3.000       3.000       3.000       3.000       2.000       3.000
+item37       4.000       6.000       1.000       5.000       6.000       4.000                   6.000       2.000       3.000
+item38       2.000       4.000       4.000       4.000       4.000       7.000       2.000       6.000       7.000       7.000
+item39       2.000       2.000       1.000       1.000       5.000       2.000       6.000       4.000       2.000       5.000
+item40                   5.000                   3.000       2.000       5.000       3.000       4.000       2.000       5.000
+item41       5.000       3.000       1.000       4.000       2.000       5.000                   4.000       3.000       1.000
+item42       2.000       2.000       2.000       2.000       2.000       2.000                   2.000       2.000       2.000
+item43       1.000       3.000       3.000       1.000       4.000                   4.000                   4.000       4.000
+item44                   1.000       1.000       1.000       1.000       1.000       1.000                   1.000
+item45       4.000       4.000       4.000       3.000       3.000       4.000       4.000       4.000       2.000       3.000
+item46       2.000       2.000                   2.000       2.000       2.000       2.000       2.000       2.000       2.000
+item47       3.000       5.000       5.000       4.000       1.000       4.000       4.000       5.000       1.000       1.000
+item48       6.000       3.000                   6.000       2.000       6.000       3.000       4.000       1.000       1.000
+item49       5.000       6.000       4.000       7.000       3.000       2.000       6.000       6.000                   7.000
+item50                   3.000                   3.000       3.000       3.000       2.000                               1.000
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using MIP From line 100
+
+
+---- objective  =E=  minimize totalcost
+
+objective..  totalcost - 4.397303124*buy(item1,supplier1) - 3.53806938*buy(item1,supplier2) - 4.945865024*buy(item1,supplier3)
+     
+      - 4.031669732*buy(item1,supplier4) - 3.031533888*buy(item1,supplier7) - 4.071094112*buy(item1,supplier8)
+     
+      - 4.328512536*buy(item1,supplier10) - 3.33574302*buy(item2,supplier2) - 3.300238404*buy(item2,supplier3)
+     
+      - 3.226821616*buy(item2,supplier4) - 3.41431284*buy(item2,supplier5) - 4.90820004*buy(item2,supplier7)
+     
+      - 3.216291796*buy(item2,supplier8) - 4.740166524*buy(item2,supplier9) - 2.652799784*buy(item2,supplier10)
+     
+      - 4.2257828*buy(item3,supplier1) - 1.003111576*buy(item3,supplier2) - 2.821042132*buy(item3,supplier3)
+     
+      - 2.676661208*buy(item3,supplier4) - 1.062658892*buy(item3,supplier5) - 1.327918764*buy(item3,supplier6)
+     
+      - 3.395254956*buy(item3,supplier7) - 3.220700912*buy(item3,supplier8) - 3.472019256*buy(item3,supplier9)
+     
+      - 4.540363464*buy(item4,supplier1) - 1.759463888*buy(item4,supplier3) - 2.712250356*buy(item4,supplier4)
+     
+      - 1.6660355*buy(item4,supplier5) - 4.545057428*buy(item4,supplier6) - 3.706165092*buy(item4,supplier7)
+     
+      - 4.453366764*buy(item4,supplier8) - 1.37102884*buy(item4,supplier9) - 4.985932132*buy(item4,supplier10)
+     
+      - 3.467240516*buy(item5,supplier1) - 1.00308142*buy(item5,supplier2) - 3.435778228*buy(item5,supplier3)
+     
+      - 1.694831428*buy(item5,supplier4) - 2.244741436*buy(item5,supplier5) - 3.915528472*buy(item5,supplier6)
+     
+      - 1.338987112*buy(item5,supplier8) - 2.767946836*buy(item5,supplier10) - 3.636226272*buy(item6,supplier3)
+     
+      - 2.937814408*buy(item6,supplier4) - 2.2727464*buy(item6,supplier5) - 4.656173532*buy(item6,supplier6)
+     
+      - 1.736909704*buy(item6,supplier7) - 4.48845206*buy(item6,supplier8) - 2.824406952*buy(item6,supplier9)
+     
+      - 2.835698288*buy(item6,supplier10) - 1.496413868*buy(item7,supplier1) - 1.4152151*buy(item7,supplier2)
+     
+      - 1.93956044*buy(item7,supplier3) - 2.360627352*buy(item7,supplier4) - 4.492261864*buy(item7,supplier5)
+     
+      - 4.379141856*buy(item7,supplier6) - 4.291766648*buy(item7,supplier7) - 2.9220662*buy(item7,supplier8)
+     
+      - 4.655034056*buy(item7,supplier10) - 4.717106428*buy(item8,supplier2) - 1.432434732*buy(item8,supplier3)
+     
+      - 2.402405644*buy(item8,supplier4) - 4.439913576*buy(item8,supplier6) - 2.362017304*buy(item8,supplier7)
+     
+      - 1.852375652*buy(item8,supplier9) - 4.705446124*buy(item8,supplier10) - 2.442901152*buy(item9,supplier1)
+     
+      - 4.5039557*buy(item9,supplier2) - 1.59255448*buy(item9,supplier3) - 2.823937624*buy(item9,supplier4)
+     
+      - 2.073014332*buy(item9,supplier5) - 2.187034092*buy(item9,supplier6) - 1.461986356*buy(item9,supplier7)
+     
+      - 2.5991287*buy(item9,supplier8) - 4.64704684*buy(item9,supplier9) - 2.006204288*buy(item10,supplier1)
+     
+      - 1.411911756*buy(item10,supplier2) - 1.58533092*buy(item10,supplier3) - 2.54521476*buy(item10,supplier4)
+     
+      - 1.185625948*buy(item10,supplier5) - 1.105536476*buy(item10,supplier6) - 1.61600318*buy(item10,supplier7)
+     
+      - 1.290830968*buy(item10,supplier8) - 4.314563304*buy(item10,supplier9) - 2.599099156*buy(item10,supplier10)
+     
+      - 2.668688468*buy(item11,supplier1) - 4.88859896*buy(item11,supplier3) - 1.973725716*buy(item11,supplier4)
+     
+      - 2.447862752*buy(item11,supplier5) - 3.521375492*buy(item11,supplier6) - 1.971411688*buy(item11,supplier7)
+     
+      - 1.40424434*buy(item11,supplier8) - 2.623737316*buy(item11,supplier9) - 2.9162289*buy(item11,supplier10)
+     
+      - 1.579785452*buy(item12,supplier1) - 3.038748708*buy(item12,supplier2) - 4.54112522*buy(item12,supplier3)
+     
+      - 1.221913432*buy(item12,supplier5) - 3.029614368*buy(item12,supplier7) - 4.056454604*buy(item12,supplier8)
+     
+      - 4.916007008*buy(item12,supplier9) - 3.88166352*buy(item13,supplier1) - 4.487791024*buy(item13,supplier2)
+     
+      - 2.198099692*buy(item13,supplier3) - 4.015581868*buy(item13,supplier4) - 4.375025696*buy(item13,supplier6)
+     
+      - 2.872910936*buy(item13,supplier7) - 3.619718068*buy(item13,supplier8) - 2.512206136*buy(item13,supplier9)
+     
+      - 2.435499164*buy(item13,supplier10) - 2.01792286*buy(item14,supplier2) - 2.02192846*buy(item14,supplier5)
+     
+      - 2.802476888*buy(item14,supplier6) - 4.779418188*buy(item14,supplier8) - 2.342103564*buy(item14,supplier9)
+     
+      - 1.193962928*buy(item14,supplier10) - 4.22597904*buy(item15,supplier1) - 3.930456472*buy(item15,supplier2)
+     
+      - 4.680058236*buy(item15,supplier3) - 2.3265791*buy(item15,supplier4) - 1.839104688*buy(item15,supplier5)
+     
+      - 1.188595892*buy(item15,supplier6) - 4.532146092*buy(item15,supplier7) - 1.371222808*buy(item15,supplier8)
+     
+      - 4.3476223*buy(item15,supplier9) - 2.855246184*buy(item15,supplier10) - 1.000661036*buy(item16,supplier1)
+     
+      - 1.62630726*buy(item16,supplier2) - 3.82011642*buy(item16,supplier4) - 2.121388172*buy(item16,supplier5)
+     
+      - 3.542304164*buy(item16,supplier6) - 3.319842372*buy(item16,supplier7) - 4.848421216*buy(item16,supplier8)
+     
+      - 3.0567627*buy(item16,supplier10) - 3.361218996*buy(item17,supplier1) - 3.269838188*buy(item17,supplier2)
+     
+      - 1.119589312*buy(item17,supplier3) - 4.875615868*buy(item17,supplier4) - 3.375002864*buy(item17,supplier5)
+     
+      - 1.238471804*buy(item17,supplier6) - 3.176426604*buy(item17,supplier8) - 1.509457104*buy(item17,supplier9)
+     
+      - 2.681959068*buy(item17,supplier10) - 4.525796552*buy(item18,supplier2) - 3.866341436*buy(item18,supplier3)
+     
+      - 2.25430526*buy(item18,supplier4) - 4.971809608*buy(item18,supplier5) - 1.221331672*buy(item18,supplier6)
+     
+      - 3.476315324*buy(item18,supplier8) - 4.217768148*buy(item18,supplier9) - 2.186373056*buy(item18,supplier10)
+     
+      - 4.835679096*buy(item19,supplier1) - 3.77901228*buy(item19,supplier2) - 3.525658668*buy(item19,supplier4)
+     
+      - 3.463900124*buy(item19,supplier5) - 3.092069384*buy(item19,supplier6) - 1.564127248*buy(item19,supplier7)
+     
+      - 4.346923944*buy(item19,supplier8) - 4.56836684*buy(item19,supplier9) - 3.785881836*buy(item19,supplier10)
+     
+      - 2.2471501*buy(item20,supplier1) - 2.423284088*buy(item20,supplier2) - 4.04432278*buy(item20,supplier4)
+     
+      - 1.54544844*buy(item20,supplier6) - 3.866527488*buy(item20,supplier7) - 4.854803556*buy(item20,supplier8)
+     
+      - 2.76767214*buy(item20,supplier9) - 2.057913272*buy(item20,supplier10) - 2.776713256*buy(item21,supplier1)
+     
+      - 2.586818768*buy(item21,supplier2) - 2.46769726*buy(item21,supplier4) - 3.4850516*buy(item21,supplier5)
+     
+      - 4.438922228*buy(item21,supplier6) - 4.020027628*buy(item21,supplier7) - 4.603259436*buy(item21,supplier8)
+     
+      - 2.75218144*buy(item21,supplier9) - 1.276394196*buy(item22,supplier1) - 4.754299412*buy(item22,supplier2)
+     
+      - 4.375870176*buy(item22,supplier3) - 4.801763448*buy(item22,supplier4) - 3.317536272*buy(item22,supplier5)
+     
+      - 1.14086708*buy(item22,supplier6) - 2.629732852*buy(item22,supplier7) - 1.229700032*buy(item22,supplier8)
+     
+      - 3.127875596*buy(item22,supplier9) - 1.449626848*buy(item22,supplier10) - 4.575395288*buy(item23,supplier2)
+     
+      - 1.966757696*buy(item23,supplier3) - 3.568971676*buy(item23,supplier4) - 2.163119304*buy(item23,supplier5)
+     
+      - 4.25425632*buy(item23,supplier6) - 1.744563616*buy(item23,supplier7) - 3.002704932*buy(item23,supplier9)
+     
+      - 4.755284796*buy(item23,supplier10) - 3.726265668*buy(item24,supplier1) - 1.74092744*buy(item24,supplier2)
+     
+      - 4.491534244*buy(item24,supplier4) - 1.660030608*buy(item24,supplier5) - 2.723319664*buy(item24,supplier6)
+     
+      - 4.086923248*buy(item24,supplier8) - 4.912201696*buy(item24,supplier9) - 4.77784668*buy(item25,supplier1)
+     
+      - 1.995352632*buy(item25,supplier2) - 4.545858852*buy(item25,supplier3) - 4.537709912*buy(item25,supplier5)
+     
+      - 4.859793956*buy(item25,supplier6) - 3.996574408*buy(item25,supplier7) - 3.590416388*buy(item25,supplier8)
+     
+      - 3.993512576*buy(item25,supplier9) - 3.092677316*buy(item25,supplier10) - 3.744447084*buy(item26,supplier1)
+     
+      - 3.76427326*buy(item26,supplier2) - 4.462591384*buy(item26,supplier3) - 4.183026956*buy(item26,supplier5)
+     
+      - 1.870203996*buy(item26,supplier6) - 3.358487668*buy(item26,supplier7) - 4.69046438*buy(item26,supplier8)
+     
+      - 3.411611128*buy(item26,supplier9) - 1.142817992*buy(item26,supplier10) - 4.644479756*buy(item27,supplier1)
+     
+      - 3.260051092*buy(item27,supplier2) - 2.299297656*buy(item27,supplier3) - 2.560499756*buy(item27,supplier4)
+     
+      - 2.197292412*buy(item27,supplier5) - 1.875856752*buy(item27,supplier6) - 4.286880032*buy(item27,supplier7)
+     
+      - 1.610651648*buy(item27,supplier8) - 4.80219154*buy(item27,supplier10) - 1.12766916*buy(item28,supplier1)
+     
+      - 3.937853044*buy(item28,supplier2) - 1.441971448*buy(item28,supplier3) - 2.951011268*buy(item28,supplier4)
+     
+      - 2.444149992*buy(item28,supplier5) - 1.865569144*buy(item28,supplier6) - 4.694826824*buy(item28,supplier7)
+     
+      - 2.799853988*buy(item28,supplier8) - 4.88433256*buy(item28,supplier9) - 1.385339884*buy(item28,supplier10)
+     
+      - 2.91567784*buy(item29,supplier3) - 3.888662432*buy(item29,supplier4) - 2.732819708*buy(item29,supplier5)
+     
+      - 1.632711652*buy(item29,supplier6) - 1.402630448*buy(item29,supplier7) - 4.222047732*buy(item29,supplier9)
+     
+      - 2.594752464*buy(item29,supplier10) - 1.468374484*buy(item30,supplier1) - 4.497413516*buy(item30,supplier2)
+     
+      - 1.579420844*buy(item30,supplier3) - 1.710962016*buy(item30,supplier5) - 3.180817228*buy(item30,supplier6)
+     
+      - 2.874399952*buy(item30,supplier8) - 4.636730688*buy(item30,supplier9) - 3.892358468*buy(item30,supplier10)
+     
+      - 1.665406392*buy(item31,supplier1) - 2.310209992*buy(item31,supplier2) - 3.325382928*buy(item31,supplier3)
+     
+      - 3.31014942*buy(item31,supplier4) - 3.510301032*buy(item31,supplier5) - 1.106936624*buy(item31,supplier6)
+     
+      - 1.517682284*buy(item31,supplier7) - 1.25653452*buy(item31,supplier8) - 2.244392968*buy(item31,supplier9)
+     
+      - 3.314022192*buy(item32,supplier1) - 4.239213164*buy(item32,supplier3) - 3.71680714*buy(item32,supplier4)
+     
+      - 3.942683636*buy(item32,supplier5) - 2.354432396*buy(item32,supplier6) - 1.8969403*buy(item32,supplier7)
+     
+      - 4.600108592*buy(item32,supplier8) - 4.31753708*buy(item32,supplier9) - 2.264888408*buy(item32,supplier10)
+     
+      - 4.808882668*buy(item33,supplier1) - 2.026756288*buy(item33,supplier2) - 3.504460804*buy(item33,supplier3)
+     
+      - 4.885023408*buy(item33,supplier4) - 4.848325584*buy(item33,supplier6) - 2.701127168*buy(item33,supplier7)
+     
+      - 1.421573908*buy(item33,supplier8) - 1.308335948*buy(item33,supplier9) - 3.576505864*buy(item33,supplier10)
+     
+      - 2.248880796*buy(item34,supplier1) - 3.380731452*buy(item34,supplier2) - 3.425511944*buy(item34,supplier3)
+     
+      - 3.534608348*buy(item34,supplier4) - 4.832946408*buy(item34,supplier5) - 1.329053868*buy(item34,supplier6)
+     
+      - 1.501485092*buy(item34,supplier7) - 3.420880604*buy(item34,supplier9) - 3.96591976*buy(item34,supplier10)
+     
+      - 4.39008174*buy(item35,supplier2) - 2.409840864*buy(item35,supplier4) - 3.565651084*buy(item35,supplier5)
+     
+      - 4.582918364*buy(item35,supplier6) - 2.552666916*buy(item35,supplier7) - 2.09359926*buy(item35,supplier8)
+     
+      - 4.881581712*buy(item35,supplier9) - 2.38485484*buy(item35,supplier10) - 2.638357188*buy(item36,supplier1)
+     
+      - 4.759456348*buy(item36,supplier2) - 3.411725508*buy(item36,supplier3) - 4.598170488*buy(item36,supplier4)
+     
+      - 2.138925848*buy(item36,supplier5) - 1.888956464*buy(item36,supplier6) - 3.299350888*buy(item36,supplier7)
+     
+      - 3.037999236*buy(item36,supplier8) - 3.229920196*buy(item36,supplier9) - 2.376679596*buy(item36,supplier10)
+     
+      - 2.593060812*buy(item37,supplier1) - 4.104906636*buy(item37,supplier2) - 1.11291758*buy(item37,supplier3)
+     
+      - 2.449526176*buy(item37,supplier4) - 4.023269388*buy(item37,supplier5) - 2.899649384*buy(item37,supplier6)
+     
+      - 1.304745084*buy(item37,supplier8) - 1.390013124*buy(item37,supplier9) - 2.318681476*buy(item37,supplier10)
+     
+      - 1.80242152*buy(item38,supplier1) - 1.363010924*buy(item38,supplier2) - 2.795063172*buy(item38,supplier3)
+     
+      - 2.851237996*buy(item38,supplier4) - 4.247856812*buy(item38,supplier5) - 2.799996308*buy(item38,supplier6)
+     
+      - 4.817024284*buy(item38,supplier7) - 1.49055788*buy(item38,supplier8) - 2.626395996*buy(item38,supplier9)
+     
+      - 4.545471716*buy(item38,supplier10) - 3.812619192*buy(item39,supplier1) - 4.49967652*buy(item39,supplier2)
+     
+      - 3.220536012*buy(item39,supplier3) - 2.02250736*buy(item39,supplier4) - 2.036708668*buy(item39,supplier5)
+     
+      - 2.42049376*buy(item39,supplier6) - 1.547536468*buy(item39,supplier7) - 4.228262152*buy(item39,supplier8)
+     
+      - 2.303911264*buy(item39,supplier9) - 2.715342364*buy(item39,supplier10) - 1.035834664*buy(item40,supplier2)
+     
+      - 1.897157932*buy(item40,supplier4) - 3.642674704*buy(item40,supplier5) - 2.14961368*buy(item40,supplier6)
+     
+      - 1.524472236*buy(item40,supplier7) - 2.62846478*buy(item40,supplier8) - 1.646492012*buy(item40,supplier9)
+     
+      - 4.447001828*buy(item40,supplier10) - 2.5108486*buy(item41,supplier1) - 4.554436088*buy(item41,supplier2)
+     
+      - 2.079916016*buy(item41,supplier3) - 4.109550712*buy(item41,supplier4) - 2.691141084*buy(item41,supplier5)
+     
+      - 2.719416692*buy(item41,supplier6) - 1.996263476*buy(item41,supplier8) - 2.527079768*buy(item41,supplier9)
+     
+      - 1.283924792*buy(item41,supplier10) - 3.862516048*buy(item42,supplier1) - 3.811616916*buy(item42,supplier2)
+     
+      - 1.280633408*buy(item42,supplier3) - 4.87403744*buy(item42,supplier4) - 2.080073796*buy(item42,supplier5)
+     
+      - 2.2725946*buy(item42,supplier6) - 4.533538432*buy(item42,supplier8) - 3.344896788*buy(item42,supplier9)
+     
+      - 2.528354012*buy(item42,supplier10) - 4.891933644*buy(item43,supplier1) - 3.683332728*buy(item43,supplier2)
+     
+      - 4.804581632*buy(item43,supplier3) - 3.873020312*buy(item43,supplier4) - 2.774388592*buy(item43,supplier5)
+     
+      - 4.518917932*buy(item43,supplier7) - 2.87923314*buy(item43,supplier9) - 2.855404776*buy(item43,supplier10)
+     
+      - 2.485735068*buy(item44,supplier2) - 1.473367652*buy(item44,supplier3) - 4.861525832*buy(item44,supplier4)
+     
+      - 4.374182568*buy(item44,supplier5) - 3.885318236*buy(item44,supplier6) - 4.857775072*buy(item44,supplier7)
+     
+      - 2.458290292*buy(item44,supplier9) - 4.073229656*buy(item45,supplier1) - 2.329902584*buy(item45,supplier2)
+     
+      - 3.168315964*buy(item45,supplier3) - 1.55374558*buy(item45,supplier4) - 2.254672124*buy(item45,supplier5)
+     
+      - 1.319523224*buy(item45,supplier6) - 4.736607528*buy(item45,supplier7) - 2.977015596*buy(item45,supplier8)
+     
+      - 3.715649632*buy(item45,supplier9) - 3.766256348*buy(item45,supplier10) - 1.218970744*buy(item46,supplier1)
+     
+      - 1.960807548*buy(item46,supplier2) - 4.530993184*buy(item46,supplier4) - 1.402339944*buy(item46,supplier5)
+     
+      - 3.713445236*buy(item46,supplier6) - 1.405512588*buy(item46,supplier7) - 1.17123482*buy(item46,supplier8)
+     
+      - 4.01381742*buy(item46,supplier9) - 4.948152756*buy(item46,supplier10) - 1.059355732*buy(item47,supplier1)
+     
+      - 1.587445784*buy(item47,supplier2) - 4.96391856*buy(item47,supplier3) - 1.528773392*buy(item47,supplier4)
+     
+      - 1.341706016*buy(item47,supplier5) - 1.743794628*buy(item47,supplier6) - 4.160655296*buy(item47,supplier7)
+     
+      - 4.458080032*buy(item47,supplier8) - 3.991726136*buy(item47,supplier9) - 2.557947068*buy(item47,supplier10)
+     
+      - 4.180153296*buy(item48,supplier1) - 3.483928484*buy(item48,supplier2) - 4.045491764*buy(item48,supplier4)
+     
+      - 3.321059036*buy(item48,supplier5) - 3.654237412*buy(item48,supplier6) - 1.328565724*buy(item48,supplier7)
+     
+      - 3.267454604*buy(item48,supplier8) - 2.77291808*buy(item48,supplier9) - 2.31300242*buy(item48,supplier10)
+     
+      - 2.322389428*buy(item49,supplier1) - 1.491645344*buy(item49,supplier2) - 3.471439884*buy(item49,supplier3)
+     
+      - 3.13579626*buy(item49,supplier4) - 1.57631948*buy(item49,supplier5) - 2.569109048*buy(item49,supplier6)
+     
+      - 1.059046228*buy(item49,supplier7) - 4.483083268*buy(item49,supplier8) - 1.982075208*buy(item49,supplier10)
+     
+      - 4.212730072*buy(item50,supplier2) - 1.336121388*buy(item50,supplier4) - 4.948895416*buy(item50,supplier5)
+     
+      - 3.233061052*buy(item50,supplier6) - 3.727690556*buy(item50,supplier7) - 4.438316408*buy(item50,supplier10)
+     
+      - 23.57443027*use(supplier1) - 15.06614614*use(supplier2) - 27.14794981*use(supplier3) - 35.76120241*use(supplier4)
+     
+      - 11.07595531*use(supplier5) - 20.66064541*use(supplier6) - 20.13604147*use(supplier7) - 24.59468704*use(supplier8)
+     
+      - 17.78107468*use(supplier9) - 36.73575853*use(supplier10) =E= 0 ; (LHS = 0)
+     
+
+---- meetdemand  =E=  distribute demand over suppliers
+
+meetdemand(item1)..  buy(item1,supplier1) + buy(item1,supplier2) + buy(item1,supplier3) + buy(item1,supplier4)
+     
+      + buy(item1,supplier5) + buy(item1,supplier6) + buy(item1,supplier7) + buy(item1,supplier8) + buy(item1,supplier9)
+     
+      + buy(item1,supplier10) =E= 2 ; (LHS = 0, INFES = 2 ****)
+     
+meetdemand(item2)..  buy(item2,supplier1) + buy(item2,supplier2) + buy(item2,supplier3) + buy(item2,supplier4)
+     
+      + buy(item2,supplier5) + buy(item2,supplier6) + buy(item2,supplier7) + buy(item2,supplier8) + buy(item2,supplier9)
+     
+      + buy(item2,supplier10) =E= 9 ; (LHS = 0, INFES = 9 ****)
+     
+meetdemand(item3)..  buy(item3,supplier1) + buy(item3,supplier2) + buy(item3,supplier3) + buy(item3,supplier4)
+     
+      + buy(item3,supplier5) + buy(item3,supplier6) + buy(item3,supplier7) + buy(item3,supplier8) + buy(item3,supplier9)
+     
+      + buy(item3,supplier10) =E= 6 ; (LHS = 0, INFES = 6 ****)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- use_supplier  =L=  use=0 => buy=0
+
+use_supplier(item1,supplier1)..  buy(item1,supplier1) - 2*use(supplier1) =L= 0 ; (LHS = 0)
+     
+use_supplier(item1,supplier2)..  buy(item1,supplier2) - 2*use(supplier2) =L= 0 ; (LHS = 0)
+     
+use_supplier(item1,supplier3)..  buy(item1,supplier3) - 2*use(supplier3) =L= 0 ; (LHS = 0)
+     
+REMAINING 497 ENTRIES SKIPPED
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using MIP From line 100
+
+
+---- totalcost  to be minimized
+
+totalcost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objective
+
+
+---- buy  orders to be placed at suppliers
+
+buy(item1,supplier1)
+                (.LO, .L, .UP, .M = 0, 0, 2, 0)
+       -4.3973  objective
+        1       meetdemand(item1)
+        1       use_supplier(item1,supplier1)
+
+buy(item1,supplier2)
+                (.LO, .L, .UP, .M = 0, 0, 2, 0)
+       -3.5381  objective
+        1       meetdemand(item1)
+        1       use_supplier(item1,supplier2)
+
+buy(item1,supplier3)
+                (.LO, .L, .UP, .M = 0, 0, 2, 0)
+       -4.9459  objective
+        1       meetdemand(item1)
+        1       use_supplier(item1,supplier3)
+
+REMAINING 497 ENTRIES SKIPPED
+
+---- use  supplier is used
+
+use(supplier1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -23.5744  objective
+       -2       use_supplier(item1,supplier1)
+       -1       use_supplier(item3,supplier1)
+       -1       use_supplier(item4,supplier1)
+       -3       use_supplier(item5,supplier1)
+       -3       use_supplier(item7,supplier1)
+       -1       use_supplier(item9,supplier1)
+       -6       use_supplier(item10,supplier1)
+       -5       use_supplier(item11,supplier1)
+       -6       use_supplier(item12,supplier1)
+       -3       use_supplier(item13,supplier1)
+       -2       use_supplier(item15,supplier1)
+       -7       use_supplier(item16,supplier1)
+       -2       use_supplier(item17,supplier1)
+       -5       use_supplier(item19,supplier1)
+       -5       use_supplier(item20,supplier1)
+       -4       use_supplier(item21,supplier1)
+       -2       use_supplier(item22,supplier1)
+       -2       use_supplier(item24,supplier1)
+       -3       use_supplier(item25,supplier1)
+       -4       use_supplier(item26,supplier1)
+       -3       use_supplier(item27,supplier1)
+       -5       use_supplier(item28,supplier1)
+       -4       use_supplier(item30,supplier1)
+       -2       use_supplier(item31,supplier1)
+       -2       use_supplier(item32,supplier1)
+       -1       use_supplier(item33,supplier1)
+       -5       use_supplier(item34,supplier1)
+       -3       use_supplier(item36,supplier1)
+       -4       use_supplier(item37,supplier1)
+       -2       use_supplier(item38,supplier1)
+       -2       use_supplier(item39,supplier1)
+       -5       use_supplier(item41,supplier1)
+       -2       use_supplier(item42,supplier1)
+       -1       use_supplier(item43,supplier1)
+       -4       use_supplier(item45,supplier1)
+       -2       use_supplier(item46,supplier1)
+       -3       use_supplier(item47,supplier1)
+       -6       use_supplier(item48,supplier1)
+       -5       use_supplier(item49,supplier1)
+
+use(supplier2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -15.0661  objective
+       -2       use_supplier(item1,supplier2)
+       -1       use_supplier(item2,supplier2)
+       -1       use_supplier(item3,supplier2)
+       -2       use_supplier(item5,supplier2)
+       -1       use_supplier(item7,supplier2)
+       -3       use_supplier(item8,supplier2)
+       -1       use_supplier(item9,supplier2)
+       -1       use_supplier(item10,supplier2)
+       -4       use_supplier(item12,supplier2)
+       -6       use_supplier(item13,supplier2)
+       -1       use_supplier(item14,supplier2)
+       -2       use_supplier(item15,supplier2)
+       -2       use_supplier(item16,supplier2)
+       -1       use_supplier(item17,supplier2)
+       -3       use_supplier(item18,supplier2)
+       -5       use_supplier(item19,supplier2)
+       -4       use_supplier(item20,supplier2)
+       -4       use_supplier(item21,supplier2)
+       -3       use_supplier(item22,supplier2)
+       -2       use_supplier(item23,supplier2)
+       -2       use_supplier(item24,supplier2)
+       -2       use_supplier(item25,supplier2)
+       -6       use_supplier(item26,supplier2)
+       -2       use_supplier(item27,supplier2)
+       -1       use_supplier(item28,supplier2)
+       -4       use_supplier(item30,supplier2)
+       -1       use_supplier(item31,supplier2)
+       -2       use_supplier(item33,supplier2)
+       -5       use_supplier(item34,supplier2)
+       -3       use_supplier(item35,supplier2)
+       -1       use_supplier(item36,supplier2)
+       -6       use_supplier(item37,supplier2)
+       -4       use_supplier(item38,supplier2)
+       -2       use_supplier(item39,supplier2)
+       -5       use_supplier(item40,supplier2)
+       -3       use_supplier(item41,supplier2)
+       -2       use_supplier(item42,supplier2)
+       -3       use_supplier(item43,supplier2)
+       -1       use_supplier(item44,supplier2)
+       -4       use_supplier(item45,supplier2)
+       -2       use_supplier(item46,supplier2)
+       -5       use_supplier(item47,supplier2)
+       -3       use_supplier(item48,supplier2)
+       -6       use_supplier(item49,supplier2)
+       -3       use_supplier(item50,supplier2)
+
+use(supplier3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -27.1479  objective
+       -2       use_supplier(item1,supplier3)
+       -4       use_supplier(item2,supplier3)
+       -1       use_supplier(item3,supplier3)
+       -2       use_supplier(item4,supplier3)
+       -2       use_supplier(item5,supplier3)
+       -3       use_supplier(item6,supplier3)
+       -3       use_supplier(item7,supplier3)
+       -2       use_supplier(item8,supplier3)
+       -1       use_supplier(item9,supplier3)
+       -5       use_supplier(item10,supplier3)
+       -1       use_supplier(item11,supplier3)
+       -6       use_supplier(item12,supplier3)
+       -3       use_supplier(item13,supplier3)
+       -2       use_supplier(item15,supplier3)
+       -2       use_supplier(item17,supplier3)
+       -3       use_supplier(item18,supplier3)
+       -2       use_supplier(item22,supplier3)
+       -2       use_supplier(item23,supplier3)
+       -6       use_supplier(item25,supplier3)
+       -4       use_supplier(item26,supplier3)
+       -1       use_supplier(item27,supplier3)
+       -4       use_supplier(item28,supplier3)
+       -7       use_supplier(item29,supplier3)
+       -2       use_supplier(item30,supplier3)
+       -1       use_supplier(item31,supplier3)
+       -6       use_supplier(item32,supplier3)
+       -2       use_supplier(item33,supplier3)
+       -6       use_supplier(item34,supplier3)
+       -2       use_supplier(item36,supplier3)
+       -1       use_supplier(item37,supplier3)
+       -4       use_supplier(item38,supplier3)
+       -1       use_supplier(item39,supplier3)
+       -1       use_supplier(item41,supplier3)
+       -2       use_supplier(item42,supplier3)
+       -3       use_supplier(item43,supplier3)
+       -1       use_supplier(item44,supplier3)
+       -4       use_supplier(item45,supplier3)
+       -5       use_supplier(item47,supplier3)
+       -4       use_supplier(item49,supplier3)
+
+REMAINING 7 ENTRIES SKIPPED
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using MIP From line 100
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+01] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 7.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 3.674E+01]
+
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using MIP From line 100
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS          551
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES          511
+NON ZERO ELEMENTS         1,869     DISCRETE VARIABLES        510
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  42.2.0 ef14ea53 WEX-WEI
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using MIP From line 100
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  totalcost
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  100
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              598.1315
+
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
+ ITERATION COUNT, LIMIT       154    2147483647
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.03 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.62 Mb (peak 0.63 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.02 Mb (peak 0.08 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.05sec (det. 11.87 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.42 ticks)
+
+
+Proven optimal solution
+MIP Solution:          598.131517    (154 iterations, 0 nodes)
+Final Solve:           598.131517    (0 iterations)
+
+Best possible:         598.131517
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU objective           .              .              .             1.0000      
+
+  objective  minimize totalcost
+
+---- EQU meetdemand  distribute demand over suppliers
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+item1          2.0000         2.0000         2.0000          .          
+item2          9.0000         9.0000         9.0000          .          
+item3          6.0000         6.0000         6.0000          .          
+item4          4.0000         4.0000         4.0000          .          
+item5          3.0000         3.0000         3.0000          .          
+item6          3.0000         3.0000         3.0000          .          
+item7          4.0000         4.0000         4.0000          .          
+item8          9.0000         9.0000         9.0000          .          
+item9          1.0000         1.0000         1.0000          .          
+item10         6.0000         6.0000         6.0000          .          
+item11        10.0000        10.0000        10.0000          .          
+item12         6.0000         6.0000         6.0000          .          
+item13        10.0000        10.0000        10.0000          .          
+item14         8.0000         8.0000         8.0000          .          
+item15         2.0000         2.0000         2.0000          .          
+item16         7.0000         7.0000         7.0000          .          
+item17         2.0000         2.0000         2.0000          .          
+item18         3.0000         3.0000         3.0000          .          
+item19         7.0000         7.0000         7.0000          .          
+item20         5.0000         5.0000         5.0000          .          
+item21         4.0000         4.0000         4.0000          .          
+item22         4.0000         4.0000         4.0000          .          
+item23         2.0000         2.0000         2.0000          .          
+item24         2.0000         2.0000         2.0000          .          
+item25         6.0000         6.0000         6.0000          .          
+item26         9.0000         9.0000         9.0000          .          
+item27         3.0000         3.0000         3.0000          .          
+item28         7.0000         7.0000         7.0000          .          
+item29         8.0000         8.0000         8.0000          .          
+item30         4.0000         4.0000         4.0000          .          
+item31         2.0000         2.0000         2.0000          .          
+item32         6.0000         6.0000         6.0000          .          
+item33         2.0000         2.0000         2.0000          .          
+item34         9.0000         9.0000         9.0000          .          
+item35         3.0000         3.0000         3.0000          .          
+item36         3.0000         3.0000         3.0000          .          
+item37         6.0000         6.0000         6.0000          .          
+item38         8.0000         8.0000         8.0000          .          
+item39         7.0000         7.0000         7.0000          .          
+item40         5.0000         5.0000         5.0000          .          
+item41         5.0000         5.0000         5.0000          .          
+item42         2.0000         2.0000         2.0000          .          
+item43         4.0000         4.0000         4.0000          .          
+item44         1.0000         1.0000         1.0000          .          
+item45         4.0000         4.0000         4.0000          .          
+item46         2.0000         2.0000         2.0000          .          
+item47         7.0000         7.0000         7.0000          .          
+item48         6.0000         6.0000         6.0000          .          
+item49         8.0000         8.0000         8.0000          .          
+item50         3.0000         3.0000         3.0000          .          
+
+---- EQU use_supplier  use=0 => buy=0
+
+                         LOWER          LEVEL          UPPER         MARGINAL
+
+item1 .supplier1         -INF           -2.0000          .              .          
+item1 .supplier2         -INF             .              .              .          
+item1 .supplier3         -INF             .              .              .          
+item1 .supplier4         -INF             .              .              .          
+item1 .supplier5         -INF             .              .              .          
+item1 .supplier6         -INF             .              .              .          
+item1 .supplier7         -INF             .              .              .          
+item1 .supplier8         -INF           -2.0000          .              .          
+item1 .supplier9         -INF             .              .              .          
+item1 .supplier10        -INF             .              .              .          
+item2 .supplier1         -INF             .              .              .          
+item2 .supplier2         -INF             .              .              .          
+item2 .supplier3         -INF             .              .              .          
+item2 .supplier4         -INF             .              .              .          
+item2 .supplier5         -INF             .              .              .          
+item2 .supplier6         -INF             .              .              .          
+item2 .supplier7         -INF           -3.0000          .              .          
+item2 .supplier8         -INF             .              .              .          
+item2 .supplier9         -INF             .              .              .          
+item2 .supplier10        -INF             .              .              .          
+item3 .supplier1         -INF           -1.0000          .              .          
+item3 .supplier2         -INF             .              .              .          
+item3 .supplier3         -INF             .              .              .          
+item3 .supplier4         -INF             .              .              .          
+item3 .supplier5         -INF             .              .              .          
+item3 .supplier6         -INF           -3.0000          .              .          
+item3 .supplier7         -INF           -2.0000          .              .          
+item3 .supplier8         -INF           -1.0000          .              .          
+item3 .supplier9         -INF           -5.0000          .              .          
+item3 .supplier10        -INF             .              .              .          
+item4 .supplier1         -INF           -1.0000          .              .          
+item4 .supplier2         -INF             .              .              .          
+item4 .supplier3         -INF             .              .              .          
+item4 .supplier4         -INF             .              .              .          
+item4 .supplier5         -INF             .              .              .          
+item4 .supplier6         -INF           -1.0000          .              .          
+item4 .supplier7         -INF           -1.0000          .              .          
+item4 .supplier8         -INF           -2.0000          .              .          
+item4 .supplier9         -INF             .              .              .          
+item4 .supplier10        -INF             .              .              .          
+item5 .supplier1         -INF           -3.0000          .              .          
+item5 .supplier2         -INF             .              .              .          
+item5 .supplier3         -INF             .              .              .          
+item5 .supplier4         -INF             .              .              .          
+item5 .supplier5         -INF           -3.0000          .              .          
+item5 .supplier6         -INF           -3.0000          .              .          
+item5 .supplier7         -INF             .              .              .          
+item5 .supplier8         -INF             .              .              .          
+item5 .supplier9         -INF             .              .              .          
+item5 .supplier10        -INF             .              .              .          
+item6 .supplier1         -INF             .              .              .          
+item6 .supplier2         -INF             .              .              .          
+item6 .supplier3         -INF             .              .              .          
+item6 .supplier4         -INF             .              .              .          
+item6 .supplier5         -INF           -3.0000          .              .          
+item6 .supplier6         -INF           -1.0000          .              .          
+item6 .supplier7         -INF             .              .              .          
+item6 .supplier8         -INF           -2.0000          .              .          
+item6 .supplier9         -INF           -1.0000          .              .          
+item6 .supplier10        -INF             .              .              .          
+item7 .supplier1         -INF             .              .              .          
+item7 .supplier2         -INF             .              .              .          
+item7 .supplier3         -INF             .              .              .          
+item7 .supplier4         -INF             .              .              .          
+item7 .supplier5         -INF           -2.0000          .              .          
+item7 .supplier6         -INF           -4.0000          .              .          
+item7 .supplier7         -INF           -1.0000          .              .          
+item7 .supplier8         -INF           -1.0000          .              .          
+item7 .supplier9         -INF             .              .              .          
+item7 .supplier10        -INF             .              .              .          
+item8 .supplier1         -INF             .              .              .          
+item8 .supplier2         -INF             .              .              .          
+item8 .supplier3         -INF             .              .              .          
+item8 .supplier4         -INF             .              .              .          
+item8 .supplier5         -INF             .              .              .          
+item8 .supplier6         -INF           -4.0000          .              .          
+item8 .supplier7         -INF           -1.0000          .              .          
+item8 .supplier8         -INF             .              .              .          
+item8 .supplier9         -INF      8.881784E-16          .              .          
+item8 .supplier10        -INF             .              .              .          
+item9 .supplier1         -INF           -1.0000          .              .          
+item9 .supplier2         -INF             .              .              .          
+item9 .supplier3         -INF             .              .              .          
+item9 .supplier4         -INF             .              .              .          
+item9 .supplier5         -INF           -1.0000          .              .          
+item9 .supplier6         -INF           -1.0000          .              .          
+item9 .supplier7         -INF             .              .              .          
+item9 .supplier8         -INF           -1.0000          .              .          
+item9 .supplier9         -INF           -1.0000          .              .          
+item9 .supplier10        -INF             .              .              .          
+item10.supplier1         -INF           -6.0000          .              .          
+item10.supplier2         -INF             .              .              .          
+item10.supplier3         -INF             .              .              .          
+item10.supplier4         -INF             .              .              .          
+item10.supplier5         -INF           -1.0000          .              .          
+item10.supplier6         -INF             .              .              .          
+item10.supplier7         -INF           -2.0000          .              .          
+item10.supplier8         -INF           -1.0000          .              .          
+item10.supplier9         -INF           -1.0000          .              .          
+item10.supplier10        -INF             .              .              .          
+item11.supplier1         -INF           -5.0000          .              .          
+item11.supplier2         -INF             .              .              .          
+item11.supplier3         -INF             .              .              .          
+item11.supplier4         -INF             .              .              .          
+item11.supplier5         -INF             .              .              .          
+item11.supplier6         -INF           -5.0000          .              .          
+item11.supplier7         -INF             .              .              .          
+item11.supplier8         -INF             .              .              .          
+item11.supplier9         -INF           -1.0000          .              .          
+item11.supplier10        -INF             .              .              .          
+item12.supplier1         -INF           -1.0000          .              .          
+item12.supplier2         -INF             .              .              .          
+item12.supplier3         -INF             .              .              .          
+item12.supplier4         -INF             .              .              .          
+item12.supplier5         -INF             .              .              .          
+item12.supplier6         -INF             .              .              .          
+item12.supplier7         -INF           -4.0000          .              .          
+item12.supplier8         -INF           -1.0000          .              .          
+item12.supplier9         -INF           -5.0000          .              .          
+item12.supplier10        -INF             .              .              .          
+item13.supplier1         -INF           -3.0000          .              .          
+item13.supplier2         -INF             .              .              .          
+item13.supplier3         -INF             .              .              .          
+item13.supplier4         -INF             .              .              .          
+item13.supplier5         -INF             .              .              .          
+item13.supplier6         -INF           -4.0000          .              .          
+item13.supplier7         -INF             .              .              .          
+item13.supplier8         -INF           -1.0000          .              .          
+item13.supplier9         -INF             .              .              .          
+item13.supplier10        -INF             .              .              .          
+item14.supplier1         -INF             .              .              .          
+item14.supplier2         -INF             .              .              .          
+item14.supplier3         -INF             .              .              .          
+item14.supplier4         -INF             .              .              .          
+item14.supplier5         -INF             .              .              .          
+item14.supplier6         -INF           -4.0000          .              .          
+item14.supplier7         -INF             .              .              .          
+item14.supplier8         -INF           -1.0000          .              .          
+item14.supplier9         -INF           -5.0000          .              .          
+item14.supplier10        -INF             .              .              .          
+item15.supplier1         -INF           -2.0000          .              .          
+item15.supplier2         -INF             .              .              .          
+item15.supplier3         -INF             .              .              .          
+item15.supplier4         -INF             .              .              .          
+item15.supplier5         -INF           -2.0000          .              .          
+item15.supplier6         -INF             .              .              .          
+item15.supplier7         -INF           -2.0000          .              .          
+item15.supplier8         -INF           -2.0000          .              .          
+item15.supplier9         -INF           -2.0000          .              .          
+item15.supplier10        -INF             .              .              .          
+item16.supplier1         -INF             .              .              .          
+item16.supplier2         -INF             .              .              .          
+item16.supplier3         -INF             .              .              .          
+item16.supplier4         -INF             .              .              .          
+item16.supplier5         -INF           -4.0000          .              .          
+item16.supplier6         -INF           -2.0000          .              .          
+item16.supplier7         -INF           -7.0000          .              .          
+item16.supplier8         -INF           -6.0000          .              .          
+item16.supplier9         -INF             .              .              .          
+item16.supplier10        -INF             .              .              .          
+item17.supplier1         -INF           -2.0000          .              .          
+item17.supplier2         -INF             .              .              .          
+item17.supplier3         -INF             .              .              .          
+item17.supplier4         -INF             .              .              .          
+item17.supplier5         -INF           -2.0000          .              .          
+item17.supplier6         -INF             .              .              .          
+item17.supplier7         -INF             .              .              .          
+item17.supplier8         -INF           -2.0000          .              .          
+item17.supplier9         -INF           -2.0000          .              .          
+item17.supplier10        -INF             .              .              .          
+item18.supplier1         -INF             .              .              .          
+item18.supplier2         -INF             .              .              .          
+item18.supplier3         -INF             .              .              .          
+item18.supplier4         -INF             .              .              .          
+item18.supplier5         -INF           -2.0000          .              .          
+item18.supplier6         -INF             .              .              .          
+item18.supplier7         -INF             .              .              .          
+item18.supplier8         -INF           -3.0000          .              .          
+item18.supplier9         -INF           -3.0000          .              .          
+item18.supplier10        -INF             .              .              .          
+item19.supplier1         -INF           -5.0000          .              .          
+item19.supplier2         -INF             .              .              .          
+item19.supplier3         -INF             .              .              .          
+item19.supplier4         -INF             .              .              .          
+item19.supplier5         -INF           -5.0000          .              .          
+item19.supplier6         -INF           -6.0000          .              .          
+item19.supplier7         -INF             .              .              .          
+item19.supplier8         -INF           -4.0000          .              .          
+item19.supplier9         -INF           -5.0000          .              .          
+item19.supplier10        -INF             .              .              .          
+item20.supplier1         -INF           -5.0000          .              .          
+item20.supplier2         -INF             .              .              .          
+item20.supplier3         -INF             .              .              .          
+item20.supplier4         -INF             .              .              .          
+item20.supplier5         -INF             .              .              .          
+item20.supplier6         -INF             .              .              .          
+item20.supplier7         -INF           -1.0000          .              .          
+item20.supplier8         -INF           -1.0000          .              .          
+item20.supplier9         -INF           -5.0000          .              .          
+item20.supplier10        -INF             .              .              .          
+item21.supplier1         -INF           -3.0000          .              .          
+item21.supplier2         -INF             .              .              .          
+item21.supplier3         -INF             .              .              .          
+item21.supplier4         -INF             .              .              .          
+item21.supplier5         -INF           -4.0000          .              .          
+item21.supplier6         -INF           -4.0000          .              .          
+item21.supplier7         -INF           -4.0000          .              .          
+item21.supplier8         -INF           -1.0000          .              .          
+item21.supplier9         -INF             .              .              .          
+item21.supplier10        -INF             .              .              .          
+item22.supplier1         -INF           -2.0000          .              .          
+item22.supplier2         -INF             .              .              .          
+item22.supplier3         -INF             .              .              .          
+item22.supplier4         -INF             .              .              .          
+item22.supplier5         -INF           -4.0000          .              .          
+item22.supplier6         -INF             .              .              .          
+item22.supplier7         -INF           -1.0000          .              .          
+item22.supplier8         -INF           -2.0000          .              .          
+item22.supplier9         -INF           -2.0000          .              .          
+item22.supplier10        -INF             .              .              .          
+item23.supplier1         -INF             .              .              .          
+item23.supplier2         -INF             .              .              .          
+item23.supplier3         -INF             .              .              .          
+item23.supplier4         -INF             .              .              .          
+item23.supplier5         -INF           -2.0000          .              .          
+item23.supplier6         -INF           -2.0000          .              .          
+item23.supplier7         -INF             .              .              .          
+item23.supplier8         -INF             .              .              .          
+item23.supplier9         -INF           -2.0000          .              .          
+item23.supplier10        -INF             .              .              .          
+item24.supplier1         -INF           -2.0000          .              .          
+item24.supplier2         -INF             .              .              .          
+item24.supplier3         -INF             .              .              .          
+item24.supplier4         -INF             .              .              .          
+item24.supplier5         -INF             .              .              .          
+item24.supplier6         -INF           -2.0000          .              .          
+item24.supplier7         -INF             .              .              .          
+item24.supplier8         -INF           -2.0000          .              .          
+item24.supplier9         -INF           -2.0000          .              .          
+item24.supplier10        -INF             .              .              .          
+item25.supplier1         -INF           -3.0000          .              .          
+item25.supplier2         -INF             .              .              .          
+item25.supplier3         -INF             .              .              .          
+item25.supplier4         -INF             .              .              .          
+item25.supplier5         -INF           -5.0000          .              .          
+item25.supplier6         -INF           -6.0000          .              .          
+item25.supplier7         -INF           -6.0000          .              .          
+item25.supplier8         -INF             .              .              .          
+item25.supplier9         -INF           -6.0000          .              .          
+item25.supplier10        -INF             .              .              .          
+item26.supplier1         -INF           -4.0000          .              .          
+item26.supplier2         -INF             .              .              .          
+item26.supplier3         -INF             .              .              .          
+item26.supplier4         -INF             .              .              .          
+item26.supplier5         -INF           -4.0000          .              .          
+item26.supplier6         -INF             .              .              .          
+item26.supplier7         -INF             .              .              .          
+item26.supplier8         -INF           -1.0000          .              .          
+item26.supplier9         -INF           -2.0000          .              .          
+item26.supplier10        -INF             .              .              .          
+item27.supplier1         -INF           -3.0000          .              .          
+item27.supplier2         -INF             .              .              .          
+item27.supplier3         -INF             .              .              .          
+item27.supplier4         -INF             .              .              .          
+item27.supplier5         -INF           -3.0000          .              .          
+item27.supplier6         -INF           -3.0000          .              .          
+item27.supplier7         -INF           -3.0000          .              .          
+item27.supplier8         -INF             .              .              .          
+item27.supplier9         -INF             .              .              .          
+item27.supplier10        -INF             .              .              .          
+item28.supplier1         -INF             .              .              .          
+item28.supplier2         -INF             .              .              .          
+item28.supplier3         -INF             .              .              .          
+item28.supplier4         -INF             .              .              .          
+item28.supplier5         -INF           -1.0000          .              .          
+item28.supplier6         -INF             .              .              .          
+item28.supplier7         -INF           -4.0000          .              .          
+item28.supplier8         -INF           -5.0000          .              .          
+item28.supplier9         -INF           -3.0000          .              .          
+item28.supplier10        -INF             .              .              .          
+item29.supplier1         -INF             .              .              .          
+item29.supplier2         -INF             .              .              .          
+item29.supplier3         -INF             .              .              .          
+item29.supplier4         -INF             .              .              .          
+item29.supplier5         -INF           -6.0000          .              .          
+item29.supplier6         -INF             .              .              .          
+item29.supplier7         -INF             .              .              .          
+item29.supplier8         -INF             .              .              .          
+item29.supplier9         -INF           -4.0000          .              .          
+item29.supplier10        -INF             .              .              .          
+item30.supplier1         -INF             .              .              .          
+item30.supplier2         -INF             .              .              .          
+item30.supplier3         -INF             .              .              .          
+item30.supplier4         -INF             .              .              .          
+item30.supplier5         -INF           -3.0000          .              .          
+item30.supplier6         -INF           -2.0000          .              .          
+item30.supplier7         -INF             .              .              .          
+item30.supplier8         -INF           -4.0000          .              .          
+item30.supplier9         -INF           -3.0000          .              .          
+item30.supplier10        -INF             .              .              .          
+item31.supplier1         -INF           -2.0000          .              .          
+item31.supplier2         -INF             .              .              .          
+item31.supplier3         -INF             .              .              .          
+item31.supplier4         -INF             .              .              .          
+item31.supplier5         -INF           -2.0000          .              .          
+item31.supplier6         -INF             .              .              .          
+item31.supplier7         -INF           -1.0000          .              .          
+item31.supplier8         -INF           -2.0000          .              .          
+item31.supplier9         -INF           -2.0000          .              .          
+item31.supplier10        -INF             .              .              .          
+item32.supplier1         -INF           -1.0000          .              .          
+item32.supplier2         -INF             .              .              .          
+item32.supplier3         -INF             .              .              .          
+item32.supplier4         -INF             .              .              .          
+item32.supplier5         -INF           -3.0000          .              .          
+item32.supplier6         -INF             .              .              .          
+item32.supplier7         -INF             .              .              .          
+item32.supplier8         -INF           -5.0000          .              .          
+item32.supplier9         -INF           -4.0000          .              .          
+item32.supplier10        -INF             .              .              .          
+item33.supplier1         -INF           -1.0000          .              .          
+item33.supplier2         -INF             .              .              .          
+item33.supplier3         -INF             .              .              .          
+item33.supplier4         -INF             .              .              .          
+item33.supplier5         -INF             .              .              .          
+item33.supplier6         -INF           -2.0000          .              .          
+item33.supplier7         -INF           -2.0000          .              .          
+item33.supplier8         -INF           -2.0000          .              .          
+item33.supplier9         -INF             .              .              .          
+item33.supplier10        -INF             .              .              .          
+item34.supplier1         -INF           -3.0000          .              .          
+item34.supplier2         -INF             .              .              .          
+item34.supplier3         -INF             .              .              .          
+item34.supplier4         -INF             .              .              .          
+item34.supplier5         -INF           -2.0000          .              .          
+item34.supplier6         -INF             .              .              .          
+item34.supplier7         -INF             .              .              .          
+item34.supplier8         -INF             .              .              .          
+item34.supplier9         -INF           -6.0000          .              .          
+item34.supplier10        -INF             .              .              .          
+item35.supplier1         -INF             .              .              .          
+item35.supplier2         -INF             .              .              .          
+item35.supplier3         -INF             .              .              .          
+item35.supplier4         -INF             .              .              .          
+item35.supplier5         -INF           -3.0000          .              .          
+item35.supplier6         -INF           -3.0000          .              .          
+item35.supplier7         -INF           -3.0000          .              .          
+item35.supplier8         -INF             .              .              .          
+item35.supplier9         -INF           -3.0000          .              .          
+item35.supplier10        -INF             .              .              .          
+item36.supplier1         -INF           -3.0000          .              .          
+item36.supplier2         -INF             .              .              .          
+item36.supplier3         -INF             .              .              .          
+item36.supplier4         -INF             .              .              .          
+item36.supplier5         -INF           -3.0000          .              .          
+item36.supplier6         -INF             .              .              .          
+item36.supplier7         -INF           -3.0000          .              .          
+item36.supplier8         -INF           -3.0000          .              .          
+item36.supplier9         -INF           -2.0000          .              .          
+item36.supplier10        -INF             .              .              .          
+item37.supplier1         -INF           -4.0000          .              .          
+item37.supplier2         -INF             .              .              .          
+item37.supplier3         -INF             .              .              .          
+item37.supplier4         -INF             .              .              .          
+item37.supplier5         -INF           -6.0000          .              .          
+item37.supplier6         -INF           -4.0000          .              .          
+item37.supplier7         -INF             .              .              .          
+item37.supplier8         -INF             .              .              .          
+item37.supplier9         -INF           -2.0000          .              .          
+item37.supplier10        -INF             .              .              .          
+item38.supplier1         -INF             .              .              .          
+item38.supplier2         -INF             .              .              .          
+item38.supplier3         -INF             .              .              .          
+item38.supplier4         -INF             .              .              .          
+item38.supplier5         -INF           -4.0000          .              .          
+item38.supplier6         -INF           -7.0000          .              .          
+item38.supplier7         -INF           -2.0000          .              .          
+item38.supplier8         -INF             .              .              .          
+item38.supplier9         -INF           -7.0000          .              .          
+item38.supplier10        -INF             .              .              .          
+item39.supplier1         -INF           -2.0000          .              .          
+item39.supplier2         -INF             .              .              .          
+item39.supplier3         -INF             .              .              .          
+item39.supplier4         -INF             .              .              .          
+item39.supplier5         -INF           -4.0000          .              .          
+item39.supplier6         -INF           -2.0000          .              .          
+item39.supplier7         -INF             .              .              .          
+item39.supplier8         -INF           -4.0000          .              .          
+item39.supplier9         -INF           -2.0000          .              .          
+item39.supplier10        -INF             .              .              .          
+item40.supplier1         -INF             .              .              .          
+item40.supplier2         -INF             .              .              .          
+item40.supplier3         -INF             .              .              .          
+item40.supplier4         -INF             .              .              .          
+item40.supplier5         -INF           -2.0000          .              .          
+item40.supplier6         -INF           -5.0000          .              .          
+item40.supplier7         -INF             .              .              .          
+item40.supplier8         -INF           -4.0000          .              .          
+item40.supplier9         -INF             .              .              .          
+item40.supplier10        -INF             .              .              .          
+item41.supplier1         -INF           -4.0000          .              .          
+item41.supplier2         -INF             .              .              .          
+item41.supplier3         -INF             .              .              .          
+item41.supplier4         -INF             .              .              .          
+item41.supplier5         -INF           -2.0000          .              .          
+item41.supplier6         -INF           -5.0000          .              .          
+item41.supplier7         -INF             .              .              .          
+item41.supplier8         -INF             .              .              .          
+item41.supplier9         -INF           -3.0000          .              .          
+item41.supplier10        -INF             .              .              .          
+item42.supplier1         -INF           -2.0000          .              .          
+item42.supplier2         -INF             .              .              .          
+item42.supplier3         -INF             .              .              .          
+item42.supplier4         -INF             .              .              .          
+item42.supplier5         -INF             .              .              .          
+item42.supplier6         -INF           -2.0000          .              .          
+item42.supplier7         -INF             .              .              .          
+item42.supplier8         -INF           -2.0000          .              .          
+item42.supplier9         -INF           -2.0000          .              .          
+item42.supplier10        -INF             .              .              .          
+item43.supplier1         -INF           -1.0000          .              .          
+item43.supplier2         -INF             .              .              .          
+item43.supplier3         -INF             .              .              .          
+item43.supplier4         -INF             .              .              .          
+item43.supplier5         -INF             .              .              .          
+item43.supplier6         -INF             .              .              .          
+item43.supplier7         -INF           -4.0000          .              .          
+item43.supplier8         -INF             .              .              .          
+item43.supplier9         -INF           -4.0000          .              .          
+item43.supplier10        -INF             .              .              .          
+item44.supplier1         -INF             .              .              .          
+item44.supplier2         -INF             .              .              .          
+item44.supplier3         -INF             .              .              .          
+item44.supplier4         -INF             .              .              .          
+item44.supplier5         -INF           -1.0000          .              .          
+item44.supplier6         -INF           -1.0000          .              .          
+item44.supplier7         -INF           -1.0000          .              .          
+item44.supplier8         -INF             .              .              .          
+item44.supplier9         -INF             .              .              .          
+item44.supplier10        -INF             .              .              .          
+item45.supplier1         -INF           -4.0000          .              .          
+item45.supplier2         -INF             .              .              .          
+item45.supplier3         -INF             .              .              .          
+item45.supplier4         -INF             .              .              .          
+item45.supplier5         -INF           -3.0000          .              .          
+item45.supplier6         -INF             .              .              .          
+item45.supplier7         -INF           -4.0000          .              .          
+item45.supplier8         -INF           -4.0000          .              .          
+item45.supplier9         -INF           -2.0000          .              .          
+item45.supplier10        -INF             .              .              .          
+item46.supplier1         -INF           -2.0000          .              .          
+item46.supplier2         -INF             .              .              .          
+item46.supplier3         -INF             .              .              .          
+item46.supplier4         -INF             .              .              .          
+item46.supplier5         -INF           -2.0000          .              .          
+item46.supplier6         -INF           -2.0000          .              .          
+item46.supplier7         -INF           -2.0000          .              .          
+item46.supplier8         -INF             .              .              .          
+item46.supplier9         -INF           -2.0000          .              .          
+item46.supplier10        -INF             .              .              .          
+item47.supplier1         -INF             .              .              .          
+item47.supplier2         -INF             .              .              .          
+item47.supplier3         -INF             .              .              .          
+item47.supplier4         -INF             .              .              .          
+item47.supplier5         -INF             .              .              .          
+item47.supplier6         -INF           -1.0000          .              .          
+item47.supplier7         -INF           -4.0000          .              .          
+item47.supplier8         -INF           -5.0000          .              .          
+item47.supplier9         -INF           -1.0000          .              .          
+item47.supplier10        -INF             .              .              .          
+item48.supplier1         -INF           -6.0000          .              .          
+item48.supplier2         -INF             .              .              .          
+item48.supplier3         -INF             .              .              .          
+item48.supplier4         -INF             .              .              .          
+item48.supplier5         -INF           -2.0000          .              .          
+item48.supplier6         -INF           -6.0000          .              .          
+item48.supplier7         -INF             .              .              .          
+item48.supplier8         -INF           -2.0000          .              .          
+item48.supplier9         -INF             .              .              .          
+item48.supplier10        -INF             .              .              .          
+item49.supplier1         -INF           -5.0000          .              .          
+item49.supplier2         -INF             .              .              .          
+item49.supplier3         -INF             .              .              .          
+item49.supplier4         -INF             .              .              .          
+item49.supplier5         -INF           -1.0000          .              .          
+item49.supplier6         -INF           -2.0000          .              .          
+item49.supplier7         -INF             .              .              .          
+item49.supplier8         -INF           -6.0000          .              .          
+item49.supplier9         -INF             .              .              .          
+item49.supplier10        -INF             .              .              .          
+item50.supplier1         -INF             .              .              .          
+item50.supplier2         -INF             .              .              .          
+item50.supplier3         -INF             .              .              .          
+item50.supplier4         -INF             .              .              .          
+item50.supplier5         -INF           -3.0000          .              .          
+item50.supplier6         -INF             .              .              .          
+item50.supplier7         -INF           -2.0000          .              .          
+item50.supplier8         -INF             .              .              .          
+item50.supplier9         -INF             .              .              .          
+item50.supplier10        -INF             .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalcost         -INF          598.1315        +INF             .          
+
+  totalcost  to be minimized
+
+---- VAR buy  orders to be placed at suppliers
+
+                         LOWER          LEVEL          UPPER         MARGINAL
+
+item1 .supplier1           .              .             2.0000         4.3973      
+item1 .supplier2           .              .             2.0000         3.5381      
+item1 .supplier3           .              .             2.0000         4.9459      
+item1 .supplier4           .              .             2.0000         4.0317      
+item1 .supplier5           .              .              .             EPS         
+item1 .supplier6           .              .              .             EPS         
+item1 .supplier7           .             2.0000         2.0000         3.0315      
+item1 .supplier8           .              .             2.0000         4.0711      
+item1 .supplier9           .              .              .             EPS         
+item1 .supplier10          .              .             2.0000         4.3285      
+item2 .supplier1           .              .              .             EPS         
+item2 .supplier2           .              .             1.0000         3.3357      
+item2 .supplier3           .              .             4.0000         3.3002      
+item2 .supplier4           .              .             6.0000         3.2268      
+item2 .supplier5           .             1.0000         1.0000         3.4143      
+item2 .supplier6           .              .              .             EPS         
+item2 .supplier7           .             1.0000         4.0000         4.9082      
+item2 .supplier8           .             4.0000         4.0000         3.2163      
+item2 .supplier9           .             3.0000         3.0000         4.7402      
+item2 .supplier10          .              .             2.0000         2.6528      
+item3 .supplier1           .              .             1.0000         4.2258      
+item3 .supplier2           .              .             1.0000         1.0031      
+item3 .supplier3           .              .             1.0000         2.8210      
+item3 .supplier4           .              .             6.0000         2.6767      
+item3 .supplier5           .             3.0000         3.0000         1.0627      
+item3 .supplier6           .             3.0000         6.0000         1.3279      
+item3 .supplier7           .              .             2.0000         3.3953      
+item3 .supplier8           .              .             1.0000         3.2207      
+item3 .supplier9           .              .             5.0000         3.4720      
+item3 .supplier10          .              .              .             EPS         
+item4 .supplier1           .              .             1.0000         4.5404      
+item4 .supplier2           .              .              .             EPS         
+item4 .supplier3           .              .             2.0000         1.7595      
+item4 .supplier4           .              .             3.0000         2.7123      
+item4 .supplier5           .             1.0000         1.0000         1.6660      
+item4 .supplier6           .              .             1.0000         4.5451      
+item4 .supplier7           .             1.0000         2.0000         3.7062      
+item4 .supplier8           .              .             2.0000         4.4534      
+item4 .supplier9           .             2.0000         2.0000         1.3710      
+item4 .supplier10          .              .             4.0000         4.9859      
+item5 .supplier1           .              .             3.0000         3.4672      
+item5 .supplier2           .              .             2.0000         1.0031      
+item5 .supplier3           .              .             2.0000         3.4358      
+item5 .supplier4           .              .             3.0000         1.6948      
+item5 .supplier5           .              .             3.0000         2.2447      
+item5 .supplier6           .              .             3.0000         3.9155      
+item5 .supplier7           .              .              .             EPS         
+item5 .supplier8           .             3.0000         3.0000         1.3390      
+item5 .supplier9           .              .              .             EPS         
+item5 .supplier10          .              .             3.0000         2.7679      
+item6 .supplier1           .              .              .             EPS         
+item6 .supplier2           .              .              .             EPS         
+item6 .supplier3           .              .             3.0000         3.6362      
+item6 .supplier4           .              .             3.0000         2.9378      
+item6 .supplier5           .              .             3.0000         2.2727      
+item6 .supplier6           .              .             1.0000         4.6562      
+item6 .supplier7           .             3.0000         3.0000         1.7369      
+item6 .supplier8           .              .             2.0000         4.4885      
+item6 .supplier9           .              .             1.0000         2.8244      
+item6 .supplier10          .              .             3.0000         2.8357      
+item7 .supplier1           .             3.0000         3.0000         1.4964      
+item7 .supplier2           .              .             1.0000         1.4152      
+item7 .supplier3           .              .             3.0000         1.9396      
+item7 .supplier4           .              .             2.0000         2.3606      
+item7 .supplier5           .              .             2.0000         4.4923      
+item7 .supplier6           .              .             4.0000         4.3791      
+item7 .supplier7           .              .             1.0000         4.2918      
+item7 .supplier8           .             1.0000         2.0000         2.9221      
+item7 .supplier9           .              .              .             EPS         
+item7 .supplier10          .              .             3.0000         4.6550      
+item8 .supplier1           .              .              .             EPS         
+item8 .supplier2           .              .             3.0000         4.7171      
+item8 .supplier3           .              .             2.0000         1.4324      
+item8 .supplier4           .              .             1.0000         2.4024      
+item8 .supplier5           .              .              .             EPS         
+item8 .supplier6           .              .             4.0000         4.4399      
+item8 .supplier7           .             3.0000         4.0000         2.3620      
+item8 .supplier8           .              .              .             EPS         
+item8 .supplier9           .             6.0000         6.0000         1.8524      
+item8 .supplier10          .              .             7.0000         4.7054      
+item9 .supplier1           .              .             1.0000         2.4429      
+item9 .supplier2           .              .             1.0000         4.5040      
+item9 .supplier3           .              .             1.0000         1.5926      
+item9 .supplier4           .              .             1.0000         2.8239      
+item9 .supplier5           .              .             1.0000         2.0730      
+item9 .supplier6           .              .             1.0000         2.1870      
+item9 .supplier7           .             1.0000         1.0000         1.4620      
+item9 .supplier8           .              .             1.0000         2.5991      
+item9 .supplier9           .              .             1.0000         4.6470      
+item9 .supplier10          .              .              .             EPS         
+item10.supplier1           .              .             6.0000         2.0062      
+item10.supplier2           .              .             1.0000         1.4119      
+item10.supplier3           .              .             5.0000         1.5853      
+item10.supplier4           .              .             6.0000         2.5452      
+item10.supplier5           .             5.0000         6.0000         1.1856      
+item10.supplier6           .             1.0000         1.0000         1.1055      
+item10.supplier7           .              .             2.0000         1.6160      
+item10.supplier8           .              .             1.0000         1.2908      
+item10.supplier9           .              .             1.0000         4.3146      
+item10.supplier10          .              .             5.0000         2.5991      
+item11.supplier1           .              .             5.0000         2.6687      
+item11.supplier2           .              .              .             EPS         
+item11.supplier3           .              .             1.0000         4.8886      
+item11.supplier4           .              .             3.0000         1.9737      
+item11.supplier5           .             1.0000         1.0000         2.4479      
+item11.supplier6           .              .             5.0000         3.5214      
+item11.supplier7           .             6.0000         6.0000         1.9714      
+item11.supplier8           .             1.0000         1.0000         1.4042      
+item11.supplier9           .             2.0000         3.0000         2.6237      
+item11.supplier10          .              .             5.0000         2.9162      
+item12.supplier1           .             5.0000         6.0000         1.5798      
+item12.supplier2           .              .             4.0000         3.0387      
+item12.supplier3           .              .             6.0000         4.5411      
+item12.supplier4           .              .              .             EPS         
+item12.supplier5           .             1.0000         1.0000         1.2219      
+item12.supplier6           .              .              .             EPS         
+item12.supplier7           .              .             4.0000         3.0296      
+item12.supplier8           .              .             1.0000         4.0565      
+item12.supplier9           .              .             5.0000         4.9160      
+item12.supplier10          .              .              .             EPS         
+item13.supplier1           .              .             3.0000         3.8817      
+item13.supplier2           .              .             6.0000         4.4878      
+item13.supplier3           .              .             3.0000         2.1981      
+item13.supplier4           .              .             4.0000         4.0156      
+item13.supplier5           .              .              .             EPS         
+item13.supplier6           .              .             4.0000         4.3750      
+item13.supplier7           .             3.0000         3.0000         2.8729      
+item13.supplier8           .             6.0000         7.0000         3.6197      
+item13.supplier9           .             1.0000         1.0000         2.5122      
+item13.supplier10          .              .             1.0000         2.4355      
+item14.supplier1           .              .              .             EPS         
+item14.supplier2           .              .             1.0000         2.0179      
+item14.supplier3           .              .              .             EPS         
+item14.supplier4           .              .              .             EPS         
+item14.supplier5           .             6.0000         6.0000         2.0219      
+item14.supplier6           .              .             4.0000         2.8025      
+item14.supplier7           .              .              .             EPS         
+item14.supplier8           .              .             1.0000         4.7794      
+item14.supplier9           .             2.0000         7.0000         2.3421      
+item14.supplier10          .              .             2.0000         1.1940      
+item15.supplier1           .              .             2.0000         4.2260      
+item15.supplier2           .              .             2.0000         3.9305      
+item15.supplier3           .              .             2.0000         4.6801      
+item15.supplier4           .              .             1.0000         2.3266      
+item15.supplier5           .              .             2.0000         1.8391      
+item15.supplier6           .             2.0000         2.0000         1.1886      
+item15.supplier7           .              .             2.0000         4.5321      
+item15.supplier8           .              .             2.0000         1.3712      
+item15.supplier9           .              .             2.0000         4.3476      
+item15.supplier10          .              .             2.0000         2.8552      
+item16.supplier1           .             7.0000         7.0000         1.0007      
+item16.supplier2           .              .             2.0000         1.6263      
+item16.supplier3           .              .              .             EPS         
+item16.supplier4           .              .             7.0000         3.8201      
+item16.supplier5           .              .             4.0000         2.1214      
+item16.supplier6           .              .             2.0000         3.5423      
+item16.supplier7           .              .             7.0000         3.3198      
+item16.supplier8           .              .             6.0000         4.8484      
+item16.supplier9           .              .              .             EPS         
+item16.supplier10          .              .             7.0000         3.0568      
+item17.supplier1           .              .             2.0000         3.3612      
+item17.supplier2           .              .             1.0000         3.2698      
+item17.supplier3           .              .             2.0000         1.1196      
+item17.supplier4           .              .             2.0000         4.8756      
+item17.supplier5           .              .             2.0000         3.3750      
+item17.supplier6           .             2.0000         2.0000         1.2385      
+item17.supplier7           .              .              .             EPS         
+item17.supplier8           .              .             2.0000         3.1764      
+item17.supplier9           .              .             2.0000         1.5095      
+item17.supplier10          .              .             2.0000         2.6820      
+item18.supplier1           .              .              .             EPS         
+item18.supplier2           .              .             3.0000         4.5258      
+item18.supplier3           .              .             3.0000         3.8663      
+item18.supplier4           .              .             3.0000         2.2543      
+item18.supplier5           .              .             2.0000         4.9718      
+item18.supplier6           .             3.0000         3.0000         1.2213      
+item18.supplier7           .              .              .             EPS         
+item18.supplier8           .              .             3.0000         3.4763      
+item18.supplier9           .              .             3.0000         4.2178      
+item18.supplier10          .              .             3.0000         2.1864      
+item19.supplier1           .              .             5.0000         4.8357      
+item19.supplier2           .              .             5.0000         3.7790      
+item19.supplier3           .              .              .             EPS         
+item19.supplier4           .              .             7.0000         3.5257      
+item19.supplier5           .              .             5.0000         3.4639      
+item19.supplier6           .             1.0000         7.0000         3.0921      
+item19.supplier7           .             6.0000         6.0000         1.5641      
+item19.supplier8           .              .             4.0000         4.3469      
+item19.supplier9           .              .             5.0000         4.5684      
+item19.supplier10          .              .             5.0000         3.7859      
+item20.supplier1           .              .             5.0000         2.2472      
+item20.supplier2           .              .             4.0000         2.4233      
+item20.supplier3           .              .              .             EPS         
+item20.supplier4           .              .             3.0000         4.0443      
+item20.supplier5           .              .              .             EPS         
+item20.supplier6           .             5.0000         5.0000         1.5454      
+item20.supplier7           .              .             1.0000         3.8665      
+item20.supplier8           .              .             1.0000         4.8548      
+item20.supplier9           .              .             5.0000         2.7677      
+item20.supplier10          .              .             5.0000         2.0579      
+item21.supplier1           .             1.0000         4.0000         2.7767      
+item21.supplier2           .              .             4.0000         2.5868      
+item21.supplier3           .              .              .             EPS         
+item21.supplier4           .              .             2.0000         2.4677      
+item21.supplier5           .              .             4.0000         3.4851      
+item21.supplier6           .              .             4.0000         4.4389      
+item21.supplier7           .              .             4.0000         4.0200      
+item21.supplier8           .              .             1.0000         4.6033      
+item21.supplier9           .             3.0000         3.0000         2.7522      
+item21.supplier10          .              .              .             EPS         
+item22.supplier1           .              .             2.0000         1.2764      
+item22.supplier2           .              .             3.0000         4.7543      
+item22.supplier3           .              .             2.0000         4.3759      
+item22.supplier4           .              .             1.0000         4.8018      
+item22.supplier5           .              .             4.0000         3.3175      
+item22.supplier6           .             3.0000         3.0000         1.1409      
+item22.supplier7           .              .             1.0000         2.6297      
+item22.supplier8           .             1.0000         3.0000         1.2297      
+item22.supplier9           .              .             2.0000         3.1279      
+item22.supplier10          .              .             4.0000         1.4496      
+item23.supplier1           .              .              .             EPS         
+item23.supplier2           .              .             2.0000         4.5754      
+item23.supplier3           .              .             2.0000         1.9668      
+item23.supplier4           .              .             2.0000         3.5690      
+item23.supplier5           .              .             2.0000         2.1631      
+item23.supplier6           .              .             2.0000         4.2543      
+item23.supplier7           .             2.0000         2.0000         1.7446      
+item23.supplier8           .              .              .             EPS         
+item23.supplier9           .              .             2.0000         3.0027      
+item23.supplier10          .              .             1.0000         4.7553      
+item24.supplier1           .              .             2.0000         3.7263      
+item24.supplier2           .              .             2.0000         1.7409      
+item24.supplier3           .              .              .             EPS         
+item24.supplier4           .              .             2.0000         4.4915      
+item24.supplier5           .             2.0000         2.0000         1.6600      
+item24.supplier6           .              .             2.0000         2.7233      
+item24.supplier7           .              .              .             EPS         
+item24.supplier8           .              .             2.0000         4.0869      
+item24.supplier9           .              .             2.0000         4.9122      
+item24.supplier10          .              .              .             EPS         
+item25.supplier1           .              .             3.0000         4.7778      
+item25.supplier2           .              .             2.0000         1.9954      
+item25.supplier3           .              .             6.0000         4.5459      
+item25.supplier4           .              .              .             EPS         
+item25.supplier5           .              .             5.0000         4.5377      
+item25.supplier6           .              .             6.0000         4.8598      
+item25.supplier7           .              .             6.0000         3.9966      
+item25.supplier8           .             6.0000         6.0000         3.5904      
+item25.supplier9           .              .             6.0000         3.9935      
+item25.supplier10          .              .             3.0000         3.0927      
+item26.supplier1           .              .             4.0000         3.7444      
+item26.supplier2           .              .             6.0000         3.7643      
+item26.supplier3           .              .             4.0000         4.4626      
+item26.supplier4           .              .              .             EPS         
+item26.supplier5           .              .             4.0000         4.1830      
+item26.supplier6           .             4.0000         4.0000         1.8702      
+item26.supplier7           .             5.0000         5.0000         3.3585      
+item26.supplier8           .              .             1.0000         4.6905      
+item26.supplier9           .              .             2.0000         3.4116      
+item26.supplier10          .              .             2.0000         1.1428      
+item27.supplier1           .              .             3.0000         4.6445      
+item27.supplier2           .              .             2.0000         3.2601      
+item27.supplier3           .              .             1.0000         2.2993      
+item27.supplier4           .              .             3.0000         2.5605      
+item27.supplier5           .              .             3.0000         2.1973      
+item27.supplier6           .              .             3.0000         1.8759      
+item27.supplier7           .              .             3.0000         4.2869      
+item27.supplier8           .             3.0000         3.0000         1.6107      
+item27.supplier9           .              .              .             EPS         
+item27.supplier10          .              .             3.0000         4.8022      
+item28.supplier1           .             5.0000         5.0000         1.1277      
+item28.supplier2           .              .             1.0000         3.9379      
+item28.supplier3           .              .             4.0000         1.4420      
+item28.supplier4           .              .             5.0000         2.9510      
+item28.supplier5           .              .             1.0000         2.4441      
+item28.supplier6           .             2.0000         2.0000         1.8656      
+item28.supplier7           .              .             4.0000         4.6948      
+item28.supplier8           .              .             5.0000         2.7999      
+item28.supplier9           .              .             3.0000         4.8843      
+item28.supplier10          .              .             1.0000         1.3853      
+item29.supplier1           .              .              .             EPS         
+item29.supplier2           .              .              .             EPS         
+item29.supplier3           .              .             7.0000         2.9157      
+item29.supplier4           .              .             7.0000         3.8887      
+item29.supplier5           .             1.0000         7.0000         2.7328      
+item29.supplier6           .             6.0000         6.0000         1.6327      
+item29.supplier7           .             1.0000         1.0000         1.4026      
+item29.supplier8           .              .              .             EPS         
+item29.supplier9           .              .             4.0000         4.2220      
+item29.supplier10          .              .             1.0000         2.5948      
+item30.supplier1           .             4.0000         4.0000         1.4684      
+item30.supplier2           .              .             4.0000         4.4974      
+item30.supplier3           .              .             2.0000         1.5794      
+item30.supplier4           .              .              .             EPS         
+item30.supplier5           .              .             3.0000         1.7110      
+item30.supplier6           .              .             2.0000         3.1808      
+item30.supplier7           .              .              .             EPS         
+item30.supplier8           .              .             4.0000         2.8744      
+item30.supplier9           .              .             3.0000         4.6367      
+item30.supplier10          .              .             3.0000         3.8924      
+item31.supplier1           .              .             2.0000         1.6654      
+item31.supplier2           .              .             1.0000         2.3102      
+item31.supplier3           .              .             1.0000         3.3254      
+item31.supplier4           .              .             2.0000         3.3101      
+item31.supplier5           .              .             2.0000         3.5103      
+item31.supplier6           .             2.0000         2.0000         1.1069      
+item31.supplier7           .              .             1.0000         1.5177      
+item31.supplier8           .              .             2.0000         1.2565      
+item31.supplier9           .              .             2.0000         2.2444      
+item31.supplier10          .              .              .             EPS         
+item32.supplier1           .             1.0000         2.0000         3.3140      
+item32.supplier2           .              .              .             EPS         
+item32.supplier3           .              .             6.0000         4.2392      
+item32.supplier4           .              .             1.0000         3.7168      
+item32.supplier5           .              .             3.0000         3.9427      
+item32.supplier6           .             2.0000         2.0000         2.3544      
+item32.supplier7           .             3.0000         3.0000         1.8969      
+item32.supplier8           .              .             5.0000         4.6001      
+item32.supplier9           .              .             4.0000         4.3175      
+item32.supplier10          .              .             1.0000         2.2649      
+item33.supplier1           .              .             1.0000         4.8089      
+item33.supplier2           .              .             2.0000         2.0268      
+item33.supplier3           .              .             2.0000         3.5045      
+item33.supplier4           .              .             2.0000         4.8850      
+item33.supplier5           .              .              .             EPS         
+item33.supplier6           .              .             2.0000         4.8483      
+item33.supplier7           .              .             2.0000         2.7011      
+item33.supplier8           .              .             2.0000         1.4216      
+item33.supplier9           .             2.0000         2.0000         1.3083      
+item33.supplier10          .              .             1.0000         3.5765      
+item34.supplier1           .             2.0000         5.0000         2.2489      
+item34.supplier2           .              .             5.0000         3.3807      
+item34.supplier3           .              .             6.0000         3.4255      
+item34.supplier4           .              .             4.0000         3.5346      
+item34.supplier5           .              .             2.0000         4.8329      
+item34.supplier6           .             4.0000         4.0000         1.3291      
+item34.supplier7           .             3.0000         3.0000         1.5015      
+item34.supplier8           .              .              .             EPS         
+item34.supplier9           .              .             6.0000         3.4209      
+item34.supplier10          .              .             2.0000         3.9659      
+item35.supplier1           .              .              .             EPS         
+item35.supplier2           .              .             3.0000         4.3901      
+item35.supplier3           .              .              .             EPS         
+item35.supplier4           .              .             3.0000         2.4098      
+item35.supplier5           .              .             3.0000         3.5657      
+item35.supplier6           .              .             3.0000         4.5829      
+item35.supplier7           .              .             3.0000         2.5527      
+item35.supplier8           .             3.0000         3.0000         2.0936      
+item35.supplier9           .              .             3.0000         4.8816      
+item35.supplier10          .              .             3.0000         2.3849      
+item36.supplier1           .              .             3.0000         2.6384      
+item36.supplier2           .              .             1.0000         4.7595      
+item36.supplier3           .              .             2.0000         3.4117      
+item36.supplier4           .              .             3.0000         4.5982      
+item36.supplier5           .              .             3.0000         2.1389      
+item36.supplier6           .             3.0000         3.0000         1.8890      
+item36.supplier7           .              .             3.0000         3.2994      
+item36.supplier8           .              .             3.0000         3.0380      
+item36.supplier9           .              .             2.0000         3.2299      
+item36.supplier10          .              .             3.0000         2.3767      
+item37.supplier1           .              .             4.0000         2.5931      
+item37.supplier2           .              .             6.0000         4.1049      
+item37.supplier3           .              .             1.0000         1.1129      
+item37.supplier4           .              .             5.0000         2.4495      
+item37.supplier5           .              .             6.0000         4.0233      
+item37.supplier6           .              .             4.0000         2.8996      
+item37.supplier7           .              .              .             EPS         
+item37.supplier8           .             6.0000         6.0000         1.3047      
+item37.supplier9           .              .             2.0000         1.3900      
+item37.supplier10          .              .             3.0000         2.3187      
+item38.supplier1           .             2.0000         2.0000         1.8024      
+item38.supplier2           .              .             4.0000         1.3630      
+item38.supplier3           .              .             4.0000         2.7951      
+item38.supplier4           .              .             4.0000         2.8512      
+item38.supplier5           .              .             4.0000         4.2479      
+item38.supplier6           .              .             7.0000         2.8000      
+item38.supplier7           .              .             2.0000         4.8170      
+item38.supplier8           .             6.0000         6.0000         1.4906      
+item38.supplier9           .              .             7.0000         2.6264      
+item38.supplier10          .              .             7.0000         4.5455      
+item39.supplier1           .              .             2.0000         3.8126      
+item39.supplier2           .              .             2.0000         4.4997      
+item39.supplier3           .              .             1.0000         3.2205      
+item39.supplier4           .              .             1.0000         2.0225      
+item39.supplier5           .             1.0000         5.0000         2.0367      
+item39.supplier6           .              .             2.0000         2.4205      
+item39.supplier7           .             6.0000         6.0000         1.5475      
+item39.supplier8           .              .             4.0000         4.2283      
+item39.supplier9           .              .             2.0000         2.3039      
+item39.supplier10          .              .             5.0000         2.7153      
+item40.supplier1           .              .              .             EPS         
+item40.supplier2           .              .             5.0000         1.0358      
+item40.supplier3           .              .              .             EPS         
+item40.supplier4           .              .             3.0000         1.8972      
+item40.supplier5           .              .             2.0000         3.6427      
+item40.supplier6           .              .             5.0000         2.1496      
+item40.supplier7           .             3.0000         3.0000         1.5245      
+item40.supplier8           .              .             4.0000         2.6285      
+item40.supplier9           .             2.0000         2.0000         1.6465      
+item40.supplier10          .              .             5.0000         4.4470      
+item41.supplier1           .             1.0000         5.0000         2.5108      
+item41.supplier2           .              .             3.0000         4.5544      
+item41.supplier3           .              .             1.0000         2.0799      
+item41.supplier4           .              .             4.0000         4.1096      
+item41.supplier5           .              .             2.0000         2.6911      
+item41.supplier6           .              .             5.0000         2.7194      
+item41.supplier7           .              .              .             EPS         
+item41.supplier8           .             4.0000         4.0000         1.9963      
+item41.supplier9           .              .             3.0000         2.5271      
+item41.supplier10          .              .             1.0000         1.2839      
+item42.supplier1           .              .             2.0000         3.8625      
+item42.supplier2           .              .             2.0000         3.8116      
+item42.supplier3           .              .             2.0000         1.2806      
+item42.supplier4           .              .             2.0000         4.8740      
+item42.supplier5           .             2.0000         2.0000         2.0801      
+item42.supplier6           .              .             2.0000         2.2726      
+item42.supplier7           .              .              .             EPS         
+item42.supplier8           .              .             2.0000         4.5335      
+item42.supplier9           .              .             2.0000         3.3449      
+item42.supplier10          .              .             2.0000         2.5284      
+item43.supplier1           .              .             1.0000         4.8919      
+item43.supplier2           .              .             3.0000         3.6833      
+item43.supplier3           .              .             3.0000         4.8046      
+item43.supplier4           .              .             1.0000         3.8730      
+item43.supplier5           .             4.0000         4.0000         2.7744      
+item43.supplier6           .              .              .             EPS         
+item43.supplier7           .              .             4.0000         4.5189      
+item43.supplier8           .              .              .             EPS         
+item43.supplier9           .              .             4.0000         2.8792      
+item43.supplier10          .              .             4.0000         2.8554      
+item44.supplier1           .              .              .             EPS         
+item44.supplier2           .              .             1.0000         2.4857      
+item44.supplier3           .              .             1.0000         1.4734      
+item44.supplier4           .              .             1.0000         4.8615      
+item44.supplier5           .              .             1.0000         4.3742      
+item44.supplier6           .              .             1.0000         3.8853      
+item44.supplier7           .              .             1.0000         4.8578      
+item44.supplier8           .              .              .             EPS         
+item44.supplier9           .             1.0000         1.0000         2.4583      
+item44.supplier10          .              .              .             EPS         
+item45.supplier1           .              .             4.0000         4.0732      
+item45.supplier2           .              .             4.0000         2.3299      
+item45.supplier3           .              .             4.0000         3.1683      
+item45.supplier4           .              .             3.0000         1.5537      
+item45.supplier5           .              .             3.0000         2.2547      
+item45.supplier6           .             4.0000         4.0000         1.3195      
+item45.supplier7           .              .             4.0000         4.7366      
+item45.supplier8           .              .             4.0000         2.9770      
+item45.supplier9           .              .             2.0000         3.7156      
+item45.supplier10          .              .             3.0000         3.7663      
+item46.supplier1           .              .             2.0000         1.2190      
+item46.supplier2           .              .             2.0000         1.9608      
+item46.supplier3           .              .              .             EPS         
+item46.supplier4           .              .             2.0000         4.5310      
+item46.supplier5           .              .             2.0000         1.4023      
+item46.supplier6           .              .             2.0000         3.7134      
+item46.supplier7           .              .             2.0000         1.4055      
+item46.supplier8           .             2.0000         2.0000         1.1712      
+item46.supplier9           .              .             2.0000         4.0138      
+item46.supplier10          .              .             2.0000         4.9482      
+item47.supplier1           .             3.0000         3.0000         1.0594      
+item47.supplier2           .              .             5.0000         1.5874      
+item47.supplier3           .              .             5.0000         4.9639      
+item47.supplier4           .              .             4.0000         1.5288      
+item47.supplier5           .             1.0000         1.0000         1.3417      
+item47.supplier6           .             3.0000         4.0000         1.7438      
+item47.supplier7           .              .             4.0000         4.1607      
+item47.supplier8           .              .             5.0000         4.4581      
+item47.supplier9           .              .             1.0000         3.9917      
+item47.supplier10          .              .             1.0000         2.5579      
+item48.supplier1           .              .             6.0000         4.1802      
+item48.supplier2           .              .             3.0000         3.4839      
+item48.supplier3           .              .              .             EPS         
+item48.supplier4           .              .             6.0000         4.0455      
+item48.supplier5           .              .             2.0000         3.3211      
+item48.supplier6           .              .             6.0000         3.6542      
+item48.supplier7           .             3.0000         3.0000         1.3286      
+item48.supplier8           .             2.0000         4.0000         3.2675      
+item48.supplier9           .             1.0000         1.0000         2.7729      
+item48.supplier10          .              .             1.0000         2.3130      
+item49.supplier1           .              .             5.0000         2.3224      
+item49.supplier2           .              .             6.0000         1.4916      
+item49.supplier3           .              .             4.0000         3.4714      
+item49.supplier4           .              .             7.0000         3.1358      
+item49.supplier5           .             2.0000         3.0000         1.5763      
+item49.supplier6           .              .             2.0000         2.5691      
+item49.supplier7           .             6.0000         6.0000         1.0590      
+item49.supplier8           .              .             6.0000         4.4831      
+item49.supplier9           .              .              .             EPS         
+item49.supplier10          .              .             7.0000         1.9821      
+item50.supplier1           .              .              .             EPS         
+item50.supplier2           .              .             3.0000         4.2127      
+item50.supplier3           .              .              .             EPS         
+item50.supplier4           .              .             3.0000         1.3361      
+item50.supplier5           .              .             3.0000         4.9489      
+item50.supplier6           .             3.0000         3.0000         3.2331      
+item50.supplier7           .              .             2.0000         3.7277      
+item50.supplier8           .              .              .             EPS         
+item50.supplier9           .              .              .             EPS         
+item50.supplier10          .              .             1.0000         4.4383      
+
+---- VAR use  supplier is used
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+supplier1           .             1.0000         1.0000        23.5744      
+supplier2           .              .             1.0000        15.0661      
+supplier3           .              .             1.0000        27.1479      
+supplier4           .              .             1.0000        35.7612      
+supplier5           .             1.0000         1.0000        11.0760      
+supplier6           .             1.0000         1.0000        20.6606      
+supplier7           .             1.0000         1.0000        20.1360      
+supplier8           .             1.0000         1.0000        24.5947      
+supplier9           .             1.0000         1.0000        17.7811      
+supplier10          .              .             1.0000        36.7358      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 42.2.0  ef14ea53 Feb 16, 2023          WEX-WEI x86 64bit/MS Windows - 02/20/23 09:38:30 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    102 VARIABLE totalcost.L           =      598.132  to be minimized
+
+----    102 VARIABLE use.L  supplier is used
+
+supplier1 1.000,    supplier5 1.000,    supplier6 1.000,    supplier7 1.000,    supplier8 1.000,    supplier9 1.000
+
+
+----    102 VARIABLE buy.L  orders to be placed at suppliers
+
+         supplier1   supplier5   supplier6   supplier7   supplier8   supplier9
+
+item1                                            2.000
+item2                    1.000                   1.000       4.000       3.000
+item3                    3.000       3.000
+item4                    1.000                   1.000                   2.000
+item5                                                        3.000
+item6                                            3.000
+item7        3.000                                           1.000
+item8                                            3.000                   6.000
+item9                                            1.000
+item10                   5.000       1.000
+item11                   1.000                   6.000       1.000       2.000
+item12       5.000       1.000
+item13                                           3.000       6.000       1.000
+item14                   6.000                                           2.000
+item15                               2.000
+item16       7.000
+item17                               2.000
+item18                               3.000
+item19                               1.000       6.000
+item20                               5.000
+item21       1.000                                                       3.000
+item22                               3.000                   1.000
+item23                                           2.000
+item24                   2.000
+item25                                                       6.000
+item26                               4.000       5.000
+item27                                                       3.000
+item28       5.000                   2.000
+item29                   1.000       6.000       1.000
+item30       4.000
+item31                               2.000
+item32       1.000                   2.000       3.000
+item33                                                                   2.000
+item34       2.000                   4.000       3.000
+item35                                                       3.000
+item36                               3.000
+item37                                                       6.000
+item38       2.000                                           6.000
+item39                   1.000                   6.000
+item40                                           3.000                   2.000
+item41       1.000                                           4.000
+item42                   2.000
+item43                   4.000
+item44                                                                   1.000
+item45                               4.000
+item46                                                       2.000
+item47       3.000       1.000       3.000
+item48                                           3.000       2.000       1.000
+item49                   2.000                   6.000
+item50                               3.000
+
+
+
+EXECUTION TIME       =        0.062 SECONDS      4 MB  42.2.0 ef14ea53 WEX-WEI
+
+
+USER: Eval License                                   G221205|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\SupplierSelection\SupplierSelection.gms
+Output     C:\projects\OptimizationModels\SupplierSelection\SupplierSelection.lst
