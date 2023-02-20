@@ -5,8 +5,9 @@ $ontext
 
 $offtext
 
-
-
+* reduce the size of the listing file
+option limrow=0, limcol=0, solprint=off;
+ 
 *---------------------------------------------------------------
 * size of the matrix
 *---------------------------------------------------------------
