@@ -1,0 +1,179 @@
+--- Job jobassignment.gms Start 02/20/23 04:57:21 42.2.0 ef14ea53 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\42\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\projects\OptimizationModels\AssignJobsToMachines\jobassignment.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\AssignJobsToMachines\225a\
+    SysDir C:\GAMS\42\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G221205|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 42.2.0   Copyright (C) 1987-2023 GAMS Development. All rights reserved
+--- Starting compilation
+--- jobassignment.gms(238) 4 Mb
+--- Starting execution: elapsed 0:00:00.007
+--- jobassignment.gms(211) 5 Mb
+--- Generating MIP model assign1
+--- jobassignment.gms(212) 13 Mb
+---   26,621 rows  3,961 columns  56,939 non-zeroes
+---   3,960 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.030
+
+IBM ILOG CPLEX   42.2.0 ef14ea53 Feb 16, 2023          WEI x86 64bit/MS Window
+
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 1.30 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 6.41 Mb (peak 6.44 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.38 Mb (peak 2.43 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 24637 rows and 46 columns.
+MIP Presolve modified 1825 coefficients.
+Reduced MIP has 1983 rows, 3915 columns, and 19290 nonzeros.
+Reduced MIP has 3915 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (34.93 ticks)
+Found incumbent of value 30.000000 after 0.03 sec. (52.23 ticks)
+Probing fixed 2 vars, tightened 0 bounds.
+Probing time = 0.02 sec. (4.93 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 2 rows and 2 columns.
+Reduced MIP has 1981 rows, 3913 columns, and 19164 nonzeros.
+Reduced MIP has 3913 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (17.30 ticks)
+Probing time = 0.00 sec. (2.91 ticks)
+Clique table members: 5946.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 13 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 11 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (1.93 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             3.000000
+Perturbation started.
+Iteration:   101   Dual objective     =             3.000000
+Iteration:   258   Dual objective     =             3.000028
+Iteration:   412   Dual objective     =             3.000039
+Iteration:   557   Dual objective     =             3.000049
+Iteration:   682   Dual objective     =             5.500041
+Iteration:   788   Dual objective     =             6.000057
+Iteration:   907   Dual objective     =            10.999988
+Iteration:  1025   Dual objective     =            11.000008
+Iteration:  1141   Dual objective     =            11.000016
+Iteration:  1242   Dual objective     =            11.000022
+Iteration:  1337   Dual objective     =            11.000027
+Iteration:  1435   Dual objective     =            11.000029
+Iteration:  1526   Dual objective     =            11.000032
+Iteration:  1622   Dual objective     =            11.000035
+Iteration:  1706   Dual objective     =            11.000036
+Iteration:  1789   Dual objective     =            11.000038
+Iteration:  1872   Dual objective     =            11.000039
+Iteration:  1960   Dual objective     =            11.000041
+Iteration:  2047   Dual objective     =            11.000042
+Iteration:  2132   Dual objective     =            11.000043
+Iteration:  2222   Dual objective     =            11.000043
+Iteration:  2313   Dual objective     =            11.000044
+Removing perturbation.
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.11 sec. (143.97 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                           30.0000        3.0000            90.00%
+Found incumbent of value 30.000000 after 0.17 sec. (230.75 ticks)
+*     0+    0                           22.0000        3.0000            86.36%
+Found incumbent of value 22.000000 after 0.17 sec. (230.80 ticks)
+*     0+    0                           11.0000        3.0000            72.73%
+Found incumbent of value 11.000000 after 0.17 sec. (230.81 ticks)
+      0     0        cutoff             11.0000       11.0000     2405    0.00%
+      0     0        cutoff             11.0000       11.0000     2405    0.00%
+Elapsed time = 0.19 sec. (233.92 ticks, tree = 0.01 MB)
+
+Root node processing (before b&c):
+  Real time             =    0.19 sec. (233.97 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.19 sec. (233.97 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.20sec (det. 233.98 ticks)
+
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Parallel mode: deterministic, using up to 16 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 14 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+LP Presolve eliminated 26620 rows and 3961 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (8.44 ticks)
+
+Dual simplex solved model.
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 16.35 ticks)
+
+
+Proven optimal solution
+MIP Solution:           11.000000    (2405 iterations, 0 nodes)
+Final Solve:            11.000000    (0 iterations)
+
+Best possible:          11.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model assign1
+--- Executing after solve: elapsed 0:00:00.342
+--- jobassignment.gms(235) 13 Mb
+--- GDX File (execute_unload) C:\projects\OptimizationModels\AssignJobsToMachines\resultdata.gdx
+--- jobassignment.gms(236) 13 Mb
+--- jobassignment.gms(237) 13 Mb
+*** Status: Normal completion
+--- Job jobassignment.gms Stop 02/20/23 04:57:22 elapsed 0:00:00.386
