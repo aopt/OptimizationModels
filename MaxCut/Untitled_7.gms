@@ -1,1 +1,0 @@
-display "%modelStat.locally Optimal%";
