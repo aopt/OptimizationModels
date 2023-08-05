@@ -174,7 +174,10 @@ statistics('lift+vi(relaxed u)',liftedmtz2)
 *-------------------------------------------------------
 
 file f /tour.html/;
-put f '<svg width="1000" height="800" viewBox="-10 -10 110 110">'/;
+put f '<h1>Optimal TSP Tour</h1>'/
+      'n=',n:0:0,' length=',totdist.l:0:3/
+      '<p>'
+      '<svg width="1000" height="800" viewBox="-10 -10 110 110">'/;
 loop(arcs(i,j)$(x.l(arcs)>0.5),
    put '<line x1="',coord(i,'x'):0,'" y1="',coord(i,'y'):0,
        '" x2="',coord(j,'x'):0,'" y2="',coord(j,'y'):0,
