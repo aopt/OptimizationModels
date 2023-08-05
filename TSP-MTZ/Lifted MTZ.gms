@@ -176,12 +176,12 @@ statistics('lift+vi(relaxed u)',liftedmtz2)
 file f /tour.html/;
 put f '<svg width="1000" height="800" viewBox="-10 -10 110 110">'/;
 loop(arcs(i,j)$(x.l(arcs)>0.5),
-   put '<line x1="',coord(i,'x'):0:0,'" y1="',coord(i,'y'):0:0,
-       '" x2="',coord(j,'x'):0:0,'" y2="',coord(j,'y'):0:0,
+   put '<line x1="',coord(i,'x'):0,'" y1="',coord(i,'y'):0,
+       '" x2="',coord(j,'x'):0,'" y2="',coord(j,'y'):0,
        '" stroke="darkred" stroke-width="0.1"/>'/;
 );
 loop(i,
-   put '<circle cx="',coord(i,'x'):0:0,'" cy="',coord(i,'y'):0:0,
+   put '<circle cx="',coord(i,'x'):0,'" cy="',coord(i,'y'):0,
        '" r="0.5" fill="blue"/>'/;
 );
 putclose '</svg>'/;
