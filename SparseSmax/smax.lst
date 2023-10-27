@@ -1,0 +1,91 @@
+GAMS 45.1.0  88bbff72 Oct 14, 2023          WEX-WEI x86 64bit/MS Windows - 10/27/23 13:01:11 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+   2  set
+   3  *   i 'cases' /case1*case10/
+   4     i 'cases' /case1*case100000/
+   5     j 'attribute' /j1*j25/
+   6     k 'attribute' /k1*k25/
+   7     t 'type' /typ1*typ2/
+   8  ;
+   9   
+  10  parameter p(i,j,k,t) 'positive numbers';
+  11  * note: for each i we have only one (j,k)
+  12  scalar s1,s2;
+  13  loop(i,
+  14      s1 = uniformint(1,card(j));
+  15      s2 = uniformint(1,card(k));
+  16      p(i,j,k,t)$(ord(j)=s1 and ord(k)=s2) = uniform(0,1);
+  17  );
+  18   
+  19  option p:3:3:1;
+  20  display$(card(i)<=100) p;
+  21   
+  22  option profile=1;
+  23   
+  24  * version 1  (very slow)
+  25  * this calculates the smax for all combinations (i,j,k) (carthesian product)
+  26  parameter q(i,j,k) 'smax(t, p(i,j,k,t))';
+  27  q(i,j,k) = smax(t,p(i,j,k,t));
+  28   
+  29  option q:3:0:1;
+  30  display$(card(i)<=100) q;
+  31   
+  32  * version 2  (fast)
+  33  * this skips the smax for non-existent combinations (i,j,k)
+  34  * assumption: p>=0
+  35  parameter q2(i,j,k);
+  36  q2(i,j,k)$sum(t,p(i,j,k,t)) = smax(t,p(i,j,k,t));
+  37   
+  38   
+  39  * version 3: also works with negative values p (fast)
+  40  * here the $sum is counting nonzero values
+  41  parameter q3(i,j,k);
+  42  q3(i,j,k)$sum(t$p(i,j,k,t),1) = smax(t,p(i,j,k,t));
+  43   
+  44   
+  45  * version 4. Introduce a set with existing combinations
+  46  * (also fast but ijk+q4 takes a bit more time)
+  47  set ijk(i,j,k);
+  48  ijk(i,j,k) = sum(t$p(i,j,k,t),1);
+  49  parameter q4(i,j,k);
+  50  q4(ijk) = smax(t,p(ijk,t));
+
+
+COMPILATION TIME     =        0.016 SECONDS     11 MB  45.1.0 88bbff72 WEX-WEI
+GAMS 45.1.0  88bbff72 Oct 14, 2023          WEX-WEI x86 64bit/MS Windows - 10/27/23 13:01:11 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     27 Assignment q             6.579    26.641 SECS     34 MB  100000
+----     29 Other                    0.000    26.641 SECS     33 MB 
+----     30 Display                  0.000    26.641 SECS     33 MB 
+----     36 Assignment q2            0.031    26.672 SECS     43 MB  100000
+----     42 Assignment q3            0.047    26.719 SECS     51 MB  100000
+----     48 Assignment ijk           0.031    26.750 SECS     58 MB  100000
+----     50 Assignment q4            0.031    26.781 SECS     66 MB  100000
+
+
+EXECUTION TIME       =       26.781 SECONDS     65 MB  45.1.0 88bbff72 WEX-WEI
+
+
+USER: Eval License                                   G221205|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\SparseSmax\smax.gms
+Output     C:\projects\OptimizationModels\SparseSmax\smax.lst
+----     50 GAMS Fini                0.000     0.000 SECS     65 MB 
+ 
+---- Profile Summary (8 records processed)
+     6.579   0.034GB        27 Assignment q (100000)
+     0.047   0.051GB        42 Assignment q3 (100000)
+     0.031   0.043GB        36 Assignment q2 (100000)
+     0.031   0.058GB        48 Assignment ijk (100000)
+     0.031   0.066GB        50 Assignment q4 (100000)
