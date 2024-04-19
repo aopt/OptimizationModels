@@ -1,0 +1,2168 @@
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        The Dantzig Selector for sparse Regression
+        
+        Compare results of R package GDSARM with
+        an LP model.
+       
+        See:
+        https://yetanothermathprogrammingconsultant.blogspot.com/2024/04/lp-in-statistics-dantzig-selector.html
+       
+  12   
+  13  * for ordering of results
+  14  set dummy /delta, OLS/;
+  15   
+  16  *------------------------------------------------
+  17  * data
+  18  *------------------------------------------------
+  19  Sets
+  20     i 'rows',
+  21     j0 'all columns';
+  22   
+  23  Table data(i<,j0<)
+  24     V1 V2 V3 V4 V5 V6 V7    V8
+  25  1   1  1 -1  1  1  1 -1 6.058
+  26  2   1 -1  1  1  1 -1 -1 4.733
+  27  3  -1  1  1  1 -1 -1 -1 4.625
+  28  4   1  1  1 -1 -1 -1  1 5.899
+  29  5   1  1 -1 -1 -1  1 -1 7.000
+  30  6   1 -1 -1 -1  1 -1  1 5.752
+  31  7  -1 -1 -1  1 -1  1  1 5.682
+  32  8  -1 -1  1 -1  1  1 -1 6.607
+  33  9  -1  1 -1  1  1 -1  1 5.818
+  34  10  1 -1  1  1 -1  1  1 5.917
+  35  11 -1  1  1 -1  1  1  1 5.863
+  36  12 -1 -1 -1 -1 -1 -1 -1 4.809
+  37  ;
+  38  display i,j0,data;
+  39   
+  40  *------------------------------------------------
+  41  * scale and center
+  42  *------------------------------------------------
+  43   
+  44  set j(j0) 'independent variables: columns for X';
+  45  j(j0) = ord(j0)<card(j0);
+  46   
+  47  parameters
+  48     n 'number of rows'
+  49     mean(j0)
+  50     sd(j0) 'standard deviation'
+  51     scaled_data(i,j0)
+  52  ;
+  53   
+  54  n = card(i);
+  55  mean(j0) = sum(i,data(i,j0))/n;
+  56   
+  57  * center
+  58  scaled_data(i,j0) = data(i,j0)-mean(j0);
+  59  * scale (only for X)
+  60  sd(j) = sqrt(sum(i,sqr(scaled_data(i,j)))/(card(i)-1));
+  61  scaled_data(i,j) = scaled_data(i,j)/sd(j);
+  62  display scaled_data;
+  63   
+  64   
+  65  *------------------------------------------------
+  66  * extract X,y
+  67  *------------------------------------------------
+  68   
+  69  parameters
+  70     X(i,j0) 'independent variables'
+  71     y(i)    'dependent variable'
+  72  ;
+  73  X(i,j) = scaled_data(i,j);
+  74  y(i) = scaled_data(i,'v8');
+  75  display X,y;
+  76   
+  77   
+  78  *------------------------------------------------
+  79  * Tuning parameter
+  80  * maxdelta and delta
+  81  *------------------------------------------------
+  82   
+  83  scalar MaxDelta;
+  84  MaxDelta = smax(j,abs(sum(i,X(i,j)*Y(i))));
+  85  display MaxDelta;
+  86   
+  87  * create equally spaced values 0..MaxDelta
+  88  set k /k1*k4/;
+  89  parameter delta(k);
+  90  delta(k) = MaxDelta*(ord(k)-1) / (card(k)-1);
+  91  display delta;
+  92   
+  93   
+  94  *------------------------------------------------
+  95  * OLS regression
+  96  *------------------------------------------------
+  97   
+  98  variable
+  99    beta(j0) 'estimators'
+ 100    z        'objective'
+ 101    r(i)     'residuals'
+ 102  ;
+ 103   
+ 104  equations
+ 105     fit(i)     'linear model'
+ 106     qobj       'quadratic objective'
+ 107  ;
+ 108   
+ 109  qobj..      z =e= sum(i, sqr(r(i)));
+ 110  fit(i)..    r(i) =e= y(i) - sum(j,X(i,j)*beta(j));
+ 111   
+ 112  model ols /qobj,fit/;
+ 113   
+ 114  *------------------------------------------------
+ 115  * Dantzig selector LP model
+ 116  * we need to set bounds for
+ 117  *  Xr(i) >= -delta
+ 118  *  Xr(i) <= delta
+ 119  * that is done in the solve loop
+ 120  *------------------------------------------------
+ 121   
+ 122  variable
+ 123    Xr(j0)   'X^T*r'
+ 124  ;
+ 125  positive variable
+ 126    absb(j0) 'absolute values'
+ 127  ;
+ 128   
+ 129  equations
+ 130     obj        'objective'
+ 131     bound1(j0) 'absolute value bound (obj)'
+ 132     bound2(j0) 'absolute value bound (obj)'
+ 133     fit(i)     'linear model'
+ 134     defXr(j0)  'evaluate X^T*r'
+ 135  ;
+ 136   
+ 137  obj.. z =e= sum(j,absb(j));
+ 138  bound1(j).. absb(j) =g= -beta(j);
+ 139  bound2(j).. absb(j) =g= beta(j);
+ 140  defXr(j)..  Xr(j) =e= sum(i,X(i,j)*r(i));
+ 141   
+ 142  model ds /obj,fit,bound1,bound2,defXr/;
+ 143   
+ 144   
+ 145  *------------------------------------------------
+ 146  * run regressions
+ 147  *------------------------------------------------
+ 148   
+ 149  parameter results(*,*) 'estimations';
+ 150   
+ 151  solve ols using qcp minimizing z;
+ 152  results('OLS',j) = beta.l(j);
+ 153   
+ 154  results(k,'delta') = delta(k);
+ 155  loop(k,
+ 156     Xr.lo(j) = -delta(k);
+ 157     Xr.up(j) = delta(k);
+ 158     solve ds using lp minimizing z;
+ 159     display beta.l;
+ 160     results(k,j) = beta.l(j);
+ 161  );
+ 162  display results;
+ 163   
+ 164   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  46.3.0 cc87b1db WEX-WEI
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     38 SET i  rows
+
+1 ,    2 ,    3 ,    4 ,    5 ,    6 ,    7 ,    8 ,    9 ,    10,    11,    12
+
+
+----     38 SET j0  all columns
+
+V1,    V2,    V3,    V4,    V5,    V6,    V7,    V8
+
+
+----     38 PARAMETER data  
+
+            V1          V2          V3          V4          V5          V6          V7          V8
+
+1        1.000       1.000      -1.000       1.000       1.000       1.000      -1.000       6.058
+2        1.000      -1.000       1.000       1.000       1.000      -1.000      -1.000       4.733
+3       -1.000       1.000       1.000       1.000      -1.000      -1.000      -1.000       4.625
+4        1.000       1.000       1.000      -1.000      -1.000      -1.000       1.000       5.899
+5        1.000       1.000      -1.000      -1.000      -1.000       1.000      -1.000       7.000
+6        1.000      -1.000      -1.000      -1.000       1.000      -1.000       1.000       5.752
+7       -1.000      -1.000      -1.000       1.000      -1.000       1.000       1.000       5.682
+8       -1.000      -1.000       1.000      -1.000       1.000       1.000      -1.000       6.607
+9       -1.000       1.000      -1.000       1.000       1.000      -1.000       1.000       5.818
+10       1.000      -1.000       1.000       1.000      -1.000       1.000       1.000       5.917
+11      -1.000       1.000       1.000      -1.000       1.000       1.000       1.000       5.863
+12      -1.000      -1.000      -1.000      -1.000      -1.000      -1.000      -1.000       4.809
+
+
+----     62 PARAMETER scaled_data  
+
+            V1          V2          V3          V4          V5          V6          V7          V8
+
+1        0.957       0.957      -0.957       0.957       0.957       0.957      -0.957       0.328
+2        0.957      -0.957       0.957       0.957       0.957      -0.957      -0.957      -0.997
+3       -0.957       0.957       0.957       0.957      -0.957      -0.957      -0.957      -1.105
+4        0.957       0.957       0.957      -0.957      -0.957      -0.957       0.957       0.169
+5        0.957       0.957      -0.957      -0.957      -0.957       0.957      -0.957       1.270
+6        0.957      -0.957      -0.957      -0.957       0.957      -0.957       0.957       0.022
+7       -0.957      -0.957      -0.957       0.957      -0.957       0.957       0.957      -0.048
+8       -0.957      -0.957       0.957      -0.957       0.957       0.957      -0.957       0.877
+9       -0.957       0.957      -0.957       0.957       0.957      -0.957       0.957       0.088
+10       0.957      -0.957       0.957       0.957      -0.957       0.957       0.957       0.187
+11      -0.957       0.957       0.957      -0.957       0.957       0.957       0.957       0.133
+12      -0.957      -0.957      -0.957      -0.957      -0.957      -0.957      -0.957      -0.921
+
+
+----     75 PARAMETER X  independent variables
+
+            V1          V2          V3          V4          V5          V6          V7
+
+1        0.957       0.957      -0.957       0.957       0.957       0.957      -0.957
+2        0.957      -0.957       0.957       0.957       0.957      -0.957      -0.957
+3       -0.957       0.957       0.957       0.957      -0.957      -0.957      -0.957
+4        0.957       0.957       0.957      -0.957      -0.957      -0.957       0.957
+5        0.957       0.957      -0.957      -0.957      -0.957       0.957      -0.957
+6        0.957      -0.957      -0.957      -0.957       0.957      -0.957       0.957
+7       -0.957      -0.957      -0.957       0.957      -0.957       0.957       0.957
+8       -0.957      -0.957       0.957      -0.957       0.957       0.957      -0.957
+9       -0.957       0.957      -0.957       0.957       0.957      -0.957       0.957
+10       0.957      -0.957       0.957       0.957      -0.957       0.957       0.957
+11      -0.957       0.957       0.957      -0.957       0.957       0.957       0.957
+12      -0.957      -0.957      -0.957      -0.957      -0.957      -0.957      -0.957
+
+
+----     75 PARAMETER y  dependent variable
+
+1   0.328,    2  -0.997,    3  -1.105,    4   0.169,    5   1.270,    6   0.022,    7  -0.048,    8   0.877,    9   0.088
+10  0.187,    11  0.133,    12 -0.921
+
+
+----     85 PARAMETER MaxDelta             =        5.257  
+
+----     91 PARAMETER delta  
+
+k2 1.752,    k3 3.505,    k4 5.257
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ols Using QCP From line 151
+
+
+---- qobj  =E=  quadratic objective
+
+qobj..  z + (0)*r(1) + (0)*r(2) + (0)*r(3) + (0)*r(4) + (0)*r(5) + (0)*r(6) + (0)*r(7) + (0)*r(8) + (0)*r(9) + (0)*r(10)
+     
+      + (0)*r(11) + (0)*r(12) =E= 0 ; (LHS = 0)
+     
+
+---- fit  =E=  linear model
+
+fit(1)..  0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) - 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) + 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(1) =E= 0.32775 ;
+     
+      (LHS = 0, INFES = 0.32775 ****)
+     
+fit(2)..  0.957427107756338*beta(V1) - 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(2) =E= -0.99725 ;
+     
+      (LHS = 0, INFES = 0.99725 ****)
+     
+fit(3)..  - 0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      - 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(3) =E= -1.10525 ;
+     
+      (LHS = 0, INFES = 1.10525 ****)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ols Using QCP From line 151
+
+
+---- beta  estimators
+
+beta(V1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        0.9574  fit(1)
+        0.9574  fit(2)
+       -0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+        0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+       -0.9574  fit(11)
+       -0.9574  fit(12)
+
+beta(V2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        0.9574  fit(1)
+       -0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+        0.9574  fit(9)
+       -0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+
+beta(V3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.9574  fit(1)
+        0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+       -0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+        0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       qobj
+
+
+---- r  residuals
+
+r(1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      qobj
+        1       fit(1)
+
+r(2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      qobj
+        1       fit(2)
+
+r(3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      qobj
+        1       fit(3)
+
+REMAINING 9 ENTRIES SKIPPED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ols Using QCP From line 151
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.175E-02, 1.270E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA]
+Matrix    [min, max] : [ 9.574E-01, 1.000E+00] - Zero values observed as well
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ols Using QCP From line 151
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           13
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           20
+NON ZERO ELEMENTS           109     NON LINEAR N-Z             12
+CODE LENGTH                  38     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ols Using QCP From line 151
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ols                 OBJECTIVE  z
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  151
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE                1.4059
+
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ ITERATION COUNT, LIMIT         2    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T   version 4.33
+    Copyright (C) ARKI Consulting and Development A/S
+                  Bagsvaerdvej 246 A
+                  DK-2880 Bagsvaerd, Denmark
+ 
+    Will use up to 16 threads.
+ 
+ 
+    The user model has 13 constraints and 20 variables
+    with 109 Jacobian elements, 12 of which are nonlinear.
+    The Hessian of the Lagrangian has 12 elements on the diagonal,
+    0 elements below the diagonal, and 12 nonlinear variables.
+ 
+    The post-triangular part of the model has 13 constraints and variables.
+ 
+    Preprocessed model has no constraints and 7 variables.
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.016 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+             2nd Derivative evaluations       0.000 =  0.0%
+             Directional 2nd Deriv(Hess)      0.000 =  0.0%
+             Interval derivative evals        0.000 =  0.0%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU qobj                .              .              .             1.0000      
+
+  qobj  quadratic objective
+
+---- EQU fit  linear model
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1          0.3277         0.3277         0.3277        -0.5757      
+2         -0.9973        -0.9973        -0.9973        -0.3160      
+3         -1.1052        -1.1052        -1.1052        -0.1683      
+4          0.1688         0.1688         0.1688         0.3293      
+5          1.2698         1.2698         1.2698         0.5757      
+6          0.0217         0.0217         0.0217        -0.1683      
+7         -0.0482        -0.0482        -0.0482        -0.1550      
+8          0.8768         0.8768         0.8768         1.2210      
+9          0.0877         0.0877         0.0877         1.0600      
+10         0.1867         0.1867         0.1867         0.1550      
+11         0.1328         0.1328         0.1328        -1.2210      
+12        -0.9212        -0.9212        -0.9212        -0.7367      
+
+---- VAR beta  estimators
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -INF            0.1702        +INF      8.1702565E-9      
+V2        -INF            0.1534        +INF      8.1524263E-9      
+V3        -INF           -0.1284        +INF      7.8516189E-9      
+V4        -INF           -0.2696        +INF      7.7009146E-9      
+V5        -INF            0.0782        +INF      8.0721563E-9      
+V6        -INF            0.4779        +INF      8.4987781E-9      
+V7        -INF            0.0957        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            1.4059        +INF             .          
+
+  z  objective
+
+---- VAR r  residuals
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1         -INF           -0.2878        +INF             .          
+2         -INF           -0.1580        +INF             .          
+3         -INF           -0.0842        +INF             .          
+4         -INF            0.1647        +INF             .          
+5         -INF            0.2878        +INF             .          
+6         -INF           -0.0842        +INF             .          
+7         -INF           -0.0775        +INF             .          
+8         -INF            0.6105        +INF             .          
+9         -INF            0.5300        +INF             .          
+10        -INF            0.0775        +INF             .          
+11        -INF           -0.6105        +INF             .          
+12        -INF           -0.3683        +INF      -7.379010E-9      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ds Using LP From line 158
+
+
+---- obj  =E=  objective
+
+obj..  z - absb(V1) - absb(V2) - absb(V3) - absb(V4) - absb(V5) - absb(V6) - absb(V7) =E= 0 ;
+     
+      (LHS = 1.40594566666667, INFES = 1.40594566666667 ****)
+     
+
+---- fit  =E=  linear model
+
+fit(1)..  0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) - 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) + 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(1) =E= 0.32775 ; (LHS = 0.32775)
+     
+fit(2)..  0.957427107756338*beta(V1) - 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(2) =E= -0.99725 ;
+     
+      (LHS = -0.99725)
+     
+fit(3)..  - 0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      - 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(3) =E= -1.10525 ;
+     
+      (LHS = -1.10525)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- bound1  =G=  absolute value bound (obj)
+
+bound1(V1)..  beta(V1) + absb(V1) =G= 0 ; (LHS = 0.17016090874694)
+     
+bound1(V2)..  beta(V2) + absb(V2) =G= 0 ; (LHS = 0.153449453774382)
+     
+bound1(V3)..  beta(V3) + absb(V3) =G= 0 ; (LHS = -0.128382271231566, INFES = 0.128382271231566 ****)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- bound2  =G=  absolute value bound (obj)
+
+bound2(V1)..  - beta(V1) + absb(V1) =G= 0 ; (LHS = -0.17016090874694, INFES = 0.17016090874694 ****)
+     
+bound2(V2)..  - beta(V2) + absb(V2) =G= 0 ; (LHS = -0.153449453774382, INFES = 0.153449453774382 ****)
+     
+bound2(V3)..  - beta(V3) + absb(V3) =G= 0 ; (LHS = 0.128382271231566)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- defXr  =E=  evaluate X^T*r
+
+defXr(V1)..  - 0.957427107756338*r(1) - 0.957427107756338*r(2) + 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) - 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) + 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V1) =E= 0 ;
+     
+      (LHS = 5.52696166611355E-10, INFES = 5.52696166611355E-10 ****)
+     
+defXr(V2)..  - 0.957427107756338*r(1) + 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) - 0.957427107756338*r(9)
+     
+      + 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V2) =E= 0 ;
+     
+      (LHS = 5.43781075723615E-10, INFES = 5.43781075723615E-10 ****)
+     
+defXr(V3)..  0.957427107756338*r(1) - 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      + 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) - 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V3) =E= 0 ;
+     
+      (LHS = 3.93377386220806E-10, INFES = 3.93377386220806E-10 ****)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ds Using LP From line 158
+
+
+---- beta  estimators
+
+beta(V1)
+                (.LO, .L, .UP, .M = -INF, 0.17016090874694, +INF, 8.1702564713737E-9)
+        0.9574  fit(1)
+        0.9574  fit(2)
+       -0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+        0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+       -0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V1)
+       -1       bound2(V1)
+
+beta(V2)
+                (.LO, .L, .UP, .M = -INF, 0.153449453774382, +INF, 8.15242628959822E-9)
+        0.9574  fit(1)
+       -0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+        0.9574  fit(9)
+       -0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V2)
+       -1       bound2(V2)
+
+beta(V3)
+                (.LO, .L, .UP, .M = -INF, -0.128382271231566, +INF, 7.85161891059261E-9)
+       -0.9574  fit(1)
+        0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+       -0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+        0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V3)
+       -1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 1.40594566666667, +INF, 0)
+        1       obj
+
+
+---- r  residuals
+
+r(1)
+                (.LO, .L, .UP, .M = -INF, -0.287833333835909, +INF, 0)
+        1       fit(1)
+       -0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+        0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+       -0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(2)
+                (.LO, .L, .UP, .M = -INF, -0.158000000351588, +INF, 0)
+        1       fit(2)
+       -0.9574  defXr(V1)
+        0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(3)
+                (.LO, .L, .UP, .M = -INF, -0.0841666669290291, +INF, 0)
+        1       fit(3)
+        0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+        0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- Xr  X^T*r
+
+Xr(V1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       defXr(V1)
+
+Xr(V2)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       defXr(V2)
+
+Xr(V3)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       defXr(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- absb  absolute values
+
+absb(V1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V1)
+        1       bound2(V1)
+
+absb(V2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V2)
+        1       bound2(V2)
+
+absb(V3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V3)
+        1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ds Using LP From line 158
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.175E-02, 1.270E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 9.574E-01, 1.000E+00]
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ds Using LP From line 158
+
+
+LOOPS                                    k   k1
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           34
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES           34
+NON ZERO ELEMENTS           223
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+               L O O P S                  k k1
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ds Using LP From line 158
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ds                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  158
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                1.3734
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        14    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.23 ticks)
+
+
+Optimal solution found
+Objective:            1.373386
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU fit  linear model
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1          0.3277         0.3277         0.3277         0.2611      
+2         -0.9973        -0.9973        -0.9973        -0.2611      
+3         -1.1052        -1.1052        -1.1052        -0.4352      
+4          0.1688         0.1688         0.1688         0.0870      
+5          1.2698         1.2698         1.2698         0.2611      
+6          0.0217         0.0217         0.0217         0.2611      
+7         -0.0482        -0.0482        -0.0482        -0.0870      
+8          0.8768         0.8768         0.8768        -0.0870      
+9          0.0877         0.0877         0.0877         0.0870      
+10         0.1867         0.1867         0.1867        -0.0870      
+11         0.1328         0.1328         0.1328         0.2611      
+12        -0.9212        -0.9212        -0.9212        -0.2611      
+
+---- EQU bound1  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .             0.3403        +INF             .          
+V2          .             0.3069        +INF             .          
+V3          .              .            +INF            1.0000      
+V4          .              .            +INF            1.0000      
+V5          .             0.1565        +INF             .          
+V6          .             0.9559        +INF             .          
+V7          .             0.1913        +INF             .          
+
+---- EQU bound2  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            1.0000      
+V2          .              .            +INF            1.0000      
+V3          .             0.2568        +INF             .          
+V4          .             0.5391        +INF             .          
+V5          .              .            +INF            1.0000      
+V6          .              .            +INF            1.0000      
+V7          .              .            +INF            1.0000      
+
+---- EQU defXr  evaluate X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .              .             0.0909      
+V2          .              .              .             0.0909      
+V3          .              .              .            -0.0909      
+V4          .              .              .            -0.0909      
+V5          .              .              .             0.0909      
+V6          .              .              .             0.0909      
+V7          .              .              .             0.0909      
+
+---- VAR beta  estimators
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -INF            0.1702        +INF             .          
+V2        -INF            0.1534        +INF             .          
+V3        -INF           -0.1284        +INF             .          
+V4        -INF           -0.2696        +INF             .          
+V5        -INF            0.0782        +INF             .          
+V6        -INF            0.4779        +INF             .          
+V7        -INF            0.0957        +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            1.3734        +INF             .          
+
+  z  objective
+
+---- VAR r  residuals
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1         -INF           -0.2878        +INF             .          
+2         -INF           -0.1580        +INF             .          
+3         -INF           -0.0842        +INF             .          
+4         -INF            0.1647        +INF             .          
+5         -INF            0.2878        +INF             .          
+6         -INF           -0.0842        +INF             .          
+7         -INF           -0.0775        +INF             .          
+8         -INF            0.6105        +INF             .          
+9         -INF            0.5300        +INF             .          
+10        -INF            0.0775        +INF             .          
+11        -INF           -0.6105        +INF             .          
+12        -INF           -0.3683        +INF             .          
+
+---- VAR Xr  X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .              .            -0.0909      
+V2          .              .              .            -0.0909      
+V3          .              .              .             0.0909      
+V4          .              .              .             0.0909      
+V5          .              .              .            -0.0909      
+V6          .              .              .            -0.0909      
+V7          .              .              .            -0.0909      
+
+---- VAR absb  absolute values
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .             0.1702        +INF             .          
+V2          .             0.1534        +INF             .          
+V3          .             0.1284        +INF             .          
+V4          .             0.2696        +INF             .          
+V5          .             0.0782        +INF             .          
+V6          .             0.4779        +INF             .          
+V7          .             0.0957        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    159 VARIABLE beta.L  estimators
+
+V1  0.170,    V2  0.153,    V3 -0.128,    V4 -0.270,    V5  0.078,    V6  0.478,    V7  0.096
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ds Using LP From line 158
+
+
+---- obj  =E=  objective
+
+obj..  z - absb(V1) - absb(V2) - absb(V3) - absb(V4) - absb(V5) - absb(V6) - absb(V7) =E= 0 ; (LHS = 0)
+     
+
+---- fit  =E=  linear model
+
+fit(1)..  0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) - 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) + 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(1) =E= 0.32775 ; (LHS = 0.32775)
+     
+fit(2)..  0.957427107756338*beta(V1) - 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(2) =E= -0.99725 ;
+     
+      (LHS = -0.99725)
+     
+fit(3)..  - 0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      - 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(3) =E= -1.10525 ;
+     
+      (LHS = -1.10525)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- bound1  =G=  absolute value bound (obj)
+
+bound1(V1)..  beta(V1) + absb(V1) =G= 0 ; (LHS = 0.340321817393389)
+     
+bound1(V2)..  beta(V2) + absb(V2) =G= 0 ; (LHS = 0.306898907449895)
+     
+bound1(V3)..  beta(V3) + absb(V3) =G= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- bound2  =G=  absolute value bound (obj)
+
+bound2(V1)..  - beta(V1) + absb(V1) =G= 0 ; (LHS = 0)
+     
+bound2(V2)..  - beta(V2) + absb(V2) =G= 0 ; (LHS = 0)
+     
+bound2(V3)..  - beta(V3) + absb(V3) =G= 0 ; (LHS = 0.256764542534654)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- defXr  =E=  evaluate X^T*r
+
+defXr(V1)..  - 0.957427107756338*r(1) - 0.957427107756338*r(2) + 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) - 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) + 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V1) =E= 0 ; (LHS = 0)
+     
+defXr(V2)..  - 0.957427107756338*r(1) + 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) - 0.957427107756338*r(9)
+     
+      + 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V2) =E= 0 ; (LHS = 0)
+     
+defXr(V3)..  0.957427107756338*r(1) - 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      + 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) - 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V3) =E= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ds Using LP From line 158
+
+
+---- beta  estimators
+
+beta(V1)
+                (.LO, .L, .UP, .M = -INF, 0.170160908696695, +INF, 0)
+        0.9574  fit(1)
+        0.9574  fit(2)
+       -0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+        0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+       -0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V1)
+       -1       bound2(V1)
+
+beta(V2)
+                (.LO, .L, .UP, .M = -INF, 0.153449453724948, +INF, 0)
+        0.9574  fit(1)
+       -0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+        0.9574  fit(9)
+       -0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V2)
+       -1       bound2(V2)
+
+beta(V3)
+                (.LO, .L, .UP, .M = -INF, -0.128382271267327, +INF, 0)
+       -0.9574  fit(1)
+        0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+       -0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+        0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V3)
+       -1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 1.37338566666248, +INF, 0)
+        1       obj
+
+
+---- r  residuals
+
+r(1)
+                (.LO, .L, .UP, .M = -INF, -0.287833333333333, +INF, 0)
+        1       fit(1)
+       -0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+        0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+       -0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(2)
+                (.LO, .L, .UP, .M = -INF, -0.158, +INF, 0)
+        1       fit(2)
+       -0.9574  defXr(V1)
+        0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(3)
+                (.LO, .L, .UP, .M = -INF, -0.0841666666666662, +INF, 0)
+        1       fit(3)
+        0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+        0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- Xr  X^T*r
+
+Xr(V1)
+                (.LO, .L, .UP, .M = -1.75241074956335, 0, 1.75241074956335, -0.0909090909090909)
+        1       defXr(V1)
+
+Xr(V2)
+                (.LO, .L, .UP, .M = -1.75241074956335, 0, 1.75241074956335, -0.0909090909090909)
+        1       defXr(V2)
+
+Xr(V3)
+                (.LO, .L, .UP, .M = -1.75241074956335, 0, 1.75241074956335, 0.0909090909090909)
+        1       defXr(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- absb  absolute values
+
+absb(V1)
+                (.LO, .L, .UP, .M = 0, 0.170160908696695, +INF, 0)
+       -1       obj
+        1       bound1(V1)
+        1       bound2(V1)
+
+absb(V2)
+                (.LO, .L, .UP, .M = 0, 0.153449453724948, +INF, 0)
+       -1       obj
+        1       bound1(V2)
+        1       bound2(V2)
+
+absb(V3)
+                (.LO, .L, .UP, .M = 0, 0.128382271267327, +INF, 0)
+       -1       obj
+        1       bound1(V3)
+        1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ds Using LP From line 158
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.175E-02, 1.270E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.752E+00, 1.752E+00] - Zero values observed as well
+Matrix    [min, max] : [ 9.574E-01, 1.000E+00]
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ds Using LP From line 158
+
+
+LOOPS                                    k   k2
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           34
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES           34
+NON ZERO ELEMENTS           223
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+               L O O P S                  k k2
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ds Using LP From line 158
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ds                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  158
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.4397
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        11    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.22 ticks)
+
+
+Optimal solution found
+Objective:            0.439720
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU fit  linear model
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1          0.3277         0.3277         0.3277         0.0870      
+2         -0.9973        -0.9973        -0.9973        -0.0870      
+3         -1.1052        -1.1052        -1.1052        -0.2611      
+4          0.1688         0.1688         0.1688         0.0870      
+5          1.2698         1.2698         1.2698         0.2611      
+6          0.0217         0.0217         0.0217         0.0870      
+7         -0.0482        -0.0482        -0.0482        -0.0870      
+8          0.8768         0.8768         0.8768         0.0870      
+9          0.0877         0.0877         0.0877        -0.2611      
+10         0.1867         0.1867         0.1867         0.0870      
+11         0.1328         0.1328         0.1328         0.0870      
+12        -0.9212        -0.9212        -0.9212        -0.0870      
+
+---- EQU bound1  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .             0.0217        +INF             .          
+V2          .              .            +INF            0.5000      
+V3          .              .            +INF            0.5000      
+V4          .              .            +INF            1.0000      
+V5          .              .            +INF            0.5000      
+V6          .             0.6372        +INF             .          
+V7          .              .            +INF            0.5000      
+
+---- EQU bound2  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            1.0000      
+V2          .              .            +INF            0.5000      
+V3          .              .            +INF            0.5000      
+V4          .             0.2205        +INF             .          
+V5          .              .            +INF            0.5000      
+V6          .              .            +INF            1.0000      
+V7          .              .            +INF            0.5000      
+
+---- EQU defXr  evaluate X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .              .             0.0909      
+V2          .              .              .             EPS         
+V3          .              .              .             EPS         
+V4          .              .              .            -0.0909      
+V5          .              .              .             EPS         
+V6          .              .              .             0.0909      
+V7          .              .              .             EPS         
+
+---- VAR beta  estimators
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -INF            0.0109        +INF             .          
+V2        -INF             .            +INF             .          
+V3        -INF             .            +INF             .          
+V4        -INF           -0.1102        +INF             .          
+V5        -INF             .            +INF             .          
+V6        -INF            0.3186        +INF             .          
+V7        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.4397        +INF             .          
+
+  z  objective
+
+---- VAR r  residuals
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1         -INF            0.1179        +INF             .          
+2         -INF           -0.5970        +INF             .          
+3         -INF           -0.6842        +INF             .          
+4         -INF            0.3579        +INF             .          
+5         -INF            0.8488        +INF             .          
+6         -INF            0.2109        +INF             .          
+7         -INF           -0.2374        +INF             .          
+8         -INF            0.4765        +INF             .          
+9         -INF            0.5087        +INF             .          
+10        -INF           -0.0231        +INF             .          
+11        -INF           -0.2675        +INF             .          
+12        -INF           -0.7114        +INF             .          
+
+---- VAR Xr  X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -1.7524         1.7524         1.7524        -0.0909      
+V2        -1.7524         1.6879         1.7524          .          
+V3        -1.7524        -1.4122         1.7524          .          
+V4        -1.7524        -1.7524         1.7524         0.0909      
+V5        -1.7524         0.8607         1.7524          .          
+V6        -1.7524         1.7524         1.7524        -0.0909      
+V7        -1.7524         1.0522         1.7524          .          
+
+---- VAR absb  absolute values
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .             0.0109        +INF             .          
+V2          .              .            +INF             .          
+V3          .              .            +INF             .          
+V4          .             0.1102        +INF             .          
+V5          .              .            +INF             .          
+V6          .             0.3186        +INF             .          
+V7          .              .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    159 VARIABLE beta.L  estimators
+
+V1  0.011,    V4 -0.110,    V6  0.319
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ds Using LP From line 158
+
+
+---- obj  =E=  objective
+
+obj..  z - absb(V1) - absb(V2) - absb(V3) - absb(V4) - absb(V5) - absb(V6) - absb(V7) =E= 0 ; (LHS = 0)
+     
+
+---- fit  =E=  linear model
+
+fit(1)..  0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) - 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) + 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(1) =E= 0.32775 ; (LHS = 0.32775)
+     
+fit(2)..  0.957427107756338*beta(V1) - 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(2) =E= -0.99725 ;
+     
+      (LHS = -0.99725)
+     
+fit(3)..  - 0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      - 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(3) =E= -1.10525 ;
+     
+      (LHS = -1.10525)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- bound1  =G=  absolute value bound (obj)
+
+bound1(V1)..  beta(V1) + absb(V1) =G= 0 ; (LHS = 0.0217016811091433)
+     
+bound1(V2)..  beta(V2) + absb(V2) =G= 0 ; (LHS = 0)
+     
+bound1(V3)..  beta(V3) + absb(V3) =G= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- bound2  =G=  absolute value bound (obj)
+
+bound2(V1)..  - beta(V1) + absb(V1) =G= 0 ; (LHS = 0)
+     
+bound2(V2)..  - beta(V2) + absb(V2) =G= 0 ; (LHS = 0)
+     
+bound2(V3)..  - beta(V3) + absb(V3) =G= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- defXr  =E=  evaluate X^T*r
+
+defXr(V1)..  - 0.957427107756338*r(1) - 0.957427107756338*r(2) + 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) - 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) + 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V1) =E= 0 ; (LHS = 0)
+     
+defXr(V2)..  - 0.957427107756338*r(1) + 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) - 0.957427107756338*r(9)
+     
+      + 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V2) =E= 0 ; (LHS = 0)
+     
+defXr(V3)..  0.957427107756338*r(1) - 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      + 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) - 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V3) =E= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ds Using LP From line 158
+
+
+---- beta  estimators
+
+beta(V1)
+                (.LO, .L, .UP, .M = -INF, 0.0108508405545716, +INF, 0)
+        0.9574  fit(1)
+        0.9574  fit(2)
+       -0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+        0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+       -0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V1)
+       -1       bound2(V1)
+
+beta(V2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        0.9574  fit(1)
+       -0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+        0.9574  fit(9)
+       -0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V2)
+       -1       bound2(V2)
+
+beta(V3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.9574  fit(1)
+        0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+       -0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+        0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V3)
+       -1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.439720158944093, +INF, 0)
+        1       obj
+
+
+---- r  residuals
+
+r(1)
+                (.LO, .L, .UP, .M = -INF, 0.117861111111111, +INF, 0)
+        1       fit(1)
+       -0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+        0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+       -0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(2)
+                (.LO, .L, .UP, .M = -INF, -0.597027777777778, +INF, 0)
+        1       fit(2)
+       -0.9574  defXr(V1)
+        0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(3)
+                (.LO, .L, .UP, .M = -INF, -0.68425, +INF, 0)
+        1       fit(3)
+        0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+        0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- Xr  X^T*r
+
+Xr(V1)
+                (.LO, .L, .UP, .M = -3.5048214991267, 1.75241074956335, 3.5048214991267, -0.0909090909090909)
+        1       defXr(V1)
+
+Xr(V2)
+                (.LO, .L, .UP, .M = -3.5048214991267, 1.68794399097442, 3.5048214991267, 0)
+        1       defXr(V2)
+
+Xr(V3)
+                (.LO, .L, .UP, .M = -3.5048214991267, -1.4122049839406, 3.5048214991267, 0)
+        1       defXr(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- absb  absolute values
+
+absb(V1)
+                (.LO, .L, .UP, .M = 0, 0.0108508405545716, +INF, 0)
+       -1       obj
+        1       bound1(V1)
+        1       bound2(V1)
+
+absb(V2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V2)
+        1       bound2(V2)
+
+absb(V3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V3)
+        1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ds Using LP From line 158
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.175E-02, 1.270E+00] - Zero values observed as well
+Bound     [min, max] : [ 3.505E+00, 3.505E+00] - Zero values observed as well
+Matrix    [min, max] : [ 9.574E-01, 1.000E+00]
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ds Using LP From line 158
+
+
+LOOPS                                    k   k3
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           34
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES           34
+NON ZERO ELEMENTS           223
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+               L O O P S                  k k3
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ds Using LP From line 158
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ds                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  158
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.1593
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         4    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.20 ticks)
+
+
+Optimal solution found
+Objective:            0.159310
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU fit  linear model
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1          0.3277         0.3277         0.3277         0.0870      
+2         -0.9973        -0.9973        -0.9973        -0.0870      
+3         -1.1052        -1.1052        -1.1052        -0.0870      
+4          0.1688         0.1688         0.1688        -0.0870      
+5          1.2698         1.2698         1.2698         0.0870      
+6          0.0217         0.0217         0.0217        -0.0870      
+7         -0.0482        -0.0482        -0.0482         0.0870      
+8          0.8768         0.8768         0.8768         0.0870      
+9          0.0877         0.0877         0.0877        -0.0870      
+10         0.1867         0.1867         0.1867         0.0870      
+11         0.1328         0.1328         0.1328         0.0870      
+12        -0.9212        -0.9212        -0.9212        -0.0870      
+
+---- EQU bound1  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            0.5000      
+V2          .              .            +INF            0.5000      
+V3          .              .            +INF            0.5000      
+V4          .              .            +INF            0.5000      
+V5          .              .            +INF            0.5000      
+V6          .             0.3186        +INF             .          
+V7          .              .            +INF            0.5000      
+
+---- EQU bound2  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            0.5000      
+V2          .              .            +INF            0.5000      
+V3          .              .            +INF            0.5000      
+V4          .              .            +INF            0.5000      
+V5          .              .            +INF            0.5000      
+V6          .              .            +INF            1.0000      
+V7          .              .            +INF            0.5000      
+
+---- EQU defXr  evaluate X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .              .             EPS         
+V2          .              .              .             EPS         
+V3          .              .              .             EPS         
+V4          .              .              .             EPS         
+V5          .              .              .             EPS         
+V6          .              .              .             0.0909      
+V7          .              .              .             EPS         
+
+---- VAR beta  estimators
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -INF             .            +INF             .          
+V2        -INF             .            +INF             .          
+V3        -INF             .            +INF             .          
+V4        -INF             .            +INF             .          
+V5        -INF             .            +INF             .          
+V6        -INF            0.1593        +INF             .          
+V7        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.1593        +INF             .          
+
+  z  objective
+
+---- VAR r  residuals
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1         -INF            0.1752        +INF             .          
+2         -INF           -0.8447        +INF             .          
+3         -INF           -0.9527        +INF             .          
+4         -INF            0.3213        +INF             .          
+5         -INF            1.1172        +INF             .          
+6         -INF            0.1743        +INF             .          
+7         -INF           -0.2008        +INF             .          
+8         -INF            0.7242        +INF             .          
+9         -INF            0.2403        +INF             .          
+10        -INF            0.0342        +INF             .          
+11        -INF           -0.0198        +INF             .          
+12        -INF           -0.7687        +INF             .          
+
+---- VAR Xr  X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -3.5048         1.8718         3.5048          .          
+V2        -3.5048         1.6879         3.5048          .          
+V3        -3.5048        -1.4122         3.5048          .          
+V4        -3.5048        -2.9652         3.5048          .          
+V5        -3.5048         0.8607         3.5048          .          
+V6        -3.5048         3.5048         3.5048        -0.0909      
+V7        -3.5048         1.0522         3.5048          .          
+
+---- VAR absb  absolute values
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF             .          
+V2          .              .            +INF             .          
+V3          .              .            +INF             .          
+V4          .              .            +INF             .          
+V5          .              .            +INF             .          
+V6          .             0.1593        +INF             .          
+V7          .              .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    159 VARIABLE beta.L  estimators
+
+V6 0.159
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE ds Using LP From line 158
+
+
+---- obj  =E=  objective
+
+obj..  z - absb(V1) - absb(V2) - absb(V3) - absb(V4) - absb(V5) - absb(V6) - absb(V7) =E= 0 ; (LHS = 0)
+     
+
+---- fit  =E=  linear model
+
+fit(1)..  0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) - 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) + 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(1) =E= 0.32775 ; (LHS = 0.32775)
+     
+fit(2)..  0.957427107756338*beta(V1) - 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      + 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(2) =E= -0.99725 ;
+     
+      (LHS = -0.99725)
+     
+fit(3)..  - 0.957427107756338*beta(V1) + 0.957427107756338*beta(V2) + 0.957427107756338*beta(V3) + 0.957427107756338*beta(V4)
+     
+      - 0.957427107756338*beta(V5) - 0.957427107756338*beta(V6) - 0.957427107756338*beta(V7) + r(3) =E= -1.10525 ;
+     
+      (LHS = -1.10525)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+
+---- bound1  =G=  absolute value bound (obj)
+
+bound1(V1)..  beta(V1) + absb(V1) =G= 0 ; (LHS = 0)
+     
+bound1(V2)..  beta(V2) + absb(V2) =G= 0 ; (LHS = 0)
+     
+bound1(V3)..  beta(V3) + absb(V3) =G= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- bound2  =G=  absolute value bound (obj)
+
+bound2(V1)..  - beta(V1) + absb(V1) =G= 0 ; (LHS = 0)
+     
+bound2(V2)..  - beta(V2) + absb(V2) =G= 0 ; (LHS = 0)
+     
+bound2(V3)..  - beta(V3) + absb(V3) =G= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+
+---- defXr  =E=  evaluate X^T*r
+
+defXr(V1)..  - 0.957427107756338*r(1) - 0.957427107756338*r(2) + 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) - 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) + 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V1) =E= 0 ; (LHS = 0)
+     
+defXr(V2)..  - 0.957427107756338*r(1) + 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      - 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) + 0.957427107756338*r(8) - 0.957427107756338*r(9)
+     
+      + 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V2) =E= 0 ; (LHS = 0)
+     
+defXr(V3)..  0.957427107756338*r(1) - 0.957427107756338*r(2) - 0.957427107756338*r(3) - 0.957427107756338*r(4)
+     
+      + 0.957427107756338*r(5) + 0.957427107756338*r(6) + 0.957427107756338*r(7) - 0.957427107756338*r(8) + 0.957427107756338*r(9)
+     
+      - 0.957427107756338*r(10) - 0.957427107756338*r(11) + 0.957427107756338*r(12) + Xr(V3) =E= 0 ; (LHS = 0)
+     
+REMAINING 4 ENTRIES SKIPPED
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 27
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE ds Using LP From line 158
+
+
+---- beta  estimators
+
+beta(V1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        0.9574  fit(1)
+        0.9574  fit(2)
+       -0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+        0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+       -0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V1)
+       -1       bound2(V1)
+
+beta(V2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        0.9574  fit(1)
+       -0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+        0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+       -0.9574  fit(8)
+        0.9574  fit(9)
+       -0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V2)
+       -1       bound2(V2)
+
+beta(V3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -0.9574  fit(1)
+        0.9574  fit(2)
+        0.9574  fit(3)
+        0.9574  fit(4)
+       -0.9574  fit(5)
+       -0.9574  fit(6)
+       -0.9574  fit(7)
+        0.9574  fit(8)
+       -0.9574  fit(9)
+        0.9574  fit(10)
+        0.9574  fit(11)
+       -0.9574  fit(12)
+        1       bound1(V3)
+       -1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.159310068142123, +INF, 0)
+        1       obj
+
+
+---- r  residuals
+
+r(1)
+                (.LO, .L, .UP, .M = -INF, 0.175222222222222, +INF, 0)
+        1       fit(1)
+       -0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+        0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+       -0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(2)
+                (.LO, .L, .UP, .M = -INF, -0.844722222222222, +INF, 0)
+        1       fit(2)
+       -0.9574  defXr(V1)
+        0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+       -0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+r(3)
+                (.LO, .L, .UP, .M = -INF, -0.952722222222222, +INF, 0)
+        1       fit(3)
+        0.9574  defXr(V1)
+       -0.9574  defXr(V2)
+       -0.9574  defXr(V3)
+       -0.9574  defXr(V4)
+        0.9574  defXr(V5)
+        0.9574  defXr(V6)
+        0.9574  defXr(V7)
+
+REMAINING 9 ENTRIES SKIPPED
+
+---- Xr  X^T*r
+
+Xr(V1)
+                (.LO, .L, .UP, .M = -5.25723224869005, 1.87176999566364, 5.25723224869005, 0)
+        1       defXr(V1)
+
+Xr(V2)
+                (.LO, .L, .UP, .M = -5.25723224869005, 1.68794399097442, 5.25723224869005, 0)
+        1       defXr(V2)
+
+Xr(V3)
+                (.LO, .L, .UP, .M = -5.25723224869005, -1.4122049839406, 5.25723224869005, 0)
+        1       defXr(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+
+---- absb  absolute values
+
+absb(V1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V1)
+        1       bound2(V1)
+
+absb(V2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V2)
+        1       bound2(V2)
+
+absb(V3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -1       obj
+        1       bound1(V3)
+        1       bound2(V3)
+
+REMAINING 4 ENTRIES SKIPPED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 28
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE ds Using LP From line 158
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.175E-02, 1.270E+00] - Zero values observed as well
+Bound     [min, max] : [ 5.257E+00, 5.257E+00] - Zero values observed as well
+Matrix    [min, max] : [ 9.574E-01, 1.000E+00]
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 29
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE ds Using LP From line 158
+
+
+LOOPS                                    k   k4
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           34
+BLOCKS OF VARIABLES           5     SINGLE VARIABLES           34
+NON ZERO ELEMENTS           223
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+               L O O P S                  k k4
+
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 30
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE ds Using LP From line 158
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   ds                  OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  158
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.14 ticks)
+
+
+Optimal solution found
+Objective:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU fit  linear model
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1          0.3277         0.3277         0.3277         EPS         
+2         -0.9973        -0.9973        -0.9973         EPS         
+3         -1.1052        -1.1052        -1.1052         EPS         
+4          0.1688         0.1688         0.1688         EPS         
+5          1.2698         1.2698         1.2698         EPS         
+6          0.0217         0.0217         0.0217         EPS         
+7         -0.0482        -0.0482        -0.0482         EPS         
+8          0.8768         0.8768         0.8768         EPS         
+9          0.0877         0.0877         0.0877         EPS         
+10         0.1867         0.1867         0.1867         EPS         
+11         0.1328         0.1328         0.1328         EPS         
+12        -0.9212        -0.9212        -0.9212         EPS         
+
+---- EQU bound1  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            EPS         
+V2          .              .            +INF            EPS         
+V3          .              .            +INF            EPS         
+V4          .              .            +INF            EPS         
+V5          .              .            +INF            EPS         
+V6          .              .            +INF            EPS         
+V7          .              .            +INF            EPS         
+
+---- EQU bound2  absolute value bound (obj)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF             .          
+V2          .              .            +INF             .          
+V3          .              .            +INF             .          
+V4          .              .            +INF             .          
+V5          .              .            +INF             .          
+V6          .              .            +INF             .          
+V7          .              .            +INF             .          
+
+---- EQU defXr  evaluate X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .              .             EPS         
+V2          .              .              .             EPS         
+V3          .              .              .             EPS         
+V4          .              .              .             EPS         
+V5          .              .              .             EPS         
+V6          .       4.996004E-16          .              .          
+V7          .              .              .             EPS         
+
+---- VAR beta  estimators
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -INF             .            +INF             .          
+V2        -INF             .            +INF             .          
+V3        -INF             .            +INF             .          
+V4        -INF             .            +INF             .          
+V5        -INF             .            +INF             .          
+V6        -INF             .            +INF             .          
+V7        -INF             .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  objective
+
+---- VAR r  residuals
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+1         -INF            0.3277        +INF             .          
+2         -INF           -0.9973        +INF             .          
+3         -INF           -1.1052        +INF             .          
+4         -INF            0.1688        +INF             .          
+5         -INF            1.2698        +INF             .          
+6         -INF            0.0217        +INF             .          
+7         -INF           -0.0482        +INF             .          
+8         -INF            0.8768        +INF             .          
+9         -INF            0.0877        +INF             .          
+10        -INF            0.1867        +INF             .          
+11        -INF            0.1328        +INF             .          
+12        -INF           -0.9212        +INF             .          
+
+---- VAR Xr  X^T*r
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1        -5.2572         1.8718         5.2572          .          
+V2        -5.2572         1.6879         5.2572          .          
+V3        -5.2572        -1.4122         5.2572          .          
+V4        -5.2572        -2.9652         5.2572          .          
+V5        -5.2572         0.8607         5.2572          .          
+V6        -5.2572         5.2572         5.2572         EPS         
+V7        -5.2572         1.0522         5.2572          .          
+
+---- VAR absb  absolute values
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+V1          .              .            +INF            1.0000      
+V2          .              .            +INF            1.0000      
+V3          .              .            +INF            1.0000      
+V4          .              .            +INF            1.0000      
+V5          .              .            +INF            1.0000      
+V6          .              .            +INF            1.0000      
+V7          .              .            +INF            1.0000      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 46.3.0  cc87b1db Mar 19, 2024          WEX-WEI x86 64bit/MS Windows - 04/19/24 04:22:23 Page 31
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    159 VARIABLE beta.L  estimators
+
+                      ( ALL       0.000 )
+
+
+----    162 PARAMETER results  estimations
+
+          delta          V1          V2          V3          V4          V5          V6          V7
+
+OLS                   0.170       0.153      -0.128      -0.270       0.078       0.478       0.096
+k1                    0.170       0.153      -0.128      -0.270       0.078       0.478       0.096
+k2        1.752       0.011                              -0.110                   0.319
+k3        3.505                                                                   0.159
+k4        5.257
+
+
+
+EXECUTION TIME       =        0.328 SECONDS      4 MB  46.3.0 cc87b1db WEX-WEI
+
+
+USER: Eval License                                   G231201|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\DantzigSelector\DantzigSelector.gms
+Output     C:\projects\OptimizationModels\DantzigSelector\DantzigSelector.lst
