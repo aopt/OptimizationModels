@@ -79,7 +79,7 @@ model circleswo 'w/o symmetry' /circlesw - symmetry/ ;
 *-------------------------------------------------------------------
 
 $set MultiStart 1
-$set Global     1
+$set Global     0
 
 
 *-------------------------------------------------------------------
@@ -97,13 +97,15 @@ scalar zbest 'best objective' /0/;
 parameter trace(k) 'keep track of improvements';
 circleswo.solprint = %solprint.Silent%;
 circleswo.solvelink = 5;
+* abort expensive solves
+option reslim = 10; 
 loop(k,
      x.l(i) = uniform(10,sizeX-10);
      y.l(i) = uniform(10,sizeY-10);
      r.l(i) = uniform(10,40);
      
      solve circleswo maximizing z using qcp;
-     if(z.l>zbest,
+     if(circleswo.modelstat=%modelStat.locallyOptimal% and z.l>zbest,
          zbest = z.l;
          best(i,'x') = x.l(i);
          best(i,'y') = y.l(i);
@@ -133,6 +135,7 @@ z.l = zbest;
 
 * reset to default for next solves
 circleswo.solprint = %solprint.On%;
+
 
 $endIf
 
