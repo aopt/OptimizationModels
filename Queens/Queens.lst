@@ -1,0 +1,941 @@
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        n-queens problem with Cplex solution pool
+        we should get 92 solutions  
+       
+        with Cplex options threads=1 and SolnPoolAGap=0
+        we find 91 solutions (instead of 92)  
+       
+        Erwin Kalvelagen
+        erwin@amsopt.com 
+       
+  13   
+  14   
+  15  *--------------------------------------------------------------------
+  16  * basic sets
+  17  *--------------------------------------------------------------------
+  18   
+  19  Sets
+  20    i      'rows' /8*1/
+  21    j      'columns' /a*h/
+  22    kd     'diagonals have i-j=k for k=-6..6' /'-6'*'-1',0*6/
+  23    kad    'anti-diagonals have i+j=k for k=3..15' /3*15/
+  24  ;
+  25   
+  26  *--------------------------------------------------------------------
+  27  * describe diagonals and anti-diagonals
+  28  *--------------------------------------------------------------------
+  29   
+  30  sets
+  31     diag(i,j,kd) 'diagonals'
+  32     antidiag(i,j,kad) 'anti-diagonals'
+  33  ;
+  34  diag(i,j,kd) = i.val - ord(j) = kd.val;
+  35  antidiag(i,j,kad) = i.val + ord(j) = kad.val;
+  36   
+  37  option diag:0:0:8, antidiag:0:0:8;
+  38  display diag, antidiag;
+  39   
+  40  *--------------------------------------------------------------------
+  41  * model
+  42  *--------------------------------------------------------------------
+  43   
+  44  binary variable x(i,j) 'placement of queens';
+  45  variable numqueens 'number of queens we can place';
+  46   
+  47  equations
+  48     obj               "objective: place as many queens as we can"
+  49     row(i)            "don't place two queens in same row"
+  50     column(j)         "don't place two queens in same column"
+  51     diagonal(kd)      "don't place two queens on the same diagonal"
+  52     antidiagonal(kad) "don't place two queens on the same anti-diagonal"
+  53  ;
+  54   
+  55  obj..       numqueens =e= sum((i,j),x(i,j));
+  56   
+  57  row(i)..    sum(j, x(i,j)) =l= 1;
+  58  column(j).. sum(i, x(i,j)) =l= 1;
+  59   
+  60  diagonal(kd).. sum(diag(i,j,kd),x(i,j)) =l= 1;
+  61  antidiagonal(kad).. sum(antidiag(i,j,kad),x(i,j)) =l= 1;
+  62   
+  63  model queens /all/;
+  64   
+  65  *--------------------------------------------------------------------
+  66  * find a single solution
+  67  *--------------------------------------------------------------------
+  68   
+  69  option mip=cplex;
+  70  solve queens maximizing numqueens using mip;
+  71   
+  72  option numqueens:0,x:0;
+  73  display "----- Single Solution --------------------",
+  74           numqueens.l,x.l
+  75          "------------------------------------------";
+  76  ;
+  77   
+  78  *--------------------------------------------------------------------
+  79  * find all solutions using the Cplex solution pool
+  80  * note: threads=1 and SolnPoolAGap=0 gives 91 solutions (instead of 92)
+  81  *--------------------------------------------------------------------
+  82   
+  84   
+  96   
+  97  queens.optfile=1;
+  98  solve queens maximizing numqueens using mip;
+  99   
+ 100  * if all is ok we'll see:
+ 101  * --- Dumping 92 solutions from the solution pool...
+ 102   
+ 103  *--------------------------------------------------------------------
+ 104  * load all solutions
+ 105  *--------------------------------------------------------------------
+ 106   
+ 107  Sets
+ 108     index0'register elements' /soln_queens_p1*soln_queens_p100/
+ 109     index(index0)
+ 110  ;
+ 111   
+ 112  parameter allsols(index0,i,j);
+ 113   
+ 114  execute_load "allsols.gdx" index,allsols=x;
+ 115  display index;
+ 116   
+ 117   
+ 118  *--------------------------------------------------------------------
+ 119  * plot all solutions
+ 120  *--------------------------------------------------------------------
+ 121   
+ 123   
+ 124  scalar
+ 125     tablecolnum 'column counter' /1/
+ 126     solnum      'solution counter' /1/
+ 127     posx        'x position'
+ 128     posy        'y position'
+ 129     iswhite     'square is white if i+j=even'
+ 130  ;
+ 131   
+ 132   
+ 133  file f /allsolutions.html/;
+ 134  put f;
+ 135   
+ 136  put '<h1>n-Queens Problem</h1>'/;
+ 137  put '<p>Place as many queens as possible on a standard 8×8 chess board such that they '
+ 138      "don't attack each other. Show all possible optimal solutions.</p>"/;
+ 139   
+ 140   
+ 141  put '<table>'/;
+ 142  put '<tr>'/;
+ 143   
+ 144  loop(index,
+ 145     put '<td>'/;
+ 146     put '<svg height="200" width="250" viewbox="0 0 9 9">'/;
+ 147   
+ 148  *
+ 149  *  column headers (a,b,c,...)
+ 150  *
+ 151   
+ 152     loop(i,
+ 153        posy = 0.5+ord(i);
+ 154        put '<text x="0.5" y="',posy:0:1,
+ 155              '" dominant-baseline="middle" text-anchor="middle" stroke="black" stroke-width="0.01" fill="black" font-size="1"
+      >',
+ 156              i.tl:0:0,
+ 157              '</text>'/;
+ 158     );
+ 159   
+ 160  *
+ 161  *  row labels (8,7,6,...)
+ 162  *
+ 163   
+ 164     loop(j,
+ 165        posx = 0.5+ord(j);
+ 166        put '<text x="',posx:0:1,
+ 167              '" y="0.5" dominant-baseline="middle" text-anchor="middle" stroke="black" stroke-width="0.01" fill="black" font-
+      size="1">',
+ 168              j.tl:0:0,
+ 169              '</text>'/;
+ 170     );
+ 171   
+ 172   
+ 173  *
+ 174  *  black/white board
+ 175  *  black squares are painted light blue
+ 176  *
+ 177     loop((i,j),
+ 178       iswhite = (ord(i)+ord(j))/2 <> floor((ord(i)+ord(j))/2);
+ 179       put '<rect x="',ord(j):0:0,'" y="',ord(i):0:0,'" width="1" height="1" ';
+ 180       put$(iswhite=1) 'fill="white" ';
+ 181       put$(iswhite=0) 'fill="lightblue" ';
+ 182       put 'stroke-width="0.01" stroke="black" />'/;
+ 183     );
+ 184   
+ 185     loop((i,j)$(allsols(index,i,j)>0.5),
+ 186        posx = 0.5+ord(j);
+ 187        posy = 0.9+ord(i);
+ 188        put '<text x="',posx:0:1,'" y="',posy:0:1,'" '
+ 189              'text-anchor="middle" stroke="black" '
+ 190              'stroke-width="0.01" fill="black" font-size="1">♕</text>'/;
+ 191   
+ 192     );
+ 193   
+ 194     put '</svg><br><div style="text-align: center;">Solution:',solnum:0:0,' of ',card(index):0:0,'</div></td>'/;
+ 195   
+ 196     if (tablecolnum=8 and solnum<card(index),
+ 197        tablecolnum = 0;
+ 198        put '</tr><tr>'/;
+ 199     );
+ 200     tablecolnum=tablecolnum+1;
+ 201     solnum=solnum+1;
+ 202  );
+ 203  put '</tr></table>'/;
+ 204   
+ 205  putclose;
+ 206   
+ 207   
+ 208  executetool 'win32.ShellExecute "allsolutions.html"';
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  47.5.0 d6b95593 WEX-WEI
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     38 SET diag  diagonals
+
+8.b.6 ,    8.c.5 ,    8.d.4 ,    8.e.3 ,    8.f.2 ,    8.g.1 ,    8.h.0 ,    7.a.6 
+7.b.5 ,    7.c.4 ,    7.d.3 ,    7.e.2 ,    7.f.1 ,    7.g.0 ,    7.h.-1,    6.a.5 
+6.b.4 ,    6.c.3 ,    6.d.2 ,    6.e.1 ,    6.f.0 ,    6.g.-1,    6.h.-2,    5.a.4 
+5.b.3 ,    5.c.2 ,    5.d.1 ,    5.e.0 ,    5.f.-1,    5.g.-2,    5.h.-3,    4.a.3 
+4.b.2 ,    4.c.1 ,    4.d.0 ,    4.e.-1,    4.f.-2,    4.g.-3,    4.h.-4,    3.a.2 
+3.b.1 ,    3.c.0 ,    3.d.-1,    3.e.-2,    3.f.-3,    3.g.-4,    3.h.-5,    2.a.1 
+2.b.0 ,    2.c.-1,    2.d.-2,    2.e.-3,    2.f.-4,    2.g.-5,    2.h.-6,    1.a.0 
+1.b.-1,    1.c.-2,    1.d.-3,    1.e.-4,    1.f.-5,    1.g.-6
+
+
+----     38 SET antidiag  anti-diagonals
+
+8.a.9 ,    8.b.10,    8.c.11,    8.d.12,    8.e.13,    8.f.14,    8.g.15,    7.a.8 
+7.b.9 ,    7.c.10,    7.d.11,    7.e.12,    7.f.13,    7.g.14,    7.h.15,    6.a.7 
+6.b.8 ,    6.c.9 ,    6.d.10,    6.e.11,    6.f.12,    6.g.13,    6.h.14,    5.a.6 
+5.b.7 ,    5.c.8 ,    5.d.9 ,    5.e.10,    5.f.11,    5.g.12,    5.h.13,    4.a.5 
+4.b.6 ,    4.c.7 ,    4.d.8 ,    4.e.9 ,    4.f.10,    4.g.11,    4.h.12,    3.a.4 
+3.b.5 ,    3.c.6 ,    3.d.7 ,    3.e.8 ,    3.f.9 ,    3.g.10,    3.h.11,    2.a.3 
+2.b.4 ,    2.c.5 ,    2.d.6 ,    2.e.7 ,    2.f.8 ,    2.g.9 ,    2.h.10,    1.b.3 
+1.c.4 ,    1.d.5 ,    1.e.6 ,    1.f.7 ,    1.g.8 ,    1.h.9 
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE queens Using MIP From line 70
+
+
+---- obj  =E=  objective: place as many queens as we can
+
+obj..  - x(8,a) - x(8,b) - x(8,c) - x(8,d) - x(8,e) - x(8,f) - x(8,g) - x(8,h) - x(7,a) - x(7,b) - x(7,c) - x(7,d) - x(7,e)
+     
+      - x(7,f) - x(7,g) - x(7,h) - x(6,a) - x(6,b) - x(6,c) - x(6,d) - x(6,e) - x(6,f) - x(6,g) - x(6,h) - x(5,a) - x(5,b)
+     
+      - x(5,c) - x(5,d) - x(5,e) - x(5,f) - x(5,g) - x(5,h) - x(4,a) - x(4,b) - x(4,c) - x(4,d) - x(4,e) - x(4,f) - x(4,g)
+     
+      - x(4,h) - x(3,a) - x(3,b) - x(3,c) - x(3,d) - x(3,e) - x(3,f) - x(3,g) - x(3,h) - x(2,a) - x(2,b) - x(2,c) - x(2,d)
+     
+      - x(2,e) - x(2,f) - x(2,g) - x(2,h) - x(1,a) - x(1,b) - x(1,c) - x(1,d) - x(1,e) - x(1,f) - x(1,g) - x(1,h) + numqueens =E= 
+     0 ; (LHS = 0)
+     
+
+---- row  =L=  don't place two queens in same row
+
+row(8)..  x(8,a) + x(8,b) + x(8,c) + x(8,d) + x(8,e) + x(8,f) + x(8,g) + x(8,h) =L= 1 ; (LHS = 0)
+     
+row(7)..  x(7,a) + x(7,b) + x(7,c) + x(7,d) + x(7,e) + x(7,f) + x(7,g) + x(7,h) =L= 1 ; (LHS = 0)
+     
+row(6)..  x(6,a) + x(6,b) + x(6,c) + x(6,d) + x(6,e) + x(6,f) + x(6,g) + x(6,h) =L= 1 ; (LHS = 0)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- column  =L=  don't place two queens in same column
+
+column(a)..  x(8,a) + x(7,a) + x(6,a) + x(5,a) + x(4,a) + x(3,a) + x(2,a) + x(1,a) =L= 1 ; (LHS = 0)
+     
+column(b)..  x(8,b) + x(7,b) + x(6,b) + x(5,b) + x(4,b) + x(3,b) + x(2,b) + x(1,b) =L= 1 ; (LHS = 0)
+     
+column(c)..  x(8,c) + x(7,c) + x(6,c) + x(5,c) + x(4,c) + x(3,c) + x(2,c) + x(1,c) =L= 1 ; (LHS = 0)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- diagonal  =L=  don't place two queens on the same diagonal
+
+diagonal(6)..  x(8,b) + x(7,a) =L= 1 ; (LHS = 0)
+     
+diagonal(5)..  x(8,c) + x(7,b) + x(6,a) =L= 1 ; (LHS = 0)
+     
+diagonal(4)..  x(8,d) + x(7,c) + x(6,b) + x(5,a) =L= 1 ; (LHS = 0)
+     
+REMAINING 10 ENTRIES SKIPPED
+
+
+---- antidiagonal  =L=  don't place two queens on the same anti-diagonal
+
+antidiagonal(8)..  x(7,a) + x(6,b) + x(5,c) + x(4,d) + x(3,e) + x(2,f) + x(1,g) =L= 1 ; (LHS = 0)
+     
+antidiagonal(7)..  x(6,a) + x(5,b) + x(4,c) + x(3,d) + x(2,e) + x(1,f) =L= 1 ; (LHS = 0)
+     
+antidiagonal(6)..  x(5,a) + x(4,b) + x(3,c) + x(2,d) + x(1,e) =L= 1 ; (LHS = 0)
+     
+REMAINING 10 ENTRIES SKIPPED
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE queens Using MIP From line 70
+
+
+---- x  placement of queens
+
+x(8,a)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+        1       row(8)
+        1       column(a)
+        1       antidiagonal(9)
+
+x(8,b)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+        1       row(8)
+        1       column(b)
+        1       diagonal(6)
+        1       antidiagonal(10)
+
+x(8,c)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       obj
+        1       row(8)
+        1       column(c)
+        1       diagonal(5)
+        1       antidiagonal(11)
+
+REMAINING 61 ENTRIES SKIPPED
+
+---- numqueens  number of queens we can place
+
+numqueens
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE queens Using MIP From line 70
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE queens Using MIP From line 70
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           43
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           65
+NON ZERO ELEMENTS           317     DISCRETE VARIABLES         64
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  47.5.0 d6b95593 WEX-WEI
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE queens Using MIP From line 70
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   queens              OBJECTIVE  numqueens
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  70
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                8.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        60    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 0.91 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.04 ticks)
+
+
+Proven optimal solution
+MIP Solution:            8.000000    (60 iterations, 0 nodes)
+Final Solve:             8.000000    (0 iterations)
+
+Best possible:           8.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective: place as many queens as we can
+
+---- EQU row  don't place two queens in same row
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+8        -INF            1.0000         1.0000          .          
+7        -INF            1.0000         1.0000          .          
+6        -INF            1.0000         1.0000          .          
+5        -INF            1.0000         1.0000          .          
+4        -INF            1.0000         1.0000          .          
+3        -INF            1.0000         1.0000          .          
+2        -INF            1.0000         1.0000          .          
+1        -INF            1.0000         1.0000          .          
+
+---- EQU column  don't place two queens in same column
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+a        -INF            1.0000         1.0000          .          
+b        -INF            1.0000         1.0000          .          
+c        -INF            1.0000         1.0000          .          
+d        -INF            1.0000         1.0000          .          
+e        -INF            1.0000         1.0000          .          
+f        -INF            1.0000         1.0000          .          
+g        -INF            1.0000         1.0000          .          
+h        -INF            1.0000         1.0000          .          
+
+---- EQU diagonal  don't place two queens on the same diagonal
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+6         -INF             .             1.0000          .          
+5         -INF            1.0000         1.0000          .          
+4         -INF             .             1.0000          .          
+3         -INF            1.0000         1.0000          .          
+2         -INF            1.0000         1.0000          .          
+1         -INF             .             1.0000          .          
+-6        -INF             .             1.0000          .          
+-5        -INF             .             1.0000          .          
+-4        -INF            1.0000         1.0000          .          
+-3        -INF            1.0000         1.0000          .          
+-2        -INF            1.0000         1.0000          .          
+-1        -INF            1.0000         1.0000          .          
+0         -INF            1.0000         1.0000          .          
+
+---- EQU antidiagonal  don't place two queens on the same anti-diagonal
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+8         -INF             .             1.0000          .          
+7         -INF             .             1.0000          .          
+6         -INF            1.0000         1.0000          .          
+5         -INF            1.0000         1.0000          .          
+4         -INF            1.0000         1.0000          .          
+3         -INF             .             1.0000          .          
+9         -INF            1.0000         1.0000          .          
+10        -INF            1.0000         1.0000          .          
+11        -INF            1.0000         1.0000          .          
+12        -INF            1.0000         1.0000          .          
+13        -INF             .             1.0000          .          
+14        -INF             .             1.0000          .          
+15        -INF            1.0000         1.0000          .          
+
+---- VAR x  placement of queens
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+8.a          .              .             1.0000         1.0000      
+8.b          .              .             1.0000         1.0000      
+8.c          .             1.0000         1.0000         1.0000      
+8.d          .              .             1.0000         1.0000      
+8.e          .              .             1.0000         1.0000      
+8.f          .              .             1.0000         1.0000      
+8.g          .              .             1.0000         1.0000      
+8.h          .              .             1.0000         1.0000      
+7.a          .              .             1.0000         1.0000      
+7.b          .              .             1.0000         1.0000      
+7.c          .              .             1.0000         1.0000      
+7.d          .              .             1.0000         1.0000      
+7.e          .              .             1.0000         1.0000      
+7.f          .              .             1.0000         1.0000      
+7.g          .              .             1.0000         1.0000      
+7.h          .             1.0000         1.0000         1.0000      
+6.a          .              .             1.0000         1.0000      
+6.b          .              .             1.0000         1.0000      
+6.c          .              .             1.0000         1.0000      
+6.d          .             1.0000         1.0000         1.0000      
+6.e          .              .             1.0000         1.0000      
+6.f          .              .             1.0000         1.0000      
+6.g          .              .             1.0000         1.0000      
+6.h          .              .             1.0000         1.0000      
+5.a          .              .             1.0000         1.0000      
+5.b          .              .             1.0000         1.0000      
+5.c          .              .             1.0000         1.0000      
+5.d          .              .             1.0000         1.0000      
+5.e          .              .             1.0000         1.0000      
+5.f          .              .             1.0000         1.0000      
+5.g          .             1.0000         1.0000         1.0000      
+5.h          .              .             1.0000         1.0000      
+4.a          .             1.0000         1.0000         1.0000      
+4.b          .              .             1.0000         1.0000      
+4.c          .              .             1.0000         1.0000      
+4.d          .              .             1.0000         1.0000      
+4.e          .              .             1.0000         1.0000      
+4.f          .              .             1.0000         1.0000      
+4.g          .              .             1.0000         1.0000      
+4.h          .              .             1.0000         1.0000      
+3.a          .              .             1.0000         1.0000      
+3.b          .              .             1.0000         1.0000      
+3.c          .              .             1.0000         1.0000      
+3.d          .              .             1.0000         1.0000      
+3.e          .              .             1.0000         1.0000      
+3.f          .             1.0000         1.0000         1.0000      
+3.g          .              .             1.0000         1.0000      
+3.h          .              .             1.0000         1.0000      
+2.a          .              .             1.0000         1.0000      
+2.b          .             1.0000         1.0000         1.0000      
+2.c          .              .             1.0000         1.0000      
+2.d          .              .             1.0000         1.0000      
+2.e          .              .             1.0000         1.0000      
+2.f          .              .             1.0000         1.0000      
+2.g          .              .             1.0000         1.0000      
+2.h          .              .             1.0000         1.0000      
+1.a          .              .             1.0000         1.0000      
+1.b          .              .             1.0000         1.0000      
+1.c          .              .             1.0000         1.0000      
+1.d          .              .             1.0000         1.0000      
+1.e          .             1.0000         1.0000         1.0000      
+1.f          .              .             1.0000         1.0000      
+1.g          .              .             1.0000         1.0000      
+1.h          .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR numqueens         -INF            8.0000        +INF             .          
+
+  numqueens  number of queens we can place
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     73 ----- Single Solution --------------------
+            VARIABLE numqueens.L           =            8  number of queens we can place
+
+----     73 VARIABLE x.L  placement of queens
+
+            a           b           c           d           e           f           g           h
+
+8                                   1
+7                                                                                               1
+6                                               1
+5                                                                                   1
+4           1
+3                                                                       1
+2                       1
+1                                                           1
+
+
+----     73 ------------------------------------------
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE queens Using MIP From line 98
+
+
+---- obj  =E=  objective: place as many queens as we can
+
+obj..  - x(8,a) - x(8,b) - x(8,c) - x(8,d) - x(8,e) - x(8,f) - x(8,g) - x(8,h) - x(7,a) - x(7,b) - x(7,c) - x(7,d) - x(7,e)
+     
+      - x(7,f) - x(7,g) - x(7,h) - x(6,a) - x(6,b) - x(6,c) - x(6,d) - x(6,e) - x(6,f) - x(6,g) - x(6,h) - x(5,a) - x(5,b)
+     
+      - x(5,c) - x(5,d) - x(5,e) - x(5,f) - x(5,g) - x(5,h) - x(4,a) - x(4,b) - x(4,c) - x(4,d) - x(4,e) - x(4,f) - x(4,g)
+     
+      - x(4,h) - x(3,a) - x(3,b) - x(3,c) - x(3,d) - x(3,e) - x(3,f) - x(3,g) - x(3,h) - x(2,a) - x(2,b) - x(2,c) - x(2,d)
+     
+      - x(2,e) - x(2,f) - x(2,g) - x(2,h) - x(1,a) - x(1,b) - x(1,c) - x(1,d) - x(1,e) - x(1,f) - x(1,g) - x(1,h) + numqueens =E= 
+     0 ; (LHS = 0)
+     
+
+---- row  =L=  don't place two queens in same row
+
+row(8)..  x(8,a) + x(8,b) + x(8,c) + x(8,d) + x(8,e) + x(8,f) + x(8,g) + x(8,h) =L= 1 ; (LHS = 1)
+     
+row(7)..  x(7,a) + x(7,b) + x(7,c) + x(7,d) + x(7,e) + x(7,f) + x(7,g) + x(7,h) =L= 1 ; (LHS = 1)
+     
+row(6)..  x(6,a) + x(6,b) + x(6,c) + x(6,d) + x(6,e) + x(6,f) + x(6,g) + x(6,h) =L= 1 ; (LHS = 1)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- column  =L=  don't place two queens in same column
+
+column(a)..  x(8,a) + x(7,a) + x(6,a) + x(5,a) + x(4,a) + x(3,a) + x(2,a) + x(1,a) =L= 1 ; (LHS = 1)
+     
+column(b)..  x(8,b) + x(7,b) + x(6,b) + x(5,b) + x(4,b) + x(3,b) + x(2,b) + x(1,b) =L= 1 ; (LHS = 1)
+     
+column(c)..  x(8,c) + x(7,c) + x(6,c) + x(5,c) + x(4,c) + x(3,c) + x(2,c) + x(1,c) =L= 1 ; (LHS = 1)
+     
+REMAINING 5 ENTRIES SKIPPED
+
+
+---- diagonal  =L=  don't place two queens on the same diagonal
+
+diagonal(6)..  x(8,b) + x(7,a) =L= 1 ; (LHS = 0)
+     
+diagonal(5)..  x(8,c) + x(7,b) + x(6,a) =L= 1 ; (LHS = 1)
+     
+diagonal(4)..  x(8,d) + x(7,c) + x(6,b) + x(5,a) =L= 1 ; (LHS = 0)
+     
+REMAINING 10 ENTRIES SKIPPED
+
+
+---- antidiagonal  =L=  don't place two queens on the same anti-diagonal
+
+antidiagonal(8)..  x(7,a) + x(6,b) + x(5,c) + x(4,d) + x(3,e) + x(2,f) + x(1,g) =L= 1 ; (LHS = 0)
+     
+antidiagonal(7)..  x(6,a) + x(5,b) + x(4,c) + x(3,d) + x(2,e) + x(1,f) =L= 1 ; (LHS = 0)
+     
+antidiagonal(6)..  x(5,a) + x(4,b) + x(3,c) + x(2,d) + x(1,e) =L= 1 ; (LHS = 1)
+     
+REMAINING 10 ENTRIES SKIPPED
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE queens Using MIP From line 98
+
+
+---- x  placement of queens
+
+x(8,a)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       obj
+        1       row(8)
+        1       column(a)
+        1       antidiagonal(9)
+
+x(8,b)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       obj
+        1       row(8)
+        1       column(b)
+        1       diagonal(6)
+        1       antidiagonal(10)
+
+x(8,c)
+                (.LO, .L, .UP, .M = 0, 1, 1, 1)
+       -1       obj
+        1       row(8)
+        1       column(c)
+        1       diagonal(5)
+        1       antidiagonal(11)
+
+REMAINING 61 ENTRIES SKIPPED
+
+---- numqueens  number of queens we can place
+
+numqueens
+                (.LO, .L, .UP, .M = -INF, 8, +INF, 0)
+        1       obj
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE queens Using MIP From line 98
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE queens Using MIP From line 98
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           43
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           65
+NON ZERO ELEMENTS           317     DISCRETE VARIABLES         64
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  47.5.0 d6b95593 WEX-WEI
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE queens Using MIP From line 98
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   queens              OBJECTIVE  numqueens
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  98
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                8.0000
+
+ RESOURCE USAGE, LIMIT          0.062 10000000000.000
+ ITERATION COUNT, LIMIT      9890    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\projects\OptimizationModels\Queens\cplex.opt"
+>>  SolnPoolAGap=0.1
+>>  solnpoolintensity=4
+>>  solnpoolpop=2
+>>  populatelim=100000
+>>  solnpoolmerge=allsols.gdx
+>> 
+>>  *to reproduce Cplex bug use:
+>>  *SolnPoolAGap=0
+>>  *threads=1
+Finished reading from "C:\projects\OptimizationModels\Queens\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- MIP status (130): all reachable solutions enumerated, pool tolerance.
+--- Cplex Time: 0.05sec (det. 18.40 ticks)
+
+--- Dumping 92 solutions from the solution pool...
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.04 ticks)
+
+
+Populate has completed the enumeration of solutions within tolerance
+MIP Solution:            8.000000    (9890 iterations, 1858 nodes)
+Final Solve:             8.000000    (0 iterations)
+
+Best possible:           8.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective: place as many queens as we can
+
+---- EQU row  don't place two queens in same row
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+8        -INF            1.0000         1.0000          .          
+7        -INF            1.0000         1.0000          .          
+6        -INF            1.0000         1.0000          .          
+5        -INF            1.0000         1.0000          .          
+4        -INF            1.0000         1.0000          .          
+3        -INF            1.0000         1.0000          .          
+2        -INF            1.0000         1.0000          .          
+1        -INF            1.0000         1.0000          .          
+
+---- EQU column  don't place two queens in same column
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+a        -INF            1.0000         1.0000          .          
+b        -INF            1.0000         1.0000          .          
+c        -INF            1.0000         1.0000          .          
+d        -INF            1.0000         1.0000          .          
+e        -INF            1.0000         1.0000          .          
+f        -INF            1.0000         1.0000          .          
+g        -INF            1.0000         1.0000          .          
+h        -INF            1.0000         1.0000          .          
+
+---- EQU diagonal  don't place two queens on the same diagonal
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+6         -INF             .             1.0000          .          
+5         -INF            1.0000         1.0000          .          
+4         -INF             .             1.0000          .          
+3         -INF            1.0000         1.0000          .          
+2         -INF            1.0000         1.0000          .          
+1         -INF             .             1.0000          .          
+-6        -INF             .             1.0000          .          
+-5        -INF             .             1.0000          .          
+-4        -INF            1.0000         1.0000          .          
+-3        -INF            1.0000         1.0000          .          
+-2        -INF            1.0000         1.0000          .          
+-1        -INF            1.0000         1.0000          .          
+0         -INF            1.0000         1.0000          .          
+
+---- EQU antidiagonal  don't place two queens on the same anti-diagonal
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+8         -INF             .             1.0000          .          
+7         -INF             .             1.0000          .          
+6         -INF            1.0000         1.0000          .          
+5         -INF            1.0000         1.0000          .          
+4         -INF            1.0000         1.0000          .          
+3         -INF             .             1.0000          .          
+9         -INF            1.0000         1.0000          .          
+10        -INF            1.0000         1.0000          .          
+11        -INF            1.0000         1.0000          .          
+12        -INF            1.0000         1.0000          .          
+13        -INF             .             1.0000          .          
+14        -INF             .             1.0000          .          
+15        -INF            1.0000         1.0000          .          
+
+---- VAR x  placement of queens
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+8.a          .              .             1.0000         1.0000      
+8.b          .              .             1.0000         1.0000      
+8.c          .             1.0000         1.0000         1.0000      
+8.d          .              .             1.0000         1.0000      
+8.e          .              .             1.0000         1.0000      
+8.f          .              .             1.0000         1.0000      
+8.g          .              .             1.0000         1.0000      
+8.h          .              .             1.0000         1.0000      
+7.a          .              .             1.0000         1.0000      
+7.b          .              .             1.0000         1.0000      
+7.c          .              .             1.0000         1.0000      
+7.d          .              .             1.0000         1.0000      
+7.e          .              .             1.0000         1.0000      
+7.f          .              .             1.0000         1.0000      
+7.g          .              .             1.0000         1.0000      
+7.h          .             1.0000         1.0000         1.0000      
+6.a          .              .             1.0000         1.0000      
+6.b          .              .             1.0000         1.0000      
+6.c          .              .             1.0000         1.0000      
+6.d          .             1.0000         1.0000         1.0000      
+6.e          .              .             1.0000         1.0000      
+6.f          .              .             1.0000         1.0000      
+6.g          .              .             1.0000         1.0000      
+6.h          .              .             1.0000         1.0000      
+5.a          .              .             1.0000         1.0000      
+5.b          .              .             1.0000         1.0000      
+5.c          .              .             1.0000         1.0000      
+5.d          .              .             1.0000         1.0000      
+5.e          .              .             1.0000         1.0000      
+5.f          .              .             1.0000         1.0000      
+5.g          .             1.0000         1.0000         1.0000      
+5.h          .              .             1.0000         1.0000      
+4.a          .             1.0000         1.0000         1.0000      
+4.b          .              .             1.0000         1.0000      
+4.c          .              .             1.0000         1.0000      
+4.d          .              .             1.0000         1.0000      
+4.e          .              .             1.0000         1.0000      
+4.f          .              .             1.0000         1.0000      
+4.g          .              .             1.0000         1.0000      
+4.h          .              .             1.0000         1.0000      
+3.a          .              .             1.0000         1.0000      
+3.b          .              .             1.0000         1.0000      
+3.c          .              .             1.0000         1.0000      
+3.d          .              .             1.0000         1.0000      
+3.e          .              .             1.0000         1.0000      
+3.f          .             1.0000         1.0000         1.0000      
+3.g          .              .             1.0000         1.0000      
+3.h          .              .             1.0000         1.0000      
+2.a          .              .             1.0000         1.0000      
+2.b          .             1.0000         1.0000         1.0000      
+2.c          .              .             1.0000         1.0000      
+2.d          .              .             1.0000         1.0000      
+2.e          .              .             1.0000         1.0000      
+2.f          .              .             1.0000         1.0000      
+2.g          .              .             1.0000         1.0000      
+2.h          .              .             1.0000         1.0000      
+1.a          .              .             1.0000         1.0000      
+1.b          .              .             1.0000         1.0000      
+1.c          .              .             1.0000         1.0000      
+1.d          .              .             1.0000         1.0000      
+1.e          .             1.0000         1.0000         1.0000      
+1.f          .              .             1.0000         1.0000      
+1.g          .              .             1.0000         1.0000      
+1.h          .              .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR numqueens         -INF            8.0000        +INF             .          
+
+  numqueens  number of queens we can place
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 47.5.0  d6b95593 Aug 29, 2024          WEX-WEI x86 64bit/MS Windows - 09/02/24 04:26:05 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    115 SET index  
+
+soln_queens_p1 ,    soln_queens_p2 ,    soln_queens_p3 ,    soln_queens_p4 ,    soln_queens_p5 ,    soln_queens_p6 
+soln_queens_p7 ,    soln_queens_p8 ,    soln_queens_p9 ,    soln_queens_p10,    soln_queens_p11,    soln_queens_p12
+soln_queens_p13,    soln_queens_p14,    soln_queens_p15,    soln_queens_p16,    soln_queens_p17,    soln_queens_p18
+soln_queens_p19,    soln_queens_p20,    soln_queens_p21,    soln_queens_p22,    soln_queens_p23,    soln_queens_p24
+soln_queens_p25,    soln_queens_p26,    soln_queens_p27,    soln_queens_p28,    soln_queens_p29,    soln_queens_p30
+soln_queens_p31,    soln_queens_p32,    soln_queens_p33,    soln_queens_p34,    soln_queens_p35,    soln_queens_p36
+soln_queens_p37,    soln_queens_p38,    soln_queens_p39,    soln_queens_p40,    soln_queens_p41,    soln_queens_p42
+soln_queens_p43,    soln_queens_p44,    soln_queens_p45,    soln_queens_p46,    soln_queens_p47,    soln_queens_p48
+soln_queens_p49,    soln_queens_p50,    soln_queens_p51,    soln_queens_p52,    soln_queens_p53,    soln_queens_p54
+soln_queens_p55,    soln_queens_p56,    soln_queens_p57,    soln_queens_p58,    soln_queens_p59,    soln_queens_p60
+soln_queens_p61,    soln_queens_p62,    soln_queens_p63,    soln_queens_p64,    soln_queens_p65,    soln_queens_p66
+soln_queens_p67,    soln_queens_p68,    soln_queens_p69,    soln_queens_p70,    soln_queens_p71,    soln_queens_p72
+soln_queens_p73,    soln_queens_p74,    soln_queens_p75,    soln_queens_p76,    soln_queens_p77,    soln_queens_p78
+soln_queens_p79,    soln_queens_p80,    soln_queens_p81,    soln_queens_p82,    soln_queens_p83,    soln_queens_p84
+soln_queens_p85,    soln_queens_p86,    soln_queens_p87,    soln_queens_p88,    soln_queens_p89,    soln_queens_p90
+soln_queens_p91,    soln_queens_p92
+
+
+**** REPORT FILE SUMMARY
+
+f C:\projects\OptimizationModels\Queens\allsolutions.html
+
+
+EXECUTION TIME       =        0.391 SECONDS      6 MB  47.5.0 d6b95593 WEX-WEI
+
+
+USER: Eval License                                   G231201|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Queens\Queens.gms
+Output     C:\projects\OptimizationModels\Queens\Queens.lst

@@ -80,8 +80,8 @@ display X,y;
 * maxdelta and delta 
 *------------------------------------------------
 
-scalar MaxDelta;
-MaxDelta = smax(j,abs(sum(i,X(i,j)*Y(i))));
+scalar MaxDelta "||X^T*y||_∞";
+MaxDelta = smax(j,abs(sum(i,X(i,j)*y(i))));
 display MaxDelta;
 
 * create equally spaced values 0..MaxDelta
