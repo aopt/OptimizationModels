@@ -1,0 +1,1292 @@
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Model 1: basic min cost flow model with arc capacities and costs
+         Model 2a: formulate node capacities as side constraints
+         Model 2b: id, but remove duplicate expressions
+         Model 3: handle node capacities within network by
+                  duplicating the nodes
+         
+  10   
+  11  option lp=cplex;
+  12   
+  13  *----------------------------------------------------
+  14  * network topology
+  15  * both a small and medium sized data set
+  16  *----------------------------------------------------
+  17   
+  18  * small data set. set to 0 or 1.
+  20   
+  22  set
+  23     i0 'superset of nodes' /node1*node6, nodedup1*nodedup6/
+  24     i(i0) 'current nodes' /node1*node6/
+  25     a(i0,i0) 'current arcs'
+  26     sup(i0) 'supply nodes' /node1/
+  27     dem(i0) 'demand nodes' /node6/
+  28  ;
+  29  scalars
+  30     supdem 'supply and demand quantities' /100/
+  31     density 'fraction of arcs generated' /0.6/
+  32  ;
+  34   
+  35  alias (i0,j0), (i,j);
+  36   
+  37   
+  38  *----------------------------------------------------
+  39  * capacity, cost data
+  40  *----------------------------------------------------
+  41   
+  42  Parameters
+  43     cap(i0,j0) 'arc capacity'
+  44     cost(i0,j0) 'arc cost'
+  45     supply(i0) 'supply at supply nodes'
+  46     demand(i0) 'demand at demand nodes'
+  47     nodecap(i0) 'node capacity'
+  48  ;
+  49   
+  50  *----------------------------------------------------
+  51  * random data
+  52  *----------------------------------------------------
+  53   
+  54  scalar printFlag 'if nonzero we display things';
+  55  printFlag = card(i)<=50;
+  56   
+  57  * sparse network: not all a(i,j) exist
+  58  * no self loops
+  59  a(i,j)$(not sameas(i,j)) = uniform(0,1)<density;
+  60   
+  61  cap(a) = uniform(10,80);
+  62  cost(a) = uniform(0,10);
+  63   
+  64  supply(sup) = supdem;
+  65  demand(dem) = supdem;
+  66   
+  67  * assume balanced supply and demand
+  68  abort$(sum(i,supply(i))<>sum(i,demand(i))) "total supply does not equal total demand";
+  69   
+  70  * node cap should be >= supply or demand for supply and demand nodes
+  71  * otherwise the model would be infeasible
+  72  nodecap(i) = 20;
+  73  nodecap(sup) = supdem;
+  74  nodecap(dem) = supdem;
+  75   
+  76  * for small networks print things
+  77  * for larger cases use the gdx viewer
+  78  * optional option for better, more compact display
+  80  display$printFlag i,a,sup,dem,cap,cost,supply,demand;
+  81   
+  82   
+  83  *----------------------------------------------------
+  84  * Model 1:
+  85  * LP formulation of min cost flow network with
+  86  * arc capacities only
+  87  *----------------------------------------------------
+  88   
+  89  variable totalcost;
+  90  positive variable f(i0,j0) 'flow';
+  91   
+  92  Equations
+  93      obj        'objective'
+  94      nodbal(i0)  'node balance'
+  95  ;
+  96   
+  97  obj.. totalcost =e= sum(a,cost(a)*f(a));
+  98   
+  99  nodbal(i).. sum(a(j,i), f(a))+supply(i) =e= sum(a(i,j), f(a))+demand(i);
+ 100   
+ 101  f.up(a) = cap(a);
+ 102   
+ 103  model model1 /all/;
+ 104   
+ 105  solve model1 using lp minimizing totalcost;
+ 107  display totalcost.l,f.l;
+ 108   
+ 109   
+ 110  *----------------------------------------------------
+ 111  * reporting
+ 112  *----------------------------------------------------
+ 113  parameter results(*,*);
+ 114  results('model1: no node cap','obj') = totalcost.l;
+ 115  display results;
+ 116   
+ 117  parameter nodeflow(i0,*) 'flow through nodes';
+ 118  nodeflow(i,'inflow') = sum(a(j,i), f.l(a))+supply(i);
+ 119  nodeflow(i,'outflow') = sum(a(i,j), f.l(a))+demand(i);
+ 120  display nodeflow;
+ 121   
+ 122   
+ 123  *----------------------------------------------------
+ 124  * Model 2a:
+ 125  * add node capacity as constraints
+ 126  * no longer a network model: will do LP iterations
+ 127  * after network solve
+ 128  *----------------------------------------------------
+ 129   
+ 130  equation node_inflow_lim(i0);
+ 131  node_inflow_lim(i).. sum(a(j,i), f(a))+supply(i) =l= nodecap(i);
+ 132   
+ 133  model model2a /model1+node_inflow_lim/;
+ 134   
+ 135  solve model2a using lp minimizing totalcost;
+ 136  display totalcost.l,f.l;
+ 137   
+ 138  results('model2a: side constraint','obj') = totalcost.l;
+ 139  display results;
+ 140   
+ 141   
+ 142  *----------------------------------------------------
+ 143  * Model 2b:
+ 144  * add node capacity as constraints, but remove duplicate
+ 145  * expressions
+ 146  * this is so close to a network problem that solvers can
+ 147  * use the network solver exclusively to find the optimal
+ 148  * solution.
+ 149  *----------------------------------------------------
+ 150   
+ 151  positive variables
+ 152    nf(i0)  'inflow/outflow of node i'
+ 153  ;
+ 154   
+ 155  equations
+ 156     def_inflow(i0)
+ 157     def_outflow(i0)
+ 158  ;
+ 159   
+ 160  def_inflow(i).. nf(i) =e= sum(a(j,i), f(a))+supply(i);
+ 161  def_outflow(i).. nf(i) =e= sum(a(i,j), f(a))+demand(i);
+ 162   
+ 163  nf.up(i) = nodecap(i);
+ 164   
+ 165  model model2b /obj,def_inflow,def_outflow/;
+ 166   
+ 167  solve model2b using lp minimizing totalcost;
+ 169  display totalcost.l,f.l,nf.l;
+ 170   
+ 171  results('model2b: sparse reformulation','obj') = totalcost.l;
+ 172  display results;
+ 173   
+ 174   
+ 175  *----------------------------------------------------
+ 176  * Model 3:
+ 177  * add node capacities by duplicating all nodes
+ 178  *----------------------------------------------------
+ 179   
+ 180  * pairs of original and duplicate nodes
+ 181  * i.e. node1.nodedup1, node2.nodedup2, ...
+ 182  set pairs(i0,i0) 'node pairs';
+ 183  pairs(i0,i0+card(i)) = yes;
+ 184   
+ 185   
+ 186  loop(pairs(i,j0),
+ 187  * copy out links from nodeX to nodedupX
+ 188      a(j0,j) = a(i,j);
+ 189  * remove old outlinks from nodeX
+ 190      a(i,j) = no;
+ 191  * add the link nodeX -> nodedupX
+ 192      a(i,j0) = yes;
+ 193  * move cost, cap and demand
+ 194  * supply does not need to be moved
+ 195      cost(j0,j) = cost(i,j);
+ 196      cost(i,j) = 0;
+ 197      cap(j0,j) = cap(i,j);
+ 198      cap(i,j) = 0;
+ 199      cap(i,j0) = nodecap(i);
+ 200      demand(j0) = demand(i);
+ 201      demand(i) = 0;
+ 202  );
+ 203   
+ 204  * the set i should now contain all nodes
+ 205  i(i0) = yes;
+ 206   
+ 207  display$printFlag i,a,cost,cap,supply,demand;
+ 208   
+ 209  * redo the bounds as cap has changed
+ 210  f.up(a) = cap(a);
+ 211   
+ 212  * get rid of older values so displays are clean
+ 213  f.l(i0,j0) = 0;
+ 214   
+ 215  solve model1 using lp minimizing totalcost;
+ 216  display totalcost.l,f.l;
+ 217  results('model1: duplicated nodes','obj') = totalcost.l;
+ 218  display results;
+ 219   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     80 SET i  current nodes
+
+node1,    node2,    node3,    node4,    node5,    node6
+
+
+----     80 SET a  current arcs
+
+            node1       node2       node3       node4       node5       node6
+
+node1                     YES                     YES         YES         YES
+node2         YES                     YES                     YES         YES
+node3                     YES                                             YES
+node4                     YES         YES                                 YES
+node5         YES         YES         YES         YES                     YES
+node6                     YES                                 YES
+
+
+----     80 SET sup  supply nodes
+
+node1
+
+
+----     80 SET dem  demand nodes
+
+node6
+
+
+----     80 PARAMETER cap  arc capacity
+
+            node1       node2       node3       node4       node5       node6
+
+node1                  17.734                  45.167      21.212      71.072
+node2      28.558                  30.007                  51.577      60.590
+node3                  53.977                                          42.466
+node4                  38.931      18.239                              31.995
+node5      13.259      33.699      22.747      55.201                  49.252
+node6                  63.897                              30.846
+
+
+----     80 PARAMETER cost  arc cost
+
+            node1       node2       node3       node4       node5       node6
+
+node1                   6.611                   7.558       6.274       2.839
+node2       0.864                   1.025                   6.413       5.453
+node3                   0.315                                           7.924
+node4                   0.728       1.757                               5.256
+node5       7.502       1.781       0.341       5.851                   6.212
+node6                   3.894                               3.587
+
+
+----     80 PARAMETER supply  supply at supply nodes
+
+node1 100.000
+
+
+----     80 PARAMETER demand  demand at demand nodes
+
+node6 100.000
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE model1 Using LP From line 105
+
+
+---- obj  =E=  objective
+
+obj..  totalcost - 6.61106261*f(node1,node2) - 7.55821674*f(node1,node4) - 6.27447499*f(node1,node5) - 2.83864198*f(node1,node6)
+     
+      - 0.86424624*f(node2,node1) - 1.02514669*f(node2,node3) - 6.41251151*f(node2,node5) - 5.45309498*f(node2,node6)
+     
+      - 0.31524852*f(node3,node2) - 7.92360642*f(node3,node6) - 0.72766998*f(node4,node2) - 1.75661049*f(node4,node3)
+     
+      - 5.25632613*f(node4,node6) - 7.50207669*f(node5,node1) - 1.78123714*f(node5,node2) - 0.34140986*f(node5,node3)
+     
+      - 5.85131173*f(node5,node4) - 6.21229984*f(node5,node6) - 3.893619*f(node6,node2) - 3.58714153*f(node6,node5) =E= 0 ;
+     
+      (LHS = 0)
+     
+
+---- nodbal  =E=  node balance
+
+nodbal(node1)..  - f(node1,node2) - f(node1,node4) - f(node1,node5) - f(node1,node6) + f(node2,node1) + f(node5,node1) =E= -100 ;
+     
+      (LHS = 0, INFES = 100 ****)
+     
+nodbal(node2)..  f(node1,node2) - f(node2,node1) - f(node2,node3) - f(node2,node5) - f(node2,node6) + f(node3,node2)
+     
+      + f(node4,node2) + f(node5,node2) + f(node6,node2) =E= 0 ; (LHS = 0)
+     
+nodbal(node3)..  f(node2,node3) - f(node3,node2) - f(node3,node6) + f(node4,node3) + f(node5,node3) =E= 0 ; (LHS = 0)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE model1 Using LP From line 105
+
+
+---- totalcost  
+
+totalcost
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- f  flow
+
+f(node1,node2)
+                (.LO, .L, .UP, .M = 0, 0, 17.73446037, 0)
+       -6.6111  obj
+       -1       nodbal(node1)
+        1       nodbal(node2)
+
+f(node1,node4)
+                (.LO, .L, .UP, .M = 0, 0, 45.16694062, 0)
+       -7.5582  obj
+       -1       nodbal(node1)
+        1       nodbal(node4)
+
+f(node1,node5)
+                (.LO, .L, .UP, .M = 0, 0, 21.21209334, 0)
+       -6.2745  obj
+       -1       nodbal(node1)
+        1       nodbal(node5)
+
+REMAINING 17 ENTRIES SKIPPED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE model1 Using LP From line 105
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.326E+01, 7.107E+01] - Zero values observed as well
+Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE model1 Using LP From line 105
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS            7
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           21
+NON ZERO ELEMENTS            61
+
+
+GENERATION TIME      =        0.047 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE model1 Using LP From line 105
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   model1              OBJECTIVE  totalcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  105
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              554.3192
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:          554.319185
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU nodbal  node balance
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1      -100.0000      -100.0000      -100.0000          .          
+node2          .              .              .             6.9311      
+node3          .              .              .             6.6159      
+node4          .              .              .             7.1279      
+node5          .              .              .             6.2745      
+node6       100.0000       100.0000       100.0000        12.3842      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalcost         -INF          554.3192        +INF             .          
+
+---- VAR f  flow
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+node1.node2          .            17.7345        17.7345        -0.3201      
+node1.node4          .              .            45.1669         0.4303      
+node1.node5          .            11.1932        21.2121          .          
+node1.node6          .            71.0724        71.0724        -9.5456      
+node2.node1          .              .            28.5580         7.7954      
+node2.node3          .              .            30.0070         1.3404      
+node2.node5          .              .            51.5769         7.0692      
+node2.node6          .            28.9276        60.5903          .          
+node3.node2          .            11.1932        53.9774          .          
+node3.node6          .              .            42.4659         2.1553      
+node4.node2          .              .            38.9315         0.9244      
+node4.node3          .              .            18.2387         2.2686      
+node4.node6          .              .            31.9949          .          
+node5.node1          .              .            13.2586        13.7766      
+node5.node2          .              .            33.6985         1.1246      
+node5.node3          .            11.1932        22.7470          .          
+node5.node4          .              .            55.2009         4.9979      
+node5.node6          .              .            49.2522         0.1025      
+node6.node2          .              .            63.8973         9.3467      
+node6.node5          .              .            30.8464         9.6969      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    107 VARIABLE totalcost.L           =      554.319  
+
+----    107 VARIABLE f.L  flow
+
+            node2       node3       node5       node6
+
+node1      17.734                  11.193      71.072
+node2                                          28.928
+node3      11.193
+node5                  11.193
+
+
+----    115 PARAMETER results  
+
+                            obj
+
+model1: no node cap     554.319
+
+
+----    120 PARAMETER nodeflow  flow through nodes
+
+           inflow     outflow
+
+node1     100.000     100.000
+node2      28.928      28.928
+node3      11.193      11.193
+node5      11.193      11.193
+node6     100.000     100.000
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE model2a Using LP From line 135
+
+
+---- obj  =E=  objective
+
+obj..  totalcost - 6.61106261*f(node1,node2) - 7.55821674*f(node1,node4) - 6.27447499*f(node1,node5) - 2.83864198*f(node1,node6)
+     
+      - 0.86424624*f(node2,node1) - 1.02514669*f(node2,node3) - 6.41251151*f(node2,node5) - 5.45309498*f(node2,node6)
+     
+      - 0.31524852*f(node3,node2) - 7.92360642*f(node3,node6) - 0.72766998*f(node4,node2) - 1.75661049*f(node4,node3)
+     
+      - 5.25632613*f(node4,node6) - 7.50207669*f(node5,node1) - 1.78123714*f(node5,node2) - 0.34140986*f(node5,node3)
+     
+      - 5.85131173*f(node5,node4) - 6.21229984*f(node5,node6) - 3.893619*f(node6,node2) - 3.58714153*f(node6,node5) =E= 0 ;
+     
+      (LHS = 0)
+     
+
+---- nodbal  =E=  node balance
+
+nodbal(node1)..  - f(node1,node2) - f(node1,node4) - f(node1,node5) - f(node1,node6) + f(node2,node1) + f(node5,node1) =E= -100 ;
+     
+      (LHS = -100)
+     
+nodbal(node2)..  f(node1,node2) - f(node2,node1) - f(node2,node3) - f(node2,node5) - f(node2,node6) + f(node3,node2)
+     
+      + f(node4,node2) + f(node5,node2) + f(node6,node2) =E= 0 ; (LHS = 0)
+     
+nodbal(node3)..  f(node2,node3) - f(node3,node2) - f(node3,node6) + f(node4,node3) + f(node5,node3) =E= 0 ; (LHS = 0)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- node_inflow_lim  =L=  
+
+node_inflow_lim(node1)..  f(node2,node1) + f(node5,node1) =L= 0 ; (LHS = 0)
+     
+node_inflow_lim(node2)..  f(node1,node2) + f(node3,node2) + f(node4,node2) + f(node5,node2) + f(node6,node2) =L= 20 ;
+     
+      (LHS = 28.92763823, INFES = 8.92763823 ****)
+     
+node_inflow_lim(node3)..  f(node2,node3) + f(node4,node3) + f(node5,node3) =L= 20 ; (LHS = 11.19317786)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE model2a Using LP From line 135
+
+
+---- totalcost  
+
+totalcost
+                (.LO, .L, .UP, .M = -INF, 554.319184995763, +INF, 0)
+        1       obj
+
+
+---- f  flow
+
+f(node1,node2)
+                (.LO, .L, .UP, .M = 0, 17.73446037, 17.73446037, -0.32007076)
+       -6.6111  obj
+       -1       nodbal(node1)
+        1       nodbal(node2)
+        1       node_inflow_lim(node2)
+
+f(node1,node4)
+                (.LO, .L, .UP, .M = 0, 0, 45.16694062, 0.43031452)
+       -7.5582  obj
+       -1       nodbal(node1)
+        1       nodbal(node4)
+        1       node_inflow_lim(node4)
+
+f(node1,node5)
+                (.LO, .L, .UP, .M = 0, 11.19317786, 21.21209334, 0)
+       -6.2745  obj
+       -1       nodbal(node1)
+        1       nodbal(node5)
+        1       node_inflow_lim(node5)
+
+REMAINING 17 ENTRIES SKIPPED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE model2a Using LP From line 135
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 2.000E+01, 1.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.326E+01, 7.107E+01] - Zero values observed as well
+Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE model2a Using LP From line 135
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           13
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           21
+NON ZERO ELEMENTS            81
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE model2a Using LP From line 135
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   model2a             OBJECTIVE  totalcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  135
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              555.2347
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         6    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU nodbal  node balance
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1      -100.0000      -100.0000      -100.0000        -6.6159      
+node2          .              .              .             0.4178      
+node3          .       7.105427E-15          .              .          
+node4          .              .              .             0.6146      
+node5          .              .              .            -0.3414      
+node6       100.0000       100.0000       100.0000         5.8709      
+
+---- EQU node_inflow_lim  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1        -INF             .              .              .          
+node2        -INF           20.0000        20.0000        -0.1025      
+node3        -INF            2.2655        20.0000          .          
+node4        -INF             .            20.0000          .          
+node5        -INF           11.1932        20.0000          .          
+node6        -INF          100.0000       100.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalcost         -INF          555.2347        +INF             .          
+
+---- VAR f  flow
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+node1.node2          .            17.7345        17.7345        -0.3201      
+node1.node4          .              .            45.1669         0.3278      
+node1.node5          .            11.1932        21.2121          .          
+node1.node6          .            71.0724        71.0724        -9.6481      
+node2.node1          .              .            28.5580         7.8979      
+node2.node3          .              .            30.0070         1.4429      
+node2.node5          .              .            51.5769         7.1717      
+node2.node6          .            20.0000        60.5903          .          
+node3.node2          .             2.2655        53.9774          .          
+node3.node6          .              .            42.4659         2.0527      
+node4.node2          .              .            38.9315         1.0270      
+node4.node3          .              .            18.2387         2.3712      
+node4.node6          .              .            31.9949          .          
+node5.node1          .              .            13.2586        13.7766      
+node5.node2          .              .            33.6985         1.1246      
+node5.node3          .             2.2655        22.7470          .          
+node5.node4          .              .            55.2009         4.8953      
+node5.node6          .             8.9276        49.2522          .          
+node6.node2          .              .            63.8973         9.4493      
+node6.node5          .              .            30.8464         9.7994      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    136 VARIABLE totalcost.L           =      555.235  
+
+----    136 VARIABLE f.L  flow
+
+            node2       node3       node5       node6
+
+node1      17.734                  11.193      71.072
+node2                                          20.000
+node3       2.266
+node5                   2.266                   8.928
+
+
+----    139 PARAMETER results  
+
+                                 obj
+
+model1: no node cap          554.319
+model2a: side constraint     555.235
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE model2b Using LP From line 167
+
+
+---- obj  =E=  objective
+
+obj..  totalcost - 6.61106261*f(node1,node2) - 7.55821674*f(node1,node4) - 6.27447499*f(node1,node5) - 2.83864198*f(node1,node6)
+     
+      - 0.86424624*f(node2,node1) - 1.02514669*f(node2,node3) - 6.41251151*f(node2,node5) - 5.45309498*f(node2,node6)
+     
+      - 0.31524852*f(node3,node2) - 7.92360642*f(node3,node6) - 0.72766998*f(node4,node2) - 1.75661049*f(node4,node3)
+     
+      - 5.25632613*f(node4,node6) - 7.50207669*f(node5,node1) - 1.78123714*f(node5,node2) - 0.34140986*f(node5,node3)
+     
+      - 5.85131173*f(node5,node4) - 6.21229984*f(node5,node6) - 3.893619*f(node6,node2) - 3.58714153*f(node6,node5) =E= 0 ;
+     
+      (LHS = -1.13686837721616E-13, INFES = 1.13686837721616E-13 ****)
+     
+
+---- def_inflow  =E=  
+
+def_inflow(node1)..  - f(node2,node1) - f(node5,node1) + nf(node1) =E= 100 ; (LHS = 0, INFES = 100 ****)
+     
+def_inflow(node2)..  - f(node1,node2) - f(node3,node2) - f(node4,node2) - f(node5,node2) - f(node6,node2) + nf(node2) =E= 0 ;
+     
+      (LHS = -20, INFES = 20 ****)
+     
+def_inflow(node3)..  - f(node2,node3) - f(node4,node3) - f(node5,node3) + nf(node3) =E= 0 ;
+     
+      (LHS = -2.26553963000001, INFES = 2.26553963000001 ****)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+
+---- def_outflow  =E=  
+
+def_outflow(node1)..  - f(node1,node2) - f(node1,node4) - f(node1,node5) - f(node1,node6) + nf(node1) =E= 0 ;
+     
+      (LHS = -100, INFES = 100 ****)
+     
+def_outflow(node2)..  - f(node2,node1) - f(node2,node3) - f(node2,node5) - f(node2,node6) + nf(node2) =E= 0 ;
+     
+      (LHS = -20, INFES = 20 ****)
+     
+def_outflow(node3)..  - f(node3,node2) - f(node3,node6) + nf(node3) =E= 0 ; (LHS = -2.26553963, INFES = 2.26553963 ****)
+     
+REMAINING 3 ENTRIES SKIPPED
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE model2b Using LP From line 167
+
+
+---- totalcost  
+
+totalcost
+                (.LO, .L, .UP, .M = -INF, 555.234682870963, +INF, 0)
+        1       obj
+
+
+---- f  flow
+
+f(node1,node2)
+                (.LO, .L, .UP, .M = 0, 17.73446037, 17.73446037, -0.32007076)
+       -6.6111  obj
+       -1       def_inflow(node2)
+       -1       def_outflow(node1)
+
+f(node1,node4)
+                (.LO, .L, .UP, .M = 0, 0, 45.16694062, 0.327768039999999)
+       -7.5582  obj
+       -1       def_inflow(node4)
+       -1       def_outflow(node1)
+
+f(node1,node5)
+                (.LO, .L, .UP, .M = 0, 11.19317786, 21.21209334, 0)
+       -6.2745  obj
+       -1       def_inflow(node5)
+       -1       def_outflow(node1)
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- nf  inflow/outflow of node i
+
+nf(node1)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+        1       def_inflow(node1)
+        1       def_outflow(node1)
+
+nf(node2)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       def_inflow(node2)
+        1       def_outflow(node2)
+
+nf(node3)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+        1       def_inflow(node3)
+        1       def_outflow(node3)
+
+REMAINING 3 ENTRIES SKIPPED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE model2b Using LP From line 167
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.326E+01, 1.000E+02] - Zero values observed as well
+Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE model2b Using LP From line 167
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           13
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           27
+NON ZERO ELEMENTS            73
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE model2b Using LP From line 167
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   model2b             OBJECTIVE  totalcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  167
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              555.2347
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.03 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU def_inflow  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1       100.0000       100.0000       100.0000         6.9311      
+node2          .       7.105427E-15          .              .          
+node3          .              .              .             0.3152      
+node4          .              .              .            -0.6271      
+node5          .              .              .             0.6567      
+node6          .              .              .            -5.5556      
+
+---- EQU def_outflow  
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1          .              .              .            -6.9311      
+node2          .              .              .             0.1025      
+node3          .              .              .            -0.3152      
+node4          .              .              .             0.6271      
+node5          .              .              .            -0.6567      
+node6       100.0000       100.0000       100.0000         5.5556      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalcost         -INF          555.2347        +INF             .          
+
+---- VAR f  flow
+
+                   LOWER          LEVEL          UPPER         MARGINAL
+
+node1.node2          .            17.7345        17.7345        -0.3201      
+node1.node4          .              .            45.1669          .          
+node1.node5          .            11.1932        21.2121          .          
+node1.node6          .            71.0724        71.0724        -9.6481      
+node2.node1          .              .            28.5580         7.8979      
+node2.node3          .              .            30.0070         1.4429      
+node2.node5          .              .            51.5769         7.1717      
+node2.node6          .            20.0000        60.5903          .          
+node3.node2          .             2.2655        53.9774          .          
+node3.node6          .              .            42.4659         2.0527      
+node4.node2          .              .            38.9315         1.3548      
+node4.node3          .              .            18.2387         2.6989      
+node4.node6          .              .            31.9949         0.3278      
+node5.node1          .              .            13.2586        13.7766      
+node5.node2          .              .            33.6985         1.1246      
+node5.node3          .             2.2655        22.7470          .          
+node5.node4          .              .            55.2009         4.5676      
+node5.node6          .             8.9276        49.2522          .          
+node6.node2          .              .            63.8973         9.4493      
+node6.node5          .              .            30.8464         9.7994      
+
+---- VAR nf  inflow/outflow of node i
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+node1          .           100.0000       100.0000          .          
+node2          .            20.0000        20.0000        -0.1025      
+node3          .             2.2655        20.0000          .          
+node4          .              .            20.0000          .          
+node5          .            11.1932        20.0000          .          
+node6          .           100.0000       100.0000          .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    169 VARIABLE totalcost.L           =      555.235  
+
+----    169 VARIABLE f.L  flow
+
+            node2       node3       node5       node6
+
+node1      17.734                  11.193      71.072
+node2                                          20.000
+node3       2.266
+node5                   2.266                   8.928
+
+
+----    169 VARIABLE nf.L  inflow/outflow of node i
+
+node1 100.000,    node2  20.000,    node3   2.266,    node5  11.193,    node6 100.000
+
+
+----    172 PARAMETER results  
+
+                                      obj
+
+model1: no node cap               554.319
+model2a: side constraint          555.235
+model2b: sparse reformulation     555.235
+
+
+----    207 SET i  current nodes
+
+node1   ,    node2   ,    node3   ,    node4   ,    node5   ,    node6   ,    nodedup1,    nodedup2,    nodedup3,    nodedup4
+nodedup5,    nodedup6
+
+
+----    207 SET a  current arcs
+
+               node1       node2       node3       node4       node5       node6    nodedup1    nodedup2    nodedup3    nodedup4
+
+node1                                                                                    YES
+node2                                                                                                YES
+node3                                                                                                            YES
+node4                                                                                                                        YES
+nodedup1                     YES                     YES         YES         YES
+nodedup2         YES                     YES                     YES         YES
+nodedup3                     YES                                             YES
+nodedup4                     YES         YES                                 YES
+nodedup5         YES         YES         YES         YES                     YES
+nodedup6                     YES                                 YES
+
+       +    nodedup5    nodedup6
+
+node5            YES
+node6                        YES
+
+
+----    207 PARAMETER cost  arc cost
+
+               node1       node2       node3       node4       node5       node6
+
+nodedup1                   6.611                   7.558       6.274       2.839
+nodedup2       0.864                   1.025                   6.413       5.453
+nodedup3                   0.315                                           7.924
+nodedup4                   0.728       1.757                               5.256
+nodedup5       7.502       1.781       0.341       5.851                   6.212
+nodedup6                   3.894                               3.587
+
+
+----    207 PARAMETER cap  arc capacity
+
+               node1       node2       node3       node4       node5       node6    nodedup1    nodedup2    nodedup3    nodedup4
+
+node1                                                                                100.000
+node2                                                                                             20.000
+node3                                                                                                         20.000
+node4                                                                                                                     20.000
+nodedup1                  17.734                  45.167      21.212      71.072
+nodedup2      28.558                  30.007                  51.577      60.590
+nodedup3                  53.977                                          42.466
+nodedup4                  38.931      18.239                              31.995
+nodedup5      13.259      33.699      22.747      55.201                  49.252
+nodedup6                  63.897                              30.846
+
+       +    nodedup5    nodedup6
+
+node5         20.000
+node6                    100.000
+
+
+----    207 PARAMETER supply  supply at supply nodes
+
+node1 100.000
+
+
+----    207 PARAMETER demand  demand at demand nodes
+
+nodedup6 100.000
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE model1 Using LP From line 215
+
+
+---- obj  =E=  objective
+
+obj..  totalcost - 6.61106261*f(nodedup1,node2) - 7.55821674*f(nodedup1,node4) - 6.27447499*f(nodedup1,node5)
+     
+      - 2.83864198*f(nodedup1,node6) - 0.86424624*f(nodedup2,node1) - 1.02514669*f(nodedup2,node3) - 6.41251151*f(nodedup2,node5)
+     
+      - 5.45309498*f(nodedup2,node6) - 0.31524852*f(nodedup3,node2) - 7.92360642*f(nodedup3,node6) - 0.72766998*f(nodedup4,node2)
+     
+      - 1.75661049*f(nodedup4,node3) - 5.25632613*f(nodedup4,node6) - 7.50207669*f(nodedup5,node1) - 1.78123714*f(nodedup5,node2)
+     
+      - 0.34140986*f(nodedup5,node3) - 5.85131173*f(nodedup5,node4) - 6.21229984*f(nodedup5,node6) - 3.893619*f(nodedup6,node2)
+     
+      - 3.58714153*f(nodedup6,node5) =E= 0 ; (LHS = 555.234682870963, INFES = 555.234682870963 ****)
+     
+
+---- nodbal  =E=  node balance
+
+nodbal(node1)..  - f(node1,nodedup1) + f(nodedup2,node1) + f(nodedup5,node1) =E= -100 ; (LHS = 0, INFES = 100 ****)
+     
+nodbal(node2)..  - f(node2,nodedup2) + f(nodedup1,node2) + f(nodedup3,node2) + f(nodedup4,node2) + f(nodedup5,node2)
+     
+      + f(nodedup6,node2) =E= 0 ; (LHS = 0)
+     
+nodbal(node3)..  - f(node3,nodedup3) + f(nodedup2,node3) + f(nodedup4,node3) + f(nodedup5,node3) =E= 0 ; (LHS = 0)
+     
+REMAINING 9 ENTRIES SKIPPED
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE model1 Using LP From line 215
+
+
+---- totalcost  
+
+totalcost
+                (.LO, .L, .UP, .M = -INF, 555.234682870963, +INF, 0)
+        1       obj
+
+
+---- f  flow
+
+f(node1,nodedup1)
+                (.LO, .L, .UP, .M = 0, 0, 100, 0)
+       -1       nodbal(node1)
+        1       nodbal(nodedup1)
+
+f(node2,nodedup2)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+       -1       nodbal(node2)
+        1       nodbal(nodedup2)
+
+f(node3,nodedup3)
+                (.LO, .L, .UP, .M = 0, 0, 20, 0)
+       -1       nodbal(node3)
+        1       nodbal(nodedup3)
+
+REMAINING 23 ENTRIES SKIPPED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE model1 Using LP From line 215
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+Bound     [min, max] : [ 1.326E+01, 1.000E+02] - Zero values observed as well
+Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE model1 Using LP From line 215
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           13
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           27
+NON ZERO ELEMENTS            73
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE model1 Using LP From line 215
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   model1              OBJECTIVE  totalcost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  215
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE              555.2347
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        12    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU nodbal  node balance
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+node1         -100.0000      -100.0000      -100.0000        -6.6159      
+node2             .              .              .             0.3152      
+node3             .       -7.10543E-15          .              .          
+node4             .              .              .             0.9423      
+node5             .              .              .            -0.3414      
+node6             .              .              .             5.8709      
+nodedup1          .              .              .            -6.6159      
+nodedup2          .              .              .             0.4178      
+nodedup3          .              .              .             EPS         
+nodedup4          .              .              .             0.6146      
+nodedup5          .              .              .            -0.3414      
+nodedup6       100.0000       100.0000       100.0000         5.8709      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR totalcost         -INF          555.2347        +INF             .          
+
+---- VAR f  flow
+
+                         LOWER          LEVEL          UPPER         MARGINAL
+
+node1   .nodedup1          .           100.0000       100.0000          .          
+node2   .nodedup2          .            20.0000        20.0000        -0.1025      
+node3   .nodedup3          .             2.2655        20.0000          .          
+node4   .nodedup4          .              .            20.0000         0.3278      
+node5   .nodedup5          .            11.1932        20.0000          .          
+node6   .nodedup6          .           100.0000       100.0000          .          
+nodedup1.node2             .            17.7345        17.7345        -0.3201      
+nodedup1.node4             .              .            45.1669          .          
+nodedup1.node5             .            11.1932        21.2121          .          
+nodedup1.node6             .            71.0724        71.0724        -9.6481      
+nodedup2.node1             .              .            28.5580         7.8979      
+nodedup2.node3             .              .            30.0070         1.4429      
+nodedup2.node5             .              .            51.5769         7.1717      
+nodedup2.node6             .            20.0000        60.5903          .          
+nodedup3.node2             .             2.2655        53.9774          .          
+nodedup3.node6             .              .            42.4659         2.0527      
+nodedup4.node2             .              .            38.9315         1.0270      
+nodedup4.node3             .              .            18.2387         2.3712      
+nodedup4.node6             .              .            31.9949          .          
+nodedup5.node1             .              .            13.2586        13.7766      
+nodedup5.node2             .              .            33.6985         1.1246      
+nodedup5.node3             .             2.2655        22.7470          .          
+nodedup5.node4             .              .            55.2009         4.5676      
+nodedup5.node6             .             8.9276        49.2522          .          
+nodedup6.node2             .              .            63.8973         9.4493      
+nodedup6.node5             .              .            30.8464         9.7994      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 02/15/25 00:28:39 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    216 VARIABLE totalcost.L           =      555.235  
+
+----    216 VARIABLE f.L  flow
+
+               node2       node3       node5       node6    nodedup1    nodedup2    nodedup3    nodedup5    nodedup6
+
+node1                                                        100.000
+node2                                                                     20.000
+node3                                                                                  2.266
+node5                                                                                             11.193
+node6                                                                                                        100.000
+nodedup1      17.734                  11.193      71.072
+nodedup2                                          20.000
+nodedup3       2.266
+nodedup5                   2.266                   8.928
+
+
+----    218 PARAMETER results  
+
+                                      obj
+
+model1: no node cap               554.319
+model2a: side constraint          555.235
+model2b: sparse reformulation     555.235
+model1: duplicated nodes          555.235
+
+
+
+EXECUTION TIME       =        0.250 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+
+
+USER: Eval License                                   S241129|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\erwin\Projects\blog\nodecap\nodecap.gms
+Output     C:\Users\erwin\Projects\blog\nodecap\nodecap.lst

@@ -1,0 +1,254 @@
+--- Job nodecap.gms Start 02/15/25 00:28:39 48.4.0 d74fe9ea WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\48\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\Users\erwin\Projects\blog\nodecap\nodecap.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\Users\erwin\Projects\blog\nodecap\225a\
+    SysDir C:\GAMS\48\
+    LogOption 3
+    OptFile 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   S241129|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+          The expiration date of time-limited license is Dec 24, 2025
+Processor information: 1 socket(s), 8 core(s), and 16 thread(s) available
+GAMS 48.4.0   Copyright (C) 1987-2024 GAMS Development. All rights reserved
+--- Starting compilation
+--- nodecap.gms(231) 3 Mb
+--- Starting execution: elapsed 0:00:00.015
+--- nodecap.gms(101) 4 Mb
+--- Generating LP model model1
+--- nodecap.gms(105) 4 Mb
+---   7 rows  21 columns  61 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+--- Bound     [min, max] : [ 1.326E+01, 7.107E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.059
+
+IBM ILOG CPLEX   48.4.0 d74fe9ea Nov 27, 2024          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_LPMethod                                3
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 6 rows, 20 columns, and 40 nonzeros.
+Presolve time = 0.00 sec. (0.01 ticks)
+Extracted network with 6 nodes and 20 arcs.
+Extraction time = 0.00 sec. (0.00 ticks)
+
+Iteration log . . .
+Iteration:     0   Infeasibility     =           100.000000 (100)
+
+Network - Optimal:  Objective =    5.5431918500e+02
+Network time = 0.00 sec. (0.00 ticks)  Iterations = 7 (7)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:          554.319185
+
+--- Reading solution for model model1
+--- Executing after solve: elapsed 0:00:00.144
+--- nodecap.gms(120) 4 Mb
+--- Generating LP model model2a
+--- nodecap.gms(135) 4 Mb
+---   13 rows  21 columns  81 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 2.000E+01, 1.000E+02] - Zero values observed as well
+--- Bound     [min, max] : [ 1.326E+01, 7.107E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.146
+
+IBM ILOG CPLEX   48.4.0 d74fe9ea Nov 27, 2024          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_LPMethod                                3
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Extracted network with 9 nodes and 26 arcs, including slacks.
+Extraction time = 0.00 sec. (0.00 ticks)
+
+Iteration log . . .
+Iteration:     0   Infeasibility     =           280.000000 (280)
+
+Network - Optimal:  Objective =    3.8625966484e+02
+Network time = 0.00 sec. (0.00 ticks)  Iterations = 8 (8)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1             538.312766         f(node4,node6)    nodbal(node6) artif
+     2             544.004824         f(node2,node6)    nodbal(node4) artif
+     3             550.736576node_inflow_lim(n slack    nodbal(node5) artif
+     4             550.790552         f(node5,node3)         f(node1,node2)
+     5             554.319185         f(node3,node2)    nodbal(node2) artif
+     6             555.234683         f(node5,node6)node_inflow_lim(n slack
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+--- Reading solution for model model2a
+--- Executing after solve: elapsed 0:00:00.179
+--- nodecap.gms(163) 4 Mb
+--- Generating LP model model2b
+--- nodecap.gms(167) 4 Mb
+---   13 rows  27 columns  73 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+--- Bound     [min, max] : [ 1.326E+01, 1.000E+02] - Zero values observed as well
+--- Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.181
+
+IBM ILOG CPLEX   48.4.0 d74fe9ea Nov 27, 2024          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 0
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_LPMethod                                3
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 7 columns.
+Reduced LP has 10 rows, 20 columns, and 40 nonzeros.
+Presolve time = 0.00 sec. (0.02 ticks)
+Extracted network with 10 nodes and 20 arcs.
+Extraction time = 0.00 sec. (0.00 ticks)
+
+Iteration log . . .
+Iteration:     0   Infeasibility     =           200.000000 (200)
+Iteration:    10   Objective         =           559.135772
+
+Network - Optimal:  Objective =    5.5523468287e+02
+Network time = 0.00 sec. (0.00 ticks)  Iterations = 14 (9)
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.03 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+--- Reading solution for model model2b
+--- Executing after solve: elapsed 0:00:00.216
+--- nodecap.gms(213) 4 Mb
+--- Generating LP model model1
+--- nodecap.gms(215) 4 Mb
+---   13 rows  27 columns  73 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+02, 1.000E+02] - Zero values observed as well
+--- Bound     [min, max] : [ 1.326E+01, 1.000E+02] - Zero values observed as well
+--- Matrix    [min, max] : [ 3.152E-01, 7.924E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.218
+
+IBM ILOG CPLEX   48.4.0 d74fe9ea Nov 27, 2024          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+
+Reading parameter(s) from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+>>  lpmethod 3
+Finished reading from "C:\Users\erwin\Projects\blog\nodecap\cplex.opt"
+
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.1.0 | 2022-11-27 | 9160aff4d
+CPXPARAM_Advance                                 2
+CPXPARAM_Simplex_Display                         2
+CPXPARAM_LPMethod                                3
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Extracted network with 12 nodes and 26 arcs.
+Extraction time = 0.00 sec. (0.00 ticks)
+Network - Infeasible:  Infeasibility =    3.0000000000e+02
+Network time = 0.00 sec. (0.00 ticks)  Iterations = 0 (0)
+
+Iteration      Dual Objective            In Variable           Out Variable
+     1               0.000000      f(node1,nodedup1)    nodbal(node1) artif
+     2               0.000000      f(node6,nodedup6) nodbal(nodedup6) artif
+     3             353.802090      f(nodedup4,node6)    nodbal(node6) artif
+     4             537.904790      f(nodedup1,node2) nodbal(nodedup1) artif
+     5             538.312766      f(nodedup1,node5)    nodbal(node5) artif
+     6             545.044518      f(nodedup5,node3) nodbal(nodedup5) artif
+     7             546.801199      f(nodedup2,node6) nodbal(nodedup4) artif
+     8             550.736576      f(nodedup1,node4)    nodbal(node4) artif
+     9             554.466499      f(nodedup5,node6) nodbal(nodedup2) artif
+    10             554.520475      f(node5,nodedup5)      f(nodedup1,node2)
+    11             555.234683      f(nodedup3,node2)    nodbal(node2) artif
+    12             555.234683      f(node3,nodedup3) nodbal(nodedup3) artif
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:          555.234683
+
+--- Reading solution for model model1
+--- Executing after solve: elapsed 0:00:00.254
+--- nodecap.gms(218) 4 Mb
+*** Status: Normal completion
+--- Job nodecap.gms Stop 02/15/25 00:28:40 elapsed 0:00:00.255
