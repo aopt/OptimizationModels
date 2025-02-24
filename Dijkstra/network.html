@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>GAMS Shortest Path Network</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"></script>
+<script src="networkdata.js"></script>
+</head>
+
+<style>
+#cy {
+    width: calc(100% - 200px);
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 200px;
+}
+
+table,th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+</style>
+
+<body>
+    <div id="cy"></div>
+    <div id="my-table"></div>
+    <div><button onclick="buttonClicked()" id="btn">Animate Flow</button></div>
+    <script>
+      document.getElementById('my-table').innerHTML = table
+      var cy = cytoscape({
+        container: document.getElementById('cy'),
+        elements: networkdata,
+        style: [
+          {
+            selector: 'node',
+            style: {
+                'background-color': 'data(color)',
+                label: 'data(id)',
+                width: 'data(size)', height: 'data(size)',
+               'font-size': 1.5
+            }
+          },
+          {
+            selector: 'edge',
+            style: { 'width': 'data(width)', 'line-color': 'data(color)',
+                     'mid-target-arrow-shape': 'triangle',
+                     'mid-target-arrow-color': 'data(color)',
+                     'arrow-scale': 0.15, 'curve-style': 'bezier' }
+
+          }
+        ],
+        layout: { name: 'cose' }
+      });
+
+
+      const loopAnimation = (ele, i) => {
+          const offset = { style: {'line-dash-offset': -100 * i } };
+          const duration = { duration: 10000 };
+          return ele.animation(offset, duration).play()
+                 .promise('complete')
+                 .then(() => loopAnimation(ele, i + 1));
+      };
+
+      var reds = cy.edges().filter(function(ele) { return ele.data('color') == 'red'; });
+      reds.forEach((edge) => {
+          loopAnimation(edge, 1);
+      });
+
+
+     var animated = false;
+     const btn = document.getElementById("btn");
+
+     function buttonClicked(b) {
+       if (animated) {
+         reds.style({'line-style':'solid', 'width':0.2});
+         btn.innerHTML = "Animate flow";
+       }
+       else {
+         reds.style({'line-style':'dashed', 'line-dash-pattern': [0.6, 1.1], 'width':0.4});
+         btn.innerHTML = "Stop animation";
+       }
+       animated = !animated;
+     }
+    </script>
+</body>
+</html>

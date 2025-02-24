@@ -1,0 +1,1417 @@
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+       Implementation of Dijkstra's algorithm for the shortest path problem.
+       
+       From: https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+       
+       
+        1. Dijkstra's shortest path algorithm implemented in GAMS
+        2. Dijkstra's shortest path algorithm implemented in Python
+        3. Shortest path as LP
+        
+  13   
+  14   
+  15  *-----------------------------------------------------
+  16  * set up network
+  17  *-----------------------------------------------------
+  18   
+  19  set i 'nodes' /node1*node50/;
+  20  alias (i,j,v);
+  21   
+  22  set a(i,j) 'arcs of sparse network';
+  23  * no self loops and density of 15%
+  24  a(i,j)$(ord(i)<>ord(j)) = uniform(0,1)<0.15;
+  25   
+  26  singleton sets
+  27     source(i) /node1/
+  28     sink(i)   /node49/
+  29  ;
+  30  * sink is chosen so optimal path needs quite a few hops
+  31   
+  32  parameter cost(i,j) 'random costs (lengths)';
+  33  cost(a) = uniform(1,10);
+  34   
+  35  option a:0:0:7, cost:3:0:6;
+  36  display$(card(i)<=50)
+  37     "============== data ==============",
+  38     i,source,sink,a,cost;
+  39   
+  40   
+  41  *=====================================================
+  42  * 1.  Dijkstra GAMS algorithm
+  43  *=====================================================
+  44   
+  45  *-----------------------------------------------------
+  46  * data structures
+  47  *-----------------------------------------------------
+  48   
+  49  sets
+  50     prev(i,j) 'i is previous wrt j'
+  51     Q(i)      'unvisited nodes'
+  52  ;
+  53  parameter dist(i) 'distance from source';
+  54   
+  55  * initialize
+  56  Q(i) = yes;
+  57  dist(i) = INF;
+  58  dist(source) = 0;
+  59   
+  60   
+  61  *-----------------------------------------------------
+  62  * algorithm
+  63  *-----------------------------------------------------
+  64   
+  65  scalar mindist;
+  66  singleton set u(i);
+  67  scalar alt;
+  68   
+  69  * if multiple assignments to singleton set,
+  70  * only the last one will remain. This will
+  71  * guarantee a singleton set will hold
+  72  * 0 or 1 elements.
+  73  option strictSingleton=0;
+  74   
+  75  while(card(Q)>0,
+  76   
+  77  * find node in Q with minimum distance from the source
+  78     mindist = smin(q,dist(q));
+  79     u(Q) = dist(Q)=mindist;
+  80   
+  81  * remove u from Q
+  82     Q(u) = no;
+  83   
+  84  * loop over neighbors of u in Q
+  85     loop(a(u,v)$Q(v),
+  86        alt = dist(u) + cost(a);
+  87        if(alt < dist(v),
+  88           dist(v) = alt;
+  89           prev(i,v) = no;
+  90           prev(u,v) = yes;
+  91        );
+  92     );
+  93  );
+  94   
+  95  option prev:0:0:7,dist:3:0:6;
+  96  display
+  97     "============== Dijkstra (GAMS) ==============",
+  98     prev,dist;
+  99  parameter results(*,*);
+ 100  results('Dijkstra (GAMS)','obj') = dist(sink);
+ 101  display results;
+ 102   
+ 103  *-----------------------------------------------------
+ 104  * recover path
+ 105  * more complicated than the algorithm itself
+ 106  *-----------------------------------------------------
+ 107   
+ 108  set s /step1*step25/;
+ 109  singleton sets
+ 110     n(i) 'current node'
+ 111     p(i) 'previous node'
+ 112  ;
+ 113  parameter steps(s,i,j) 'cost for each step taken';
+ 114  option steps:3:0:1;
+ 115  steps(s,i,j) = 0;
+ 116   
+ 117  * initialization
+ 118  n(sink) = yes;
+ 119   
+ 120  * loop from last (sink) to first (source)
+ 121  repeat
+ 122     p(i) = no;
+ 123  * loop finds v given n
+ 124  * body of loop is executed 0 or 1 times
+ 125     loop(prev(v,n),
+ 126  * make room by moving all steps one down
+ 127        steps(s,i,j) = steps(s-1,i,j);
+ 128        steps('step1',prev) = cost(prev);
+ 129        p(v) = yes;
+ 130     );
+ 131     n(i) = p(i);
+ 132  until card(n)=0;
+ 133   
+ 134  display steps;
+ 135   
+ 136   
+ 137  *=====================================================
+ 138  * 2.  Dijkstra Python algorithm
+ 139  *=====================================================
+ 140   
+ 141  parameters
+ 142     psteps(s,i,j) 'results from python code'
+ 143     pobj   'objective function value'
+ 144  ;
+ 145   
+ 146  * just in case we have arcs with costs=0
+ 147  cost(a)$(cost(a)=0) = eps;
+ 148   
+ 149  embeddedCode Python:
+ 150   
+ 151  #-- import GAMS data
+ 152  import gams.transfer as gt
+ 153   
+ 154  nodes=list(gams.get('i'))
+ 155  print(f"i={nodes}")
+ 156   
+ 157  source=list(gams.get('source'))[0]
+ 158  print(f"source={source}")
+ 159   
+ 160  sink=list(gams.get('sink'))[0]
+ 161  print(f"sink={sink}")
+ 162   
+ 163  m = gt.Container(gams.db)
+ 164  dfcost = m.data["cost"].records
+ 165  print(dfcost)
+ 166   
+ 167  #-- data structures
+ 168  successors = {v:[] for v in nodes}
+ 169  cost = {}
+ 170  for index, row in dfcost.iterrows():
+ 171      u = row['i']
+ 172      v = row['j']
+ 173      successors[u].append(v)
+ 174      cost[(u,v)] = row['value']    
+ 175   
+ 176  #print(successors)
+ 177   
+ 178  #-- initialization
+ 179  Q=set(nodes)
+ 180  inf=float('inf')
+ 181  dist = {v:inf for v in nodes}
+ 182  dist[source] = 0
+ 183  prev = {v:None for v in nodes}
+ 184   
+ 185  #-- run algorithm
+ 186  while len(Q)>0:
+ 187      u = min(Q, key=lambda n:dist[n])
+ 188      Q.remove(u)
+ 189      
+ 190      for v in successors[u]:
+ 191          if v in Q:
+ 192             alt = dist[u] + cost[(u,v)]
+ 193             if alt < dist[v]:
+ 194                dist[v] = alt
+ 195                prev[v] = u
+ 196                
+ 197  print(f"optimal total cost: {dist[sink]}")
+ 198   
+ 199  #-- recover path
+ 200  path = []
+ 201  u = sink
+ 202  while u is not None:
+ 203     path.insert(0,u)
+ 204     u = prev[u]
+ 205     
+ 206  print(path)
+ 207   
+ 208  #-- move things back to GAMS
+ 209   
+ 210  stepsdata = [(f"step{i}",path[i-1],path[i],cost[(path[i-1],path[i])]) for i in range(1,len(path))]
+ 211  gams.set("psteps",stepsdata)
+ 212  gams.set("pobj",[dist[sink]])
+ 213   
+ 214  endEmbeddedCode psteps,pobj
+ 215   
+ 216   
+ 217   
+ 218  option psteps:3:0:1;
+ 219  display
+ 220     "============== Dijkstra (Python) ==============",
+ 221     psteps,pobj;
+ 222   
+ 223  results('Dijkstra (Python)','obj') = pobj;
+ 224  display results;
+ 225   
+ 226   
+ 227   
+ 228  *=====================================================
+ 229  * 3.  LP Model
+ 230  *=====================================================
+ 231   
+ 232  parameters supply(i), demand(i);
+ 233  supply(source) = 1;
+ 234  demand(sink) = 1;
+ 235   
+ 236  positive variables x(i,j) 'flow along i->j';
+ 237  variable z 'objective';
+ 238   
+ 239  equations
+ 240     obj 'objective'
+ 241     nodebal(i) 'node balance'
+ 242  ;
+ 243   
+ 244  obj.. z =e= sum((i,j),cost(i,j)*x(i,j));
+ 245  nodebal(i).. sum(a(j,i),x(a)) + supply(i) =e= sum(a(i,j),x(a)) + demand(i);
+ 246   
+ 247  model m /all/;
+ 248  solve m minimizing z using lp;
+ 249   
+ 250  display
+ 251     "============== LP model ==============",
+ 252     x.l,z.l;
+ 253  results('LP','obj') = z.l;
+ 254  display results;
+ 255   
+ 256  *-----------------------------------------------------
+ 257  * recover path
+ 258  *-----------------------------------------------------
+ 259   
+ 260  parameters
+ 261     lpsteps(s,i,j) 'results from LP model'
+ 262  ;
+ 263  singleton set next(i) 'next node';
+ 264   
+ 265  n(i) = source(i);
+ 266  loop(s$card(n),
+ 267       next(i) = x.l(n,i)>0.5;
+ 268       lpsteps(s,n,next) = cost(n,next);
+ 269       n(i) = next(i);
+ 270  );
+ 271  option lpsteps:3:0:1;
+ 272  display lpsteps;
+ 273   
+ 274   
+ 275  *=====================================================
+ 276  * 4.  Visualization
+ 277  *=====================================================
+ 278   
+ 279   
+ 280  *-----------------------------------------------------------
+ 281  * Plot network using put statement
+ 282  * We generate some JavaScript code to hold the data
+ 283  * For documentation on plotting library, see:
+ 284  * https://js.cytoscape.org/
+ 285  *-----------------------------------------------------------
+ 286   
+ 289   
+ 290  file fln /networkdata.js/;
+ 291  put fln;
+ 292  put 'networkdata=['/;
+ 293  loop(i,
+ 294      put$(ord(i)>1) ",";
+ 295      put "{data:{id:",(ord(i)):0:0;
+ 296      put$(supply(i)=0 and demand(i)=0) ",color:'black'";
+ 297      put$(supply(i)>0) ",color:'blue'";
+ 298      put$(demand(i)>0) ",color:'green'";
+ 299      put$(supply(i)=0 and demand(i)=0) ",size:1";
+ 300      put$(supply(i)>0 or demand(i)>0) ",size:2";
+ 301      put "}}"/;
+ 302  );
+ 303  loop(a(i,j),
+ 304      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 305      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 306      put$(x.l(i,j)>0.5) ",color:'red',width:0.2";
+ 307      put$(x.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 308      put "}}"/;
+ 309  );
+ 310  put '];'/;
+ 311   
+ 312  put "table='<h4>GAMS Shortest Path</h4>"
+ 313      "Number of nodes: ",(card(i)):0:0,"<br>"
+ 314      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 315      "<table><tr><th>From</th><th>To</th><th>cost</th></tr>'+"/;
+ 316  loop((s,i,j)$lpsteps(s,i,j),
+ 317     put "'<tr><td>",i.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",cost(i,j):10:3,"</pre></td></tr>'+"/;
+ 318  );
+ 319  put "'<tr><td colspan=2>Total cost</td><td><pre>",z.l:10:3,"</pre></td></tr>'+"/;
+ 320   
+ 321  put "'</table><br>';";
+ 322  putclose;
+ 323   
+ 324   
+       
+      With an internet connection you can use:
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"></script>
+      Without use a local .js file:
+        <script src="cytoscape.min.js"></script>
+       
+ 333   
+ 424   
+ 425  execute "network.html";
+ 426   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     36 ============== data ==============
+
+----     36 SET i  nodes
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36
+node37,    node38,    node39,    node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48
+node49,    node50
+
+
+----     36 SET source  
+
+node1
+
+
+----     36 SET sink  
+
+node49
+
+
+----     36 SET a  arcs of sparse network
+
+node1 .node10,    node1 .node16,    node1 .node24,    node1 .node32,    node1 .node43,    node1 .node45,    node2 .node7 
+node2 .node8 ,    node2 .node11,    node2 .node13,    node2 .node18,    node2 .node25,    node2 .node30,    node2 .node32
+node2 .node34,    node2 .node49,    node3 .node1 ,    node3 .node4 ,    node3 .node5 ,    node3 .node15,    node3 .node22
+node3 .node24,    node3 .node28,    node3 .node31,    node3 .node43,    node4 .node6 ,    node4 .node18,    node4 .node20
+node4 .node22,    node4 .node24,    node4 .node29,    node4 .node35,    node4 .node37,    node4 .node38,    node4 .node41
+node5 .node8 ,    node5 .node14,    node5 .node22,    node5 .node26,    node5 .node32,    node5 .node38,    node5 .node48
+node5 .node50,    node6 .node9 ,    node6 .node16,    node6 .node20,    node6 .node23,    node6 .node27,    node6 .node34
+node6 .node39,    node6 .node43,    node6 .node46,    node6 .node50,    node7 .node11,    node7 .node26,    node7 .node38
+node7 .node39,    node7 .node44,    node7 .node45,    node8 .node1 ,    node8 .node4 ,    node8 .node15,    node8 .node18
+node8 .node20,    node8 .node28,    node8 .node33,    node8 .node46,    node8 .node49,    node9 .node1 ,    node9 .node11
+node9 .node26,    node9 .node50,    node10.node2 ,    node10.node17,    node10.node27,    node10.node36,    node10.node38
+node10.node41,    node10.node48,    node10.node50,    node11.node14,    node11.node31,    node11.node34,    node11.node50
+node12.node2 ,    node12.node4 ,    node12.node9 ,    node12.node10,    node12.node17,    node12.node39,    node12.node42
+node12.node43,    node13.node4 ,    node13.node7 ,    node13.node12,    node13.node23,    node13.node24,    node13.node33
+node13.node41,    node13.node45,    node13.node49,    node13.node50,    node14.node2 ,    node14.node3 ,    node14.node5 
+node14.node15,    node14.node18,    node14.node21,    node14.node39,    node14.node45,    node14.node47,    node14.node50
+node15.node10,    node15.node13,    node15.node16,    node15.node22,    node15.node31,    node15.node38,    node16.node1 
+node16.node6 ,    node16.node8 ,    node16.node10,    node16.node44,    node17.node4 ,    node17.node6 ,    node17.node13
+node17.node19,    node17.node22,    node17.node24,    node17.node35,    node17.node36,    node17.node37,    node18.node4 
+node18.node5 ,    node18.node12,    node18.node13,    node18.node37,    node18.node41,    node18.node42,    node18.node45
+node19.node1 ,    node19.node10,    node19.node14,    node19.node18,    node19.node31,    node19.node34,    node19.node50
+node20.node9 ,    node20.node11,    node20.node16,    node20.node19,    node20.node22,    node20.node23,    node20.node26
+node20.node27,    node20.node29,    node20.node30,    node20.node41,    node20.node46,    node20.node49,    node21.node1 
+node21.node5 ,    node21.node11,    node21.node23,    node21.node29,    node21.node31,    node21.node46,    node22.node9 
+node22.node12,    node22.node18,    node22.node21,    node22.node29,    node22.node39,    node22.node50,    node23.node3 
+node23.node8 ,    node23.node17,    node23.node19,    node23.node21,    node23.node35,    node23.node37,    node23.node41
+node23.node50,    node24.node7 ,    node24.node9 ,    node24.node10,    node24.node18,    node24.node44,    node24.node45
+node24.node47,    node25.node5 ,    node25.node6 ,    node25.node32,    node25.node34,    node25.node45,    node25.node47
+node26.node3 ,    node26.node11,    node26.node13,    node26.node14,    node26.node15,    node26.node19,    node26.node28
+node26.node33,    node26.node36,    node26.node39,    node26.node41,    node26.node44,    node26.node48,    node27.node8 
+node27.node10,    node27.node12,    node27.node15,    node27.node49,    node28.node9 ,    node28.node10,    node28.node13
+node28.node15,    node28.node27,    node28.node47,    node29.node13,    node29.node21,    node29.node24,    node29.node46
+node30.node2 ,    node30.node6 ,    node30.node16,    node30.node25,    node30.node32,    node30.node33,    node30.node34
+node30.node36,    node30.node42,    node30.node46,    node30.node48,    node31.node16,    node31.node18,    node31.node19
+node31.node20,    node31.node29,    node31.node32,    node31.node33,    node32.node2 ,    node32.node4 ,    node32.node8 
+node32.node9 ,    node32.node11,    node32.node18,    node32.node22,    node32.node29,    node32.node31,    node32.node38
+node32.node45,    node32.node47,    node32.node49,    node33.node8 ,    node33.node11,    node33.node12,    node33.node22
+node33.node29,    node33.node30,    node33.node31,    node33.node41,    node33.node48,    node34.node20,    node34.node22
+node34.node47,    node35.node1 ,    node35.node4 ,    node35.node14,    node35.node21,    node35.node23,    node35.node28
+node35.node29,    node35.node30,    node35.node31,    node35.node40,    node35.node43,    node36.node4 ,    node36.node10
+node36.node13,    node36.node20,    node36.node26,    node36.node34,    node36.node43,    node37.node2 ,    node37.node4 
+node37.node8 ,    node37.node12,    node37.node13,    node37.node19,    node37.node22,    node37.node30,    node37.node39
+node37.node40,    node37.node49,    node38.node2 ,    node38.node3 ,    node38.node4 ,    node38.node7 ,    node38.node12
+node38.node13,    node38.node17,    node38.node44,    node38.node49,    node39.node6 ,    node39.node11,    node39.node17
+node39.node27,    node39.node34,    node39.node45,    node39.node49,    node40.node5 ,    node40.node15,    node40.node21
+node40.node24,    node40.node26,    node40.node38,    node40.node50,    node41.node18,    node41.node23,    node41.node33
+node41.node38,    node41.node43,    node41.node46,    node42.node1 ,    node42.node14,    node42.node34,    node42.node38
+node43.node3 ,    node43.node6 ,    node43.node16,    node43.node24,    node43.node25,    node43.node34,    node43.node37
+node43.node40,    node43.node48,    node44.node4 ,    node44.node8 ,    node44.node11,    node44.node20,    node44.node22
+node44.node24,    node44.node34,    node44.node43,    node44.node46,    node45.node4 ,    node45.node10,    node45.node18
+node45.node28,    node45.node29,    node45.node35,    node45.node41,    node45.node44,    node45.node46,    node46.node2 
+node46.node6 ,    node46.node7 ,    node46.node14,    node46.node15,    node46.node21,    node46.node22,    node46.node26
+node46.node29,    node46.node33,    node46.node41,    node46.node47,    node47.node7 ,    node47.node12,    node47.node19
+node47.node28,    node47.node31,    node47.node36,    node47.node39,    node48.node3 ,    node48.node5 ,    node48.node8 
+node48.node9 ,    node48.node29,    node49.node6 ,    node49.node21,    node49.node22,    node49.node41,    node49.node47
+node50.node8 ,    node50.node9 ,    node50.node13,    node50.node19,    node50.node24,    node50.node29,    node50.node34
+node50.node39,    node50.node41,    node50.node47
+
+
+----     36 PARAMETER cost  random costs (lengths)
+
+node1 .node10  4.935,    node1 .node16  4.958,    node1 .node24  7.343,    node1 .node32  3.319,    node1 .node43  6.534
+node1 .node45  8.792,    node2 .node7   2.969,    node2 .node8   4.780,    node2 .node11  3.507,    node2 .node13  8.732
+node2 .node18  4.993,    node2 .node25  5.997,    node2 .node30  1.826,    node2 .node32  2.595,    node2 .node34  5.995
+node2 .node49  3.239,    node3 .node1   6.640,    node3 .node4   8.003,    node3 .node5   3.465,    node3 .node15  8.997
+node3 .node22  6.381,    node3 .node24  1.738,    node3 .node28  2.199,    node3 .node31  9.425,    node3 .node43  8.258
+node4 .node6   6.076,    node4 .node18  2.368,    node4 .node20  7.365,    node4 .node22  9.519,    node4 .node24  5.974
+node4 .node29  2.300,    node4 .node35  7.104,    node4 .node37  2.546,    node4 .node38  9.192,    node4 .node41  4.910
+node5 .node8   8.590,    node5 .node14  8.442,    node5 .node22  6.276,    node5 .node26  6.035,    node5 .node32  5.902
+node5 .node38  9.634,    node5 .node48  9.818,    node5 .node50  3.369,    node6 .node9   1.503,    node6 .node16  6.245
+node6 .node20  5.675,    node6 .node23  1.090,    node6 .node27  6.286,    node6 .node34  1.174,    node6 .node39  4.131
+node6 .node43  2.046,    node6 .node46  8.588,    node6 .node50  8.779,    node7 .node11  5.909,    node7 .node26  1.352
+node7 .node38  2.318,    node7 .node39  5.750,    node7 .node44  4.929,    node7 .node45  7.365,    node8 .node1   8.236
+node8 .node4   7.909,    node8 .node15  1.318,    node8 .node18  6.358,    node8 .node20  6.210,    node8 .node28  5.611
+node8 .node33  3.718,    node8 .node46  9.171,    node8 .node49  5.474,    node9 .node1   6.001,    node9 .node11  4.602
+node9 .node26  2.126,    node9 .node50  2.395,    node10.node2   5.468,    node10.node17  1.925,    node10.node27  4.020
+node10.node36  5.135,    node10.node38  2.461,    node10.node41  9.983,    node10.node48  2.744,    node10.node50  3.616
+node11.node14  1.502,    node11.node31  3.839,    node11.node34  7.667,    node11.node50  7.526,    node12.node2   9.957
+node12.node4   7.407,    node12.node9   8.228,    node12.node10  2.872,    node12.node17  6.631,    node12.node39  4.910
+node12.node42  9.873,    node12.node43  6.506,    node13.node4   7.257,    node13.node7   6.780,    node13.node12  2.237
+node13.node23  4.215,    node13.node24  2.010,    node13.node33  2.788,    node13.node41  4.470,    node13.node45  6.519
+node13.node49  7.108,    node13.node50  4.866,    node14.node2   4.525,    node14.node3   5.524,    node14.node5   5.575
+node14.node15  8.529,    node14.node18  9.698,    node14.node21  2.993,    node14.node39  6.016,    node14.node45  4.893
+node14.node47  8.876,    node14.node50  9.674,    node15.node10  3.561,    node15.node13 10.000,    node15.node16  8.717
+node15.node22  2.936,    node15.node31  9.018,    node15.node38  9.255,    node16.node1   4.665,    node16.node6   6.419
+node16.node8   8.808,    node16.node10  1.581,    node16.node44  7.033,    node17.node4   9.726,    node17.node6   8.567
+node17.node13  6.224,    node17.node19  2.761,    node17.node22  5.650,    node17.node24  8.556,    node17.node35  3.517
+node17.node36  8.890,    node17.node37  6.786,    node18.node4   9.892,    node18.node5   6.459,    node18.node12  3.442
+node18.node13  2.695,    node18.node37  4.357,    node18.node41  1.340,    node18.node42  5.210,    node18.node45  9.967
+node19.node1   5.447,    node19.node10  7.270,    node19.node14  3.699,    node19.node18  6.909,    node19.node31  2.578
+node19.node34  8.683,    node19.node50  4.528,    node20.node9   5.646,    node20.node11  5.753,    node20.node16  9.444
+node20.node19  4.427,    node20.node22  7.112,    node20.node23  2.080,    node20.node26  3.944,    node20.node27  4.051
+node20.node29  5.321,    node20.node30  9.880,    node20.node41  5.980,    node20.node46  1.884,    node20.node49  8.807
+node21.node1   9.482,    node21.node5   7.327,    node21.node11  3.316,    node21.node23  9.991,    node21.node29  2.960
+node21.node31  1.958,    node21.node46  9.173,    node22.node9   9.722,    node22.node12  3.332,    node22.node18  2.191
+node22.node21  2.978,    node22.node29  2.612,    node22.node39  2.027,    node22.node50  2.793,    node23.node3   9.788
+node23.node8   4.898,    node23.node17  1.708,    node23.node19  1.526,    node23.node21  3.468,    node23.node35  2.787
+node23.node37  4.987,    node23.node41  8.546,    node23.node50  4.640,    node24.node7   6.768,    node24.node9   9.047
+node24.node10  3.371,    node24.node18  9.678,    node24.node44  6.026,    node24.node45  2.934,    node24.node47  7.918
+node25.node5   8.576,    node25.node6   9.978,    node25.node32  3.333,    node25.node34  7.252,    node25.node45  6.123
+node25.node47  9.441,    node26.node3   3.345,    node26.node11  6.221,    node26.node13  1.543,    node26.node14  9.585
+node26.node15  2.702,    node26.node19  2.517,    node26.node28  8.481,    node26.node33  1.996,    node26.node36  1.350
+node26.node39  1.547,    node26.node41  4.792,    node26.node44  9.055,    node26.node48  6.946,    node27.node8   6.228
+node27.node10  8.287,    node27.node12  5.337,    node27.node15  1.861,    node27.node49  4.357,    node28.node9   4.119
+node28.node10  4.379,    node28.node13  8.007,    node28.node15  7.958,    node28.node27  4.844,    node28.node47  6.006
+node29.node13  4.925,    node29.node21  7.478,    node29.node24  6.365,    node29.node46  2.992,    node30.node2   6.980
+node30.node6   3.011,    node30.node16  7.165,    node30.node25  4.757,    node30.node32  9.094,    node30.node33  3.880
+node30.node34  3.320,    node30.node36  3.025,    node30.node42  6.998,    node30.node46  7.823,    node30.node48  7.034
+node31.node16  5.542,    node31.node18  5.119,    node31.node19  7.528,    node31.node20  5.688,    node31.node29  6.103
+node31.node32  9.320,    node31.node33  5.357,    node32.node2   6.146,    node32.node4   6.954,    node32.node8   7.033
+node32.node9   2.089,    node32.node11  5.756,    node32.node18  8.419,    node32.node22  6.365,    node32.node29  3.088
+node32.node31  9.529,    node32.node38  2.097,    node32.node45  7.319,    node32.node47  5.156,    node32.node49  9.927
+node33.node8   2.974,    node33.node11  5.628,    node33.node12  1.758,    node33.node22  9.584,    node33.node29  7.477
+node33.node30  8.211,    node33.node31  2.058,    node33.node41  8.733,    node33.node48  2.464,    node34.node20  6.887
+node34.node22  3.249,    node34.node47  1.145,    node35.node1   7.289,    node35.node4   1.621,    node35.node14  7.487
+node35.node21  5.222,    node35.node23  4.914,    node35.node28  1.888,    node35.node29  4.035,    node35.node30  9.912
+node35.node31  2.248,    node35.node40  8.902,    node35.node43  6.387,    node36.node4   9.659,    node36.node10  9.728
+node36.node13  6.889,    node36.node20  7.723,    node36.node26  2.412,    node36.node34  3.873,    node36.node43  3.336
+node37.node2   3.735,    node37.node4   1.323,    node37.node8   5.482,    node37.node12  9.341,    node37.node13  6.038
+node37.node19  5.192,    node37.node22  4.572,    node37.node30  3.735,    node37.node39  6.632,    node37.node40  9.157
+node37.node49  4.092,    node38.node2   7.071,    node38.node3   1.809,    node38.node4   6.093,    node38.node7   3.677
+node38.node12  2.503,    node38.node13  8.227,    node38.node17  1.710,    node38.node44  9.299,    node38.node49  9.717
+node39.node6   8.422,    node39.node11  2.905,    node39.node17  9.507,    node39.node27  4.525,    node39.node34  8.687
+node39.node45  8.611,    node39.node49  1.827,    node40.node5   3.564,    node40.node15  9.269,    node40.node21  1.924
+node40.node24  1.031,    node40.node26  8.250,    node40.node38  1.384,    node40.node50  2.610,    node41.node18  8.303
+node41.node23  6.795,    node41.node33  3.430,    node41.node38  1.928,    node41.node43  8.944,    node41.node46  9.587
+node42.node1   7.529,    node42.node14  7.709,    node42.node34  7.065,    node42.node38  3.371,    node43.node3   2.107
+node43.node6   9.192,    node43.node16  7.813,    node43.node24  1.631,    node43.node25  2.240,    node43.node34  4.364
+node43.node37  4.801,    node43.node40  8.194,    node43.node48  1.315,    node44.node4   6.554,    node44.node8   8.180
+node44.node11  3.808,    node44.node20  8.348,    node44.node22  9.854,    node44.node24  8.583,    node44.node34  6.454
+node44.node43  7.715,    node44.node46  6.361,    node45.node4   2.677,    node45.node10  7.900,    node45.node18  7.693
+node45.node28  7.206,    node45.node29  4.822,    node45.node35  1.664,    node45.node41  8.805,    node45.node44  3.055
+node45.node46  9.431,    node46.node2   6.782,    node46.node6   2.903,    node46.node7   1.261,    node46.node14  5.580
+node46.node15  5.191,    node46.node21  6.824,    node46.node22  4.197,    node46.node26  2.120,    node46.node29  8.157
+node46.node33  4.546,    node46.node41  6.742,    node46.node47  3.792,    node47.node7   1.859,    node47.node12  4.877
+node47.node19  6.375,    node47.node28  4.129,    node47.node31  1.647,    node47.node36  3.583,    node47.node39  3.284
+node48.node3   9.610,    node48.node5   6.638,    node48.node8   5.598,    node48.node9   5.516,    node48.node29  3.071
+node49.node6   2.446,    node49.node21  8.807,    node49.node22  9.038,    node49.node41  5.136,    node49.node47  4.231
+node50.node8   6.081,    node50.node9   6.310,    node50.node13  3.404,    node50.node19  1.530,    node50.node24  5.064
+node50.node29  5.085,    node50.node34  9.772,    node50.node39  8.410,    node50.node41  7.047,    node50.node47  4.656
+
+
+----     97 ============== Dijkstra (GAMS) ==============
+
+----     97 SET prev  i is previous wrt j
+
+node1 .node10,    node1 .node16,    node1 .node24,    node1 .node32,    node1 .node43,    node1 .node45,    node2 .node30
+node3 .node5 ,    node3 .node28,    node6 .node23,    node9 .node26,    node9 .node50,    node10.node17,    node10.node27
+node10.node48,    node11.node14,    node16.node6 ,    node17.node35,    node18.node42,    node22.node21,    node26.node13
+node26.node15,    node26.node33,    node26.node36,    node26.node39,    node26.node41,    node29.node46,    node31.node20
+node32.node2 ,    node32.node4 ,    node32.node8 ,    node32.node9 ,    node32.node11,    node32.node18,    node32.node22
+node32.node29,    node32.node38,    node32.node47,    node38.node3 ,    node38.node7 ,    node38.node12,    node39.node49
+node43.node25,    node43.node34,    node43.node37,    node43.node40,    node45.node44,    node47.node31,    node50.node19
+
+
+----     97 PARAMETER dist  distance from source
+
+node2   9.465,    node3   7.225,    node4  10.273,    node5  10.690,    node6  11.377,    node7   9.093
+node8  10.352,    node9   5.408,    node10  4.935,    node11  9.075,    node12  7.918,    node13  9.078
+node14 10.576,    node15 10.237,    node16  4.958,    node17  6.860,    node18 11.738,    node19  9.332
+node20 15.809,    node21 12.661,    node22  9.683,    node23 12.467,    node24  7.343,    node25  8.774
+node26  7.534,    node27  8.955,    node28  9.424,    node29  6.406,    node30 11.291,    node31 10.122
+node32  3.319,    node33  9.530,    node34 10.898,    node35 10.377,    node36  8.884,    node37 11.336
+node38  5.416,    node39  9.081,    node40 14.728,    node41 12.327,    node42 16.948,    node43  6.534
+node44 11.847,    node45  8.792,    node46  9.398,    node47  8.475,    node48  7.679,    node49 10.908
+node50  7.803
+
+
+----    101 PARAMETER results  
+
+                        obj
+
+Dijkstra (GAMS)      10.908
+
+
+----    134 PARAMETER steps  cost for each step taken
+
+step1.node1 .node32 3.319
+step2.node32.node9  2.089
+step3.node9 .node26 2.126
+step4.node26.node39 1.547
+step5.node39.node49 1.827
+
+
+----    220 ============== Dijkstra (Python) ==============
+
+----    220 PARAMETER psteps  results from python code
+
+step1.node1 .node32 3.319
+step2.node32.node9  2.089
+step3.node9 .node26 2.126
+step4.node26.node39 1.547
+step5.node39.node49 1.827
+
+
+----    220 PARAMETER pobj                 =       10.908  objective function value
+
+----    224 PARAMETER results  
+
+                          obj
+
+Dijkstra (GAMS)        10.908
+Dijkstra (Python)      10.908
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using LP From line 248
+
+
+---- obj  =E=  objective
+
+obj..  - 4.934532502*x(node1,node10) - 4.957716511*x(node1,node16) - 7.343159734*x(node1,node24) - 3.318675958*x(node1,node32)
+     
+      - 6.534424747*x(node1,node43) - 8.791657084*x(node1,node45) - 2.969486038*x(node2,node7) - 4.779824194*x(node2,node8)
+     
+      - 3.506570722*x(node2,node11) - 8.732229391*x(node2,node13) - 4.992502996*x(node2,node18) - 5.99670964*x(node2,node25)
+     
+      - 1.825571035*x(node2,node30) - 2.594890468*x(node2,node32) - 5.995061164*x(node2,node34) - 3.238870321*x(node2,node49)
+     
+      - 6.640415704*x(node3,node1) - 8.002851292*x(node3,node4) - 3.465174286*x(node3,node5) - 8.997295177*x(node3,node15)
+     
+      - 6.380886268*x(node3,node22) - 1.738448812*x(node3,node24) - 2.199134413*x(node3,node28) - 9.42464791*x(node3,node31)
+     
+      - 8.258460067*x(node3,node43) - 6.076314568*x(node4,node6) - 2.367936199*x(node4,node18) - 7.365405142*x(node4,node20)
+     
+      - 9.519383719*x(node4,node22) - 5.973744988*x(node4,node24) - 2.299738618*x(node4,node29) - 7.103601676*x(node4,node35)
+     
+      - 2.545697179*x(node4,node37) - 9.191972602*x(node4,node38) - 4.909825279*x(node4,node41) - 8.58986515*x(node5,node8)
+     
+      - 8.441847784*x(node5,node14) - 6.275605753*x(node5,node22) - 6.034715632*x(node5,node26) - 5.902172065*x(node5,node32)
+     
+      - 9.63430849*x(node5,node38) - 9.817671916*x(node5,node48) - 3.369077443*x(node5,node50) - 1.502827327*x(node6,node9)
+     
+      - 6.244752691*x(node6,node16) - 5.67531217*x(node6,node20) - 1.090343899*x(node6,node23) - 6.285580219*x(node6,node27)
+     
+      - 1.174324744*x(node6,node34) - 4.130961274*x(node6,node39) - 2.046227491*x(node6,node43) - 8.588127691*x(node6,node46)
+     
+      - 8.779027924*x(node6,node50) - 5.908623976*x(node7,node11) - 1.351823761*x(node7,node26) - 2.318041963*x(node7,node38)
+     
+      - 5.750440669*x(node7,node39) - 4.928996044*x(node7,node44) - 7.365143125*x(node7,node45) - 8.236013104*x(node8,node1)
+     
+      - 7.90928812*x(node8,node4) - 1.317923659*x(node8,node15) - 6.358180555*x(node8,node18) - 6.210432874*x(node8,node20)
+     
+      - 5.611260745*x(node8,node28) - 3.717534592*x(node8,node33) - 9.170831386*x(node8,node46) - 5.474435131*x(node8,node49)
+     
+      - 6.001361056*x(node9,node1) - 4.602164977*x(node9,node11) - 2.126265382*x(node9,node26) - 2.394846469*x(node9,node50)
+     
+      - 5.467644784*x(node10,node2) - 1.925265457*x(node10,node17) - 4.020032719*x(node10,node27) - 5.134772521*x(node10,node36)
+     
+      - 2.460971665*x(node10,node38) - 9.982525132*x(node10,node41) - 2.744221222*x(node10,node48) - 3.616490539*x(node10,node50)
+     
+      - 1.501541308*x(node11,node14) - 3.8389141*x(node11,node31) - 7.667297281*x(node11,node34) - 7.52601529*x(node11,node50)
+     
+      - 9.957302245*x(node12,node2) - 7.40655586*x(node12,node4) - 8.227725508*x(node12,node9) - 2.871571078*x(node12,node10)
+     
+      - 6.630912757*x(node12,node17) - 4.910087296*x(node12,node39) - 9.873235765*x(node12,node42) - 6.506304652*x(node12,node43)
+     
+      - 7.257420712*x(node13,node4) - 6.780136753*x(node13,node7) - 2.23743637*x(node13,node12) - 4.215020347*x(node13,node23)
+     
+      - 2.009962603*x(node13,node24) - 2.788111207*x(node13,node33) - 4.47023998*x(node13,node41) - 6.518997388*x(node13,node45)
+     
+      - 7.107862825*x(node13,node49) - 4.866250582*x(node13,node50) - 4.52504224*x(node14,node2) - 5.524351876*x(node14,node3)
+     
+      - 5.57477326*x(node14,node5) - 8.529022099*x(node14,node15) - 9.698107861*x(node14,node18) - 2.993368429*x(node14,node21)
+     
+      - 6.016442743*x(node14,node39) - 4.893182758*x(node14,node45) - 8.875876168*x(node14,node47) - 9.674126101*x(node14,node50)
+     
+      - 3.561059845*x(node15,node10) - 9.999737983*x(node15,node13) - 8.716629385*x(node15,node16) - 2.935543132*x(node15,node22)
+     
+      - 9.018185041*x(node15,node31) - 9.254578879*x(node15,node38) - 4.664735695*x(node16,node1) - 6.419288143*x(node16,node6)
+     
+      - 8.807709313*x(node16,node8) - 1.580966236*x(node16,node10) - 7.032587347*x(node16,node44) - 9.725755303*x(node17,node4)
+     
+      - 8.567449345*x(node17,node6) - 6.224093317*x(node17,node13) - 2.760537979*x(node17,node19) - 5.649972868*x(node17,node22)
+     
+      - 8.556188014*x(node17,node24) - 3.517205392*x(node17,node35) - 8.89001983*x(node17,node36) - 6.785659495*x(node17,node37)
+     
+      - 9.892181233*x(node18,node4) - 6.458641003*x(node18,node5) - 3.442165795*x(node18,node12) - 2.694844855*x(node18,node13)
+     
+      - 4.356857413*x(node18,node37) - 1.340211862*x(node18,node41) - 5.210443531*x(node18,node42) - 9.966790153*x(node18,node45)
+     
+      - 5.446971865*x(node19,node1) - 7.269663259*x(node19,node10) - 3.698986285*x(node19,node14) - 6.908767012*x(node19,node18)
+     
+      - 2.577646594*x(node19,node31) - 8.68262167*x(node19,node34) - 4.528063765*x(node19,node50) - 5.645791531*x(node20,node9)
+     
+      - 5.753283382*x(node20,node11) - 9.444271753*x(node20,node16) - 4.426644961*x(node20,node19) - 7.112340586*x(node20,node22)
+     
+      - 2.080380736*x(node20,node23) - 3.943957285*x(node20,node26) - 4.050662797*x(node20,node27) - 5.320550233*x(node20,node29)
+     
+      - 9.879593635*x(node20,node30) - 5.979524608*x(node20,node41) - 1.884341611*x(node20,node46) - 8.806696453*x(node20,node49)
+     
+      - 9.482056687*x(node21,node1) - 7.327085419*x(node21,node5) - 3.315571759*x(node21,node11) - 9.990512092*x(node21,node23)
+     
+      - 2.959583995*x(node21,node29) - 1.958062249*x(node21,node31) - 9.172584793*x(node21,node46) - 9.722145745*x(node22,node9)
+     
+      - 3.332440702*x(node22,node12) - 2.190614095*x(node22,node18) - 2.978240887*x(node22,node21) - 2.611629181*x(node22,node29)
+     
+      - 2.026853371*x(node22,node39) - 2.793164617*x(node22,node50) - 9.788375386*x(node23,node3) - 4.897622017*x(node23,node8)
+     
+      - 1.707730471*x(node23,node17) - 1.526282695*x(node23,node19) - 3.468334591*x(node23,node21) - 2.787312592*x(node23,node35)
+     
+      - 4.986656947*x(node23,node37) - 8.545517632*x(node23,node41) - 4.640010265*x(node23,node50) - 6.768076807*x(node24,node7)
+     
+      - 9.046965412*x(node24,node9) - 3.371022442*x(node24,node10) - 9.67779667*x(node24,node18) - 6.025930651*x(node24,node44)
+     
+      - 2.933598763*x(node24,node45) - 7.917813919*x(node24,node47) - 8.575844473*x(node25,node5) - 9.977808853*x(node25,node6)
+     
+      - 3.333486088*x(node25,node32) - 7.252118209*x(node25,node34) - 6.122615077*x(node25,node45) - 9.441462025*x(node25,node47)
+     
+      - 3.345073318*x(node26,node3) - 6.221246347*x(node26,node11) - 1.54347868*x(node26,node13) - 9.585417754*x(node26,node14)
+     
+      - 2.702451106*x(node26,node15) - 2.516613031*x(node26,node19) - 8.481134215*x(node26,node28) - 1.99609327*x(node26,node33)
+     
+      - 1.350093421*x(node26,node36) - 1.547036587*x(node26,node39) - 4.792365163*x(node26,node41) - 9.055271935*x(node26,node44)
+     
+      - 6.945738355*x(node26,node48) - 6.228119737*x(node27,node8) - 8.286521023*x(node27,node10) - 5.337208441*x(node27,node12)
+     
+      - 1.860651937*x(node27,node15) - 4.356671932*x(node27,node49) - 4.119000382*x(node28,node9) - 4.37904856*x(node28,node10)
+     
+      - 8.006725774*x(node28,node13) - 7.958325322*x(node28,node15) - 4.844175076*x(node28,node27) - 6.00550984*x(node28,node47)
+     
+      - 4.924589941*x(node29,node13) - 7.477739938*x(node29,node21) - 6.365288332*x(node29,node24) - 2.99222884*x(node29,node46)
+     
+      - 6.980170564*x(node30,node2) - 3.011450734*x(node30,node6) - 7.164657316*x(node30,node16) - 4.757190112*x(node30,node25)
+     
+      - 9.094178332*x(node30,node32) - 3.879608374*x(node30,node33) - 3.319975423*x(node30,node34) - 3.025108801*x(node30,node36)
+     
+      - 6.99821893*x(node30,node42) - 7.82254306*x(node30,node46) - 7.03402921*x(node30,node48) - 5.542385194*x(node31,node16)
+     
+      - 5.118872671*x(node31,node18) - 7.527669679*x(node31,node19) - 5.687696071*x(node31,node20) - 6.103008127*x(node31,node29)
+     
+      - 9.320359645*x(node31,node32) - 5.357246437*x(node31,node33) - 6.146337016*x(node32,node2) - 6.954074155*x(node32,node4)
+     
+      - 7.033472308*x(node32,node8) - 2.089268227*x(node32,node9) - 5.756030065*x(node32,node11) - 8.419000222*x(node32,node18)
+     
+      - 6.364518301*x(node32,node22) - 3.087568576*x(node32,node29) - 9.529374403*x(node32,node31) - 2.097283753*x(node32,node38)
+     
+      - 7.319350882*x(node32,node45) - 5.155999201*x(node32,node47) - 9.926675002*x(node32,node49) - 2.974398751*x(node33,node8)
+     
+      - 5.627777374*x(node33,node11) - 1.757938924*x(node33,node12) - 9.583976476*x(node33,node22) - 7.477161436*x(node33,node29)
+     
+      - 8.210906893*x(node33,node30) - 2.057807494*x(node33,node31) - 8.73261424*x(node33,node41) - 2.464132456*x(node33,node48)
+     
+      - 6.886710892*x(node34,node20) - 3.248585083*x(node34,node22) - 1.144916668*x(node34,node47) - 7.288815853*x(node35,node1)
+     
+      - 1.621367416*x(node35,node4) - 7.486576246*x(node35,node14) - 5.221778788*x(node35,node21) - 4.914485866*x(node35,node23)
+     
+      - 1.887599908*x(node35,node28) - 4.035046501*x(node35,node29) - 9.912087622*x(node35,node30) - 2.247789565*x(node35,node31)
+     
+      - 8.901895465*x(node35,node40) - 6.387479479*x(node35,node43) - 9.658742752*x(node36,node4) - 9.728052355*x(node36,node10)
+     
+      - 6.888835657*x(node36,node13) - 7.723195291*x(node36,node20) - 2.412116794*x(node36,node26) - 3.872931985*x(node36,node34)
+     
+      - 3.336129694*x(node36,node43) - 3.734557669*x(node37,node2) - 1.322657695*x(node37,node4) - 5.481605899*x(node37,node8)
+     
+      - 9.341408845*x(node37,node12) - 6.03793594*x(node37,node13) - 5.192291773*x(node37,node19) - 4.571836084*x(node37,node22)
+     
+      - 3.735304516*x(node37,node30) - 6.632424136*x(node37,node39) - 9.157269772*x(node37,node40) - 4.092239908*x(node37,node49)
+     
+      - 7.070725414*x(node38,node2) - 1.809128575*x(node38,node3) - 6.093422218*x(node38,node4) - 3.676800376*x(node38,node7)
+     
+      - 2.502501877*x(node38,node12) - 8.227388593*x(node38,node13) - 1.710043372*x(node38,node17) - 9.299058724*x(node38,node44)
+     
+      - 9.716733982*x(node38,node49) - 8.421893146*x(node39,node6) - 2.904927148*x(node39,node11) - 9.506723644*x(node39,node17)
+     
+      - 4.524549787*x(node39,node27) - 8.686932472*x(node39,node34) - 8.610864697*x(node39,node45) - 1.826510293*x(node39,node49)
+     
+      - 3.564118036*x(node40,node5) - 9.269143435*x(node40,node15) - 1.923580333*x(node40,node21) - 1.0307764*x(node40,node24)
+     
+      - 8.249924827*x(node40,node26) - 1.384355296*x(node40,node38) - 2.610303931*x(node40,node50) - 8.303240971*x(node41,node18)
+     
+      - 6.794625619*x(node41,node23) - 3.429786331*x(node41,node33) - 1.927886662*x(node41,node38) - 8.943870394*x(node41,node43)
+     
+      - 9.58676635*x(node41,node46) - 7.528641472*x(node42,node1) - 7.70895685*x(node42,node14) - 7.065459577*x(node42,node34)
+     
+      - 3.370834594*x(node42,node38) - 2.107481257*x(node43,node3) - 9.192356605*x(node43,node6) - 7.812627238*x(node43,node16)
+     
+      - 1.631449414*x(node43,node24) - 2.23974253*x(node43,node25) - 4.363534054*x(node43,node34) - 4.801267081*x(node43,node37)
+     
+      - 8.193820888*x(node43,node40) - 1.314833041*x(node43,node48) - 6.553581103*x(node44,node4) - 8.180130493*x(node44,node8)
+     
+      - 3.807882667*x(node44,node11) - 8.348258944*x(node44,node20) - 9.853828525*x(node44,node22) - 8.583469921*x(node44,node24)
+     
+      - 6.453959464*x(node44,node34) - 7.715130337*x(node44,node43) - 6.360929191*x(node44,node46) - 2.677497022*x(node45,node4)
+     
+      - 7.899809896*x(node45,node10) - 7.693137316*x(node45,node18) - 7.205529016*x(node45,node28) - 4.822140331*x(node45,node29)
+     
+      - 1.664211907*x(node45,node35) - 8.804606365*x(node45,node41) - 3.05543296*x(node45,node44) - 9.431190127*x(node45,node46)
+     
+      - 6.781580506*x(node46,node2) - 2.903374567*x(node46,node6) - 1.261113859*x(node46,node7) - 5.580324964*x(node46,node14)
+     
+      - 5.191131592*x(node46,node15) - 6.824133109*x(node46,node21) - 4.196598283*x(node46,node22) - 2.120488966*x(node46,node26)
+     
+      - 8.157233314*x(node46,node29) - 4.546389367*x(node46,node33) - 6.741977194*x(node46,node41) - 3.792190294*x(node46,node47)
+     
+      - 1.859237542*x(node47,node7) - 4.876722874*x(node47,node12) - 6.375195694*x(node47,node19) - 4.128974632*x(node47,node28)
+     
+      - 1.646961049*x(node47,node31) - 3.582985699*x(node47,node36) - 3.283889086*x(node47,node39) - 9.60980959*x(node48,node3)
+     
+      - 6.638236327*x(node48,node5) - 5.597733871*x(node48,node8) - 5.516298199*x(node48,node9) - 3.07131175*x(node48,node29)
+     
+      - 2.445808087*x(node49,node6) - 8.806668805*x(node49,node21) - 9.037944865*x(node49,node22) - 5.136409018*x(node49,node41)
+     
+      - 4.230761554*x(node49,node47) - 6.080794039*x(node50,node8) - 6.310125361*x(node50,node9) - 3.404060821*x(node50,node13)
+     
+      - 1.529699158*x(node50,node19) - 5.06447533*x(node50,node24) - 5.084533099*x(node50,node29) - 9.771927742*x(node50,node34)
+     
+      - 8.409905893*x(node50,node39) - 7.046857459*x(node50,node41) - 4.655580706*x(node50,node47) + z =E= 0 ; (LHS = 0)
+     
+
+---- nodebal  =E=  node balance
+
+nodebal(node1)..  - x(node1,node10) - x(node1,node16) - x(node1,node24) - x(node1,node32) - x(node1,node43) - x(node1,node45)
+     
+      + x(node3,node1) + x(node8,node1) + x(node9,node1) + x(node16,node1) + x(node19,node1) + x(node21,node1) + x(node35,node1)
+     
+      + x(node42,node1) =E= -1 ; (LHS = 0, INFES = 1 ****)
+     
+nodebal(node2)..  - x(node2,node7) - x(node2,node8) - x(node2,node11) - x(node2,node13) - x(node2,node18) - x(node2,node25)
+     
+      - x(node2,node30) - x(node2,node32) - x(node2,node34) - x(node2,node49) + x(node10,node2) + x(node12,node2)
+     
+      + x(node14,node2) + x(node30,node2) + x(node32,node2) + x(node37,node2) + x(node38,node2) + x(node46,node2) =E= 0 ;
+     
+      (LHS = 0)
+     
+nodebal(node3)..  - x(node3,node1) - x(node3,node4) - x(node3,node5) - x(node3,node15) - x(node3,node22) - x(node3,node24)
+     
+      - x(node3,node28) - x(node3,node31) - x(node3,node43) + x(node14,node3) + x(node23,node3) + x(node26,node3)
+     
+      + x(node38,node3) + x(node43,node3) + x(node48,node3) =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using LP From line 248
+
+
+---- x  flow along i->j
+
+x(node1,node10)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -4.9345  obj
+       -1       nodebal(node1)
+        1       nodebal(node10)
+
+x(node1,node16)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -4.9577  obj
+       -1       nodebal(node1)
+        1       nodebal(node16)
+
+x(node1,node24)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       -7.3432  obj
+       -1       nodebal(node1)
+        1       nodebal(node24)
+
+REMAINING 392 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using LP From line 248
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using LP From line 248
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           51
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES          396
+NON ZERO ELEMENTS         1,186
+
+
+GENERATION TIME      =        0.000 SECONDS      6 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using LP From line 248
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  z
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  248
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               10.9078
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        13    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.01 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.44 ticks)
+
+
+Optimal solution found
+Objective:           10.907756
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- EQU nodebal  node balance
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1         -1.0000        -1.0000        -1.0000        -6.4062      
+node2           .              .              .             1.2626      
+node3           .              .              .              .          
+node4           .              .              .              .          
+node5           .              .              .              .          
+node6           .              .              .              .          
+node7           .              .              .              .          
+node8           .              .              .              .          
+node9           .              .              .            -0.9983      
+node10          .              .              .            -1.4717      
+node11          .              .              .              .          
+node12          .              .              .              .          
+node13          .              .              .              .          
+node14          .              .              .              .          
+node15          .              .              .              .          
+node16          .              .              .            -1.4485      
+node17          .              .              .              .          
+node18          .              .              .              .          
+node19          .              .              .              .          
+node20          .              .              .              .          
+node21          .              .              .              .          
+node22          .              .              .             0.6481      
+node23          .              .              .              .          
+node24          .              .              .              .          
+node25          .              .              .              .          
+node26          .              .              .             1.1280      
+node27          .              .              .             0.1448      
+node28          .              .              .              .          
+node29          .              .              .              .          
+node30          .              .              .              .          
+node31          .              .              .              .          
+node32          .              .              .            -3.0876      
+node33          .              .              .              .          
+node34          .              .              .              .          
+node35          .              .              .              .          
+node36          .              .              .              .          
+node37          .              .              .             0.4093      
+node38          .              .              .            -0.9903      
+node39          .              .              .             2.6750      
+node40          .              .              .              .          
+node41          .              .              .              .          
+node42          .              .              .              .          
+node43          .              .              .              .          
+node44          .              .              .              .          
+node45          .              .              .              .          
+node46          .              .              .              .          
+node47          .              .              .              .          
+node48          .              .              .              .          
+node49         1.0000         1.0000         1.0000         4.5015      
+node50          .              .              .              .          
+
+---- VAR x  flow along i->j
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+node1 .node10          .              .            +INF             .          
+node1 .node16          .              .            +INF             .          
+node1 .node24          .              .            +INF            0.9369      
+node1 .node32          .             1.0000        +INF             .          
+node1 .node43          .              .            +INF            0.1282      
+node1 .node45          .              .            +INF            2.3854      
+node2 .node7           .              .            +INF            4.2321      
+node2 .node8           .              .            +INF            6.0425      
+node2 .node11          .              .            +INF            4.7692      
+node2 .node13          .              .            +INF            9.9949      
+node2 .node18          .              .            +INF            6.2551      
+node2 .node25          .              .            +INF            7.2594      
+node2 .node30          .              .            +INF            3.0882      
+node2 .node32          .              .            +INF            6.9451      
+node2 .node34          .              .            +INF            7.2577      
+node2 .node49          .              .            +INF             .          
+node3 .node1           .              .            +INF           13.0467      
+node3 .node4           .              .            +INF            8.0029      
+node3 .node5           .              .            +INF            3.4652      
+node3 .node15          .              .            +INF            8.9973      
+node3 .node22          .              .            +INF            5.7327      
+node3 .node24          .              .            +INF            1.7384      
+node3 .node28          .              .            +INF            2.1991      
+node3 .node31          .              .            +INF            9.4246      
+node3 .node43          .              .            +INF            8.2585      
+node4 .node6           .              .            +INF            6.0763      
+node4 .node18          .              .            +INF            2.3679      
+node4 .node20          .              .            +INF            7.3654      
+node4 .node22          .              .            +INF            8.8712      
+node4 .node24          .              .            +INF            5.9737      
+node4 .node29          .              .            +INF            2.2997      
+node4 .node35          .              .            +INF            7.1036      
+node4 .node37          .              .            +INF            2.1364      
+node4 .node38          .              .            +INF           10.1823      
+node4 .node41          .              .            +INF            4.9098      
+node5 .node8           .              .            +INF            8.5899      
+node5 .node14          .              .            +INF            8.4418      
+node5 .node22          .              .            +INF            5.6275      
+node5 .node26          .              .            +INF            4.9068      
+node5 .node32          .              .            +INF            8.9897      
+node5 .node38          .              .            +INF           10.6246      
+node5 .node48          .              .            +INF            9.8177      
+node5 .node50          .              .            +INF            3.3691      
+node6 .node9           .              .            +INF            2.5011      
+node6 .node16          .              .            +INF            7.6933      
+node6 .node20          .              .            +INF            5.6753      
+node6 .node23          .              .            +INF            1.0903      
+node6 .node27          .              .            +INF            6.1407      
+node6 .node34          .              .            +INF            1.1743      
+node6 .node39          .              .            +INF            1.4560      
+node6 .node43          .              .            +INF            2.0462      
+node6 .node46          .              .            +INF            8.5881      
+node6 .node50          .              .            +INF            8.7790      
+node7 .node11          .              .            +INF            5.9086      
+node7 .node26          .              .            +INF            0.2239      
+node7 .node38          .              .            +INF            3.3083      
+node7 .node39          .              .            +INF            3.0754      
+node7 .node44          .              .            +INF            4.9290      
+node7 .node45          .              .            +INF            7.3651      
+node8 .node1           .              .            +INF           14.6423      
+node8 .node4           .              .            +INF            7.9093      
+node8 .node15          .              .            +INF            1.3179      
+node8 .node18          .              .            +INF            6.3582      
+node8 .node20          .              .            +INF            6.2104      
+node8 .node28          .              .            +INF            5.6113      
+node8 .node33          .              .            +INF            3.7175      
+node8 .node46          .              .            +INF            9.1708      
+node8 .node49          .              .            +INF            0.9729      
+node9 .node1           .              .            +INF           11.4093      
+node9 .node11          .              .            +INF            3.6039      
+node9 .node26          .             1.0000        +INF             .          
+node9 .node50          .              .            +INF            1.3965      
+node10.node2           .              .            +INF            2.7333      
+node10.node17          .              .            +INF            0.4536      
+node10.node27          .              .            +INF            2.4035      
+node10.node36          .              .            +INF            3.6631      
+node10.node38          .              .            +INF            1.9795      
+node10.node41          .              .            +INF            8.5108      
+node10.node48          .              .            +INF            1.2725      
+node10.node50          .              .            +INF            2.1448      
+node11.node14          .              .            +INF            1.5015      
+node11.node31          .              .            +INF            3.8389      
+node11.node34          .              .            +INF            7.6673      
+node11.node50          .              .            +INF            7.5260      
+node12.node2           .              .            +INF            8.6947      
+node12.node4           .              .            +INF            7.4066      
+node12.node9           .              .            +INF            9.2260      
+node12.node10          .              .            +INF            4.3433      
+node12.node17          .              .            +INF            6.6309      
+node12.node39          .              .            +INF            2.2351      
+node12.node42          .              .            +INF            9.8732      
+node12.node43          .              .            +INF            6.5063      
+node13.node4           .              .            +INF            7.2574      
+node13.node7           .              .            +INF            6.7801      
+node13.node12          .              .            +INF            2.2374      
+node13.node23          .              .            +INF            4.2150      
+node13.node24          .              .            +INF            2.0100      
+node13.node33          .              .            +INF            2.7881      
+node13.node41          .              .            +INF            4.4702      
+node13.node45          .              .            +INF            6.5190      
+node13.node49          .              .            +INF            2.6064      
+node13.node50          .              .            +INF            4.8663      
+node14.node2           .              .            +INF            3.2624      
+node14.node3           .              .            +INF            5.5244      
+node14.node5           .              .            +INF            5.5748      
+node14.node15          .              .            +INF            8.5290      
+node14.node18          .              .            +INF            9.6981      
+node14.node21          .              .            +INF            2.9934      
+node14.node39          .              .            +INF            3.3414      
+node14.node45          .              .            +INF            4.8932      
+node14.node47          .              .            +INF            8.8759      
+node14.node50          .              .            +INF            9.6741      
+node15.node10          .              .            +INF            5.0328      
+node15.node13          .              .            +INF            9.9997      
+node15.node16          .              .            +INF           10.1652      
+node15.node22          .              .            +INF            2.2874      
+node15.node31          .              .            +INF            9.0182      
+node15.node38          .              .            +INF           10.2449      
+node16.node1           .              .            +INF            9.6225      
+node16.node6           .              .            +INF            4.9708      
+node16.node8           .              .            +INF            7.3592      
+node16.node10          .              .            +INF            1.6042      
+node16.node44          .              .            +INF            5.5841      
+node17.node4           .              .            +INF            9.7258      
+node17.node6           .              .            +INF            8.5674      
+node17.node13          .              .            +INF            6.2241      
+node17.node19          .              .            +INF            2.7605      
+node17.node22          .              .            +INF            5.0018      
+node17.node24          .              .            +INF            8.5562      
+node17.node35          .              .            +INF            3.5172      
+node17.node36          .              .            +INF            8.8900      
+node17.node37          .              .            +INF            6.3764      
+node18.node4           .              .            +INF            9.8922      
+node18.node5           .              .            +INF            6.4586      
+node18.node12          .              .            +INF            3.4422      
+node18.node13          .              .            +INF            2.6948      
+node18.node37          .              .            +INF            3.9476      
+node18.node41          .              .            +INF            1.3402      
+node18.node42          .              .            +INF            5.2104      
+node18.node45          .              .            +INF            9.9668      
+node19.node1           .              .            +INF           11.8532      
+node19.node10          .              .            +INF            8.7414      
+node19.node14          .              .            +INF            3.6990      
+node19.node18          .              .            +INF            6.9088      
+node19.node31          .              .            +INF            2.5776      
+node19.node34          .              .            +INF            8.6826      
+node19.node50          .              .            +INF            4.5281      
+node20.node9           .              .            +INF            6.6441      
+node20.node11          .              .            +INF            5.7533      
+node20.node16          .              .            +INF           10.8928      
+node20.node19          .              .            +INF            4.4266      
+node20.node22          .              .            +INF            6.4642      
+node20.node23          .              .            +INF            2.0804      
+node20.node26          .              .            +INF            2.8160      
+node20.node27          .              .            +INF            3.9058      
+node20.node29          .              .            +INF            5.3206      
+node20.node30          .              .            +INF            9.8796      
+node20.node41          .              .            +INF            5.9795      
+node20.node46          .              .            +INF            1.8843      
+node20.node49          .              .            +INF            4.3052      
+node21.node1           .              .            +INF           15.8883      
+node21.node5           .              .            +INF            7.3271      
+node21.node11          .              .            +INF            3.3156      
+node21.node23          .              .            +INF            9.9905      
+node21.node29          .              .            +INF            2.9596      
+node21.node31          .              .            +INF            1.9581      
+node21.node46          .              .            +INF            9.1726      
+node22.node9           .              .            +INF           11.3686      
+node22.node12          .              .            +INF            3.9806      
+node22.node18          .              .            +INF            2.8388      
+node22.node21          .              .            +INF            3.6264      
+node22.node29          .              .            +INF            3.2598      
+node22.node39          .              .            +INF             .          
+node22.node50          .              .            +INF            3.4413      
+node23.node3           .              .            +INF            9.7884      
+node23.node8           .              .            +INF            4.8976      
+node23.node17          .              .            +INF            1.7077      
+node23.node19          .              .            +INF            1.5263      
+node23.node21          .              .            +INF            3.4683      
+node23.node35          .              .            +INF            2.7873      
+node23.node37          .              .            +INF            4.5774      
+node23.node41          .              .            +INF            8.5455      
+node23.node50          .              .            +INF            4.6400      
+node24.node7           .              .            +INF            6.7681      
+node24.node9           .              .            +INF           10.0453      
+node24.node10          .              .            +INF            4.8427      
+node24.node18          .              .            +INF            9.6778      
+node24.node44          .              .            +INF            6.0259      
+node24.node45          .              .            +INF            2.9336      
+node24.node47          .              .            +INF            7.9178      
+node25.node5           .              .            +INF            8.5758      
+node25.node6           .              .            +INF            9.9778      
+node25.node32          .              .            +INF            6.4211      
+node25.node34          .              .            +INF            7.2521      
+node25.node45          .              .            +INF            6.1226      
+node25.node47          .              .            +INF            9.4415      
+node26.node3           .              .            +INF            4.4730      
+node26.node11          .              .            +INF            7.3492      
+node26.node13          .              .            +INF            2.6714      
+node26.node14          .              .            +INF           10.7134      
+node26.node15          .              .            +INF            3.8304      
+node26.node19          .              .            +INF            3.6446      
+node26.node28          .              .            +INF            9.6091      
+node26.node33          .              .            +INF            3.1241      
+node26.node36          .              .            +INF            2.4781      
+node26.node39          .             1.0000        +INF             .          
+node26.node41          .              .            +INF            5.9203      
+node26.node44          .              .            +INF           10.1832      
+node26.node48          .              .            +INF            8.0737      
+node27.node8           .              .            +INF            6.3730      
+node27.node10          .              .            +INF            9.9031      
+node27.node12          .              .            +INF            5.4820      
+node27.node15          .              .            +INF            2.0055      
+node27.node49          .              .            +INF             .          
+node28.node9           .              .            +INF            5.1173      
+node28.node10          .              .            +INF            5.8508      
+node28.node13          .              .            +INF            8.0067      
+node28.node15          .              .            +INF            7.9583      
+node28.node27          .              .            +INF            4.6993      
+node28.node47          .              .            +INF            6.0055      
+node29.node13          .              .            +INF            4.9246      
+node29.node21          .              .            +INF            7.4777      
+node29.node24          .              .            +INF            6.3653      
+node29.node46          .              .            +INF            2.9922      
+node30.node2           .              .            +INF            5.7175      
+node30.node6           .              .            +INF            3.0115      
+node30.node16          .              .            +INF            8.6132      
+node30.node25          .              .            +INF            4.7572      
+node30.node32          .              .            +INF           12.1817      
+node30.node33          .              .            +INF            3.8796      
+node30.node34          .              .            +INF            3.3200      
+node30.node36          .              .            +INF            3.0251      
+node30.node42          .              .            +INF            6.9982      
+node30.node46          .              .            +INF            7.8225      
+node30.node48          .              .            +INF            7.0340      
+node31.node16          .              .            +INF            6.9909      
+node31.node18          .              .            +INF            5.1189      
+node31.node19          .              .            +INF            7.5277      
+node31.node20          .              .            +INF            5.6877      
+node31.node29          .              .            +INF            6.1030      
+node31.node32          .              .            +INF           12.4079      
+node31.node33          .              .            +INF            5.3572      
+node32.node2           .              .            +INF            1.7961      
+node32.node4           .              .            +INF            3.8665      
+node32.node8           .              .            +INF            3.9459      
+node32.node9           .             1.0000        +INF             .          
+node32.node11          .              .            +INF            2.6685      
+node32.node18          .              .            +INF            5.3314      
+node32.node22          .              .            +INF            2.6288      
+node32.node29          .              .            +INF             .          
+node32.node31          .              .            +INF            6.4418      
+node32.node38          .              .            +INF             .          
+node32.node45          .              .            +INF            4.2318      
+node32.node47          .              .            +INF            2.0684      
+node32.node49          .              .            +INF            2.3376      
+node33.node8           .              .            +INF            2.9744      
+node33.node11          .              .            +INF            5.6278      
+node33.node12          .              .            +INF            1.7579      
+node33.node22          .              .            +INF            8.9358      
+node33.node29          .              .            +INF            7.4772      
+node33.node30          .              .            +INF            8.2109      
+node33.node31          .              .            +INF            2.0578      
+node33.node41          .              .            +INF            8.7326      
+node33.node48          .              .            +INF            2.4641      
+node34.node20          .              .            +INF            6.8867      
+node34.node22          .              .            +INF            2.6004      
+node34.node47          .              .            +INF            1.1449      
+node35.node1           .              .            +INF           13.6951      
+node35.node4           .              .            +INF            1.6214      
+node35.node14          .              .            +INF            7.4866      
+node35.node21          .              .            +INF            5.2218      
+node35.node23          .              .            +INF            4.9145      
+node35.node28          .              .            +INF            1.8876      
+node35.node29          .              .            +INF            4.0350      
+node35.node30          .              .            +INF            9.9121      
+node35.node31          .              .            +INF            2.2478      
+node35.node40          .              .            +INF            8.9019      
+node35.node43          .              .            +INF            6.3875      
+node36.node4           .              .            +INF            9.6587      
+node36.node10          .              .            +INF           11.1998      
+node36.node13          .              .            +INF            6.8888      
+node36.node20          .              .            +INF            7.7232      
+node36.node26          .              .            +INF            1.2842      
+node36.node34          .              .            +INF            3.8729      
+node36.node43          .              .            +INF            3.3361      
+node37.node2           .              .            +INF            2.8812      
+node37.node4           .              .            +INF            1.7319      
+node37.node8           .              .            +INF            5.8909      
+node37.node12          .              .            +INF            9.7507      
+node37.node13          .              .            +INF            6.4472      
+node37.node19          .              .            +INF            5.6016      
+node37.node22          .              .            +INF            4.3330      
+node37.node30          .              .            +INF            4.1446      
+node37.node39          .              .            +INF            4.3667      
+node37.node40          .              .            +INF            9.5665      
+node37.node49          .              .            +INF             .          
+node38.node2           .              .            +INF            4.8178      
+node38.node3           .              .            +INF            0.8188      
+node38.node4           .              .            +INF            5.1031      
+node38.node7           .              .            +INF            2.6865      
+node38.node12          .              .            +INF            1.5122      
+node38.node13          .              .            +INF            7.2371      
+node38.node17          .              .            +INF            0.7198      
+node38.node44          .              .            +INF            8.3088      
+node38.node49          .              .            +INF            4.2249      
+node39.node6           .              .            +INF           11.0969      
+node39.node11          .              .            +INF            5.5799      
+node39.node17          .              .            +INF           12.1817      
+node39.node27          .              .            +INF            7.0547      
+node39.node34          .              .            +INF           11.3619      
+node39.node45          .              .            +INF           11.2859      
+node39.node49          .             1.0000        +INF             .          
+node40.node5           .              .            +INF            3.5641      
+node40.node15          .              .            +INF            9.2691      
+node40.node21          .              .            +INF            1.9236      
+node40.node24          .              .            +INF            1.0308      
+node40.node26          .              .            +INF            7.1220      
+node40.node38          .              .            +INF            2.3746      
+node40.node50          .              .            +INF            2.6103      
+node41.node18          .              .            +INF            8.3032      
+node41.node23          .              .            +INF            6.7946      
+node41.node33          .              .            +INF            3.4298      
+node41.node38          .              .            +INF            2.9182      
+node41.node43          .              .            +INF            8.9439      
+node41.node46          .              .            +INF            9.5868      
+node42.node1           .              .            +INF           13.9349      
+node42.node14          .              .            +INF            7.7090      
+node42.node34          .              .            +INF            7.0655      
+node42.node38          .              .            +INF            4.3611      
+node43.node3           .              .            +INF            2.1075      
+node43.node6           .              .            +INF            9.1924      
+node43.node16          .              .            +INF            9.2612      
+node43.node24          .              .            +INF            1.6314      
+node43.node25          .              .            +INF            2.2397      
+node43.node34          .              .            +INF            4.3635      
+node43.node37          .              .            +INF            4.3920      
+node43.node40          .              .            +INF            8.1938      
+node43.node48          .              .            +INF            1.3148      
+node44.node4           .              .            +INF            6.5536      
+node44.node8           .              .            +INF            8.1801      
+node44.node11          .              .            +INF            3.8079      
+node44.node20          .              .            +INF            8.3483      
+node44.node22          .              .            +INF            9.2057      
+node44.node24          .              .            +INF            8.5835      
+node44.node34          .              .            +INF            6.4540      
+node44.node43          .              .            +INF            7.7151      
+node44.node46          .              .            +INF            6.3609      
+node45.node4           .              .            +INF            2.6775      
+node45.node10          .              .            +INF            9.3715      
+node45.node18          .              .            +INF            7.6931      
+node45.node28          .              .            +INF            7.2055      
+node45.node29          .              .            +INF            4.8221      
+node45.node35          .              .            +INF            1.6642      
+node45.node41          .              .            +INF            8.8046      
+node45.node44          .              .            +INF            3.0554      
+node45.node46          .              .            +INF            9.4312      
+node46.node2           .              .            +INF            5.5189      
+node46.node6           .              .            +INF            2.9034      
+node46.node7           .              .            +INF            1.2611      
+node46.node14          .              .            +INF            5.5803      
+node46.node15          .              .            +INF            5.1911      
+node46.node21          .              .            +INF            6.8241      
+node46.node22          .              .            +INF            3.5485      
+node46.node26          .              .            +INF            0.9925      
+node46.node29          .              .            +INF            8.1572      
+node46.node33          .              .            +INF            4.5464      
+node46.node41          .              .            +INF            6.7420      
+node46.node47          .              .            +INF            3.7922      
+node47.node7           .              .            +INF            1.8592      
+node47.node12          .              .            +INF            4.8767      
+node47.node19          .              .            +INF            6.3752      
+node47.node28          .              .            +INF            4.1290      
+node47.node31          .              .            +INF            1.6470      
+node47.node36          .              .            +INF            3.5830      
+node47.node39          .              .            +INF            0.6089      
+node48.node3           .              .            +INF            9.6098      
+node48.node5           .              .            +INF            6.6382      
+node48.node8           .              .            +INF            5.5977      
+node48.node9           .              .            +INF            6.5146      
+node48.node29          .              .            +INF            3.0713      
+node49.node6           .              .            +INF            6.9473      
+node49.node21          .              .            +INF           13.3082      
+node49.node22          .              .            +INF           12.8913      
+node49.node41          .              .            +INF            9.6379      
+node49.node47          .              .            +INF            8.7323      
+node50.node8           .              .            +INF            6.0808      
+node50.node9           .              .            +INF            7.3084      
+node50.node13          .              .            +INF            3.4041      
+node50.node19          .              .            +INF            1.5297      
+node50.node24          .              .            +INF            5.0645      
+node50.node29          .              .            +INF            5.0845      
+node50.node34          .              .            +INF            9.7719      
+node50.node39          .              .            +INF            5.7349      
+node50.node41          .              .            +INF            7.0469      
+node50.node47          .              .            +INF            4.6556      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           10.9078        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    251 ============== LP model ==============
+
+----    251 VARIABLE x.L  flow along i->j
+
+             node9      node26      node32      node39      node49
+
+node1                                1.000
+node9                    1.000
+node26                                           1.000
+node32       1.000
+node39                                                       1.000
+
+
+----    251 VARIABLE z.L                   =       10.908  objective
+
+----    254 PARAMETER results  
+
+                          obj
+
+Dijkstra (GAMS)        10.908
+Dijkstra (Python)      10.908
+LP                     10.908
+
+
+----    272 PARAMETER lpsteps  results from LP model
+
+step1.node1 .node32 3.319
+step2.node32.node9  2.089
+step3.node9 .node26 2.126
+step4.node26.node39 1.547
+step5.node39.node49 1.827
+
+
+**** REPORT FILE SUMMARY
+
+fln C:\projects\OptimizationModels\Dijkstra\networkdata.js
+
+
+EXECUTION TIME       =        0.718 SECONDS      8 MB  49.1.0 5c4d4ed6 WEX-WEI
+
+
+USER: Eval License                                   S241129|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Dijkstra\dijkstra.gms
+Output     C:\projects\OptimizationModels\Dijkstra\dijkstra.lst

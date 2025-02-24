@@ -1,0 +1,98 @@
+--- Job dijkstra.gms Start 02/24/25 10:37:39 49.1.0 5c4d4ed6 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\49\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\projects\OptimizationModels\Dijkstra\dijkstra.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\projects\OptimizationModels\Dijkstra\225a\
+    SysDir C:\GAMS\49\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   S241129|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+          The expiration date of time-limited license is Dec 24, 2025
+System information: 8 physical cores and 64 Gb memory detected
+GAMS 49.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+--- Starting compilation
+--- dijkstra.gms(334) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Dijkstra\network.html
+--- dijkstra.gms(426) 3 Mb
+--- Starting execution: elapsed 0:00:00.005
+--- dijkstra.gms(149) 6 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+i=['node1', 'node2', 'node3', 'node4', 'node5', 'node6', 'node7', 'node8', 'node9', 'node10', 'node11', 'node12', 'node13', 'node14', 'node15', 'node16', 'node17', 'node18', 'node19', 'node20', 'node21', 'node22', 'node23', 'node24', 'node25', 'node26', 'node27', 'node28', 'node29', 'node30', 'node31', 'node32', 'node33', 'node34', 'node35', 'node36', 'node37', 'node38', 'node39', 'node40', 'node41', 'node42', 'node43', 'node44', 'node45', 'node46', 'node47', 'node48', 'node49', 'node50']
+source=node1
+sink=node49
+          i       j     value
+0     node1  node10  4.934533
+1     node1  node16  4.957717
+2     node1  node24  7.343160
+3     node1  node32  3.318676
+4     node1  node43  6.534425
+..      ...     ...       ...
+390  node50  node29  5.084533
+391  node50  node34  9.771928
+392  node50  node39  8.409906
+393  node50  node41  7.046857
+394  node50  node47  4.655581
+
+[395 rows x 3 columns]
+optimal total cost: 10.907756446999999
+['node1', 'node32', 'node9', 'node26', 'node39', 'node49']
+--- dijkstra.gms(234) 6 Mb
+--- Generating LP model m
+--- dijkstra.gms(248) 6 Mb
+---   51 rows  396 columns  1,186 non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.532
+
+IBM ILOG CPLEX   49.1.0 5c4d4ed6 Feb 15, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.01 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 1 rows and 1 columns.
+Reduced LP has 49 rows, 395 columns, and 775 nonzeros.
+Presolve time = 0.00 sec. (0.32 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             3.318676
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.44 ticks)
+
+
+Optimal solution found
+Objective:           10.907756
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:00.567
+--- dijkstra.gms(425) 8 Mb
+--- Putfile fln C:\projects\OptimizationModels\Dijkstra\networkdata.js
+*** Status: Normal completion
+--- Job dijkstra.gms Stop 02/24/25 10:37:40 elapsed 0:00:00.826
