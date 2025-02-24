@@ -8,6 +8,7 @@ $onText
   1. Dijkstra's shortest path algorithm implemented in GAMS
   2. Dijkstra's shortest path algorithm implemented in Python
   3. Shortest path as LP
+  4. Visualization of network and shortest path
   
 $offText
 

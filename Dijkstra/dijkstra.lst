@@ -1,4 +1,4 @@
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 1
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -12,338 +12,339 @@ C o m p i l a t i o n
         1. Dijkstra's shortest path algorithm implemented in GAMS
         2. Dijkstra's shortest path algorithm implemented in Python
         3. Shortest path as LP
+        4. Visualization of network and shortest path
         
-  13   
   14   
-  15  *-----------------------------------------------------
-  16  * set up network
-  17  *-----------------------------------------------------
-  18   
-  19  set i 'nodes' /node1*node50/;
-  20  alias (i,j,v);
-  21   
-  22  set a(i,j) 'arcs of sparse network';
-  23  * no self loops and density of 15%
-  24  a(i,j)$(ord(i)<>ord(j)) = uniform(0,1)<0.15;
-  25   
-  26  singleton sets
-  27     source(i) /node1/
-  28     sink(i)   /node49/
-  29  ;
-  30  * sink is chosen so optimal path needs quite a few hops
-  31   
-  32  parameter cost(i,j) 'random costs (lengths)';
-  33  cost(a) = uniform(1,10);
-  34   
-  35  option a:0:0:7, cost:3:0:6;
-  36  display$(card(i)<=50)
-  37     "============== data ==============",
-  38     i,source,sink,a,cost;
-  39   
+  15   
+  16  *-----------------------------------------------------
+  17  * set up network
+  18  *-----------------------------------------------------
+  19   
+  20  set i 'nodes' /node1*node50/;
+  21  alias (i,j,v);
+  22   
+  23  set a(i,j) 'arcs of sparse network';
+  24  * no self loops and density of 15%
+  25  a(i,j)$(ord(i)<>ord(j)) = uniform(0,1)<0.15;
+  26   
+  27  singleton sets
+  28     source(i) /node1/
+  29     sink(i)   /node49/
+  30  ;
+  31  * sink is chosen so optimal path needs quite a few hops
+  32   
+  33  parameter cost(i,j) 'random costs (lengths)';
+  34  cost(a) = uniform(1,10);
+  35   
+  36  option a:0:0:7, cost:3:0:6;
+  37  display$(card(i)<=50)
+  38     "============== data ==============",
+  39     i,source,sink,a,cost;
   40   
-  41  *=====================================================
-  42  * 1.  Dijkstra GAMS algorithm
-  43  *=====================================================
-  44   
-  45  *-----------------------------------------------------
-  46  * data structures
-  47  *-----------------------------------------------------
-  48   
-  49  sets
-  50     prev(i,j) 'i is previous wrt j'
-  51     Q(i)      'unvisited nodes'
-  52  ;
-  53  parameter dist(i) 'distance from source';
-  54   
-  55  * initialize
-  56  Q(i) = yes;
-  57  dist(i) = INF;
-  58  dist(source) = 0;
-  59   
+  41   
+  42  *=====================================================
+  43  * 1.  Dijkstra GAMS algorithm
+  44  *=====================================================
+  45   
+  46  *-----------------------------------------------------
+  47  * data structures
+  48  *-----------------------------------------------------
+  49   
+  50  sets
+  51     prev(i,j) 'i is previous wrt j'
+  52     Q(i)      'unvisited nodes'
+  53  ;
+  54  parameter dist(i) 'distance from source';
+  55   
+  56  * initialize
+  57  Q(i) = yes;
+  58  dist(i) = INF;
+  59  dist(source) = 0;
   60   
-  61  *-----------------------------------------------------
-  62  * algorithm
-  63  *-----------------------------------------------------
-  64   
-  65  scalar mindist;
-  66  singleton set u(i);
-  67  scalar alt;
-  68   
-  69  * if multiple assignments to singleton set,
-  70  * only the last one will remain. This will
-  71  * guarantee a singleton set will hold
-  72  * 0 or 1 elements.
-  73  option strictSingleton=0;
-  74   
-  75  while(card(Q)>0,
-  76   
-  77  * find node in Q with minimum distance from the source
-  78     mindist = smin(q,dist(q));
-  79     u(Q) = dist(Q)=mindist;
-  80   
-  81  * remove u from Q
-  82     Q(u) = no;
-  83   
-  84  * loop over neighbors of u in Q
-  85     loop(a(u,v)$Q(v),
-  86        alt = dist(u) + cost(a);
-  87        if(alt < dist(v),
-  88           dist(v) = alt;
-  89           prev(i,v) = no;
-  90           prev(u,v) = yes;
-  91        );
-  92     );
-  93  );
-  94   
-  95  option prev:0:0:7,dist:3:0:6;
-  96  display
-  97     "============== Dijkstra (GAMS) ==============",
-  98     prev,dist;
-  99  parameter results(*,*);
- 100  results('Dijkstra (GAMS)','obj') = dist(sink);
- 101  display results;
- 102   
- 103  *-----------------------------------------------------
- 104  * recover path
- 105  * more complicated than the algorithm itself
- 106  *-----------------------------------------------------
- 107   
- 108  set s /step1*step25/;
- 109  singleton sets
- 110     n(i) 'current node'
- 111     p(i) 'previous node'
- 112  ;
- 113  parameter steps(s,i,j) 'cost for each step taken';
- 114  option steps:3:0:1;
- 115  steps(s,i,j) = 0;
- 116   
- 117  * initialization
- 118  n(sink) = yes;
- 119   
- 120  * loop from last (sink) to first (source)
- 121  repeat
- 122     p(i) = no;
- 123  * loop finds v given n
- 124  * body of loop is executed 0 or 1 times
- 125     loop(prev(v,n),
- 126  * make room by moving all steps one down
- 127        steps(s,i,j) = steps(s-1,i,j);
- 128        steps('step1',prev) = cost(prev);
- 129        p(v) = yes;
- 130     );
- 131     n(i) = p(i);
- 132  until card(n)=0;
- 133   
- 134  display steps;
- 135   
+  61   
+  62  *-----------------------------------------------------
+  63  * algorithm
+  64  *-----------------------------------------------------
+  65   
+  66  scalar mindist;
+  67  singleton set u(i);
+  68  scalar alt;
+  69   
+  70  * if multiple assignments to singleton set,
+  71  * only the last one will remain. This will
+  72  * guarantee a singleton set will hold
+  73  * 0 or 1 elements.
+  74  option strictSingleton=0;
+  75   
+  76  while(card(Q)>0,
+  77   
+  78  * find node in Q with minimum distance from the source
+  79     mindist = smin(q,dist(q));
+  80     u(Q) = dist(Q)=mindist;
+  81   
+  82  * remove u from Q
+  83     Q(u) = no;
+  84   
+  85  * loop over neighbors of u in Q
+  86     loop(a(u,v)$Q(v),
+  87        alt = dist(u) + cost(a);
+  88        if(alt < dist(v),
+  89           dist(v) = alt;
+  90           prev(i,v) = no;
+  91           prev(u,v) = yes;
+  92        );
+  93     );
+  94  );
+  95   
+  96  option prev:0:0:7,dist:3:0:6;
+  97  display
+  98     "============== Dijkstra (GAMS) ==============",
+  99     prev,dist;
+ 100  parameter results(*,*);
+ 101  results('Dijkstra (GAMS)','obj') = dist(sink);
+ 102  display results;
+ 103   
+ 104  *-----------------------------------------------------
+ 105  * recover path
+ 106  * more complicated than the algorithm itself
+ 107  *-----------------------------------------------------
+ 108   
+ 109  set s /step1*step25/;
+ 110  singleton sets
+ 111     n(i) 'current node'
+ 112     p(i) 'previous node'
+ 113  ;
+ 114  parameter steps(s,i,j) 'cost for each step taken';
+ 115  option steps:3:0:1;
+ 116  steps(s,i,j) = 0;
+ 117   
+ 118  * initialization
+ 119  n(sink) = yes;
+ 120   
+ 121  * loop from last (sink) to first (source)
+ 122  repeat
+ 123     p(i) = no;
+ 124  * loop finds v given n
+ 125  * body of loop is executed 0 or 1 times
+ 126     loop(prev(v,n),
+ 127  * make room by moving all steps one down
+ 128        steps(s,i,j) = steps(s-1,i,j);
+ 129        steps('step1',prev) = cost(prev);
+ 130        p(v) = yes;
+ 131     );
+ 132     n(i) = p(i);
+ 133  until card(n)=0;
+ 134   
+ 135  display steps;
  136   
- 137  *=====================================================
- 138  * 2.  Dijkstra Python algorithm
- 139  *=====================================================
- 140   
- 141  parameters
- 142     psteps(s,i,j) 'results from python code'
- 143     pobj   'objective function value'
- 144  ;
- 145   
- 146  * just in case we have arcs with costs=0
- 147  cost(a)$(cost(a)=0) = eps;
- 148   
- 149  embeddedCode Python:
- 150   
- 151  #-- import GAMS data
- 152  import gams.transfer as gt
- 153   
- 154  nodes=list(gams.get('i'))
- 155  print(f"i={nodes}")
- 156   
- 157  source=list(gams.get('source'))[0]
- 158  print(f"source={source}")
- 159   
- 160  sink=list(gams.get('sink'))[0]
- 161  print(f"sink={sink}")
- 162   
- 163  m = gt.Container(gams.db)
- 164  dfcost = m.data["cost"].records
- 165  print(dfcost)
- 166   
- 167  #-- data structures
- 168  successors = {v:[] for v in nodes}
- 169  cost = {}
- 170  for index, row in dfcost.iterrows():
- 171      u = row['i']
- 172      v = row['j']
- 173      successors[u].append(v)
- 174      cost[(u,v)] = row['value']    
- 175   
- 176  #print(successors)
- 177   
- 178  #-- initialization
- 179  Q=set(nodes)
- 180  inf=float('inf')
- 181  dist = {v:inf for v in nodes}
- 182  dist[source] = 0
- 183  prev = {v:None for v in nodes}
- 184   
- 185  #-- run algorithm
- 186  while len(Q)>0:
- 187      u = min(Q, key=lambda n:dist[n])
- 188      Q.remove(u)
- 189      
- 190      for v in successors[u]:
- 191          if v in Q:
- 192             alt = dist[u] + cost[(u,v)]
- 193             if alt < dist[v]:
- 194                dist[v] = alt
- 195                prev[v] = u
- 196                
- 197  print(f"optimal total cost: {dist[sink]}")
- 198   
- 199  #-- recover path
- 200  path = []
- 201  u = sink
- 202  while u is not None:
- 203     path.insert(0,u)
- 204     u = prev[u]
- 205     
- 206  print(path)
- 207   
- 208  #-- move things back to GAMS
- 209   
- 210  stepsdata = [(f"step{i}",path[i-1],path[i],cost[(path[i-1],path[i])]) for i in range(1,len(path))]
- 211  gams.set("psteps",stepsdata)
- 212  gams.set("pobj",[dist[sink]])
- 213   
- 214  endEmbeddedCode psteps,pobj
- 215   
+ 137   
+ 138  *=====================================================
+ 139  * 2.  Dijkstra Python algorithm
+ 140  *=====================================================
+ 141   
+ 142  parameters
+ 143     psteps(s,i,j) 'results from python code'
+ 144     pobj   'objective function value'
+ 145  ;
+ 146   
+ 147  * just in case we have arcs with costs=0
+ 148  cost(a)$(cost(a)=0) = eps;
+ 149   
+ 150  embeddedCode Python:
+ 151   
+ 152  #-- import GAMS data
+ 153  import gams.transfer as gt
+ 154   
+ 155  nodes=list(gams.get('i'))
+ 156  print(f"i={nodes}")
+ 157   
+ 158  source=list(gams.get('source'))[0]
+ 159  print(f"source={source}")
+ 160   
+ 161  sink=list(gams.get('sink'))[0]
+ 162  print(f"sink={sink}")
+ 163   
+ 164  m = gt.Container(gams.db)
+ 165  dfcost = m.data["cost"].records
+ 166  print(dfcost)
+ 167   
+ 168  #-- data structures
+ 169  successors = {v:[] for v in nodes}
+ 170  cost = {}
+ 171  for index, row in dfcost.iterrows():
+ 172      u = row['i']
+ 173      v = row['j']
+ 174      successors[u].append(v)
+ 175      cost[(u,v)] = row['value']    
+ 176   
+ 177  #print(successors)
+ 178   
+ 179  #-- initialization
+ 180  Q=set(nodes)
+ 181  inf=float('inf')
+ 182  dist = {v:inf for v in nodes}
+ 183  dist[source] = 0
+ 184  prev = {v:None for v in nodes}
+ 185   
+ 186  #-- run algorithm
+ 187  while len(Q)>0:
+ 188      u = min(Q, key=lambda n:dist[n])
+ 189      Q.remove(u)
+ 190      
+ 191      for v in successors[u]:
+ 192          if v in Q:
+ 193             alt = dist[u] + cost[(u,v)]
+ 194             if alt < dist[v]:
+ 195                dist[v] = alt
+ 196                prev[v] = u
+ 197                
+ 198  print(f"optimal total cost: {dist[sink]}")
+ 199   
+ 200  #-- recover path
+ 201  path = []
+ 202  u = sink
+ 203  while u is not None:
+ 204     path.insert(0,u)
+ 205     u = prev[u]
+ 206     
+ 207  print(path)
+ 208   
+ 209  #-- move things back to GAMS
+ 210   
+ 211  stepsdata = [(f"step{i}",path[i-1],path[i],cost[(path[i-1],path[i])]) for i in range(1,len(path))]
+ 212  gams.set("psteps",stepsdata)
+ 213  gams.set("pobj",[dist[sink]])
+ 214   
+ 215  endEmbeddedCode psteps,pobj
  216   
  217   
- 218  option psteps:3:0:1;
- 219  display
- 220     "============== Dijkstra (Python) ==============",
- 221     psteps,pobj;
- 222   
- 223  results('Dijkstra (Python)','obj') = pobj;
- 224  display results;
- 225   
+ 218   
+ 219  option psteps:3:0:1;
+ 220  display
+ 221     "============== Dijkstra (Python) ==============",
+ 222     psteps,pobj;
+ 223   
+ 224  results('Dijkstra (Python)','obj') = pobj;
+ 225  display results;
  226   
  227   
- 228  *=====================================================
- 229  * 3.  LP Model
- 230  *=====================================================
- 231   
- 232  parameters supply(i), demand(i);
- 233  supply(source) = 1;
- 234  demand(sink) = 1;
- 235   
- 236  positive variables x(i,j) 'flow along i->j';
- 237  variable z 'objective';
- 238   
- 239  equations
- 240     obj 'objective'
- 241     nodebal(i) 'node balance'
- 242  ;
- 243   
- 244  obj.. z =e= sum((i,j),cost(i,j)*x(i,j));
- 245  nodebal(i).. sum(a(j,i),x(a)) + supply(i) =e= sum(a(i,j),x(a)) + demand(i);
- 246   
- 247  model m /all/;
- 248  solve m minimizing z using lp;
- 249   
- 250  display
- 251     "============== LP model ==============",
- 252     x.l,z.l;
- 253  results('LP','obj') = z.l;
- 254  display results;
- 255   
- 256  *-----------------------------------------------------
- 257  * recover path
- 258  *-----------------------------------------------------
- 259   
- 260  parameters
- 261     lpsteps(s,i,j) 'results from LP model'
- 262  ;
- 263  singleton set next(i) 'next node';
- 264   
- 265  n(i) = source(i);
- 266  loop(s$card(n),
- 267       next(i) = x.l(n,i)>0.5;
- 268       lpsteps(s,n,next) = cost(n,next);
- 269       n(i) = next(i);
- 270  );
- 271  option lpsteps:3:0:1;
- 272  display lpsteps;
- 273   
+ 228   
+ 229  *=====================================================
+ 230  * 3.  LP Model
+ 231  *=====================================================
+ 232   
+ 233  parameters supply(i), demand(i);
+ 234  supply(source) = 1;
+ 235  demand(sink) = 1;
+ 236   
+ 237  positive variables x(i,j) 'flow along i->j';
+ 238  variable z 'objective';
+ 239   
+ 240  equations
+ 241     obj 'objective'
+ 242     nodebal(i) 'node balance'
+ 243  ;
+ 244   
+ 245  obj.. z =e= sum((i,j),cost(i,j)*x(i,j));
+ 246  nodebal(i).. sum(a(j,i),x(a)) + supply(i) =e= sum(a(i,j),x(a)) + demand(i);
+ 247   
+ 248  model m /all/;
+ 249  solve m minimizing z using lp;
+ 250   
+ 251  display
+ 252     "============== LP model ==============",
+ 253     x.l,z.l;
+ 254  results('LP','obj') = z.l;
+ 255  display results;
+ 256   
+ 257  *-----------------------------------------------------
+ 258  * recover path
+ 259  *-----------------------------------------------------
+ 260   
+ 261  parameters
+ 262     lpsteps(s,i,j) 'results from LP model'
+ 263  ;
+ 264  singleton set next(i) 'next node';
+ 265   
+ 266  n(i) = source(i);
+ 267  loop(s$card(n),
+ 268       next(i) = x.l(n,i)>0.5;
+ 269       lpsteps(s,n,next) = cost(n,next);
+ 270       n(i) = next(i);
+ 271  );
+ 272  option lpsteps:3:0:1;
+ 273  display lpsteps;
  274   
- 275  *=====================================================
- 276  * 4.  Visualization
- 277  *=====================================================
- 278   
+ 275   
+ 276  *=====================================================
+ 277  * 4.  Visualization
+ 278  *=====================================================
  279   
- 280  *-----------------------------------------------------------
- 281  * Plot network using put statement
- 282  * We generate some JavaScript code to hold the data
- 283  * For documentation on plotting library, see:
- 284  * https://js.cytoscape.org/
- 285  *-----------------------------------------------------------
- 286   
- 289   
- 290  file fln /networkdata.js/;
- 291  put fln;
- 292  put 'networkdata=['/;
- 293  loop(i,
- 294      put$(ord(i)>1) ",";
- 295      put "{data:{id:",(ord(i)):0:0;
- 296      put$(supply(i)=0 and demand(i)=0) ",color:'black'";
- 297      put$(supply(i)>0) ",color:'blue'";
- 298      put$(demand(i)>0) ",color:'green'";
- 299      put$(supply(i)=0 and demand(i)=0) ",size:1";
- 300      put$(supply(i)>0 or demand(i)>0) ",size:2";
- 301      put "}}"/;
- 302  );
- 303  loop(a(i,j),
- 304      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
- 305      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
- 306      put$(x.l(i,j)>0.5) ",color:'red',width:0.2";
- 307      put$(x.l(i,j)<0.5) ",color:'grey',width:0.1";
- 308      put "}}"/;
- 309  );
- 310  put '];'/;
- 311   
- 312  put "table='<h4>GAMS Shortest Path</h4>"
- 313      "Number of nodes: ",(card(i)):0:0,"<br>"
- 314      "Number of arcs: ",(card(a)):0:0,"<br><br>"
- 315      "<table><tr><th>From</th><th>To</th><th>cost</th></tr>'+"/;
- 316  loop((s,i,j)$lpsteps(s,i,j),
- 317     put "'<tr><td>",i.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",cost(i,j):10:3,"</pre></td></tr>'+"/;
- 318  );
- 319  put "'<tr><td colspan=2>Total cost</td><td><pre>",z.l:10:3,"</pre></td></tr>'+"/;
- 320   
- 321  put "'</table><br>';";
- 322  putclose;
- 323   
+ 280   
+ 281  *-----------------------------------------------------------
+ 282  * Plot network using put statement
+ 283  * We generate some JavaScript code to hold the data
+ 284  * For documentation on plotting library, see:
+ 285  * https://js.cytoscape.org/
+ 286  *-----------------------------------------------------------
+ 287   
+ 290   
+ 291  file fln /networkdata.js/;
+ 292  put fln;
+ 293  put 'networkdata=['/;
+ 294  loop(i,
+ 295      put$(ord(i)>1) ",";
+ 296      put "{data:{id:",(ord(i)):0:0;
+ 297      put$(supply(i)=0 and demand(i)=0) ",color:'black'";
+ 298      put$(supply(i)>0) ",color:'blue'";
+ 299      put$(demand(i)>0) ",color:'green'";
+ 300      put$(supply(i)=0 and demand(i)=0) ",size:1";
+ 301      put$(supply(i)>0 or demand(i)>0) ",size:2";
+ 302      put "}}"/;
+ 303  );
+ 304  loop(a(i,j),
+ 305      put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
+ 306      put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
+ 307      put$(x.l(i,j)>0.5) ",color:'red',width:0.2";
+ 308      put$(x.l(i,j)<0.5) ",color:'grey',width:0.1";
+ 309      put "}}"/;
+ 310  );
+ 311  put '];'/;
+ 312   
+ 313  put "table='<h4>GAMS Shortest Path</h4>"
+ 314      "Number of nodes: ",(card(i)):0:0,"<br>"
+ 315      "Number of arcs: ",(card(a)):0:0,"<br><br>"
+ 316      "<table><tr><th>From</th><th>To</th><th>cost</th></tr>'+"/;
+ 317  loop((s,i,j)$lpsteps(s,i,j),
+ 318     put "'<tr><td>",i.tl:0,"</td><td>",j.tl:0,"</td><td><pre>",cost(i,j):10:3,"</pre></td></tr>'+"/;
+ 319  );
+ 320  put "'<tr><td colspan=2>Total cost</td><td><pre>",z.l:10:3,"</pre></td></tr>'+"/;
+ 321   
+ 322  put "'</table><br>';";
+ 323  putclose;
  324   
+ 325   
        
       With an internet connection you can use:
         <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.4/cytoscape.min.js"></script>
       Without use a local .js file:
         <script src="cytoscape.min.js"></script>
        
- 333   
- 424   
- 425  execute "network.html";
- 426   
+ 334   
+ 425   
+ 426  execute "network.html";
+ 427   
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 2
+COMPILATION TIME     =        0.016 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     36 ============== data ==============
+----     37 ============== data ==============
 
-----     36 SET i  nodes
+----     37 SET i  nodes
 
 node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
 node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
@@ -352,17 +353,17 @@ node37,    node38,    node39,    node40,    node41,    node42,    node43,    nod
 node49,    node50
 
 
-----     36 SET source  
+----     37 SET source  
 
 node1
 
 
-----     36 SET sink  
+----     37 SET sink  
 
 node49
 
 
-----     36 SET a  arcs of sparse network
+----     37 SET a  arcs of sparse network
 
 node1 .node10,    node1 .node16,    node1 .node24,    node1 .node32,    node1 .node43,    node1 .node45,    node2 .node7 
 node2 .node8 ,    node2 .node11,    node2 .node13,    node2 .node18,    node2 .node25,    node2 .node30,    node2 .node32
@@ -423,7 +424,7 @@ node50.node8 ,    node50.node9 ,    node50.node13,    node50.node19,    node50.n
 node50.node39,    node50.node41,    node50.node47
 
 
-----     36 PARAMETER cost  random costs (lengths)
+----     37 PARAMETER cost  random costs (lengths)
 
 node1 .node10  4.935,    node1 .node16  4.958,    node1 .node24  7.343,    node1 .node32  3.319,    node1 .node43  6.534
 node1 .node45  8.792,    node2 .node7   2.969,    node2 .node8   4.780,    node2 .node11  3.507,    node2 .node13  8.732
@@ -506,9 +507,9 @@ node50.node8   6.081,    node50.node9   6.310,    node50.node13  3.404,    node5
 node50.node29  5.085,    node50.node34  9.772,    node50.node39  8.410,    node50.node41  7.047,    node50.node47  4.656
 
 
-----     97 ============== Dijkstra (GAMS) ==============
+----     98 ============== Dijkstra (GAMS) ==============
 
-----     97 SET prev  i is previous wrt j
+----     98 SET prev  i is previous wrt j
 
 node1 .node10,    node1 .node16,    node1 .node24,    node1 .node32,    node1 .node43,    node1 .node45,    node2 .node30
 node3 .node5 ,    node3 .node28,    node6 .node23,    node9 .node26,    node9 .node50,    node10.node17,    node10.node27
@@ -519,7 +520,7 @@ node32.node29,    node32.node38,    node32.node47,    node38.node3 ,    node38.n
 node43.node25,    node43.node34,    node43.node37,    node43.node40,    node45.node44,    node47.node31,    node50.node19
 
 
-----     97 PARAMETER dist  distance from source
+----     98 PARAMETER dist  distance from source
 
 node2   9.465,    node3   7.225,    node4  10.273,    node5  10.690,    node6  11.377,    node7   9.093
 node8  10.352,    node9   5.408,    node10  4.935,    node11  9.075,    node12  7.918,    node13  9.078
@@ -532,14 +533,14 @@ node44 11.847,    node45  8.792,    node46  9.398,    node47  8.475,    node48  
 node50  7.803
 
 
-----    101 PARAMETER results  
+----    102 PARAMETER results  
 
                         obj
 
 Dijkstra (GAMS)      10.908
 
 
-----    134 PARAMETER steps  cost for each step taken
+----    135 PARAMETER steps  cost for each step taken
 
 step1.node1 .node32 3.319
 step2.node32.node9  2.089
@@ -548,9 +549,9 @@ step4.node26.node39 1.547
 step5.node39.node49 1.827
 
 
-----    220 ============== Dijkstra (Python) ==============
+----    221 ============== Dijkstra (Python) ==============
 
-----    220 PARAMETER psteps  results from python code
+----    221 PARAMETER psteps  results from python code
 
 step1.node1 .node32 3.319
 step2.node32.node9  2.089
@@ -559,18 +560,18 @@ step4.node26.node39 1.547
 step5.node39.node49 1.827
 
 
-----    220 PARAMETER pobj                 =       10.908  objective function value
+----    221 PARAMETER pobj                 =       10.908  objective function value
 
-----    224 PARAMETER results  
+----    225 PARAMETER results  
 
                           obj
 
 Dijkstra (GAMS)        10.908
 Dijkstra (Python)      10.908
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 3
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using LP From line 248
+Equation Listing    SOLVE m Using LP From line 249
 
 
 ---- obj  =E=  objective
@@ -798,9 +799,9 @@ nodebal(node3)..  - x(node3,node1) - x(node3,node4) - x(node3,node5) - x(node3,n
      
 REMAINING 47 ENTRIES SKIPPED
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 4
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using LP From line 248
+Column Listing      SOLVE m Using LP From line 249
 
 
 ---- x  flow along i->j
@@ -831,9 +832,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 5
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m Using LP From line 248
+Range Statistics    SOLVE m Using LP From line 249
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -842,9 +843,9 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [        NA,        NA] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 6
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using LP From line 248
+Model Statistics    SOLVE m Using LP From line 249
 
 
 MODEL STATISTICS
@@ -854,17 +855,17 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES          396
 NON ZERO ELEMENTS         1,186
 
 
-GENERATION TIME      =        0.000 SECONDS      6 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 7
+GENERATION TIME      =        0.016 SECONDS      6 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using LP From line 248
+Solution Report     SOLVE m Using LP From line 249
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  z
      TYPE    LP                  DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  248
+     SOLVER  CPLEX               FROM LINE  249
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
@@ -1361,14 +1362,14 @@ node50.node47          .              .            +INF            4.6556
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 10:37:39 Page 8
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 02/24/25 11:07:40 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    251 ============== LP model ==============
+----    252 ============== LP model ==============
 
-----    251 VARIABLE x.L  flow along i->j
+----    252 VARIABLE x.L  flow along i->j
 
              node9      node26      node32      node39      node49
 
@@ -1379,9 +1380,9 @@ node32       1.000
 node39                                                       1.000
 
 
-----    251 VARIABLE z.L                   =       10.908  objective
+----    252 VARIABLE z.L                   =       10.908  objective
 
-----    254 PARAMETER results  
+----    255 PARAMETER results  
 
                           obj
 
@@ -1390,7 +1391,7 @@ Dijkstra (Python)      10.908
 LP                     10.908
 
 
-----    272 PARAMETER lpsteps  results from LP model
+----    273 PARAMETER lpsteps  results from LP model
 
 step1.node1 .node32 3.319
 step2.node32.node9  2.089
@@ -1404,7 +1405,7 @@ step5.node39.node49 1.827
 fln C:\projects\OptimizationModels\Dijkstra\networkdata.js
 
 
-EXECUTION TIME       =        0.718 SECONDS      8 MB  49.1.0 5c4d4ed6 WEX-WEI
+EXECUTION TIME       =        0.703 SECONDS      8 MB  49.1.0 5c4d4ed6 WEX-WEI
 
 
 USER: Eval License                                   S241129|0002CO-GEN
