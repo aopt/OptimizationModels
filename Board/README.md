@@ -15,4 +15,4 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2025/02/small-mip-
 
 ## Results
 
-[Example output of 32x32 board](board.html)
+[Example output of 32x32 board](board.pdf)
