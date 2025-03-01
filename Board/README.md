@@ -13,4 +13,6 @@ diagonals don't count) must be true. The goal is to minimize the number of true 
 See: https://yetanothermathprogrammingconsultant.blogspot.com/2025/02/small-mip-proving-optimality-is.html
 
 
-    
+## Results
+
+[Example output of 32x32 board](board.html)
