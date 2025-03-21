@@ -1,0 +1,537 @@
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Same problem as WolfGoatCabbage.gms, but now as shortest path problem
+       
+   6   
+   7   
+   8  *----------------------------------------------------------------------
+   9  * nodes
+  10  *----------------------------------------------------------------------
+  11   
+  12  * for ordering of displays we want to have this first
+  13  set dummy /'initial'/;
+  14   
+  15   
+  16  sets
+  17     side 'left or right bank' /L,R/
+  18     item /wolf,goat,cabbage/
+  19     node /node1*node16/
+  20     left(node) /node1*node8/
+  21     right(node) /node9*node16/
+  22  ;
+  23   
+  24  alias (side,nodeloc);
+  25   
+  26  * enumerate states: location of node + inventory
+  27  set state(node,nodeloc,side,item)  'state: node location + inventory' /
+  28  * node (or boat) is on the left bank
+  29         (node1.L).(L.wolf,L.goat,L.cabbage)
+  30         (node2.L).(L.wolf,L.goat,R.cabbage)
+  31         (node3.L).(L.wolf,R.goat,L.cabbage)
+  32         (node4.L).(L.wolf,R.goat,R.cabbage)
+  33         (node5.L).(R.wolf,L.goat,L.cabbage)
+  34         (node6.L).(R.wolf,L.goat,R.cabbage)
+  35         (node7.L).(R.wolf,R.goat,L.cabbage)
+  36         (node8.L).(R.wolf,R.goat,R.cabbage)
+  37   
+  38  * node (or boat) is on the right bank
+  39         (node9.R).(L.wolf,L.goat,L.cabbage)
+  40         (node10.R).(L.wolf,L.goat,R.cabbage)
+  41         (node11.R).(L.wolf,R.goat,L.cabbage)
+  42         (node12.R).(L.wolf,R.goat,R.cabbage)
+  43         (node13.R).(R.wolf,L.goat,L.cabbage)
+  44         (node14.R).(R.wolf,L.goat,R.cabbage)
+  45         (node15.R).(R.wolf,R.goat,L.cabbage)
+  46         (node16.R).(R.wolf,R.goat,R.cabbage)
+  47      /
+  48  ;
+  49   
+  50  * display state
+  51  option state:0:2:2;
+  52  display state;
+  53   
+  54  * drop node location index to form inventory parameter
+  55  parameter inv(node,side,item) 'inventory';
+  56  inv(node,side,item) = sum(state(node,nodeloc,side,item),1);
+  57  option inv:0:1:2;
+  58  display inv;
+  59   
+  60   
+  61  * not all nodes are allowed
+  62  * we could have done this by hand by dropping nodes from the
+  63  * state set. Instead, let's see how this looks like in code.
+  64  set
+  65     combo  'combinations not allowed'  /combo1,combo2/
+  66     forbidden(combo,item) /
+  67           combo1.(wolf,goat)
+  68           combo2.(goat,cabbage)
+  69     /
+  70     nodex(node) 'forbidden node when left unattended'
+  71   ;
+  72   
+  73  * populate nodex with forbidden nodes
+  74  * check inventory of side where node is not located
+  75  loop((combo,nodeloc,side)$(ord(side)<>ord(nodeloc)),
+  76    nodex(node)$(sum(forbidden(combo,item)$state(node,nodeloc,side,item),1) = 2) = yes;
+  77  );
+  78  display nodex;
+  79   
+  80  set rnode(node) 'reduced node set';
+  81  rnode(node) = yes;
+  82  rnode(nodex) = no;
+  83  display rnode;
+  84   
+  85   
+  86   
+  87  *----------------------------------------------------------------------
+  88  * arcs
+  89  * we have a directed arc from:
+  90  *  1. L->R and R->L
+  91  *  2. with 0 or 1 passengers
+  92  *----------------------------------------------------------------------
+  93   
+  94  alias (rnode,n1,n2);
+  95   
+  96  set
+  97    otherside(node,node) 'nodes are at opposite side'
+  98    arc(node,node)       'edges'
+  99    pax(node,node,*)     'passengers along arc'
+ 100  ;
+ 101   
+ 102  otherside(left(n1),right(n2)) = yes;
+ 103  otherside(right(n1),left(n2)) = yes;
+ 104  display otherside;
+ 105   
+ 106  Parameter
+ 107      diff(node,node,item) 'differences in L inventory between node1->node2'
+ 108      numdiff(node,node) 'number of differences in L inventory'
+ 109      sumdiff(node,node) 'sum of differences in L inventory'
+ 110  ;
+ 111  diff(otherside(n1,n2),item) = inv(n1,'L',item)-inv(n2,'L',item);
+ 112  numdiff(otherside(n1,n2)) = sum(item,abs(diff(n1,n2,item)));
+ 113  sumdiff(otherside(n1,n2)) = sum(item,diff(n1,n2,item));
+ 114   
+ 115  sets
+ 116     diff0(node,node) 'no difference in inventory: trip with zero passengers'
+ 117     diff1(node,node) 'one difference in inventory: trip with one passenger'
+ 118  ;
+ 119  diff0(otherside) = numdiff(otherside) = 0;
+ 120  diff1(left(n1),right(n2)) = numdiff(n1,n2)=1 and sumdiff(n1,n2)=1;
+ 121  diff1(right(n1),left(n2)) = numdiff(n1,n2)=1 and sumdiff(n1,n2)=-1;
+ 122  display diff0,diff1;
+ 123   
+ 124  * zero passengers: inventory stays the same
+ 125  arc(otherside)$(numdiff(otherside)=0) = yes;
+ 126   
+ 127  * one passenger: move item from node1->node2
+ 128  arc(diff1) = yes;
+ 129   
+ 130  * pax moved
+ 131  pax(arc(diff1),item) = abs(diff(diff1,item))=1;
+ 132  pax(arc(diff0),'empty') = yes;
+ 133  display pax;
+ 134   
+ 135   
+ 136  *----------------------------------------------------------------------
+ 137  * shortest path model
+ 138  *----------------------------------------------------------------------
+ 139   
+ 140  Parameters
+ 141     supply(node)  / node1 1 /
+ 142     demand(node)  / node16 1 /
+ 143  ;
+ 144   
+ 145  binary variable f(node,node) 'flow';
+ 146  variable z 'objective';
+ 147   
+ 148  equations
+ 149     flowbal(node) 'flow balance'
+ 150     obj           'objective'
+ 151  ;
+ 152   
+ 153  obj.. z =e= sum(arc,f(arc));
+ 154   
+ 155  flowbal(n1)..
+ 156     sum(arc(n2,n1),f(n2,n1)) + supply(n1) =e= sum(arc(n1,n2),f(n1,n2)) + demand(n1);
+ 157   
+ 158  model shortestpath /all/;
+ 159  solve shortestpath minimizing z using rmip;
+ 160  display f.l;
+ 161   
+ 162   
+ 163  *----------------------------------------------------------------------
+ 164  * reporting
+ 165  *----------------------------------------------------------------------
+ 166   
+ 167  set
+ 168     trip /trip1*trip10/
+ 169     trace(*,*,*,*,side,item) 'results from LP model'
+ 170  ;
+ 171  singleton sets
+ 172    n(node) 'current node' /node1/
+ 173    next(node) 'next node'
+ 174  ;
+ 175   
+ 176  alias(item,item2);
+ 177   
+ 178  trace('initial','node1','','',side,item)$inv('node1',side,item) = yes;
+ 179  loop(trip$card(n),
+ 180       next(node) = f.l(n,node)>0.5;
+ 181  * with passenger
+ 182       trace(trip,n,next,item,side,item2)$(pax(n,next,item) and inv(next,side,item2))= yes;
+ 183  * without passenger
+ 184       trace(trip,n,next,'',side,item2)$(sum(pax(n,next,item),1)=0 and inv(next,side,item2)) = yes;
+ 185       n(node) = next(node);
+ 186  );
+ 187  option trace:0:4:2;
+ 188  display trace;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     52 SET state  state: node location + inventory
+
+              L.wolf      L.goat   L.cabbage      R.wolf      R.goat   R.cabbage
+
+node1 .L         YES         YES         YES
+node2 .L         YES         YES                                             YES
+node3 .L         YES                     YES                     YES
+node4 .L         YES                                             YES         YES
+node5 .L                     YES         YES         YES
+node6 .L                     YES                     YES                     YES
+node7 .L                                 YES         YES         YES
+node8 .L                                             YES         YES         YES
+node9 .R         YES         YES         YES
+node10.R         YES         YES                                             YES
+node11.R         YES                     YES                     YES
+node12.R         YES                                             YES         YES
+node13.R                     YES         YES         YES
+node14.R                     YES                     YES                     YES
+node15.R                                 YES         YES         YES
+node16.R                                             YES         YES         YES
+
+
+----     58 PARAMETER inv  inventory
+
+            L.wolf      L.goat   L.cabbage      R.wolf      R.goat   R.cabbage
+
+node1            1           1           1
+node2            1           1                                               1
+node3            1                       1                       1
+node4            1                                               1           1
+node5                        1           1           1
+node6                        1                       1                       1
+node7                                    1           1           1
+node8                                                1           1           1
+node9            1           1           1
+node10           1           1                                               1
+node11           1                       1                       1
+node12           1                                               1           1
+node13                       1           1           1
+node14                       1                       1                       1
+node15                                   1           1           1
+node16                                               1           1           1
+
+
+----     78 SET nodex  forbidden node when left unattended
+
+node4 ,    node7 ,    node8 ,    node9 ,    node10,    node13
+
+
+----     83 SET rnode  reduced node set
+
+node1 ,    node2 ,    node3 ,    node5 ,    node6 ,    node11,    node12,    node14,    node15,    node16
+
+
+----    104 SET otherside  nodes are at opposite side
+
+             node1       node2       node3       node5       node6      node11      node12      node14      node15      node16
+
+node1                                                                      YES         YES         YES         YES         YES
+node2                                                                      YES         YES         YES         YES         YES
+node3                                                                      YES         YES         YES         YES         YES
+node5                                                                      YES         YES         YES         YES         YES
+node6                                                                      YES         YES         YES         YES         YES
+node11         YES         YES         YES         YES         YES
+node12         YES         YES         YES         YES         YES
+node14         YES         YES         YES         YES         YES
+node15         YES         YES         YES         YES         YES
+node16         YES         YES         YES         YES         YES
+
+
+----    122 SET diff0  no difference in inventory: trip with zero passengers
+
+             node3       node6      node11      node14
+
+node3                                  YES
+node6                                              YES
+node11         YES
+node14                     YES
+
+
+----    122 SET diff1  one difference in inventory: trip with one passenger
+
+             node1       node2       node3       node5       node6      node11      node12      node14      node15      node16
+
+node1                                                                      YES
+node2                                                                                  YES         YES
+node3                                                                                  YES                     YES
+node5                                                                                              YES         YES
+node6                                                                                                                      YES
+node11         YES
+node12                     YES         YES
+node14                     YES                     YES
+node15                                 YES         YES
+node16                                                         YES
+
+
+----    133 SET pax  passengers along arc
+
+                     wolf        goat     cabbage       empty
+
+node1 .node11                     YES
+node2 .node12                     YES
+node2 .node14         YES
+node3 .node11                                             YES
+node3 .node12                                 YES
+node3 .node15         YES
+node5 .node14                                 YES
+node5 .node15                     YES
+node6 .node14                                             YES
+node6 .node16                     YES
+node11.node1                      YES
+node11.node3                                              YES
+node12.node2                      YES
+node12.node3                                  YES
+node14.node2          YES
+node14.node5                                  YES
+node14.node6                                              YES
+node15.node3          YES
+node15.node5                      YES
+node16.node6                      YES
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE shortestpath Using RMIP From line 159
+
+
+---- flowbal  =E=  flow balance
+
+flowbal(node1)..  - f(node1,node11) + f(node11,node1) =E= -1 ; (LHS = 0, INFES = 1 ****)
+     
+flowbal(node2)..  - f(node2,node12) - f(node2,node14) + f(node12,node2) + f(node14,node2) =E= 0 ; (LHS = 0)
+     
+flowbal(node3)..  - f(node3,node11) - f(node3,node12) - f(node3,node15) + f(node11,node3) + f(node12,node3) + f(node15,node3) =E= 
+     0 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - f(node1,node11) - f(node2,node12) - f(node2,node14) - f(node3,node11) - f(node3,node12) - f(node3,node15)
+     
+      - f(node5,node14) - f(node5,node15) - f(node6,node14) - f(node6,node16) - f(node11,node1) - f(node11,node3)
+     
+      - f(node12,node2) - f(node12,node3) - f(node14,node2) - f(node14,node5) - f(node14,node6) - f(node15,node3)
+     
+      - f(node15,node5) - f(node16,node6) + z =E= 0 ; (LHS = 0)
+     
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE shortestpath Using RMIP From line 159
+
+
+---- f  flow
+
+f(node1,node11)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node1)
+        1       flowbal(node11)
+       -1       obj
+
+f(node2,node12)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node2)
+        1       flowbal(node12)
+       -1       obj
+
+f(node2,node14)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node2)
+        1       flowbal(node14)
+       -1       obj
+
+REMAINING 17 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE shortestpath Using RMIP From line 159
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE shortestpath Using RMIP From line 159
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           11
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           21
+NON ZERO ELEMENTS            61     DISCRETE VARIABLES         20
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE shortestpath Using RMIP From line 159
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   shortestpath        OBJECTIVE  z
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  159
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                7.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.02 ticks)
+
+
+Optimal solution found
+Objective:            7.000000
+
+
+---- EQU flowbal  flow balance
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1         -1.0000        -1.0000        -1.0000        -3.0000      
+node2           .              .              .             1.0000      
+node3           .              .              .            -1.0000      
+node5           .              .              .             1.0000      
+node6           .              .              .             3.0000      
+node11          .              .              .            -2.0000      
+node12          .              .              .              .          
+node14          .              .              .             2.0000      
+node15          .              .              .             EPS         
+node16         1.0000         1.0000         1.0000         4.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- VAR f  flow
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+node1 .node11          .             1.0000         1.0000          .          
+node2 .node12          .              .             1.0000         2.0000      
+node2 .node14          .              .             1.0000          .          
+node3 .node11          .              .             1.0000         2.0000      
+node3 .node12          .              .             1.0000          .          
+node3 .node15          .             1.0000         1.0000          .          
+node5 .node14          .             1.0000         1.0000          .          
+node5 .node15          .              .             1.0000         2.0000      
+node6 .node14          .              .             1.0000         2.0000      
+node6 .node16          .             1.0000         1.0000          .          
+node11.node1           .              .             1.0000         2.0000      
+node11.node3           .             1.0000         1.0000          .          
+node12.node2           .              .             1.0000          .          
+node12.node3           .              .             1.0000         2.0000      
+node14.node2           .              .             1.0000         2.0000      
+node14.node5           .              .             1.0000         2.0000      
+node14.node6           .             1.0000         1.0000          .          
+node15.node3           .              .             1.0000         2.0000      
+node15.node5           .             1.0000         1.0000         EPS         
+node16.node6           .              .             1.0000         2.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            7.0000        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:42:02 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    160 VARIABLE f.L  flow
+
+             node3       node5       node6      node11      node14      node15      node16
+
+node1                                            1.000
+node3                                                                    1.000
+node5                                                        1.000
+node6                                                                                1.000
+node11       1.000
+node14                               1.000
+node15                   1.000
+
+
+----    188 SET trace  results from LP model
+
+                                   L.wolf      L.goat   L.cabbage      R.wolf      R.goat   R.cabbage
+
+initial.node1 .      .                YES         YES         YES
+trip1  .node1 .node11.goat            YES                     YES                     YES
+trip2  .node11.node3 .                YES                     YES                     YES
+trip3  .node3 .node15.wolf                                    YES         YES         YES
+trip4  .node15.node5 .goat                        YES         YES         YES
+trip5  .node5 .node14.cabbage                     YES                     YES                     YES
+trip6  .node14.node6 .                            YES                     YES                     YES
+trip7  .node6 .node16.goat                                                YES         YES         YES
+
+
+
+EXECUTION TIME       =        0.047 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+
+
+USER: Eval License                                   S241129|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\erwin\Projects\blog\goat\WolfGoatCabbage2.gms
+Output     C:\Users\erwin\Projects\blog\goat\WolfGoatCabbage2.lst

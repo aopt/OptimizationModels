@@ -1,0 +1,1684 @@
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+      A farmer with a wolf, a goat, and a cabbage must cross a river by boat. The boat can carry
+      only the farmer and a single item. If left unattended together, the wolf would eat the goat,
+      or the goat would eat the cabbage. How can they cross the river without anything being eaten?
+       
+      https://en.wikipedia.org/wiki/Wolf,_goat_and_cabbage_problem
+       
+  10   
+  11   
+  12  *-------------------------------------------------------------------------
+  13  * data
+  14  *-------------------------------------------------------------------------
+  15   
+  16  sets
+  17  ** basic sets
+  18     dummy 'for ordering in displays' /initial/
+  19     trip 'trips' /trip1*trip10/
+  20     item /wolf,goat,cabbage/
+  21     side 'left/right bank' /L,R/
+  22     dir 'direction of trip' /'L->R','R->L'/
+  23     case 'forbidden item combinations' /case1,case2/
+  24   
+  25  ** derived sets
+  26     tripDir(trip,dir) 'trip direction combos'
+  27     arrival(trip,side) 'this is an arrival'
+  28     departure(trip,side) 'this is a departure'
+  29  ;
+  30   
+  31  * trips 1,3,5,.. are L->R, trips 2,4,6,..  are R->L
+  32  tripDir(trip,'L->R') = mod(ord(trip),2) = 1;
+  33  tripDir(trip,'R->L') = mod(ord(trip),2) = 0;
+  34  display trip,dir,tripDir;
+  35   
+  36  * arrival or departure
+  37  arrival(trip,'L') = tripdir(trip,'R->L');
+  38  arrival(trip,'R') = tripdir(trip,'L->R');
+  39  departure(trip,side) = not arrival(trip,side);
+  40  display arrival,departure;
+  41   
+  42  * all items are on the left bank initially
+  43  parameter InvInitial(item,side,trip) 'start inventory before trip1' /
+  44      (wolf, goat, cabbage).L.trip1   1
+  45  /;
+  46   
+  47  * the final state is to have all items on the right bank
+  48  parameter InvTarget(item,side) 'target inventory' /
+  49      (wolf, goat, cabbage).R   1
+  50  /;
+  51   
+  52  * these combinations can not be left alone
+  53  table Eat(case,item) 'combinations not allowed'
+  54          wolf  goat  cabbage
+  55  case1     1     1
+  56  case2           1      1
+  57  ;
+  58   
+  59  *-------------------------------------------------------------------------
+  60  * Model
+  61  *-------------------------------------------------------------------------
+  62   
+  63  variables
+  64     pax(trip,item)      'passengers: items taken on each trip'
+  65     inv(trip,side,item) 'inventory just after trip'
+  66     done(trip)          'if 1 we are done'
+  67     z                   'objective'
+  68  ;
+  69  binary variable pax,inv,done;
+  70   
+  71  equations
+  72     countPassengers(trip)       'max number of passengers/items on a trip'
+  73     invBal(side,item,trip,dir)  'inventory balance after trip'
+  74     eating(trip,side,case)      'some combinations of items are forbidden when unattended'
+  75     isDone1(trip,item)          "done = prod(item,inv(trip,'R',item))"
+  76     isDone2(trip)               "done = prod(item,inv(trip,'R',item))"
+  77     ordering(trip)              'done(trip)>=done(trip-1)'
+  78     obj                         'objective'
+  79  ;
+  80   
+  81  * capacity constraint
+  82  countPassengers(trip).. sum(item,pax(trip,item)) =l= 1;
+  83   
+  84  * inventory just after trip
+  85  invBal(side,item,tripDir(trip,dir))..
+  86      inv(trip,side,item) =e= inv(trip-1,side,item) + pax(trip,item)$arrival(trip,side) - pax(trip,item)$departure(trip,side) 
+      + invInitial(item,side,trip);
+  87   
+  88  * forbidden combinations
+  89  eating(departure(trip,side),case)..
+  90      sum(item, Eat(case,item)*inv(trip,side,item)) =l= 1+done(trip);
+  91   
+  92  * done = prod(item,inv(trip,'R',item))
+  93  isDone1(trip,item).. done(trip) =l= inv(trip,'R',item);
+  94  isDone2(trip).. done(trip) =g= sum(item,inv(trip,'R',item))-2;
+  95   
+  96  * done(trip)>=done(trip-1)
+  97  * ordering(trip-1).. makes sure we only generate the constraints that are needed
+  98  ordering(trip-1).. done(trip) =g= done(trip-1);
+  99   
+ 100  * maximize number of "done" trips
+ 101  obj.. z =e= sum(trip, done(trip));
+ 102   
+ 103  * optional
+ 104  done.fx(trip)$(ord(trip)=card(trip)) = 1;
+ 105  inv.fx(trip,side,item)$(ord(trip)=card(trip)) = invTarget(item,side);
+ 106   
+ 107  model m /all/;
+ 108  solve m maximizing z using mip;
+ 109  abort$(m.modelstat <> 1 and m.modelstat <> 8) "No solution";
+ 110   
+ 111  *-------------------------------------------------------------------------
+ 112  * raw results
+ 113  *-------------------------------------------------------------------------
+ 114   
+ 115  option pax:0,inv:0:1:2,done:0;
+ 116  display pax.l,inv.l,done.l,z.l;
+ 117   
+ 118  *-------------------------------------------------------------------------
+ 119  * more meaningful trip report
+ 120  *-------------------------------------------------------------------------
+ 121   
+ 122  alias(item,item2);
+ 123   
+ 124  parameter trace(*,*,*,side,item) 'trip report';
+ 125  trace('initial','','',side,item) = invInitial(item,side,'trip1');
+ 126  loop(trip,
+ 127     trace(tripDir(trip,dir),item,side,item2)$(pax.l(trip,item)>0.5) = inv.l(trip,side,item2);
+ 128     trace(tripDir(trip,dir),'',side,item2)$(sum(item,pax.l(trip,item))<0.5) = inv.l(trip,side,item2);
+ 129     break$(done.l(trip)>0.5);
+ 130  );
+ 131  option trace:0:3:2;
+ 132  display trace;
+ 133   
+ 134  *-------------------------------------------------------------------------
+ 135  * find second solution
+ 136  * for binary variable x(i):
+ 137  *   ecut(cut).. sum(i$sol(i,cut),x(i)) - sum(i$(sol(i,cut)=0),x(i)) =l= sum(i$sol(i,cut),1) - 1;
+ 138  *-------------------------------------------------------------------------
+ 139   
+ 140  sets
+ 141     cut 'static set' /cut1*cut2/
+ 142     dcut(cut) 'dynamic subset'
+ 143     ti(trip,item) 'trip-item combos'
+ 144  ;
+ 145  ti(trip,item) = yes;
+ 146   
+ 147  parameter sol(trip,item,cut) 'earlier solutions';
+ 148   
+ 149  equation ecut(cut) 'no-good cut';
+ 150   
+ 151  ecut(dcut).. sum(ti$sol(ti,dcut),pax(ti)) - sum(ti$(sol(ti,dcut)=0),pax(ti)) =l= sum(ti$sol(ti,dcut),1) - 1;
+ 152   
+ 153  * find second solution with same objective value
+ 154  model m2/m,ecut/;
+ 155  dcut('cut1') = yes;
+ 156  sol(ti,'cut1') = round(pax.l(ti));
+ 157  z.fx = round(z.l);
+ 158  solve m2 maximizing z using mip;
+ 159  abort$(m2.modelstat <> 1 and m2.modelstat <> 8) "No second solution";
+ 160  display pax.l;
+ 161   
+ 162  * there should be no third solution: this model is infeasible
+ 163  dcut('cut2') = yes;
+ 164  sol(ti,'cut2') = round(pax.l(ti));
+ 165  solve m2 maximizing z using mip;
+ 166  abort$(m2.modelstat = 1 or m2.modelstat = 8) "Expected model to be infeasible";
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     34 SET trip  trips
+
+trip1 ,    trip2 ,    trip3 ,    trip4 ,    trip5 ,    trip6 ,    trip7 ,    trip8 ,    trip9 ,    trip10
+
+
+----     34 SET dir  direction of trip
+
+L->R,    R->L
+
+
+----     34 SET tripDir  trip direction combos
+
+              L->R        R->L
+
+trip1          YES
+trip2                      YES
+trip3          YES
+trip4                      YES
+trip5          YES
+trip6                      YES
+trip7          YES
+trip8                      YES
+trip9          YES
+trip10                     YES
+
+
+----     40 SET arrival  this is an arrival
+
+                 L           R
+
+trip1                      YES
+trip2          YES
+trip3                      YES
+trip4          YES
+trip5                      YES
+trip6          YES
+trip7                      YES
+trip8          YES
+trip9                      YES
+trip10         YES
+
+
+----     40 SET departure  this is a departure
+
+                 L           R
+
+trip1          YES
+trip2                      YES
+trip3          YES
+trip4                      YES
+trip5          YES
+trip6                      YES
+trip7          YES
+trip8                      YES
+trip9          YES
+trip10                     YES
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using MIP From line 108
+
+
+---- countPassengers  =L=  max number of passengers/items on a trip
+
+countPassengers(trip1)..  pax(trip1,wolf) + pax(trip1,goat) + pax(trip1,cabbage) =L= 1 ; (LHS = 0)
+     
+countPassengers(trip2)..  pax(trip2,wolf) + pax(trip2,goat) + pax(trip2,cabbage) =L= 1 ; (LHS = 0)
+     
+countPassengers(trip3)..  pax(trip3,wolf) + pax(trip3,goat) + pax(trip3,cabbage) =L= 1 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- invBal  =E=  inventory balance after trip
+
+invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+     
+invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+     
+REMAINING 57 ENTRIES SKIPPED
+
+
+---- eating  =L=  some combinations of items are forbidden when unattended
+
+eating(trip1,L,case1)..  inv(trip1,L,wolf) + inv(trip1,L,goat) - done(trip1) =L= 1 ; (LHS = 0)
+     
+eating(trip1,L,case2)..  inv(trip1,L,goat) + inv(trip1,L,cabbage) - done(trip1) =L= 1 ; (LHS = 0)
+     
+eating(trip2,R,case1)..  inv(trip2,R,wolf) + inv(trip2,R,goat) - done(trip2) =L= 1 ; (LHS = 0)
+     
+REMAINING 17 ENTRIES SKIPPED
+
+
+---- isDone1  =L=  done = prod(item,inv(trip,'R',item))
+
+isDone1(trip1,wolf)..  - inv(trip1,R,wolf) + done(trip1) =L= 0 ; (LHS = 0)
+     
+isDone1(trip1,goat)..  - inv(trip1,R,goat) + done(trip1) =L= 0 ; (LHS = 0)
+     
+isDone1(trip1,cabbage)..  - inv(trip1,R,cabbage) + done(trip1) =L= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- isDone2  =G=  done = prod(item,inv(trip,'R',item))
+
+isDone2(trip1)..  - inv(trip1,R,wolf) - inv(trip1,R,goat) - inv(trip1,R,cabbage) + done(trip1) =G= -2 ; (LHS = 0)
+     
+isDone2(trip2)..  - inv(trip2,R,wolf) - inv(trip2,R,goat) - inv(trip2,R,cabbage) + done(trip2) =G= -2 ; (LHS = 0)
+     
+isDone2(trip3)..  - inv(trip3,R,wolf) - inv(trip3,R,goat) - inv(trip3,R,cabbage) + done(trip3) =G= -2 ; (LHS = 0)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- ordering  =G=  done(trip)>=done(trip-1)
+
+ordering(trip1)..  - done(trip1) + done(trip2) =G= 0 ; (LHS = 0)
+     
+ordering(trip2)..  - done(trip2) + done(trip3) =G= 0 ; (LHS = 0)
+     
+ordering(trip3)..  - done(trip3) + done(trip4) =G= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - done(trip1) - done(trip2) - done(trip3) - done(trip4) - done(trip5) - done(trip6) - done(trip7) - done(trip8)
+     
+      - done(trip9) - done(trip10) + z =E= 0 ; (LHS = -1, INFES = 1 ****)
+     
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using MIP From line 108
+
+
+---- pax  passengers: items taken on each trip
+
+pax(trip1,wolf)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       countPassengers(trip1)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(R,wolf,trip1,L->R)
+
+pax(trip1,goat)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       countPassengers(trip1)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(R,goat,trip1,L->R)
+
+pax(trip1,cabbage)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       countPassengers(trip1)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(R,cabbage,trip1,L->R)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- inv  inventory just after trip
+
+inv(trip1,L,wolf)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(L,wolf,trip2,R->L)
+        1       eating(trip1,L,case1)
+
+inv(trip1,L,goat)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(L,goat,trip2,R->L)
+        1       eating(trip1,L,case1)
+        1       eating(trip1,L,case2)
+
+inv(trip1,L,cabbage)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(L,cabbage,trip2,R->L)
+        1       eating(trip1,L,case2)
+
+REMAINING 57 ENTRIES SKIPPED
+
+---- done  if 1 we are done
+
+done(trip1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       eating(trip1,L,case1)
+       -1       eating(trip1,L,case2)
+        1       isDone1(trip1,wolf)
+        1       isDone1(trip1,goat)
+        1       isDone1(trip1,cabbage)
+        1       isDone2(trip1)
+       -1       ordering(trip1)
+       -1       obj
+
+done(trip2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       eating(trip2,R,case1)
+       -1       eating(trip2,R,case2)
+        1       isDone1(trip2,wolf)
+        1       isDone1(trip2,goat)
+        1       isDone1(trip2,cabbage)
+        1       isDone2(trip2)
+        1       ordering(trip1)
+       -1       ordering(trip2)
+       -1       obj
+
+done(trip3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       eating(trip3,L,case1)
+       -1       eating(trip3,L,case2)
+        1       isDone1(trip3,wolf)
+        1       isDone1(trip3,goat)
+        1       isDone1(trip3,cabbage)
+        1       isDone2(trip3)
+        1       ordering(trip2)
+       -1       ordering(trip3)
+       -1       obj
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using MIP From line 108
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 2.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using MIP From line 108
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS          140
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          101
+NON ZERO ELEMENTS           393     DISCRETE VARIABLES        100
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using MIP From line 108
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  108
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                4.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         3    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 1.11 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.10 ticks)
+
+
+Proven optimal solution
+MIP Solution:            4.000000    (3 iterations, 0 nodes)
+Final Solve:             4.000000    (0 iterations)
+
+Best possible:           4.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU countPassengers  max number of passengers/items on a trip
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1         -INF            1.0000         1.0000          .          
+trip2         -INF             .             1.0000          .          
+trip3         -INF            1.0000         1.0000          .          
+trip4         -INF            1.0000         1.0000          .          
+trip5         -INF            1.0000         1.0000          .          
+trip6         -INF             .             1.0000          .          
+trip7         -INF            1.0000         1.0000          .          
+trip8         -INF             .             1.0000          .          
+trip9         -INF             .             1.0000          .          
+trip10        -INF             .             1.0000          .          
+
+---- EQU invBal  inventory balance after trip
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+L.wolf   .trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.wolf   .trip2 .R->L          .              .              .              .          
+L.wolf   .trip3 .L->R          .              .              .              .          
+L.wolf   .trip4 .R->L          .              .              .              .          
+L.wolf   .trip5 .L->R          .              .              .              .          
+L.wolf   .trip6 .R->L          .              .              .              .          
+L.wolf   .trip7 .L->R          .              .              .              .          
+L.wolf   .trip8 .R->L          .              .              .              .          
+L.wolf   .trip9 .L->R          .              .              .              .          
+L.wolf   .trip10.R->L          .              .              .              .          
+L.goat   .trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.goat   .trip2 .R->L          .              .              .              .          
+L.goat   .trip3 .L->R          .              .              .              .          
+L.goat   .trip4 .R->L          .              .              .              .          
+L.goat   .trip5 .L->R          .              .              .              .          
+L.goat   .trip6 .R->L          .              .              .              .          
+L.goat   .trip7 .L->R          .              .              .              .          
+L.goat   .trip8 .R->L          .              .              .              .          
+L.goat   .trip9 .L->R          .              .              .              .          
+L.goat   .trip10.R->L          .              .              .              .          
+L.cabbage.trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.cabbage.trip2 .R->L          .              .              .              .          
+L.cabbage.trip3 .L->R          .              .              .              .          
+L.cabbage.trip4 .R->L          .              .              .              .          
+L.cabbage.trip5 .L->R          .              .              .              .          
+L.cabbage.trip6 .R->L          .              .              .              .          
+L.cabbage.trip7 .L->R          .              .              .              .          
+L.cabbage.trip8 .R->L          .              .              .              .          
+L.cabbage.trip9 .L->R          .              .              .              .          
+L.cabbage.trip10.R->L          .              .              .              .          
+R.wolf   .trip1 .L->R          .              .              .              .          
+R.wolf   .trip2 .R->L          .              .              .              .          
+R.wolf   .trip3 .L->R          .              .              .              .          
+R.wolf   .trip4 .R->L          .              .              .              .          
+R.wolf   .trip5 .L->R          .              .              .              .          
+R.wolf   .trip6 .R->L          .              .              .              .          
+R.wolf   .trip7 .L->R          .              .              .              .          
+R.wolf   .trip8 .R->L          .              .              .              .          
+R.wolf   .trip9 .L->R          .              .              .              .          
+R.wolf   .trip10.R->L          .              .              .              .          
+R.goat   .trip1 .L->R          .              .              .              .          
+R.goat   .trip2 .R->L          .              .              .              .          
+R.goat   .trip3 .L->R          .              .              .              .          
+R.goat   .trip4 .R->L          .              .              .              .          
+R.goat   .trip5 .L->R          .              .              .              .          
+R.goat   .trip6 .R->L          .              .              .              .          
+R.goat   .trip7 .L->R          .              .              .              .          
+R.goat   .trip8 .R->L          .              .              .              .          
+R.goat   .trip9 .L->R          .              .              .              .          
+R.goat   .trip10.R->L          .              .              .              .          
+R.cabbage.trip1 .L->R          .              .              .              .          
+R.cabbage.trip2 .R->L          .              .              .              .          
+R.cabbage.trip3 .L->R          .              .              .              .          
+R.cabbage.trip4 .R->L          .              .              .              .          
+R.cabbage.trip5 .L->R          .              .              .              .          
+R.cabbage.trip6 .R->L          .              .              .              .          
+R.cabbage.trip7 .L->R          .              .              .              .          
+R.cabbage.trip8 .R->L          .              .              .              .          
+R.cabbage.trip9 .L->R          .              .              .              .          
+R.cabbage.trip10.R->L          .              .              .              .          
+
+---- EQU eating  some combinations of items are forbidden when unattended
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .L.case1        -INF            1.0000         1.0000          .          
+trip1 .L.case2        -INF            1.0000         1.0000          .          
+trip2 .R.case1        -INF            1.0000         1.0000          .          
+trip2 .R.case2        -INF            1.0000         1.0000          .          
+trip3 .L.case1        -INF             .             1.0000          .          
+trip3 .L.case2        -INF            1.0000         1.0000          .          
+trip4 .R.case1        -INF            1.0000         1.0000          .          
+trip4 .R.case2        -INF             .             1.0000          .          
+trip5 .L.case1        -INF            1.0000         1.0000          .          
+trip5 .L.case2        -INF            1.0000         1.0000          .          
+trip6 .R.case1        -INF            1.0000         1.0000          .          
+trip6 .R.case2        -INF            1.0000         1.0000          .          
+trip7 .L.case1        -INF           -1.0000         1.0000          .          
+trip7 .L.case2        -INF           -1.0000         1.0000          .          
+trip8 .R.case1        -INF            1.0000         1.0000          .          
+trip8 .R.case2        -INF            1.0000         1.0000          .          
+trip9 .L.case1        -INF           -1.0000         1.0000          .          
+trip9 .L.case2        -INF           -1.0000         1.0000          .          
+trip10.R.case1        -INF            1.0000         1.0000          .          
+trip10.R.case2        -INF            1.0000         1.0000          .          
+
+---- EQU isDone1  done = prod(item,inv(trip,'R',item))
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .wolf           -INF             .              .              .          
+trip1 .goat           -INF           -1.0000          .              .          
+trip1 .cabbage        -INF             .              .              .          
+trip2 .wolf           -INF             .              .              .          
+trip2 .goat           -INF           -1.0000          .              .          
+trip2 .cabbage        -INF             .              .              .          
+trip3 .wolf           -INF           -1.0000          .              .          
+trip3 .goat           -INF           -1.0000          .              .          
+trip3 .cabbage        -INF             .              .              .          
+trip4 .wolf           -INF           -1.0000          .              .          
+trip4 .goat           -INF             .              .              .          
+trip4 .cabbage        -INF             .              .              .          
+trip5 .wolf           -INF           -1.0000          .              .          
+trip5 .goat           -INF             .              .              .          
+trip5 .cabbage        -INF           -1.0000          .              .          
+trip6 .wolf           -INF           -1.0000          .              .          
+trip6 .goat           -INF             .              .              .          
+trip6 .cabbage        -INF           -1.0000          .              .          
+trip7 .wolf           -INF             .              .              .          
+trip7 .goat           -INF             .              .              .          
+trip7 .cabbage        -INF             .              .              .          
+trip8 .wolf           -INF             .              .              .          
+trip8 .goat           -INF             .              .              .          
+trip8 .cabbage        -INF             .              .              .          
+trip9 .wolf           -INF             .              .              .          
+trip9 .goat           -INF             .              .              .          
+trip9 .cabbage        -INF             .              .              .          
+trip10.wolf           -INF             .              .              .          
+trip10.goat           -INF             .              .              .          
+trip10.cabbage        -INF             .              .              .          
+
+---- EQU isDone2  done = prod(item,inv(trip,'R',item))
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1         -2.0000        -1.0000        +INF             .          
+trip2         -2.0000        -1.0000        +INF             .          
+trip3         -2.0000        -2.0000        +INF             .          
+trip4         -2.0000        -1.0000        +INF             .          
+trip5         -2.0000        -2.0000        +INF             .          
+trip6         -2.0000        -2.0000        +INF             .          
+trip7         -2.0000        -2.0000        +INF             .          
+trip8         -2.0000        -2.0000        +INF             .          
+trip9         -2.0000        -2.0000        +INF             .          
+trip10        -2.0000        -2.0000        +INF             .          
+
+---- EQU ordering  done(trip)>=done(trip-1)
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+trip1          .              .            +INF             .          
+trip2          .              .            +INF             .          
+trip3          .              .            +INF             .          
+trip4          .              .            +INF             .          
+trip5          .              .            +INF             .          
+trip6          .             1.0000        +INF             .          
+trip7          .              .            +INF             .          
+trip8          .              .            +INF             .          
+trip9          .              .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- VAR pax  passengers: items taken on each trip
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .wolf             .              .             1.0000         EPS         
+trip1 .goat             .             1.0000         1.0000         EPS         
+trip1 .cabbage          .              .             1.0000         EPS         
+trip2 .wolf             .              .             1.0000         EPS         
+trip2 .goat             .              .             1.0000         EPS         
+trip2 .cabbage          .              .             1.0000         EPS         
+trip3 .wolf             .             1.0000         1.0000         EPS         
+trip3 .goat             .              .             1.0000         EPS         
+trip3 .cabbage          .              .             1.0000         EPS         
+trip4 .wolf             .              .             1.0000         EPS         
+trip4 .goat             .             1.0000         1.0000         EPS         
+trip4 .cabbage          .              .             1.0000         EPS         
+trip5 .wolf             .              .             1.0000         EPS         
+trip5 .goat             .              .             1.0000         EPS         
+trip5 .cabbage          .             1.0000         1.0000         EPS         
+trip6 .wolf             .              .             1.0000         EPS         
+trip6 .goat             .              .             1.0000         EPS         
+trip6 .cabbage          .              .             1.0000         EPS         
+trip7 .wolf             .              .             1.0000         EPS         
+trip7 .goat             .             1.0000         1.0000         EPS         
+trip7 .cabbage          .              .             1.0000         EPS         
+trip8 .wolf             .              .             1.0000         EPS         
+trip8 .goat             .              .             1.0000         EPS         
+trip8 .cabbage          .              .             1.0000         EPS         
+trip9 .wolf             .              .             1.0000         EPS         
+trip9 .goat             .              .             1.0000         EPS         
+trip9 .cabbage          .              .             1.0000         EPS         
+trip10.wolf             .              .             1.0000         EPS         
+trip10.goat             .              .             1.0000         EPS         
+trip10.cabbage          .              .             1.0000         EPS         
+
+---- VAR inv  inventory just after trip
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .L.wolf             .             1.0000         1.0000         EPS         
+trip1 .L.goat             .              .             1.0000         EPS         
+trip1 .L.cabbage          .             1.0000         1.0000         EPS         
+trip1 .R.wolf             .              .             1.0000         EPS         
+trip1 .R.goat             .             1.0000         1.0000         EPS         
+trip1 .R.cabbage          .              .             1.0000         EPS         
+trip2 .L.wolf             .             1.0000         1.0000         EPS         
+trip2 .L.goat             .              .             1.0000         EPS         
+trip2 .L.cabbage          .             1.0000         1.0000         EPS         
+trip2 .R.wolf             .              .             1.0000         EPS         
+trip2 .R.goat             .             1.0000         1.0000         EPS         
+trip2 .R.cabbage          .              .             1.0000         EPS         
+trip3 .L.wolf             .              .             1.0000         EPS         
+trip3 .L.goat             .              .             1.0000         EPS         
+trip3 .L.cabbage          .             1.0000         1.0000         EPS         
+trip3 .R.wolf             .             1.0000         1.0000         EPS         
+trip3 .R.goat             .             1.0000         1.0000         EPS         
+trip3 .R.cabbage          .              .             1.0000         EPS         
+trip4 .L.wolf             .              .             1.0000         EPS         
+trip4 .L.goat             .             1.0000         1.0000         EPS         
+trip4 .L.cabbage          .             1.0000         1.0000         EPS         
+trip4 .R.wolf             .             1.0000         1.0000         EPS         
+trip4 .R.goat             .              .             1.0000         EPS         
+trip4 .R.cabbage          .              .             1.0000         EPS         
+trip5 .L.wolf             .              .             1.0000         EPS         
+trip5 .L.goat             .             1.0000         1.0000         EPS         
+trip5 .L.cabbage          .              .             1.0000         EPS         
+trip5 .R.wolf             .             1.0000         1.0000         EPS         
+trip5 .R.goat             .              .             1.0000         EPS         
+trip5 .R.cabbage          .             1.0000         1.0000         EPS         
+trip6 .L.wolf             .              .             1.0000         EPS         
+trip6 .L.goat             .             1.0000         1.0000         EPS         
+trip6 .L.cabbage          .              .             1.0000         EPS         
+trip6 .R.wolf             .             1.0000         1.0000         EPS         
+trip6 .R.goat             .              .             1.0000         EPS         
+trip6 .R.cabbage          .             1.0000         1.0000         EPS         
+trip7 .L.wolf             .              .             1.0000         EPS         
+trip7 .L.goat             .              .             1.0000         EPS         
+trip7 .L.cabbage          .              .             1.0000         EPS         
+trip7 .R.wolf             .             1.0000         1.0000         EPS         
+trip7 .R.goat             .             1.0000         1.0000         EPS         
+trip7 .R.cabbage          .             1.0000         1.0000         EPS         
+trip8 .L.wolf             .              .             1.0000         EPS         
+trip8 .L.goat             .              .             1.0000         EPS         
+trip8 .L.cabbage          .              .             1.0000         EPS         
+trip8 .R.wolf             .             1.0000         1.0000         EPS         
+trip8 .R.goat             .             1.0000         1.0000         EPS         
+trip8 .R.cabbage          .             1.0000         1.0000         EPS         
+trip9 .L.wolf             .              .             1.0000         EPS         
+trip9 .L.goat             .              .             1.0000         EPS         
+trip9 .L.cabbage          .              .             1.0000         EPS         
+trip9 .R.wolf             .             1.0000         1.0000         EPS         
+trip9 .R.goat             .             1.0000         1.0000         EPS         
+trip9 .R.cabbage          .             1.0000         1.0000         EPS         
+trip10.L.wolf             .              .              .             EPS         
+trip10.L.goat             .              .              .             EPS         
+trip10.L.cabbage          .              .              .             EPS         
+trip10.R.wolf            1.0000         1.0000         1.0000         EPS         
+trip10.R.goat            1.0000         1.0000         1.0000         EPS         
+trip10.R.cabbage         1.0000         1.0000         1.0000         EPS         
+
+---- VAR done  if 1 we are done
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1           .              .             1.0000         1.0000      
+trip2           .              .             1.0000         1.0000      
+trip3           .              .             1.0000         1.0000      
+trip4           .              .             1.0000         1.0000      
+trip5           .              .             1.0000         1.0000      
+trip6           .              .             1.0000         1.0000      
+trip7           .             1.0000         1.0000         1.0000      
+trip8           .             1.0000         1.0000         1.0000      
+trip9           .             1.0000         1.0000         1.0000      
+trip10         1.0000         1.0000         1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            4.0000        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    116 VARIABLE pax.L  passengers: items taken on each trip
+
+              wolf        goat     cabbage
+
+trip1                        1
+trip3            1
+trip4                        1
+trip5                                    1
+trip7                        1
+
+
+----    116 VARIABLE inv.L  inventory just after trip
+
+            L.wolf      L.goat   L.cabbage      R.wolf      R.goat   R.cabbage
+
+trip1            1                       1                       1
+trip2            1                       1                       1
+trip3                                    1           1           1
+trip4                        1           1           1
+trip5                        1                       1                       1
+trip6                        1                       1                       1
+trip7                                                1           1           1
+trip8                                                1           1           1
+trip9                                                1           1           1
+trip10                                               1           1           1
+
+
+----    116 VARIABLE done.L  if 1 we are done
+
+trip7  1,    trip8  1,    trip9  1,    trip10 1
+
+
+----    116 VARIABLE z.L                   =        4.000  objective
+
+----    132 PARAMETER trace  trip report
+
+                          L.wolf      L.goat   L.cabbage      R.wolf      R.goat   R.cabbage
+
+initial.    .                  1           1           1
+trip1  .L->R.goat              1                       1                       1
+trip2  .R->L.                  1                       1                       1
+trip3  .L->R.wolf                                      1           1           1
+trip4  .R->L.goat                          1           1           1
+trip5  .L->R.cabbage                       1                       1                       1
+trip6  .R->L.                              1                       1                       1
+trip7  .L->R.goat                                                  1           1           1
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 158
+
+
+---- countPassengers  =L=  max number of passengers/items on a trip
+
+countPassengers(trip1)..  pax(trip1,wolf) + pax(trip1,goat) + pax(trip1,cabbage) =L= 1 ; (LHS = 1)
+     
+countPassengers(trip2)..  pax(trip2,wolf) + pax(trip2,goat) + pax(trip2,cabbage) =L= 1 ; (LHS = 0)
+     
+countPassengers(trip3)..  pax(trip3,wolf) + pax(trip3,goat) + pax(trip3,cabbage) =L= 1 ; (LHS = 1)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- invBal  =E=  inventory balance after trip
+
+invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
+     
+invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+     
+invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+     
+REMAINING 57 ENTRIES SKIPPED
+
+
+---- eating  =L=  some combinations of items are forbidden when unattended
+
+eating(trip1,L,case1)..  inv(trip1,L,wolf) + inv(trip1,L,goat) - done(trip1) =L= 1 ; (LHS = 1)
+     
+eating(trip1,L,case2)..  inv(trip1,L,goat) + inv(trip1,L,cabbage) - done(trip1) =L= 1 ; (LHS = 1)
+     
+eating(trip2,R,case1)..  inv(trip2,R,wolf) + inv(trip2,R,goat) - done(trip2) =L= 1 ; (LHS = 1)
+     
+REMAINING 17 ENTRIES SKIPPED
+
+
+---- isDone1  =L=  done = prod(item,inv(trip,'R',item))
+
+isDone1(trip1,wolf)..  - inv(trip1,R,wolf) + done(trip1) =L= 0 ; (LHS = 0)
+     
+isDone1(trip1,goat)..  - inv(trip1,R,goat) + done(trip1) =L= 0 ; (LHS = -1)
+     
+isDone1(trip1,cabbage)..  - inv(trip1,R,cabbage) + done(trip1) =L= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- isDone2  =G=  done = prod(item,inv(trip,'R',item))
+
+isDone2(trip1)..  - inv(trip1,R,wolf) - inv(trip1,R,goat) - inv(trip1,R,cabbage) + done(trip1) =G= -2 ; (LHS = -1)
+     
+isDone2(trip2)..  - inv(trip2,R,wolf) - inv(trip2,R,goat) - inv(trip2,R,cabbage) + done(trip2) =G= -2 ; (LHS = -1)
+     
+isDone2(trip3)..  - inv(trip3,R,wolf) - inv(trip3,R,goat) - inv(trip3,R,cabbage) + done(trip3) =G= -2 ; (LHS = -2)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- ordering  =G=  done(trip)>=done(trip-1)
+
+ordering(trip1)..  - done(trip1) + done(trip2) =G= 0 ; (LHS = 0)
+     
+ordering(trip2)..  - done(trip2) + done(trip3) =G= 0 ; (LHS = 0)
+     
+ordering(trip3)..  - done(trip3) + done(trip4) =G= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - done(trip1) - done(trip2) - done(trip3) - done(trip4) - done(trip5) - done(trip6) - done(trip7) - done(trip8)
+     
+      - done(trip9) - done(trip10) + z =E= 0 ; (LHS = 0)
+     
+
+---- ecut  =L=  no-good cut
+
+ecut(cut1)..  - pax(trip1,wolf) + pax(trip1,goat) - pax(trip1,cabbage) - pax(trip2,wolf) - pax(trip2,goat) - pax(trip2,cabbage)
+     
+      + pax(trip3,wolf) - pax(trip3,goat) - pax(trip3,cabbage) - pax(trip4,wolf) + pax(trip4,goat) - pax(trip4,cabbage)
+     
+      - pax(trip5,wolf) - pax(trip5,goat) + pax(trip5,cabbage) - pax(trip6,wolf) - pax(trip6,goat) - pax(trip6,cabbage)
+     
+      - pax(trip7,wolf) + pax(trip7,goat) - pax(trip7,cabbage) - pax(trip8,wolf) - pax(trip8,goat) - pax(trip8,cabbage)
+     
+      - pax(trip9,wolf) - pax(trip9,goat) - pax(trip9,cabbage) - pax(trip10,wolf) - pax(trip10,goat) - pax(trip10,cabbage) =L= 4 ;
+     
+      (LHS = 5, INFES = 1 ****)
+     
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 158
+
+
+---- pax  passengers: items taken on each trip
+
+pax(trip1,wolf)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(R,wolf,trip1,L->R)
+       -1       ecut(cut1)
+
+pax(trip1,goat)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(R,goat,trip1,L->R)
+        1       ecut(cut1)
+
+pax(trip1,cabbage)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(R,cabbage,trip1,L->R)
+       -1       ecut(cut1)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- inv  inventory just after trip
+
+inv(trip1,L,wolf)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(L,wolf,trip2,R->L)
+        1       eating(trip1,L,case1)
+
+inv(trip1,L,goat)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(L,goat,trip2,R->L)
+        1       eating(trip1,L,case1)
+        1       eating(trip1,L,case2)
+
+inv(trip1,L,cabbage)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(L,cabbage,trip2,R->L)
+        1       eating(trip1,L,case2)
+
+REMAINING 57 ENTRIES SKIPPED
+
+---- done  if 1 we are done
+
+done(trip1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       eating(trip1,L,case1)
+       -1       eating(trip1,L,case2)
+        1       isDone1(trip1,wolf)
+        1       isDone1(trip1,goat)
+        1       isDone1(trip1,cabbage)
+        1       isDone2(trip1)
+       -1       ordering(trip1)
+       -1       obj
+
+done(trip2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       eating(trip2,R,case1)
+       -1       eating(trip2,R,case2)
+        1       isDone1(trip2,wolf)
+        1       isDone1(trip2,goat)
+        1       isDone1(trip2,cabbage)
+        1       isDone2(trip2)
+        1       ordering(trip1)
+       -1       ordering(trip2)
+       -1       obj
+
+done(trip3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 1)
+       -1       eating(trip3,L,case1)
+       -1       eating(trip3,L,case2)
+        1       isDone1(trip3,wolf)
+        1       isDone1(trip3,goat)
+        1       isDone1(trip3,cabbage)
+        1       isDone2(trip3)
+        1       ordering(trip2)
+       -1       ordering(trip3)
+       -1       obj
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = 4, 4, 4, 0)
+        1       obj
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 158
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 158
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          141
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          101
+NON ZERO ELEMENTS           423     DISCRETE VARIABLES        100
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 158
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  158
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                4.0000
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 0.92 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.10 ticks)
+
+
+Proven optimal solution
+MIP Solution:            4.000000    (0 iterations, 0 nodes)
+Final Solve:             4.000000    (0 iterations)
+
+Best possible:           4.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU countPassengers  max number of passengers/items on a trip
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1         -INF            1.0000         1.0000          .          
+trip2         -INF             .             1.0000          .          
+trip3         -INF            1.0000         1.0000          .          
+trip4         -INF            1.0000         1.0000          .          
+trip5         -INF            1.0000         1.0000          .          
+trip6         -INF             .             1.0000          .          
+trip7         -INF            1.0000         1.0000          .          
+trip8         -INF             .             1.0000          .          
+trip9         -INF             .             1.0000          .          
+trip10        -INF             .             1.0000          .          
+
+---- EQU invBal  inventory balance after trip
+
+                             LOWER          LEVEL          UPPER         MARGINAL
+
+L.wolf   .trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.wolf   .trip2 .R->L          .              .              .              .          
+L.wolf   .trip3 .L->R          .              .              .              .          
+L.wolf   .trip4 .R->L          .              .              .              .          
+L.wolf   .trip5 .L->R          .              .              .              .          
+L.wolf   .trip6 .R->L          .              .              .              .          
+L.wolf   .trip7 .L->R          .              .              .              .          
+L.wolf   .trip8 .R->L          .              .              .              .          
+L.wolf   .trip9 .L->R          .              .              .              .          
+L.wolf   .trip10.R->L          .              .              .              .          
+L.goat   .trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.goat   .trip2 .R->L          .              .              .              .          
+L.goat   .trip3 .L->R          .              .              .              .          
+L.goat   .trip4 .R->L          .              .              .              .          
+L.goat   .trip5 .L->R          .              .              .              .          
+L.goat   .trip6 .R->L          .              .              .              .          
+L.goat   .trip7 .L->R          .              .              .              .          
+L.goat   .trip8 .R->L          .              .              .              .          
+L.goat   .trip9 .L->R          .              .              .              .          
+L.goat   .trip10.R->L          .              .              .              .          
+L.cabbage.trip1 .L->R         1.0000         1.0000         1.0000          .          
+L.cabbage.trip2 .R->L          .              .              .              .          
+L.cabbage.trip3 .L->R          .              .              .              .          
+L.cabbage.trip4 .R->L          .              .              .              .          
+L.cabbage.trip5 .L->R          .              .              .              .          
+L.cabbage.trip6 .R->L          .              .              .              .          
+L.cabbage.trip7 .L->R          .              .              .              .          
+L.cabbage.trip8 .R->L          .              .              .              .          
+L.cabbage.trip9 .L->R          .              .              .              .          
+L.cabbage.trip10.R->L          .              .              .              .          
+R.wolf   .trip1 .L->R          .              .              .              .          
+R.wolf   .trip2 .R->L          .              .              .              .          
+R.wolf   .trip3 .L->R          .              .              .              .          
+R.wolf   .trip4 .R->L          .              .              .              .          
+R.wolf   .trip5 .L->R          .              .              .              .          
+R.wolf   .trip6 .R->L          .              .              .              .          
+R.wolf   .trip7 .L->R          .              .              .              .          
+R.wolf   .trip8 .R->L          .              .              .              .          
+R.wolf   .trip9 .L->R          .              .              .              .          
+R.wolf   .trip10.R->L          .              .              .              .          
+R.goat   .trip1 .L->R          .              .              .              .          
+R.goat   .trip2 .R->L          .              .              .              .          
+R.goat   .trip3 .L->R          .              .              .              .          
+R.goat   .trip4 .R->L          .              .              .              .          
+R.goat   .trip5 .L->R          .              .              .              .          
+R.goat   .trip6 .R->L          .              .              .              .          
+R.goat   .trip7 .L->R          .              .              .              .          
+R.goat   .trip8 .R->L          .              .              .              .          
+R.goat   .trip9 .L->R          .              .              .              .          
+R.goat   .trip10.R->L          .              .              .              .          
+R.cabbage.trip1 .L->R          .              .              .              .          
+R.cabbage.trip2 .R->L          .              .              .              .          
+R.cabbage.trip3 .L->R          .              .              .              .          
+R.cabbage.trip4 .R->L          .              .              .              .          
+R.cabbage.trip5 .L->R          .              .              .              .          
+R.cabbage.trip6 .R->L          .              .              .              .          
+R.cabbage.trip7 .L->R          .              .              .              .          
+R.cabbage.trip8 .R->L          .              .              .              .          
+R.cabbage.trip9 .L->R          .              .              .              .          
+R.cabbage.trip10.R->L          .              .              .              .          
+
+---- EQU eating  some combinations of items are forbidden when unattended
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .L.case1        -INF            1.0000         1.0000          .          
+trip1 .L.case2        -INF            1.0000         1.0000          .          
+trip2 .R.case1        -INF            1.0000         1.0000          .          
+trip2 .R.case2        -INF            1.0000         1.0000          .          
+trip3 .L.case1        -INF            1.0000         1.0000          .          
+trip3 .L.case2        -INF             .             1.0000          .          
+trip4 .R.case1        -INF             .             1.0000          .          
+trip4 .R.case2        -INF            1.0000         1.0000          .          
+trip5 .L.case1        -INF            1.0000         1.0000          .          
+trip5 .L.case2        -INF            1.0000         1.0000          .          
+trip6 .R.case1        -INF            1.0000         1.0000          .          
+trip6 .R.case2        -INF            1.0000         1.0000          .          
+trip7 .L.case1        -INF           -1.0000         1.0000          .          
+trip7 .L.case2        -INF           -1.0000         1.0000          .          
+trip8 .R.case1        -INF            1.0000         1.0000          .          
+trip8 .R.case2        -INF            1.0000         1.0000          .          
+trip9 .L.case1        -INF           -1.0000         1.0000          .          
+trip9 .L.case2        -INF           -1.0000         1.0000          .          
+trip10.R.case1        -INF            1.0000         1.0000          .          
+trip10.R.case2        -INF            1.0000         1.0000          .          
+
+---- EQU isDone1  done = prod(item,inv(trip,'R',item))
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .wolf           -INF             .              .              .          
+trip1 .goat           -INF           -1.0000          .              .          
+trip1 .cabbage        -INF             .              .              .          
+trip2 .wolf           -INF             .              .              .          
+trip2 .goat           -INF           -1.0000          .              .          
+trip2 .cabbage        -INF             .              .              .          
+trip3 .wolf           -INF             .              .              .          
+trip3 .goat           -INF           -1.0000          .              .          
+trip3 .cabbage        -INF           -1.0000          .              .          
+trip4 .wolf           -INF             .              .              .          
+trip4 .goat           -INF             .              .              .          
+trip4 .cabbage        -INF           -1.0000          .              .          
+trip5 .wolf           -INF           -1.0000          .              .          
+trip5 .goat           -INF             .              .              .          
+trip5 .cabbage        -INF           -1.0000          .              .          
+trip6 .wolf           -INF           -1.0000          .              .          
+trip6 .goat           -INF             .              .              .          
+trip6 .cabbage        -INF           -1.0000          .              .          
+trip7 .wolf           -INF             .              .              .          
+trip7 .goat           -INF             .              .              .          
+trip7 .cabbage        -INF             .              .              .          
+trip8 .wolf           -INF             .              .              .          
+trip8 .goat           -INF             .              .              .          
+trip8 .cabbage        -INF             .              .              .          
+trip9 .wolf           -INF             .              .              .          
+trip9 .goat           -INF             .              .              .          
+trip9 .cabbage        -INF             .              .              .          
+trip10.wolf           -INF             .              .              .          
+trip10.goat           -INF             .              .              .          
+trip10.cabbage        -INF             .              .              .          
+
+---- EQU isDone2  done = prod(item,inv(trip,'R',item))
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1         -2.0000        -1.0000        +INF             .          
+trip2         -2.0000        -1.0000        +INF             .          
+trip3         -2.0000        -2.0000        +INF             .          
+trip4         -2.0000        -1.0000        +INF             .          
+trip5         -2.0000        -2.0000        +INF             .          
+trip6         -2.0000        -2.0000        +INF             .          
+trip7         -2.0000        -2.0000        +INF             .          
+trip8         -2.0000        -2.0000        +INF             .          
+trip9         -2.0000        -2.0000        +INF             .          
+trip10        -2.0000        -2.0000        +INF             .          
+
+---- EQU ordering  done(trip)>=done(trip-1)
+
+             LOWER          LEVEL          UPPER         MARGINAL
+
+trip1          .              .            +INF             .          
+trip2          .              .            +INF             .          
+trip3          .              .            +INF             .          
+trip4          .              .            +INF             .          
+trip5          .              .            +INF             .          
+trip6          .             1.0000        +INF             .          
+trip7          .              .            +INF             .          
+trip8          .              .            +INF             .          
+trip9          .              .            +INF             .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .              .          
+
+  obj  objective
+
+---- EQU ecut  no-good cut
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+cut1        -INF            1.0000         4.0000          .          
+
+---- VAR pax  passengers: items taken on each trip
+
+                      LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .wolf             .              .             1.0000         EPS         
+trip1 .goat             .             1.0000         1.0000         EPS         
+trip1 .cabbage          .              .             1.0000         EPS         
+trip2 .wolf             .              .             1.0000         EPS         
+trip2 .goat             .              .             1.0000         EPS         
+trip2 .cabbage          .              .             1.0000         EPS         
+trip3 .wolf             .              .             1.0000         EPS         
+trip3 .goat             .              .             1.0000         EPS         
+trip3 .cabbage          .             1.0000         1.0000         EPS         
+trip4 .wolf             .              .             1.0000         EPS         
+trip4 .goat             .             1.0000         1.0000         EPS         
+trip4 .cabbage          .              .             1.0000         EPS         
+trip5 .wolf             .             1.0000         1.0000         EPS         
+trip5 .goat             .              .             1.0000         EPS         
+trip5 .cabbage          .              .             1.0000         EPS         
+trip6 .wolf             .              .             1.0000         EPS         
+trip6 .goat             .              .             1.0000         EPS         
+trip6 .cabbage          .              .             1.0000         EPS         
+trip7 .wolf             .              .             1.0000         EPS         
+trip7 .goat             .             1.0000         1.0000         EPS         
+trip7 .cabbage          .              .             1.0000         EPS         
+trip8 .wolf             .              .             1.0000         EPS         
+trip8 .goat             .              .             1.0000         EPS         
+trip8 .cabbage          .              .             1.0000         EPS         
+trip9 .wolf             .              .             1.0000         EPS         
+trip9 .goat             .              .             1.0000         EPS         
+trip9 .cabbage          .              .             1.0000         EPS         
+trip10.wolf             .              .             1.0000         EPS         
+trip10.goat             .              .             1.0000         EPS         
+trip10.cabbage          .              .             1.0000         EPS         
+
+---- VAR inv  inventory just after trip
+
+                        LOWER          LEVEL          UPPER         MARGINAL
+
+trip1 .L.wolf             .             1.0000         1.0000         EPS         
+trip1 .L.goat             .              .             1.0000         EPS         
+trip1 .L.cabbage          .             1.0000         1.0000         EPS         
+trip1 .R.wolf             .              .             1.0000         EPS         
+trip1 .R.goat             .             1.0000         1.0000         EPS         
+trip1 .R.cabbage          .              .             1.0000         EPS         
+trip2 .L.wolf             .             1.0000         1.0000         EPS         
+trip2 .L.goat             .              .             1.0000         EPS         
+trip2 .L.cabbage          .             1.0000         1.0000         EPS         
+trip2 .R.wolf             .              .             1.0000         EPS         
+trip2 .R.goat             .             1.0000         1.0000         EPS         
+trip2 .R.cabbage          .              .             1.0000         EPS         
+trip3 .L.wolf             .             1.0000         1.0000         EPS         
+trip3 .L.goat             .              .             1.0000         EPS         
+trip3 .L.cabbage          .              .             1.0000         EPS         
+trip3 .R.wolf             .              .             1.0000         EPS         
+trip3 .R.goat             .             1.0000         1.0000         EPS         
+trip3 .R.cabbage          .             1.0000         1.0000         EPS         
+trip4 .L.wolf             .             1.0000         1.0000         EPS         
+trip4 .L.goat             .             1.0000         1.0000         EPS         
+trip4 .L.cabbage          .              .             1.0000         EPS         
+trip4 .R.wolf             .              .             1.0000         EPS         
+trip4 .R.goat             .              .             1.0000         EPS         
+trip4 .R.cabbage          .             1.0000         1.0000         EPS         
+trip5 .L.wolf             .              .             1.0000         EPS         
+trip5 .L.goat             .             1.0000         1.0000         EPS         
+trip5 .L.cabbage          .              .             1.0000         EPS         
+trip5 .R.wolf             .             1.0000         1.0000         EPS         
+trip5 .R.goat             .              .             1.0000         EPS         
+trip5 .R.cabbage          .             1.0000         1.0000         EPS         
+trip6 .L.wolf             .              .             1.0000         EPS         
+trip6 .L.goat             .             1.0000         1.0000         EPS         
+trip6 .L.cabbage          .              .             1.0000         EPS         
+trip6 .R.wolf             .             1.0000         1.0000         EPS         
+trip6 .R.goat             .              .             1.0000         EPS         
+trip6 .R.cabbage          .             1.0000         1.0000         EPS         
+trip7 .L.wolf             .              .             1.0000         EPS         
+trip7 .L.goat             .              .             1.0000         EPS         
+trip7 .L.cabbage          .              .             1.0000         EPS         
+trip7 .R.wolf             .             1.0000         1.0000         EPS         
+trip7 .R.goat             .             1.0000         1.0000         EPS         
+trip7 .R.cabbage          .             1.0000         1.0000         EPS         
+trip8 .L.wolf             .              .             1.0000         EPS         
+trip8 .L.goat             .              .             1.0000         EPS         
+trip8 .L.cabbage          .              .             1.0000         EPS         
+trip8 .R.wolf             .             1.0000         1.0000         EPS         
+trip8 .R.goat             .             1.0000         1.0000         EPS         
+trip8 .R.cabbage          .             1.0000         1.0000         EPS         
+trip9 .L.wolf             .              .             1.0000         EPS         
+trip9 .L.goat             .              .             1.0000         EPS         
+trip9 .L.cabbage          .              .             1.0000         EPS         
+trip9 .R.wolf             .             1.0000         1.0000         EPS         
+trip9 .R.goat             .             1.0000         1.0000         EPS         
+trip9 .R.cabbage          .             1.0000         1.0000         EPS         
+trip10.L.wolf             .              .              .             EPS         
+trip10.L.goat             .              .              .             EPS         
+trip10.L.cabbage          .              .              .             EPS         
+trip10.R.wolf            1.0000         1.0000         1.0000         EPS         
+trip10.R.goat            1.0000         1.0000         1.0000         EPS         
+trip10.R.cabbage         1.0000         1.0000         1.0000         EPS         
+
+---- VAR done  if 1 we are done
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+trip1           .              .             1.0000         EPS         
+trip2           .              .             1.0000         EPS         
+trip3           .              .             1.0000         EPS         
+trip4           .              .             1.0000         EPS         
+trip5           .              .             1.0000         EPS         
+trip6           .              .             1.0000         EPS         
+trip7           .             1.0000         1.0000         EPS         
+trip8           .             1.0000         1.0000         EPS         
+trip9           .             1.0000         1.0000         EPS         
+trip10         1.0000         1.0000         1.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                  4.0000         4.0000         4.0000         1.0000      
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    160 VARIABLE pax.L  passengers: items taken on each trip
+
+              wolf        goat     cabbage
+
+trip1                        1
+trip3                                    1
+trip4                        1
+trip5            1
+trip7                        1
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 165
+
+
+---- countPassengers  =L=  max number of passengers/items on a trip
+
+countPassengers(trip1)..  pax(trip1,wolf) + pax(trip1,goat) + pax(trip1,cabbage) =L= 1 ; (LHS = 1)
+     
+countPassengers(trip2)..  pax(trip2,wolf) + pax(trip2,goat) + pax(trip2,cabbage) =L= 1 ; (LHS = 0)
+     
+countPassengers(trip3)..  pax(trip3,wolf) + pax(trip3,goat) + pax(trip3,cabbage) =L= 1 ; (LHS = 1)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- invBal  =E=  inventory balance after trip
+
+invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
+     
+invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+     
+invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+     
+REMAINING 57 ENTRIES SKIPPED
+
+
+---- eating  =L=  some combinations of items are forbidden when unattended
+
+eating(trip1,L,case1)..  inv(trip1,L,wolf) + inv(trip1,L,goat) - done(trip1) =L= 1 ; (LHS = 1)
+     
+eating(trip1,L,case2)..  inv(trip1,L,goat) + inv(trip1,L,cabbage) - done(trip1) =L= 1 ; (LHS = 1)
+     
+eating(trip2,R,case1)..  inv(trip2,R,wolf) + inv(trip2,R,goat) - done(trip2) =L= 1 ; (LHS = 1)
+     
+REMAINING 17 ENTRIES SKIPPED
+
+
+---- isDone1  =L=  done = prod(item,inv(trip,'R',item))
+
+isDone1(trip1,wolf)..  - inv(trip1,R,wolf) + done(trip1) =L= 0 ; (LHS = 0)
+     
+isDone1(trip1,goat)..  - inv(trip1,R,goat) + done(trip1) =L= 0 ; (LHS = -1)
+     
+isDone1(trip1,cabbage)..  - inv(trip1,R,cabbage) + done(trip1) =L= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- isDone2  =G=  done = prod(item,inv(trip,'R',item))
+
+isDone2(trip1)..  - inv(trip1,R,wolf) - inv(trip1,R,goat) - inv(trip1,R,cabbage) + done(trip1) =G= -2 ; (LHS = -1)
+     
+isDone2(trip2)..  - inv(trip2,R,wolf) - inv(trip2,R,goat) - inv(trip2,R,cabbage) + done(trip2) =G= -2 ; (LHS = -1)
+     
+isDone2(trip3)..  - inv(trip3,R,wolf) - inv(trip3,R,goat) - inv(trip3,R,cabbage) + done(trip3) =G= -2 ; (LHS = -2)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- ordering  =G=  done(trip)>=done(trip-1)
+
+ordering(trip1)..  - done(trip1) + done(trip2) =G= 0 ; (LHS = 0)
+     
+ordering(trip2)..  - done(trip2) + done(trip3) =G= 0 ; (LHS = 0)
+     
+ordering(trip3)..  - done(trip3) + done(trip4) =G= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - done(trip1) - done(trip2) - done(trip3) - done(trip4) - done(trip5) - done(trip6) - done(trip7) - done(trip8)
+     
+      - done(trip9) - done(trip10) + z =E= 0 ; (LHS = 0)
+     
+
+---- ecut  =L=  no-good cut
+
+ecut(cut1)..  - pax(trip1,wolf) + pax(trip1,goat) - pax(trip1,cabbage) - pax(trip2,wolf) - pax(trip2,goat) - pax(trip2,cabbage)
+     
+      + pax(trip3,wolf) - pax(trip3,goat) - pax(trip3,cabbage) - pax(trip4,wolf) + pax(trip4,goat) - pax(trip4,cabbage)
+     
+      - pax(trip5,wolf) - pax(trip5,goat) + pax(trip5,cabbage) - pax(trip6,wolf) - pax(trip6,goat) - pax(trip6,cabbage)
+     
+      - pax(trip7,wolf) + pax(trip7,goat) - pax(trip7,cabbage) - pax(trip8,wolf) - pax(trip8,goat) - pax(trip8,cabbage)
+     
+      - pax(trip9,wolf) - pax(trip9,goat) - pax(trip9,cabbage) - pax(trip10,wolf) - pax(trip10,goat) - pax(trip10,cabbage) =L= 4 ;
+     
+      (LHS = 1)
+     
+ecut(cut2)..  - pax(trip1,wolf) + pax(trip1,goat) - pax(trip1,cabbage) - pax(trip2,wolf) - pax(trip2,goat) - pax(trip2,cabbage)
+     
+      - pax(trip3,wolf) - pax(trip3,goat) + pax(trip3,cabbage) - pax(trip4,wolf) + pax(trip4,goat) - pax(trip4,cabbage)
+     
+      + pax(trip5,wolf) - pax(trip5,goat) - pax(trip5,cabbage) - pax(trip6,wolf) - pax(trip6,goat) - pax(trip6,cabbage)
+     
+      - pax(trip7,wolf) + pax(trip7,goat) - pax(trip7,cabbage) - pax(trip8,wolf) - pax(trip8,goat) - pax(trip8,cabbage)
+     
+      - pax(trip9,wolf) - pax(trip9,goat) - pax(trip9,cabbage) - pax(trip10,wolf) - pax(trip10,goat) - pax(trip10,cabbage) =L= 4 ;
+     
+      (LHS = 5, INFES = 1 ****)
+     
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 165
+
+
+---- pax  passengers: items taken on each trip
+
+pax(trip1,wolf)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(R,wolf,trip1,L->R)
+       -1       ecut(cut1)
+       -1       ecut(cut2)
+
+pax(trip1,goat)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(R,goat,trip1,L->R)
+        1       ecut(cut1)
+        1       ecut(cut2)
+
+pax(trip1,cabbage)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       countPassengers(trip1)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(R,cabbage,trip1,L->R)
+       -1       ecut(cut1)
+       -1       ecut(cut2)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- inv  inventory just after trip
+
+inv(trip1,L,wolf)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       invBal(L,wolf,trip1,L->R)
+       -1       invBal(L,wolf,trip2,R->L)
+        1       eating(trip1,L,case1)
+
+inv(trip1,L,goat)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       invBal(L,goat,trip1,L->R)
+       -1       invBal(L,goat,trip2,R->L)
+        1       eating(trip1,L,case1)
+        1       eating(trip1,L,case2)
+
+inv(trip1,L,cabbage)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       invBal(L,cabbage,trip1,L->R)
+       -1       invBal(L,cabbage,trip2,R->L)
+        1       eating(trip1,L,case2)
+
+REMAINING 57 ENTRIES SKIPPED
+
+---- done  if 1 we are done
+
+done(trip1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -1       eating(trip1,L,case1)
+       -1       eating(trip1,L,case2)
+        1       isDone1(trip1,wolf)
+        1       isDone1(trip1,goat)
+        1       isDone1(trip1,cabbage)
+        1       isDone2(trip1)
+       -1       ordering(trip1)
+       -1       obj
+
+done(trip2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -1       eating(trip2,R,case1)
+       -1       eating(trip2,R,case2)
+        1       isDone1(trip2,wolf)
+        1       isDone1(trip2,goat)
+        1       isDone1(trip2,cabbage)
+        1       isDone2(trip2)
+        1       ordering(trip1)
+       -1       ordering(trip2)
+       -1       obj
+
+done(trip3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       -1       eating(trip3,L,case1)
+       -1       eating(trip3,L,case2)
+        1       isDone1(trip3,wolf)
+        1       isDone1(trip3,goat)
+        1       isDone1(trip3,cabbage)
+        1       isDone2(trip3)
+        1       ordering(trip2)
+       -1       ordering(trip3)
+       -1       obj
+
+REMAINING 7 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = 4, 4, 4, 1)
+        1       obj
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 165
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 165
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          142
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          101
+NON ZERO ELEMENTS           453     DISCRETE VARIABLES        100
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 165
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  165
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      10 Integer Infeasible
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.53 Mb (peak 0.53 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- MIP status (103): integer infeasible.
+--- Cplex Time: 0.00sec (det. 1.61 ticks)
+
+--- Problem is integer infeasible
+
+No solution returned
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+EXECUTION TIME       =        0.110 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+
+
+USER: Eval License                                   S241129|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\erwin\Projects\blog\goat\WolfGoatCabbage.gms
+Output     C:\Users\erwin\Projects\blog\goat\WolfGoatCabbage.lst
