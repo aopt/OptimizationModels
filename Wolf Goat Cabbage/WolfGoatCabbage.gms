@@ -70,7 +70,7 @@ binary variable pax,inv,done;
 
 equations
    countPassengers(trip)       'max number of passengers/items on a trip'
-   invBal(side,item,trip,dir)  'inventory balance after trip'
+   invBal(side,item,trip)      'inventory balance after trip'
    eating(trip,side,case)      'some combinations of items are forbidden when unattended'
    isDone1(trip,item)          "done = prod(item,inv(trip,'R',item))" 
    isDone2(trip)               "done = prod(item,inv(trip,'R',item))"
@@ -82,7 +82,7 @@ equations
 countPassengers(trip).. sum(item,pax(trip,item)) =l= 1;
 
 * inventory just after trip
-invBal(side,item,tripDir(trip,dir))..
+invBal(side,item,trip)..
     inv(trip,side,item) =e= inv(trip-1,side,item) + pax(trip,item)$arrival(trip,side) - pax(trip,item)$departure(trip,side) + invInitial(item,side,trip); 
 
 * forbidden combinations

@@ -1,4 +1,4 @@
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 1
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -73,7 +73,7 @@ C o m p i l a t i o n
   70   
   71  equations
   72     countPassengers(trip)       'max number of passengers/items on a trip'
-  73     invBal(side,item,trip,dir)  'inventory balance after trip'
+  73     invBal(side,item,trip)      'inventory balance after trip'
   74     eating(trip,side,case)      'some combinations of items are forbidden when unattended'
   75     isDone1(trip,item)          "done = prod(item,inv(trip,'R',item))"
   76     isDone2(trip)               "done = prod(item,inv(trip,'R',item))"
@@ -85,7 +85,7 @@ C o m p i l a t i o n
   82  countPassengers(trip).. sum(item,pax(trip,item)) =l= 1;
   83   
   84  * inventory just after trip
-  85  invBal(side,item,tripDir(trip,dir))..
+  85  invBal(side,item,trip)..
   86      inv(trip,side,item) =e= inv(trip-1,side,item) + pax(trip,item)$arrival(trip,side) - pax(trip,item)$departure(trip,side) 
       + invInitial(item,side,trip);
   87   
@@ -171,7 +171,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  48.4.0 d74fe9ea WEX-WEI
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 2
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -233,7 +233,7 @@ trip8                      YES
 trip9          YES
 trip10                     YES
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 3
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m Using MIP From line 108
 
@@ -251,11 +251,11 @@ REMAINING 7 ENTRIES SKIPPED
 
 ---- invBal  =E=  inventory balance after trip
 
-invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 0, INFES = 1 ****)
+invBal(L,wolf,trip1)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 0, INFES = 1 ****)
      
-invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip2)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
      
-invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip3)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
      
 REMAINING 57 ENTRIES SKIPPED
 
@@ -310,7 +310,7 @@ obj..  - done(trip1) - done(trip2) - done(trip3) - done(trip4) - done(trip5) - d
      
       - done(trip9) - done(trip10) + z =E= 0 ; (LHS = -1, INFES = 1 ****)
      
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 4
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m Using MIP From line 108
 
@@ -320,20 +320,20 @@ Column Listing      SOLVE m Using MIP From line 108
 pax(trip1,wolf)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       countPassengers(trip1)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(R,wolf,trip1,L->R)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(R,wolf,trip1)
 
 pax(trip1,goat)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       countPassengers(trip1)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(R,goat,trip1,L->R)
+        1       invBal(L,goat,trip1)
+       -1       invBal(R,goat,trip1)
 
 pax(trip1,cabbage)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       countPassengers(trip1)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(R,cabbage,trip1,L->R)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(R,cabbage,trip1)
 
 REMAINING 27 ENTRIES SKIPPED
 
@@ -341,21 +341,21 @@ REMAINING 27 ENTRIES SKIPPED
 
 inv(trip1,L,wolf)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(L,wolf,trip2,R->L)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(L,wolf,trip2)
         1       eating(trip1,L,case1)
 
 inv(trip1,L,goat)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(L,goat,trip2,R->L)
+        1       invBal(L,goat,trip1)
+       -1       invBal(L,goat,trip2)
         1       eating(trip1,L,case1)
         1       eating(trip1,L,case2)
 
 inv(trip1,L,cabbage)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(L,cabbage,trip2,R->L)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(L,cabbage,trip2)
         1       eating(trip1,L,case2)
 
 REMAINING 57 ENTRIES SKIPPED
@@ -405,7 +405,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 5
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m Using MIP From line 108
 
@@ -416,7 +416,7 @@ RHS       [min, max] : [ 1.000E+00, 2.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 6
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m Using MIP From line 108
 
@@ -429,7 +429,7 @@ NON ZERO ELEMENTS           393     DISCRETE VARIABLES        100
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 7
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m Using MIP From line 108
 
@@ -444,7 +444,7 @@ Solution Report     SOLVE m Using MIP From line 108
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                4.0000
 
- RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ RESOURCE USAGE, LIMIT          0.015 10000000000.000
  ITERATION COUNT, LIMIT         3    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -462,7 +462,7 @@ Solution Report     SOLVE m Using MIP From line 108
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.10 ticks)
+--- Cplex Time: 0.02sec (det. 0.10 ticks)
 
 
 Proven optimal solution
@@ -491,68 +491,68 @@ trip10        -INF             .             1.0000          .
 
 ---- EQU invBal  inventory balance after trip
 
-                             LOWER          LEVEL          UPPER         MARGINAL
+                        LOWER          LEVEL          UPPER         MARGINAL
 
-L.wolf   .trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.wolf   .trip2 .R->L          .              .              .              .          
-L.wolf   .trip3 .L->R          .              .              .              .          
-L.wolf   .trip4 .R->L          .              .              .              .          
-L.wolf   .trip5 .L->R          .              .              .              .          
-L.wolf   .trip6 .R->L          .              .              .              .          
-L.wolf   .trip7 .L->R          .              .              .              .          
-L.wolf   .trip8 .R->L          .              .              .              .          
-L.wolf   .trip9 .L->R          .              .              .              .          
-L.wolf   .trip10.R->L          .              .              .              .          
-L.goat   .trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.goat   .trip2 .R->L          .              .              .              .          
-L.goat   .trip3 .L->R          .              .              .              .          
-L.goat   .trip4 .R->L          .              .              .              .          
-L.goat   .trip5 .L->R          .              .              .              .          
-L.goat   .trip6 .R->L          .              .              .              .          
-L.goat   .trip7 .L->R          .              .              .              .          
-L.goat   .trip8 .R->L          .              .              .              .          
-L.goat   .trip9 .L->R          .              .              .              .          
-L.goat   .trip10.R->L          .              .              .              .          
-L.cabbage.trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.cabbage.trip2 .R->L          .              .              .              .          
-L.cabbage.trip3 .L->R          .              .              .              .          
-L.cabbage.trip4 .R->L          .              .              .              .          
-L.cabbage.trip5 .L->R          .              .              .              .          
-L.cabbage.trip6 .R->L          .              .              .              .          
-L.cabbage.trip7 .L->R          .              .              .              .          
-L.cabbage.trip8 .R->L          .              .              .              .          
-L.cabbage.trip9 .L->R          .              .              .              .          
-L.cabbage.trip10.R->L          .              .              .              .          
-R.wolf   .trip1 .L->R          .              .              .              .          
-R.wolf   .trip2 .R->L          .              .              .              .          
-R.wolf   .trip3 .L->R          .              .              .              .          
-R.wolf   .trip4 .R->L          .              .              .              .          
-R.wolf   .trip5 .L->R          .              .              .              .          
-R.wolf   .trip6 .R->L          .              .              .              .          
-R.wolf   .trip7 .L->R          .              .              .              .          
-R.wolf   .trip8 .R->L          .              .              .              .          
-R.wolf   .trip9 .L->R          .              .              .              .          
-R.wolf   .trip10.R->L          .              .              .              .          
-R.goat   .trip1 .L->R          .              .              .              .          
-R.goat   .trip2 .R->L          .              .              .              .          
-R.goat   .trip3 .L->R          .              .              .              .          
-R.goat   .trip4 .R->L          .              .              .              .          
-R.goat   .trip5 .L->R          .              .              .              .          
-R.goat   .trip6 .R->L          .              .              .              .          
-R.goat   .trip7 .L->R          .              .              .              .          
-R.goat   .trip8 .R->L          .              .              .              .          
-R.goat   .trip9 .L->R          .              .              .              .          
-R.goat   .trip10.R->L          .              .              .              .          
-R.cabbage.trip1 .L->R          .              .              .              .          
-R.cabbage.trip2 .R->L          .              .              .              .          
-R.cabbage.trip3 .L->R          .              .              .              .          
-R.cabbage.trip4 .R->L          .              .              .              .          
-R.cabbage.trip5 .L->R          .              .              .              .          
-R.cabbage.trip6 .R->L          .              .              .              .          
-R.cabbage.trip7 .L->R          .              .              .              .          
-R.cabbage.trip8 .R->L          .              .              .              .          
-R.cabbage.trip9 .L->R          .              .              .              .          
-R.cabbage.trip10.R->L          .              .              .              .          
+L.wolf   .trip1          1.0000         1.0000         1.0000          .          
+L.wolf   .trip2           .              .              .              .          
+L.wolf   .trip3           .              .              .              .          
+L.wolf   .trip4           .              .              .              .          
+L.wolf   .trip5           .              .              .              .          
+L.wolf   .trip6           .              .              .              .          
+L.wolf   .trip7           .              .              .              .          
+L.wolf   .trip8           .              .              .              .          
+L.wolf   .trip9           .              .              .              .          
+L.wolf   .trip10          .              .              .              .          
+L.goat   .trip1          1.0000         1.0000         1.0000          .          
+L.goat   .trip2           .              .              .              .          
+L.goat   .trip3           .              .              .              .          
+L.goat   .trip4           .              .              .              .          
+L.goat   .trip5           .              .              .              .          
+L.goat   .trip6           .              .              .              .          
+L.goat   .trip7           .              .              .              .          
+L.goat   .trip8           .              .              .              .          
+L.goat   .trip9           .              .              .              .          
+L.goat   .trip10          .              .              .              .          
+L.cabbage.trip1          1.0000         1.0000         1.0000          .          
+L.cabbage.trip2           .              .              .              .          
+L.cabbage.trip3           .              .              .              .          
+L.cabbage.trip4           .              .              .              .          
+L.cabbage.trip5           .              .              .              .          
+L.cabbage.trip6           .              .              .              .          
+L.cabbage.trip7           .              .              .              .          
+L.cabbage.trip8           .              .              .              .          
+L.cabbage.trip9           .              .              .              .          
+L.cabbage.trip10          .              .              .              .          
+R.wolf   .trip1           .              .              .              .          
+R.wolf   .trip2           .              .              .              .          
+R.wolf   .trip3           .              .              .              .          
+R.wolf   .trip4           .              .              .              .          
+R.wolf   .trip5           .              .              .              .          
+R.wolf   .trip6           .              .              .              .          
+R.wolf   .trip7           .              .              .              .          
+R.wolf   .trip8           .              .              .              .          
+R.wolf   .trip9           .              .              .              .          
+R.wolf   .trip10          .              .              .              .          
+R.goat   .trip1           .              .              .              .          
+R.goat   .trip2           .              .              .              .          
+R.goat   .trip3           .              .              .              .          
+R.goat   .trip4           .              .              .              .          
+R.goat   .trip5           .              .              .              .          
+R.goat   .trip6           .              .              .              .          
+R.goat   .trip7           .              .              .              .          
+R.goat   .trip8           .              .              .              .          
+R.goat   .trip9           .              .              .              .          
+R.goat   .trip10          .              .              .              .          
+R.cabbage.trip1           .              .              .              .          
+R.cabbage.trip2           .              .              .              .          
+R.cabbage.trip3           .              .              .              .          
+R.cabbage.trip4           .              .              .              .          
+R.cabbage.trip5           .              .              .              .          
+R.cabbage.trip6           .              .              .              .          
+R.cabbage.trip7           .              .              .              .          
+R.cabbage.trip8           .              .              .              .          
+R.cabbage.trip9           .              .              .              .          
+R.cabbage.trip10          .              .              .              .          
 
 ---- EQU eating  some combinations of items are forbidden when unattended
 
@@ -774,7 +774,7 @@ trip10         1.0000         1.0000         1.0000         1.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 8
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -826,7 +826,7 @@ trip5  .L->R.cabbage                       1                       1            
 trip6  .R->L.                              1                       1                       1
 trip7  .L->R.goat                                                  1           1           1
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 9
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m2 Using MIP From line 158
 
@@ -844,11 +844,11 @@ REMAINING 7 ENTRIES SKIPPED
 
 ---- invBal  =E=  inventory balance after trip
 
-invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
+invBal(L,wolf,trip1)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
      
-invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip2)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
      
-invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip3)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
      
 REMAINING 57 ENTRIES SKIPPED
 
@@ -918,7 +918,7 @@ ecut(cut1)..  - pax(trip1,wolf) + pax(trip1,goat) - pax(trip1,cabbage) - pax(tri
      
       (LHS = 5, INFES = 1 ****)
      
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 10
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m2 Using MIP From line 158
 
@@ -928,22 +928,22 @@ Column Listing      SOLVE m2 Using MIP From line 158
 pax(trip1,wolf)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(R,wolf,trip1,L->R)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(R,wolf,trip1)
        -1       ecut(cut1)
 
 pax(trip1,goat)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(R,goat,trip1,L->R)
+        1       invBal(L,goat,trip1)
+       -1       invBal(R,goat,trip1)
         1       ecut(cut1)
 
 pax(trip1,cabbage)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(R,cabbage,trip1,L->R)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(R,cabbage,trip1)
        -1       ecut(cut1)
 
 REMAINING 27 ENTRIES SKIPPED
@@ -952,21 +952,21 @@ REMAINING 27 ENTRIES SKIPPED
 
 inv(trip1,L,wolf)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(L,wolf,trip2,R->L)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(L,wolf,trip2)
         1       eating(trip1,L,case1)
 
 inv(trip1,L,goat)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(L,goat,trip2,R->L)
+        1       invBal(L,goat,trip1)
+       -1       invBal(L,goat,trip2)
         1       eating(trip1,L,case1)
         1       eating(trip1,L,case2)
 
 inv(trip1,L,cabbage)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(L,cabbage,trip2,R->L)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(L,cabbage,trip2)
         1       eating(trip1,L,case2)
 
 REMAINING 57 ENTRIES SKIPPED
@@ -1016,7 +1016,7 @@ z
                 (.LO, .L, .UP, .M = 4, 4, 4, 0)
         1       obj
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 11
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m2 Using MIP From line 158
 
@@ -1027,7 +1027,7 @@ RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 12
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m2 Using MIP From line 158
 
@@ -1040,7 +1040,7 @@ NON ZERO ELEMENTS           423     DISCRETE VARIABLES        100
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 13
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m2 Using MIP From line 158
 
@@ -1055,7 +1055,7 @@ Solution Report     SOLVE m2 Using MIP From line 158
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                4.0000
 
- RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -1073,7 +1073,7 @@ Solution Report     SOLVE m2 Using MIP From line 158
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.02sec (det. 0.10 ticks)
+--- Cplex Time: 0.00sec (det. 0.10 ticks)
 
 
 Proven optimal solution
@@ -1102,68 +1102,68 @@ trip10        -INF             .             1.0000          .
 
 ---- EQU invBal  inventory balance after trip
 
-                             LOWER          LEVEL          UPPER         MARGINAL
+                        LOWER          LEVEL          UPPER         MARGINAL
 
-L.wolf   .trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.wolf   .trip2 .R->L          .              .              .              .          
-L.wolf   .trip3 .L->R          .              .              .              .          
-L.wolf   .trip4 .R->L          .              .              .              .          
-L.wolf   .trip5 .L->R          .              .              .              .          
-L.wolf   .trip6 .R->L          .              .              .              .          
-L.wolf   .trip7 .L->R          .              .              .              .          
-L.wolf   .trip8 .R->L          .              .              .              .          
-L.wolf   .trip9 .L->R          .              .              .              .          
-L.wolf   .trip10.R->L          .              .              .              .          
-L.goat   .trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.goat   .trip2 .R->L          .              .              .              .          
-L.goat   .trip3 .L->R          .              .              .              .          
-L.goat   .trip4 .R->L          .              .              .              .          
-L.goat   .trip5 .L->R          .              .              .              .          
-L.goat   .trip6 .R->L          .              .              .              .          
-L.goat   .trip7 .L->R          .              .              .              .          
-L.goat   .trip8 .R->L          .              .              .              .          
-L.goat   .trip9 .L->R          .              .              .              .          
-L.goat   .trip10.R->L          .              .              .              .          
-L.cabbage.trip1 .L->R         1.0000         1.0000         1.0000          .          
-L.cabbage.trip2 .R->L          .              .              .              .          
-L.cabbage.trip3 .L->R          .              .              .              .          
-L.cabbage.trip4 .R->L          .              .              .              .          
-L.cabbage.trip5 .L->R          .              .              .              .          
-L.cabbage.trip6 .R->L          .              .              .              .          
-L.cabbage.trip7 .L->R          .              .              .              .          
-L.cabbage.trip8 .R->L          .              .              .              .          
-L.cabbage.trip9 .L->R          .              .              .              .          
-L.cabbage.trip10.R->L          .              .              .              .          
-R.wolf   .trip1 .L->R          .              .              .              .          
-R.wolf   .trip2 .R->L          .              .              .              .          
-R.wolf   .trip3 .L->R          .              .              .              .          
-R.wolf   .trip4 .R->L          .              .              .              .          
-R.wolf   .trip5 .L->R          .              .              .              .          
-R.wolf   .trip6 .R->L          .              .              .              .          
-R.wolf   .trip7 .L->R          .              .              .              .          
-R.wolf   .trip8 .R->L          .              .              .              .          
-R.wolf   .trip9 .L->R          .              .              .              .          
-R.wolf   .trip10.R->L          .              .              .              .          
-R.goat   .trip1 .L->R          .              .              .              .          
-R.goat   .trip2 .R->L          .              .              .              .          
-R.goat   .trip3 .L->R          .              .              .              .          
-R.goat   .trip4 .R->L          .              .              .              .          
-R.goat   .trip5 .L->R          .              .              .              .          
-R.goat   .trip6 .R->L          .              .              .              .          
-R.goat   .trip7 .L->R          .              .              .              .          
-R.goat   .trip8 .R->L          .              .              .              .          
-R.goat   .trip9 .L->R          .              .              .              .          
-R.goat   .trip10.R->L          .              .              .              .          
-R.cabbage.trip1 .L->R          .              .              .              .          
-R.cabbage.trip2 .R->L          .              .              .              .          
-R.cabbage.trip3 .L->R          .              .              .              .          
-R.cabbage.trip4 .R->L          .              .              .              .          
-R.cabbage.trip5 .L->R          .              .              .              .          
-R.cabbage.trip6 .R->L          .              .              .              .          
-R.cabbage.trip7 .L->R          .              .              .              .          
-R.cabbage.trip8 .R->L          .              .              .              .          
-R.cabbage.trip9 .L->R          .              .              .              .          
-R.cabbage.trip10.R->L          .              .              .              .          
+L.wolf   .trip1          1.0000         1.0000         1.0000          .          
+L.wolf   .trip2           .              .              .              .          
+L.wolf   .trip3           .              .              .              .          
+L.wolf   .trip4           .              .              .              .          
+L.wolf   .trip5           .              .              .              .          
+L.wolf   .trip6           .              .              .              .          
+L.wolf   .trip7           .              .              .              .          
+L.wolf   .trip8           .              .              .              .          
+L.wolf   .trip9           .              .              .              .          
+L.wolf   .trip10          .              .              .              .          
+L.goat   .trip1          1.0000         1.0000         1.0000          .          
+L.goat   .trip2           .              .              .              .          
+L.goat   .trip3           .              .              .              .          
+L.goat   .trip4           .              .              .              .          
+L.goat   .trip5           .              .              .              .          
+L.goat   .trip6           .              .              .              .          
+L.goat   .trip7           .              .              .              .          
+L.goat   .trip8           .              .              .              .          
+L.goat   .trip9           .              .              .              .          
+L.goat   .trip10          .              .              .              .          
+L.cabbage.trip1          1.0000         1.0000         1.0000          .          
+L.cabbage.trip2           .              .              .              .          
+L.cabbage.trip3           .              .              .              .          
+L.cabbage.trip4           .              .              .              .          
+L.cabbage.trip5           .              .              .              .          
+L.cabbage.trip6           .              .              .              .          
+L.cabbage.trip7           .              .              .              .          
+L.cabbage.trip8           .              .              .              .          
+L.cabbage.trip9           .              .              .              .          
+L.cabbage.trip10          .              .              .              .          
+R.wolf   .trip1           .              .              .              .          
+R.wolf   .trip2           .              .              .              .          
+R.wolf   .trip3           .              .              .              .          
+R.wolf   .trip4           .              .              .              .          
+R.wolf   .trip5           .              .              .              .          
+R.wolf   .trip6           .              .              .              .          
+R.wolf   .trip7           .              .              .              .          
+R.wolf   .trip8           .              .              .              .          
+R.wolf   .trip9           .              .              .              .          
+R.wolf   .trip10          .              .              .              .          
+R.goat   .trip1           .              .              .              .          
+R.goat   .trip2           .              .              .              .          
+R.goat   .trip3           .              .              .              .          
+R.goat   .trip4           .              .              .              .          
+R.goat   .trip5           .              .              .              .          
+R.goat   .trip6           .              .              .              .          
+R.goat   .trip7           .              .              .              .          
+R.goat   .trip8           .              .              .              .          
+R.goat   .trip9           .              .              .              .          
+R.goat   .trip10          .              .              .              .          
+R.cabbage.trip1           .              .              .              .          
+R.cabbage.trip2           .              .              .              .          
+R.cabbage.trip3           .              .              .              .          
+R.cabbage.trip4           .              .              .              .          
+R.cabbage.trip5           .              .              .              .          
+R.cabbage.trip6           .              .              .              .          
+R.cabbage.trip7           .              .              .              .          
+R.cabbage.trip8           .              .              .              .          
+R.cabbage.trip9           .              .              .              .          
+R.cabbage.trip10          .              .              .              .          
 
 ---- EQU eating  some combinations of items are forbidden when unattended
 
@@ -1391,7 +1391,7 @@ trip10         1.0000         1.0000         1.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 14
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -1406,7 +1406,7 @@ trip4                        1
 trip5            1
 trip7                        1
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 15
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m2 Using MIP From line 165
 
@@ -1424,11 +1424,11 @@ REMAINING 7 ENTRIES SKIPPED
 
 ---- invBal  =E=  inventory balance after trip
 
-invBal(L,wolf,trip1,L->R)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
+invBal(L,wolf,trip1)..  pax(trip1,wolf) + inv(trip1,L,wolf) =E= 1 ; (LHS = 1)
      
-invBal(L,wolf,trip2,R->L)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip2)..  - pax(trip2,wolf) - inv(trip1,L,wolf) + inv(trip2,L,wolf) =E= 0 ; (LHS = 0)
      
-invBal(L,wolf,trip3,L->R)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
+invBal(L,wolf,trip3)..  pax(trip3,wolf) - inv(trip2,L,wolf) + inv(trip3,L,wolf) =E= 0 ; (LHS = 0)
      
 REMAINING 57 ENTRIES SKIPPED
 
@@ -1510,7 +1510,7 @@ ecut(cut2)..  - pax(trip1,wolf) + pax(trip1,goat) - pax(trip1,cabbage) - pax(tri
      
       (LHS = 5, INFES = 1 ****)
      
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 16
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m2 Using MIP From line 165
 
@@ -1520,24 +1520,24 @@ Column Listing      SOLVE m2 Using MIP From line 165
 pax(trip1,wolf)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(R,wolf,trip1,L->R)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(R,wolf,trip1)
        -1       ecut(cut1)
        -1       ecut(cut2)
 
 pax(trip1,goat)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(R,goat,trip1,L->R)
+        1       invBal(L,goat,trip1)
+       -1       invBal(R,goat,trip1)
         1       ecut(cut1)
         1       ecut(cut2)
 
 pax(trip1,cabbage)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
         1       countPassengers(trip1)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(R,cabbage,trip1,L->R)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(R,cabbage,trip1)
        -1       ecut(cut1)
        -1       ecut(cut2)
 
@@ -1547,21 +1547,21 @@ REMAINING 27 ENTRIES SKIPPED
 
 inv(trip1,L,wolf)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
-        1       invBal(L,wolf,trip1,L->R)
-       -1       invBal(L,wolf,trip2,R->L)
+        1       invBal(L,wolf,trip1)
+       -1       invBal(L,wolf,trip2)
         1       eating(trip1,L,case1)
 
 inv(trip1,L,goat)
                 (.LO, .L, .UP, .M = 0, 0, 1, EPS)
-        1       invBal(L,goat,trip1,L->R)
-       -1       invBal(L,goat,trip2,R->L)
+        1       invBal(L,goat,trip1)
+       -1       invBal(L,goat,trip2)
         1       eating(trip1,L,case1)
         1       eating(trip1,L,case2)
 
 inv(trip1,L,cabbage)
                 (.LO, .L, .UP, .M = 0, 1, 1, EPS)
-        1       invBal(L,cabbage,trip1,L->R)
-       -1       invBal(L,cabbage,trip2,R->L)
+        1       invBal(L,cabbage,trip1)
+       -1       invBal(L,cabbage,trip2)
         1       eating(trip1,L,case2)
 
 REMAINING 57 ENTRIES SKIPPED
@@ -1611,7 +1611,7 @@ z
                 (.LO, .L, .UP, .M = 4, 4, 4, 1)
         1       obj
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 17
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m2 Using MIP From line 165
 
@@ -1622,7 +1622,7 @@ RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 18
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m2 Using MIP From line 165
 
@@ -1635,7 +1635,7 @@ NON ZERO ELEMENTS           453     DISCRETE VARIABLES        100
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 19
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 19
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m2 Using MIP From line 165
 
@@ -1666,12 +1666,12 @@ Solution Report     SOLVE m2 Using MIP From line 165
 --- Problem is integer infeasible
 
 No solution returned
-GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/21/25 18:45:53 Page 20
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 03/24/25 12:59:44 Page 20
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-EXECUTION TIME       =        0.110 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+EXECUTION TIME       =        0.125 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
 
 
 USER: Eval License                                   S241129|0002CO-GEN
