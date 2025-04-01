@@ -1,0 +1,983 @@
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+   4   
+   5   
+   6  *-----------------------------------------------------------------------------------
+   7  * size of problem
+   8  *-----------------------------------------------------------------------------------
+   9   
+  11   
+  12  *-----------------------------------------------------------------------------------
+  13  * nodes
+  14  *-----------------------------------------------------------------------------------
+  15   
+  17   
+  18  set
+  19    node /node1*node27/
+  20    disk /disk1*disk3/
+  21    peg /pegA,pegB,PegC/
+  22    nodes(node,disk,peg) / system.powersetRight /
+  23  ;
+  24   
+  25  scalars
+  26     n  'number of disks' /3/
+  27     nn 'number of nodes' /27/
+  28  ;
+  29   
+  30  display disk,peg,node,nodes;
+  31   
+  32  *-----------------------------------------------------------------------------------
+  33  * arcs
+  34  *-----------------------------------------------------------------------------------
+  35   
+  36  set arc(node,node);
+  37   
+  38  alias (node,node1,node2), (disk,disk1,disk2), (peg,peg1,peg2), (nodes,nodes1,nodes2);
+  39   
+  40  set smallest(node,disk,peg) 'smallest disk on peg';
+  41  smallest(node,disk,peg) = smin(disk2$nodes(node,disk2,peg),ord(disk2)) = ord(disk);
+  42  display smallest;
+  43   
+  44  parameter nodeVal(node,disk) 'peg number of (node,disk)';
+  45  nodeVal(node,disk) = sum(nodes(node,disk,peg),ord(peg));
+  46  display nodeVal;
+  47   
+  48  set nodediff1(node,node) '(node1,node2) combos with one difference';
+  49  nodediff1(node1,node2) = sum(disk$(abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5),1)=1;
+  50  display nodediff1;
+  51   
+  52  set nodeDiff1disk(node,node,disk) 'augment nodediff1 with disk id';
+  53  nodeDiff1Disk(nodeDiff1(node1,node2),disk) = abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5;
+  54  display nodeDiff1Disk;
+  55   
+  56  set diskMoved(node,node,disk) 'feasible moves';
+  57  singleton set p1(peg),p2(peg);
+  58  loop(nodeDiff1disk(node1,node2,disk),
+  59     p1(peg) = nodeval(node1,disk)=ord(peg);
+  60     p2(peg) = nodeval(node2,disk)=ord(peg);
+  61     diskMoved(node1,node2,disk) = smallest(node1,disk,p1) and smallest(node2,disk,p2);
+  62  );
+  63  display diskMoved;
+  64   
+  65  arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
+  66   
+  67  *----------------------------------------------------------------------
+  68  * shortest path model
+  69  *----------------------------------------------------------------------
+  70   
+  71  Parameters
+  72     supply(node)
+  73     demand(node)
+  74  ;
+  75  supply(node)$(sum(nodes(node,disk,'pegA'),1) = n) = 1;
+  76  demand(node)$(sum(nodes(node,disk,'pegB'),1) = n) = 1;
+  77   
+  78  binary variable f(node,node) 'flow';
+  79  variable z 'objective';
+  80   
+  81  equations
+  82     flowbal(node) 'flow balance'
+  83     obj           'objective'
+  84  ;
+  85   
+  86  obj.. z =e= sum(arc,f(arc));
+  87   
+  88  flowbal(node1)..
+  89     sum(arc(node2,node1),f(node2,node1)) + supply(node1) =e= sum(arc(node1,node2),f(node1,node2)) + demand(node1);
+  90   
+  91  model shortestpath /all/;
+  92  solve shortestpath minimizing z using rmip;
+  93  display f.l;
+  94   
+  95  *----------------------------------------------------------------------
+  96  * reporting
+  97  *----------------------------------------------------------------------
+  98   
+  99  set
+ 100      move/move1*move100/
+ 101      trace(move,node,node,disk,peg,peg)
+ 102  ;
+ 103   
+ 104  singleton sets
+ 105    cur(node) 'current node' /node1/
+ 106    next(node) 'next node'
+ 107  ;
+ 108   
+ 109  cur(node) = supply(node)>0;
+ 110   
+ 111  loop(move$card(cur),
+ 112   
+ 113      next(node) = f.l(cur,node)>0.5;
+ 114   
+ 115      loop(diskMoved(cur,next,disk),
+ 116          p1(peg) = nodeval(cur,disk)=ord(peg);
+ 117          p2(peg) = nodeval(next,disk)=ord(peg);
+ 118          trace(move,cur,next,disk,p1,p2) = yes;
+ 119      );
+ 120   
+ 121      cur(node) = next(node);
+ 122  );
+ 123   
+ 124  option trace:0:0:1;
+ 125  display trace;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     30 SET disk  
+
+disk1,    disk2,    disk3
+
+
+----     30 SET peg  
+
+pegA,    pegB,    PegC
+
+
+----     30 SET node  
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25,    node26,    node27
+
+
+----     30 SET nodes  
+
+                    pegA        pegB        PegC
+
+node1 .disk1         YES
+node1 .disk2         YES
+node1 .disk3         YES
+node2 .disk1         YES
+node2 .disk2         YES
+node2 .disk3                     YES
+node3 .disk1         YES
+node3 .disk2         YES
+node3 .disk3                                 YES
+node4 .disk1         YES
+node4 .disk2                     YES
+node4 .disk3         YES
+node5 .disk1         YES
+node5 .disk2                     YES
+node5 .disk3                     YES
+node6 .disk1         YES
+node6 .disk2                     YES
+node6 .disk3                                 YES
+node7 .disk1         YES
+node7 .disk2                                 YES
+node7 .disk3         YES
+node8 .disk1         YES
+node8 .disk2                                 YES
+node8 .disk3                     YES
+node9 .disk1         YES
+node9 .disk2                                 YES
+node9 .disk3                                 YES
+node10.disk1                     YES
+node10.disk2         YES
+node10.disk3         YES
+node11.disk1                     YES
+node11.disk2         YES
+node11.disk3                     YES
+node12.disk1                     YES
+node12.disk2         YES
+node12.disk3                                 YES
+node13.disk1                     YES
+node13.disk2                     YES
+node13.disk3         YES
+node14.disk1                     YES
+node14.disk2                     YES
+node14.disk3                     YES
+node15.disk1                     YES
+node15.disk2                     YES
+node15.disk3                                 YES
+node16.disk1                     YES
+node16.disk2                                 YES
+node16.disk3         YES
+node17.disk1                     YES
+node17.disk2                                 YES
+node17.disk3                     YES
+node18.disk1                     YES
+node18.disk2                                 YES
+node18.disk3                                 YES
+node19.disk1                                 YES
+node19.disk2         YES
+node19.disk3         YES
+node20.disk1                                 YES
+node20.disk2         YES
+node20.disk3                     YES
+node21.disk1                                 YES
+node21.disk2         YES
+node21.disk3                                 YES
+node22.disk1                                 YES
+node22.disk2                     YES
+node22.disk3         YES
+node23.disk1                                 YES
+node23.disk2                     YES
+node23.disk3                     YES
+node24.disk1                                 YES
+node24.disk2                     YES
+node24.disk3                                 YES
+node25.disk1                                 YES
+node25.disk2                                 YES
+node25.disk3         YES
+node26.disk1                                 YES
+node26.disk2                                 YES
+node26.disk3                     YES
+node27.disk1                                 YES
+node27.disk2                                 YES
+node27.disk3                                 YES
+
+
+----     42 SET smallest  smallest disk on peg
+
+                    pegA        pegB        PegC
+
+node1 .disk1         YES
+node2 .disk1         YES
+node2 .disk3                     YES
+node3 .disk1         YES
+node3 .disk3                                 YES
+node4 .disk1         YES
+node4 .disk2                     YES
+node5 .disk1         YES
+node5 .disk2                     YES
+node6 .disk1         YES
+node6 .disk2                     YES
+node6 .disk3                                 YES
+node7 .disk1         YES
+node7 .disk2                                 YES
+node8 .disk1         YES
+node8 .disk2                                 YES
+node8 .disk3                     YES
+node9 .disk1         YES
+node9 .disk2                                 YES
+node10.disk1                     YES
+node10.disk2         YES
+node11.disk1                     YES
+node11.disk2         YES
+node12.disk1                     YES
+node12.disk2         YES
+node12.disk3                                 YES
+node13.disk1                     YES
+node13.disk3         YES
+node14.disk1                     YES
+node15.disk1                     YES
+node15.disk3                                 YES
+node16.disk1                     YES
+node16.disk2                                 YES
+node16.disk3         YES
+node17.disk1                     YES
+node17.disk2                                 YES
+node18.disk1                     YES
+node18.disk2                                 YES
+node19.disk1                                 YES
+node19.disk2         YES
+node20.disk1                                 YES
+node20.disk2         YES
+node20.disk3                     YES
+node21.disk1                                 YES
+node21.disk2         YES
+node22.disk1                                 YES
+node22.disk2                     YES
+node22.disk3         YES
+node23.disk1                                 YES
+node23.disk2                     YES
+node24.disk1                                 YES
+node24.disk2                     YES
+node25.disk1                                 YES
+node25.disk3         YES
+node26.disk1                                 YES
+node26.disk3                     YES
+node27.disk1                                 YES
+
+
+----     46 PARAMETER nodeVal  peg number of (node,disk)
+
+             disk1       disk2       disk3
+
+node1        1.000       1.000       1.000
+node2        1.000       1.000       2.000
+node3        1.000       1.000       3.000
+node4        1.000       2.000       1.000
+node5        1.000       2.000       2.000
+node6        1.000       2.000       3.000
+node7        1.000       3.000       1.000
+node8        1.000       3.000       2.000
+node9        1.000       3.000       3.000
+node10       2.000       1.000       1.000
+node11       2.000       1.000       2.000
+node12       2.000       1.000       3.000
+node13       2.000       2.000       1.000
+node14       2.000       2.000       2.000
+node15       2.000       2.000       3.000
+node16       2.000       3.000       1.000
+node17       2.000       3.000       2.000
+node18       2.000       3.000       3.000
+node19       3.000       1.000       1.000
+node20       3.000       1.000       2.000
+node21       3.000       1.000       3.000
+node22       3.000       2.000       1.000
+node23       3.000       2.000       2.000
+node24       3.000       2.000       3.000
+node25       3.000       3.000       1.000
+node26       3.000       3.000       2.000
+node27       3.000       3.000       3.000
+
+
+----     50 SET nodediff1  (node1,node2) combos with one difference
+
+             node1       node2       node3       node4       node5       node6       node7       node8       node9      node10
+
+node1                      YES         YES         YES                                 YES                                 YES
+node2          YES                     YES                     YES                                 YES
+node3          YES         YES                                             YES                                 YES
+node4          YES                                             YES         YES         YES
+node5                      YES                     YES                     YES                     YES
+node6                                  YES         YES         YES                                             YES
+node7          YES                                 YES                                             YES         YES
+node8                      YES                                 YES                     YES                     YES
+node9                                  YES                                 YES         YES         YES
+node10         YES
+node11                     YES                                                                                             YES
+node12                                 YES                                                                                 YES
+node13                                             YES                                                                     YES
+node14                                                         YES
+node15                                                                     YES
+node16                                                                                 YES                                 YES
+node17                                                                                             YES
+node18                                                                                                         YES
+node19         YES                                                                                                         YES
+node20                     YES
+node21                                 YES
+node22                                             YES
+node23                                                         YES
+node24                                                                     YES
+node25                                                                                 YES
+node26                                                                                             YES
+node27                                                                                                         YES
+
+     +      node11      node12      node13      node14      node15      node16      node17      node18      node19      node20
+
+node1                                                                                                          YES
+node2          YES                                                                                                         YES
+node3                      YES
+node4                                  YES
+node5                                              YES
+node6                                                          YES
+node7                                                                      YES
+node8                                                                                  YES
+node9                                                                                              YES
+node10         YES         YES         YES                                 YES                                 YES
+node11                     YES                     YES                                 YES                                 YES
+node12         YES                                             YES                                 YES
+node13                                             YES         YES         YES
+node14         YES                     YES                     YES                     YES
+node15                     YES         YES         YES                                             YES
+node16                                 YES                                             YES         YES
+node17         YES                                 YES                     YES                     YES
+node18                     YES                                 YES         YES         YES
+node19                                                                                                                     YES
+node20         YES                                                                                             YES
+node21                     YES                                                                                 YES         YES
+node22                                 YES                                                                     YES
+node23                                             YES                                                                     YES
+node24                                                         YES
+node25                                                                     YES                                 YES
+node26                                                                                 YES                                 YES
+node27                                                                                             YES
+
+     +      node21      node22      node23      node24      node25      node26      node27
+
+node3          YES
+node4                      YES
+node5                                  YES
+node6                                              YES
+node7                                                          YES
+node8                                                                      YES
+node9                                                                                  YES
+node12         YES
+node13                     YES
+node14                                 YES
+node15                                             YES
+node16                                                         YES
+node17                                                                     YES
+node18                                                                                 YES
+node19         YES         YES                                 YES
+node20         YES                     YES                                 YES
+node21                                             YES                                 YES
+node22                                 YES         YES         YES
+node23                     YES                     YES                     YES
+node24         YES         YES         YES                                             YES
+node25                     YES                                             YES         YES
+node26                                 YES                     YES                     YES
+node27         YES                                 YES         YES         YES
+
+
+----     54 SET nodeDiff1disk  augment nodediff1 with disk id
+
+                    disk1       disk2       disk3
+
+node1 .node2                                  YES
+node1 .node3                                  YES
+node1 .node4                      YES
+node1 .node7                      YES
+node1 .node10         YES
+node1 .node19         YES
+node2 .node1                                  YES
+node2 .node3                                  YES
+node2 .node5                      YES
+node2 .node8                      YES
+node2 .node11         YES
+node2 .node20         YES
+node3 .node1                                  YES
+node3 .node2                                  YES
+node3 .node6                      YES
+node3 .node9                      YES
+node3 .node12         YES
+node3 .node21         YES
+node4 .node1                      YES
+node4 .node5                                  YES
+node4 .node6                                  YES
+node4 .node7                      YES
+node4 .node13         YES
+node4 .node22         YES
+node5 .node2                      YES
+node5 .node4                                  YES
+node5 .node6                                  YES
+node5 .node8                      YES
+node5 .node14         YES
+node5 .node23         YES
+node6 .node3                      YES
+node6 .node4                                  YES
+node6 .node5                                  YES
+node6 .node9                      YES
+node6 .node15         YES
+node6 .node24         YES
+node7 .node1                      YES
+node7 .node4                      YES
+node7 .node8                                  YES
+node7 .node9                                  YES
+node7 .node16         YES
+node7 .node25         YES
+node8 .node2                      YES
+node8 .node5                      YES
+node8 .node7                                  YES
+node8 .node9                                  YES
+node8 .node17         YES
+node8 .node26         YES
+node9 .node3                      YES
+node9 .node6                      YES
+node9 .node7                                  YES
+node9 .node8                                  YES
+node9 .node18         YES
+node9 .node27         YES
+node10.node1          YES
+node10.node11                                 YES
+node10.node12                                 YES
+node10.node13                     YES
+node10.node16                     YES
+node10.node19         YES
+node11.node2          YES
+node11.node10                                 YES
+node11.node12                                 YES
+node11.node14                     YES
+node11.node17                     YES
+node11.node20         YES
+node12.node3          YES
+node12.node10                                 YES
+node12.node11                                 YES
+node12.node15                     YES
+node12.node18                     YES
+node12.node21         YES
+node13.node4          YES
+node13.node10                     YES
+node13.node14                                 YES
+node13.node15                                 YES
+node13.node16                     YES
+node13.node22         YES
+node14.node5          YES
+node14.node11                     YES
+node14.node13                                 YES
+node14.node15                                 YES
+node14.node17                     YES
+node14.node23         YES
+node15.node6          YES
+node15.node12                     YES
+node15.node13                                 YES
+node15.node14                                 YES
+node15.node18                     YES
+node15.node24         YES
+node16.node7          YES
+node16.node10                     YES
+node16.node13                     YES
+node16.node17                                 YES
+node16.node18                                 YES
+node16.node25         YES
+node17.node8          YES
+node17.node11                     YES
+node17.node14                     YES
+node17.node16                                 YES
+node17.node18                                 YES
+node17.node26         YES
+node18.node9          YES
+node18.node12                     YES
+node18.node15                     YES
+node18.node16                                 YES
+node18.node17                                 YES
+node18.node27         YES
+node19.node1          YES
+node19.node10         YES
+node19.node20                                 YES
+node19.node21                                 YES
+node19.node22                     YES
+node19.node25                     YES
+node20.node2          YES
+node20.node11         YES
+node20.node19                                 YES
+node20.node21                                 YES
+node20.node23                     YES
+node20.node26                     YES
+node21.node3          YES
+node21.node12         YES
+node21.node19                                 YES
+node21.node20                                 YES
+node21.node24                     YES
+node21.node27                     YES
+node22.node4          YES
+node22.node13         YES
+node22.node19                     YES
+node22.node23                                 YES
+node22.node24                                 YES
+node22.node25                     YES
+node23.node5          YES
+node23.node14         YES
+node23.node20                     YES
+node23.node22                                 YES
+node23.node24                                 YES
+node23.node26                     YES
+node24.node6          YES
+node24.node15         YES
+node24.node21                     YES
+node24.node22                                 YES
+node24.node23                                 YES
+node24.node27                     YES
+node25.node7          YES
+node25.node16         YES
+node25.node19                     YES
+node25.node22                     YES
+node25.node26                                 YES
+node25.node27                                 YES
+node26.node8          YES
+node26.node17         YES
+node26.node20                     YES
+node26.node23                     YES
+node26.node25                                 YES
+node26.node27                                 YES
+node27.node9          YES
+node27.node18         YES
+node27.node21                     YES
+node27.node24                     YES
+node27.node25                                 YES
+node27.node26                                 YES
+
+
+----     63 SET diskMoved  feasible moves
+
+                    disk1       disk2       disk3
+
+node1 .node10         YES
+node1 .node19         YES
+node2 .node3                                  YES
+node2 .node11         YES
+node2 .node20         YES
+node3 .node2                                  YES
+node3 .node12         YES
+node3 .node21         YES
+node4 .node7                      YES
+node4 .node13         YES
+node4 .node22         YES
+node5 .node8                      YES
+node5 .node14         YES
+node5 .node23         YES
+node6 .node9                      YES
+node6 .node15         YES
+node6 .node24         YES
+node7 .node4                      YES
+node7 .node16         YES
+node7 .node25         YES
+node8 .node5                      YES
+node8 .node17         YES
+node8 .node26         YES
+node9 .node6                      YES
+node9 .node18         YES
+node9 .node27         YES
+node10.node1          YES
+node10.node16                     YES
+node10.node19         YES
+node11.node2          YES
+node11.node17                     YES
+node11.node20         YES
+node12.node3          YES
+node12.node18                     YES
+node12.node21         YES
+node13.node4          YES
+node13.node15                                 YES
+node13.node22         YES
+node14.node5          YES
+node14.node23         YES
+node15.node6          YES
+node15.node13                                 YES
+node15.node24         YES
+node16.node7          YES
+node16.node10                     YES
+node16.node25         YES
+node17.node8          YES
+node17.node11                     YES
+node17.node26         YES
+node18.node9          YES
+node18.node12                     YES
+node18.node27         YES
+node19.node1          YES
+node19.node10         YES
+node19.node22                     YES
+node20.node2          YES
+node20.node11         YES
+node20.node23                     YES
+node21.node3          YES
+node21.node12         YES
+node21.node24                     YES
+node22.node4          YES
+node22.node13         YES
+node22.node19                     YES
+node23.node5          YES
+node23.node14         YES
+node23.node20                     YES
+node24.node6          YES
+node24.node15         YES
+node24.node21                     YES
+node25.node7          YES
+node25.node16         YES
+node25.node26                                 YES
+node26.node8          YES
+node26.node17         YES
+node26.node25                                 YES
+node27.node9          YES
+node27.node18         YES
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE shortestpath Using RMIP From line 92
+
+
+---- flowbal  =E=  flow balance
+
+flowbal(node1)..  - f(node1,node10) - f(node1,node19) + f(node10,node1) + f(node19,node1) =E= -1 ; (LHS = 0, INFES = 1 ****)
+     
+flowbal(node2)..  - f(node2,node3) - f(node2,node11) - f(node2,node20) + f(node3,node2) + f(node11,node2) + f(node20,node2) =E= 0
+      ; (LHS = 0)
+     
+flowbal(node3)..  f(node2,node3) - f(node3,node2) - f(node3,node12) - f(node3,node21) + f(node12,node3) + f(node21,node3) =E= 0 ;
+     
+      (LHS = 0)
+     
+REMAINING 24 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - f(node1,node10) - f(node1,node19) - f(node2,node3) - f(node2,node11) - f(node2,node20) - f(node3,node2) - f(node3,node12)
+     
+      - f(node3,node21) - f(node4,node7) - f(node4,node13) - f(node4,node22) - f(node5,node8) - f(node5,node14) - f(node5,node23)
+     
+      - f(node6,node9) - f(node6,node15) - f(node6,node24) - f(node7,node4) - f(node7,node16) - f(node7,node25) - f(node8,node5)
+     
+      - f(node8,node17) - f(node8,node26) - f(node9,node6) - f(node9,node18) - f(node9,node27) - f(node10,node1)
+     
+      - f(node10,node16) - f(node10,node19) - f(node11,node2) - f(node11,node17) - f(node11,node20) - f(node12,node3)
+     
+      - f(node12,node18) - f(node12,node21) - f(node13,node4) - f(node13,node15) - f(node13,node22) - f(node14,node5)
+     
+      - f(node14,node23) - f(node15,node6) - f(node15,node13) - f(node15,node24) - f(node16,node7) - f(node16,node10)
+     
+      - f(node16,node25) - f(node17,node8) - f(node17,node11) - f(node17,node26) - f(node18,node9) - f(node18,node12)
+     
+      - f(node18,node27) - f(node19,node1) - f(node19,node10) - f(node19,node22) - f(node20,node2) - f(node20,node11)
+     
+      - f(node20,node23) - f(node21,node3) - f(node21,node12) - f(node21,node24) - f(node22,node4) - f(node22,node13)
+     
+      - f(node22,node19) - f(node23,node5) - f(node23,node14) - f(node23,node20) - f(node24,node6) - f(node24,node15)
+     
+      - f(node24,node21) - f(node25,node7) - f(node25,node16) - f(node25,node26) - f(node26,node8) - f(node26,node17)
+     
+      - f(node26,node25) - f(node27,node9) - f(node27,node18) + z =E= 0 ; (LHS = 0)
+     
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE shortestpath Using RMIP From line 92
+
+
+---- f  flow
+
+f(node1,node10)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node1)
+        1       flowbal(node10)
+       -1       obj
+
+f(node1,node19)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node1)
+        1       flowbal(node19)
+       -1       obj
+
+f(node2,node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node2)
+        1       flowbal(node3)
+       -1       obj
+
+REMAINING 75 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE shortestpath Using RMIP From line 92
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE shortestpath Using RMIP From line 92
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           28
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           79
+NON ZERO ELEMENTS           235     DISCRETE VARIABLES         78
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  49.1.0 5c4d4ed6 WEX-WEI
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE shortestpath Using RMIP From line 92
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   shortestpath        OBJECTIVE  z
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  92
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                7.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        13    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.15 ticks)
+
+
+Optimal solution found
+Objective:            7.000000
+
+
+---- EQU flowbal  flow balance
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1         -1.0000        -1.0000        -1.0000        -5.0000      
+node2           .              .              .              .          
+node3           .              .              .              .          
+node4           .              .              .            -2.0000      
+node5           .              .              .             1.0000      
+node6           .              .              .             EPS         
+node7           .              .              .            -2.0000      
+node8           .              .              .             EPS         
+node9           .              .              .              .          
+node10          .              .              .            -4.0000      
+node11          .              .              .              .          
+node12          .              .              .              .          
+node13          .              .              .            -2.0000      
+node14         1.0000         1.0000         1.0000         2.0000      
+node15          .              .              .            -1.0000      
+node16          .              .              .            -3.0000      
+node17          .              .              .              .          
+node18          .              .              .              .          
+node19          .              .              .            -4.0000      
+node20          .              .              .              .          
+node21          .              .              .              .          
+node22          .              .              .            -3.0000      
+node23          .              .              .             1.0000      
+node24          .              .              .             EPS         
+node25          .              .              .            -2.0000      
+node26          .              .              .            -1.0000      
+node27          .              .              .             1.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- VAR f  flow
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+node1 .node10          .             1.0000         1.0000          .          
+node1 .node19          .              .             1.0000          .          
+node2 .node3           .              .             1.0000         1.0000      
+node2 .node11          .              .             1.0000         1.0000      
+node2 .node20          .              .             1.0000         1.0000      
+node3 .node2           .              .             1.0000         1.0000      
+node3 .node12          .              .             1.0000         1.0000      
+node3 .node21          .              .             1.0000         1.0000      
+node4 .node7           .              .             1.0000         1.0000      
+node4 .node13          .              .             1.0000         1.0000      
+node4 .node22          .              .             1.0000         2.0000      
+node5 .node8           .              .             1.0000         2.0000      
+node5 .node14          .             1.0000         1.0000          .          
+node5 .node23          .              .             1.0000         1.0000      
+node6 .node9           .              .             1.0000         1.0000      
+node6 .node15          .              .             1.0000         2.0000      
+node6 .node24          .              .             1.0000         1.0000      
+node7 .node4           .              .             1.0000         1.0000      
+node7 .node16          .              .             1.0000         2.0000      
+node7 .node25          .              .             1.0000         1.0000      
+node8 .node5           .             1.0000         1.0000          .          
+node8 .node17          .              .             1.0000         1.0000      
+node8 .node26          .              .             1.0000         2.0000      
+node9 .node6           .              .             1.0000         1.0000      
+node9 .node18          .              .             1.0000         1.0000      
+node9 .node27          .              .             1.0000          .          
+node10.node1           .              .             1.0000         2.0000      
+node10.node16          .             1.0000         1.0000          .          
+node10.node19          .              .             1.0000         1.0000      
+node11.node2           .              .             1.0000         1.0000      
+node11.node17          .              .             1.0000         1.0000      
+node11.node20          .              .             1.0000         1.0000      
+node12.node3           .              .             1.0000         1.0000      
+node12.node18          .              .             1.0000         1.0000      
+node12.node21          .              .             1.0000         1.0000      
+node13.node4           .              .             1.0000         1.0000      
+node13.node15          .              .             1.0000          .          
+node13.node22          .              .             1.0000         2.0000      
+node14.node5           .              .             1.0000         2.0000      
+node14.node23          .              .             1.0000         2.0000      
+node15.node6           .              .             1.0000          .          
+node15.node13          .              .             1.0000         2.0000      
+node15.node24          .              .             1.0000          .          
+node16.node7           .              .             1.0000          .          
+node16.node10          .              .             1.0000         2.0000      
+node16.node25          .             1.0000         1.0000          .          
+node17.node8           .              .             1.0000         1.0000      
+node17.node11          .              .             1.0000         1.0000      
+node17.node26          .              .             1.0000         2.0000      
+node18.node9           .              .             1.0000         1.0000      
+node18.node12          .              .             1.0000         1.0000      
+node18.node27          .              .             1.0000         EPS         
+node19.node1           .              .             1.0000         2.0000      
+node19.node10          .              .             1.0000         1.0000      
+node19.node22          .              .             1.0000          .          
+node20.node2           .              .             1.0000         1.0000      
+node20.node11          .              .             1.0000         1.0000      
+node20.node23          .              .             1.0000          .          
+node21.node3           .              .             1.0000         1.0000      
+node21.node12          .              .             1.0000         1.0000      
+node21.node24          .              .             1.0000         1.0000      
+node22.node4           .              .             1.0000          .          
+node22.node13          .              .             1.0000          .          
+node22.node19          .              .             1.0000         2.0000      
+node23.node5           .              .             1.0000         1.0000      
+node23.node14          .              .             1.0000          .          
+node23.node20          .              .             1.0000         2.0000      
+node24.node6           .              .             1.0000         1.0000      
+node24.node15          .              .             1.0000         2.0000      
+node24.node21          .              .             1.0000         1.0000      
+node25.node7           .              .             1.0000         1.0000      
+node25.node16          .              .             1.0000         2.0000      
+node25.node26          .             1.0000         1.0000          .          
+node26.node8           .             1.0000         1.0000          .          
+node26.node17          .              .             1.0000         EPS         
+node26.node25          .              .             1.0000         2.0000      
+node27.node9           .              .             1.0000         2.0000      
+node27.node18          .              .             1.0000         2.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            7.0000        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     93 VARIABLE f.L  flow
+
+             node5       node8      node10      node14      node16      node25      node26
+
+node1                                1.000
+node5                                            1.000
+node8        1.000
+node10                                                       1.000
+node16                                                                   1.000
+node25                                                                               1.000
+node26                   1.000
+
+
+----    125 SET trace  
+
+move1.node1 .node10.disk1.pegA.pegB
+move2.node10.node16.disk2.pegA.PegC
+move3.node16.node25.disk1.pegB.PegC
+move4.node25.node26.disk3.pegA.pegB
+move5.node26.node8 .disk1.PegC.pegA
+move6.node8 .node5 .disk2.PegC.pegB
+move7.node5 .node14.disk1.pegA.pegB
+
+
+
+EXECUTION TIME       =        0.046 SECONDS      4 MB  49.1.0 5c4d4ed6 WEX-WEI
+
+
+USER: Eval License                                   S241129|0002CO-GEN
+      Amsterdam Optimization Modeling Group,                     DCE378
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\erwin\Projects\blog\hanoi\hanoi2.gms
+Output     C:\Users\erwin\Projects\blog\hanoi\hanoi2.lst
