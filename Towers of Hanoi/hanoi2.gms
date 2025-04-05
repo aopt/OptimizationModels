@@ -1,5 +1,7 @@
 $onText
 
+  Towers of Hanoi, network formulation
+
 $offText
 
 
@@ -63,6 +65,11 @@ loop(nodeDiff1disk(node1,node2,disk),
 display diskMoved;
 
 arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
+
+* check
+scalar narcs 'number of directed arcs in Hanoi graph';
+narcs = 3*(3**n - 1);
+abort$(card(arc)<>narcs) "number of arcs is incorrect";
 
 *----------------------------------------------------------------------
 * shortest path model

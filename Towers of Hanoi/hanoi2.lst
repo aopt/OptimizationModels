@@ -1,155 +1,162 @@
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 1
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
 
        
-   4   
-   5   
-   6  *-----------------------------------------------------------------------------------
-   7  * size of problem
+        Towers of Hanoi, network formulation
+       
+   6   
+   7   
    8  *-----------------------------------------------------------------------------------
-   9   
+   9  * size of problem
+  10  *-----------------------------------------------------------------------------------
   11   
-  12  *-----------------------------------------------------------------------------------
-  13  * nodes
+  13   
   14  *-----------------------------------------------------------------------------------
-  15   
+  15  * nodes
+  16  *-----------------------------------------------------------------------------------
   17   
-  18  set
-  19    node /node1*node27/
-  20    disk /disk1*disk3/
-  21    peg /pegA,pegB,PegC/
-  22    nodes(node,disk,peg) / system.powersetRight /
-  23  ;
-  24   
-  25  scalars
-  26     n  'number of disks' /3/
-  27     nn 'number of nodes' /27/
-  28  ;
-  29   
-  30  display disk,peg,node,nodes;
+  19   
+  20  set
+  21    node /node1*node27/
+  22    disk /disk1*disk3/
+  23    peg /pegA,pegB,PegC/
+  24    nodes(node,disk,peg) / system.powersetRight /
+  25  ;
+  26   
+  27  scalars
+  28     n  'number of disks' /3/
+  29     nn 'number of nodes' /27/
+  30  ;
   31   
-  32  *-----------------------------------------------------------------------------------
-  33  * arcs
+  32  display disk,peg,node,nodes;
+  33   
   34  *-----------------------------------------------------------------------------------
-  35   
-  36  set arc(node,node);
+  35  * arcs
+  36  *-----------------------------------------------------------------------------------
   37   
-  38  alias (node,node1,node2), (disk,disk1,disk2), (peg,peg1,peg2), (nodes,nodes1,nodes2);
+  38  set arc(node,node);
   39   
-  40  set smallest(node,disk,peg) 'smallest disk on peg';
-  41  smallest(node,disk,peg) = smin(disk2$nodes(node,disk2,peg),ord(disk2)) = ord(disk);
-  42  display smallest;
-  43   
-  44  parameter nodeVal(node,disk) 'peg number of (node,disk)';
-  45  nodeVal(node,disk) = sum(nodes(node,disk,peg),ord(peg));
-  46  display nodeVal;
-  47   
-  48  set nodediff1(node,node) '(node1,node2) combos with one difference';
-  49  nodediff1(node1,node2) = sum(disk$(abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5),1)=1;
-  50  display nodediff1;
-  51   
-  52  set nodeDiff1disk(node,node,disk) 'augment nodediff1 with disk id';
-  53  nodeDiff1Disk(nodeDiff1(node1,node2),disk) = abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5;
-  54  display nodeDiff1Disk;
-  55   
-  56  set diskMoved(node,node,disk) 'feasible moves';
-  57  singleton set p1(peg),p2(peg);
-  58  loop(nodeDiff1disk(node1,node2,disk),
-  59     p1(peg) = nodeval(node1,disk)=ord(peg);
-  60     p2(peg) = nodeval(node2,disk)=ord(peg);
-  61     diskMoved(node1,node2,disk) = smallest(node1,disk,p1) and smallest(node2,disk,p2);
-  62  );
-  63  display diskMoved;
-  64   
-  65  arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
+  40  alias (node,node1,node2), (disk,disk1,disk2), (peg,peg1,peg2), (nodes,nodes1,nodes2);
+  41   
+  42  set smallest(node,disk,peg) 'smallest disk on peg';
+  43  smallest(node,disk,peg) = smin(disk2$nodes(node,disk2,peg),ord(disk2)) = ord(disk);
+  44  display smallest;
+  45   
+  46  parameter nodeVal(node,disk) 'peg number of (node,disk)';
+  47  nodeVal(node,disk) = sum(nodes(node,disk,peg),ord(peg));
+  48  display nodeVal;
+  49   
+  50  set nodediff1(node,node) '(node1,node2) combos with one difference';
+  51  nodediff1(node1,node2) = sum(disk$(abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5),1)=1;
+  52  display nodediff1;
+  53   
+  54  set nodeDiff1disk(node,node,disk) 'augment nodediff1 with disk id';
+  55  nodeDiff1Disk(nodeDiff1(node1,node2),disk) = abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5;
+  56  display nodeDiff1Disk;
+  57   
+  58  set diskMoved(node,node,disk) 'feasible moves';
+  59  singleton set p1(peg),p2(peg);
+  60  loop(nodeDiff1disk(node1,node2,disk),
+  61     p1(peg) = nodeval(node1,disk)=ord(peg);
+  62     p2(peg) = nodeval(node2,disk)=ord(peg);
+  63     diskMoved(node1,node2,disk) = smallest(node1,disk,p1) and smallest(node2,disk,p2);
+  64  );
+  65  display diskMoved;
   66   
-  67  *----------------------------------------------------------------------
-  68  * shortest path model
-  69  *----------------------------------------------------------------------
-  70   
-  71  Parameters
-  72     supply(node)
-  73     demand(node)
-  74  ;
-  75  supply(node)$(sum(nodes(node,disk,'pegA'),1) = n) = 1;
-  76  demand(node)$(sum(nodes(node,disk,'pegB'),1) = n) = 1;
+  67  arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
+  68   
+  69  * check
+  70  scalar narcs 'number of directed arcs in Hanoi graph';
+  71  narcs = 3*(3**n - 1);
+  72  abort$(card(arc)<>narcs) "number of arcs is incorrect";
+  73   
+  74  *----------------------------------------------------------------------
+  75  * shortest path model
+  76  *----------------------------------------------------------------------
   77   
-  78  binary variable f(node,node) 'flow';
-  79  variable z 'objective';
-  80   
-  81  equations
-  82     flowbal(node) 'flow balance'
-  83     obj           'objective'
-  84  ;
-  85   
-  86  obj.. z =e= sum(arc,f(arc));
+  78  Parameters
+  79     supply(node)
+  80     demand(node)
+  81  ;
+  82  supply(node)$(sum(nodes(node,disk,'pegA'),1) = n) = 1;
+  83  demand(node)$(sum(nodes(node,disk,'pegB'),1) = n) = 1;
+  84   
+  85  binary variable f(node,node) 'flow';
+  86  variable z 'objective';
   87   
-  88  flowbal(node1)..
-  89     sum(arc(node2,node1),f(node2,node1)) + supply(node1) =e= sum(arc(node1,node2),f(node1,node2)) + demand(node1);
-  90   
-  91  model shortestpath /all/;
-  92  solve shortestpath minimizing z using rmip;
-  93  display f.l;
+  88  equations
+  89     flowbal(node) 'flow balance'
+  90     obj           'objective'
+  91  ;
+  92   
+  93  obj.. z =e= sum(arc,f(arc));
   94   
-  95  *----------------------------------------------------------------------
-  96  * reporting
-  97  *----------------------------------------------------------------------
-  98   
-  99  set
- 100      move/move1*move100/
- 101      trace(move,node,node,disk,peg,peg)
- 102  ;
- 103   
- 104  singleton sets
- 105    cur(node) 'current node' /node1/
- 106    next(node) 'next node'
- 107  ;
- 108   
- 109  cur(node) = supply(node)>0;
+  95  flowbal(node1)..
+  96     sum(arc(node2,node1),f(node2,node1)) + supply(node1) =e= sum(arc(node1,node2),f(node1,node2)) + demand(node1);
+  97   
+  98  model shortestpath /all/;
+  99  solve shortestpath minimizing z using rmip;
+ 100  display f.l;
+ 101   
+ 102  *----------------------------------------------------------------------
+ 103  * reporting
+ 104  *----------------------------------------------------------------------
+ 105   
+ 106  set
+ 107      move/move1*move100/
+ 108      trace(move,node,node,disk,peg,peg)
+ 109  ;
  110   
- 111  loop(move$card(cur),
- 112   
- 113      next(node) = f.l(cur,node)>0.5;
- 114   
- 115      loop(diskMoved(cur,next,disk),
- 116          p1(peg) = nodeval(cur,disk)=ord(peg);
- 117          p2(peg) = nodeval(next,disk)=ord(peg);
- 118          trace(move,cur,next,disk,p1,p2) = yes;
- 119      );
- 120   
- 121      cur(node) = next(node);
- 122  );
- 123   
- 124  option trace:0:0:1;
- 125  display trace;
+ 111  singleton sets
+ 112    cur(node) 'current node' /node1/
+ 113    next(node) 'next node'
+ 114  ;
+ 115   
+ 116  cur(node) = supply(node)>0;
+ 117   
+ 118  loop(move$card(cur),
+ 119   
+ 120      next(node) = f.l(cur,node)>0.5;
+ 121   
+ 122      loop(diskMoved(cur,next,disk),
+ 123          p1(peg) = nodeval(cur,disk)=ord(peg);
+ 124          p2(peg) = nodeval(next,disk)=ord(peg);
+ 125          trace(move,cur,next,disk,p1,p2) = yes;
+ 126      );
+ 127   
+ 128      cur(node) = next(node);
+ 129  );
+ 130   
+ 131  option trace:0:0:1;
+ 132  display trace;
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     30 SET disk  
+----     32 SET disk  
 
 disk1,    disk2,    disk3
 
 
-----     30 SET peg  
+----     32 SET peg  
 
 pegA,    pegB,    PegC
 
 
-----     30 SET node  
+----     32 SET node  
 
 node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
 node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
 node25,    node26,    node27
 
 
-----     30 SET nodes  
+----     32 SET nodes  
 
                     pegA        pegB        PegC
 
@@ -236,7 +243,7 @@ node27.disk2                                 YES
 node27.disk3                                 YES
 
 
-----     42 SET smallest  smallest disk on peg
+----     44 SET smallest  smallest disk on peg
 
                     pegA        pegB        PegC
 
@@ -299,7 +306,7 @@ node26.disk3                     YES
 node27.disk1                                 YES
 
 
-----     46 PARAMETER nodeVal  peg number of (node,disk)
+----     48 PARAMETER nodeVal  peg number of (node,disk)
 
              disk1       disk2       disk3
 
@@ -332,7 +339,7 @@ node26       3.000       3.000       2.000
 node27       3.000       3.000       3.000
 
 
-----     50 SET nodediff1  (node1,node2) combos with one difference
+----     52 SET nodediff1  (node1,node2) combos with one difference
 
              node1       node2       node3       node4       node5       node6       node7       node8       node9      node10
 
@@ -421,7 +428,7 @@ node26                                 YES                     YES              
 node27         YES                                 YES         YES         YES
 
 
-----     54 SET nodeDiff1disk  augment nodediff1 with disk id
+----     56 SET nodeDiff1disk  augment nodediff1 with disk id
 
                     disk1       disk2       disk3
 
@@ -589,7 +596,7 @@ node27.node25                                 YES
 node27.node26                                 YES
 
 
-----     63 SET diskMoved  feasible moves
+----     65 SET diskMoved  feasible moves
 
                     disk1       disk2       disk3
 
@@ -672,9 +679,9 @@ node26.node25                                 YES
 node27.node9          YES
 node27.node18         YES
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 3
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE shortestpath Using RMIP From line 92
+Equation Listing    SOLVE shortestpath Using RMIP From line 99
 
 
 ---- flowbal  =E=  flow balance
@@ -719,9 +726,9 @@ obj..  - f(node1,node10) - f(node1,node19) - f(node2,node3) - f(node2,node11) - 
      
       - f(node26,node25) - f(node27,node9) - f(node27,node18) + z =E= 0 ; (LHS = 0)
      
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 4
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE shortestpath Using RMIP From line 92
+Column Listing      SOLVE shortestpath Using RMIP From line 99
 
 
 ---- f  flow
@@ -752,9 +759,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 5
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE shortestpath Using RMIP From line 92
+Range Statistics    SOLVE shortestpath Using RMIP From line 99
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -763,9 +770,9 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 6
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE shortestpath Using RMIP From line 92
+Model Statistics    SOLVE shortestpath Using RMIP From line 99
 
 
 MODEL STATISTICS
@@ -775,17 +782,17 @@ BLOCKS OF VARIABLES           2     SINGLE VARIABLES           79
 NON ZERO ELEMENTS           235     DISCRETE VARIABLES         78
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 7
+GENERATION TIME      =        0.015 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE shortestpath Using RMIP From line 92
+Solution Report     SOLVE shortestpath Using RMIP From line 99
 
 
                S O L V E      S U M M A R Y
 
      MODEL   shortestpath        OBJECTIVE  z
      TYPE    RMIP                DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  92
+     SOLVER  CPLEX               FROM LINE  99
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
@@ -797,7 +804,7 @@ Solution Report     SOLVE shortestpath Using RMIP From line 92
 --- GMO setup time: 0.00s
 --- GMO memory 0.51 Mb (peak 0.51 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Cplex 22.1.1.0 link memory 0.00 Mb (peak 0.01 Mb)
 --- Starting Cplex
 
 
@@ -940,12 +947,12 @@ node27.node18          .              .             1.0000         2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 04:36:44 Page 8
+GAMS 48.4.0  d74fe9ea Nov 27, 2024          WEX-WEI x86 64bit/MS Windows - 04/05/25 00:39:11 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     93 VARIABLE f.L  flow
+----    100 VARIABLE f.L  flow
 
              node5       node8      node10      node14      node16      node25      node26
 
@@ -958,7 +965,7 @@ node25                                                                          
 node26                   1.000
 
 
-----    125 SET trace  
+----    132 SET trace  
 
 move1.node1 .node10.disk1.pegA.pegB
 move2.node10.node16.disk2.pegA.PegC
@@ -970,7 +977,7 @@ move7.node5 .node14.disk1.pegA.pegB
 
 
 
-EXECUTION TIME       =        0.046 SECONDS      4 MB  49.1.0 5c4d4ed6 WEX-WEI
+EXECUTION TIME       =        0.047 SECONDS      4 MB  48.4.0 d74fe9ea WEX-WEI
 
 
 USER: Eval License                                   S241129|0002CO-GEN
