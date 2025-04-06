@@ -15,7 +15,7 @@ $set n 3
 * nodes
 *-----------------------------------------------------------------------------------
 
-$eval nn 3**%n%
+$eval nn power(3,%n%)
 
 set
   node /node1*node%nn%/
@@ -68,7 +68,7 @@ arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
 
 * check
 scalar narcs 'number of directed arcs in Hanoi graph';
-narcs = 3*(3**n - 1);
+narcs = 3*(power(3,n) - 1);
 abort$(card(arc)<>narcs) "number of arcs is incorrect";
 
 *----------------------------------------------------------------------
