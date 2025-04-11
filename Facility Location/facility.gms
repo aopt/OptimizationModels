@@ -313,13 +313,14 @@ for (k=0; k < assign2.length; ++k) {
    item = assign2[k];
    i = item['i']-1;
    f = item['f']-1;
+   ff = f % colors.length;
    asg = {
       type:'line',
       x0:xpoints[i],
       y0:ypoints[i],
       x1:xfloc2[f],
       y1:yfloc2[f],
-      line: { color:colors[f] }
+      line: { color:colors[ff] }
       }
    assignments2.push(asg);   
 } 
