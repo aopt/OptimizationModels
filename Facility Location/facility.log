@@ -1,0 +1,377 @@
+
+--- Job facility.gms Start 04/11/25 11:18:29 49.1.0 5c4d4ed6 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\49\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\Users\erwin\Projects\blog\facility\facility.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\Users\erwin\Projects\blog\facility\225a\
+    SysDir C:\GAMS\49\
+    LogOption 3
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   S241129|0002CO-GEN
+          Amsterdam Optimization Modeling Group,                     DCE378
+          C:\Users\erwin\Documents\GAMS\gamslice.txt
+          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+          Evaluation license: Not for commercial or production use
+          The expiration date of time-limited license is Dec 24, 2025
+System information: 8 physical cores and 64 Gb memory detected
+GAMS 49.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+--- Starting compilation
+--- facility.gms(202) 3 Mb
+--- $echo File C:\Users\erwin\Projects\blog\facility\report.html
+--- facility.gms(338) 3 Mb
+--- Starting execution: elapsed 0:00:00.006
+--- facility.gms(71) 4 Mb
+--- Generating MIQCP model m1
+--- facility.gms(72) 7 Mb
+---   1,585 rows  781 columns  4,529 non-zeroes
+---   6,750 nl-code  1,500 nl-non-zeroes
+---   760 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.063E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.270E-04, 1.977E+00]
+--- facility.gms(72) 5 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.013
+
+IBM ILOG CPLEX   49.1.0 5c4d4ed6 Feb 15, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.05 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.97 Mb (peak 0.97 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.03 Mb (peak 0.13 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQCP Presolve eliminated 0 rows and 1 columns.
+Reduced MIQCP has 4564 rows, 3780 columns, and 12728 nonzeros.
+Reduced MIQCP has 760 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 750 quadratic constraints.
+Presolve time = 0.00 sec. (7.05 ticks)
+Probing fixed 1 vars, tightened 0 bounds.
+Probing time = 0.02 sec. (0.96 ticks)
+Clique table members: 6200.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Tried aggregator 1 time.
+LP Presolve eliminated 2306 rows and 1521 columns.
+Aggregator did 1500 substitutions.
+Reduced LP has 758 rows, 759 columns, and 2116 nonzeros.
+Presolve time = 0.00 sec. (2.81 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.00 sec. (5.24 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        1.0000     0                      0.0000       10         
+      0     0        1.0000     0                   Cone: 108       31         
+      0     0        1.2890     0                   Cone: 186      264         
+      0     0        1.2950   135                   Cone: 253      340         
+      0     0        1.2960   295                   Cone: 319      352         
+      0     0        1.2966   295                   Cone: 385      420         
+      0     0        1.2966   295                   Cone: 394      429         
+      0     0        1.2966   295                   Cone: 423      439         
+      0     0        1.2966   295                   Cone: 432      448         
+      0     0        1.2966   295                   Cone: 450      462         
+      0     0        1.2966   295                   Cone: 468      476         
+      0     0        1.2966   295                   Cone: 486      491         
+      0     0        1.2966   295                   Cone: 501      506         
+      0     0        1.2966   295                   Cone: 508      513         
+      0     0        1.2966   295                      1.2966      513         
+      0     0        2.0000   178                    Cuts: 22      584         
+      0     0        2.0000   100                    Cuts: 81      698         
+      0     0        2.0000    87                    Cuts: 66      800         
+      0     0        2.0000    92                   Cuts: 391      871         
+      0     2        2.0000    70                      2.0000      871         
+Elapsed time = 2.03 sec. (3414.51 ticks, tree = 0.02 MB)
+     75    54        4.0000    88                      3.0000     4766         
+                                                     Cuts: 54                  
+    561   383        5.0000    73                      3.0000    16323         
+                                                     Cone: 19                  
+   1605  1092        7.0918   109                      3.0000    31191         
+                                                    Cuts: 160                  
+   2850  1968        5.0000    94                      3.0000    52352         
+                                                    Cuts: 210                  
+   3763  2846        5.0000    64                      3.0000    79071         
+                                                     Cuts: 66                  
+   4348  3392        8.0000    14                      3.0000    93147         
+                                                     Cuts: 84                  
+*  4363+ 1718                           10.0000        3.0000            70.00%
+Found incumbent of value 10.000000 after 4.11 sec. (4851.05 ticks)
+   4973  3354        9.0000    32       10.0000        3.0000   110684   70.00%
+                                                     Cuts: 41                  
+   5890  4024    infeasible             10.0000        3.0000   133658   70.00%
+                                                     Cuts: 37                  
+   6703  4627        9.0000    12       10.0000        3.0000   153638   70.00%
+                                                     Cuts: 66                  
+*  6898+ 3497                            9.0000        3.0000            66.67%
+                                                     Cone: 36                  
+Found incumbent of value 9.000000 after 5.42 sec. (5809.15 ticks)
+   9190  5118        8.0000    64        9.0000        3.0000   231413   66.67%
+                                                    Cuts: 101                  
+Elapsed time = 6.44 sec. (6516.60 ticks, tree = 10.87 MB)
+* 10030+ 4717                            8.0000        3.0000            62.50%
+                                                     Cuts: 49                  
+Found incumbent of value 8.000000 after 6.89 sec. (6854.80 ticks)
+  12000  4720        4.0214   127        8.0000        3.0058   314955   62.43%
+                                                     Cuts: 69                  
+* 12511+ 4127                            7.0000        3.0750            56.07%
+                                                     Cuts: 31                  
+Found incumbent of value 7.000000 after 8.17 sec. (7766.30 ticks)
+* 14053+ 3286                            6.0000        3.1201            48.00%
+                                                     Cuts: 93                  
+Found incumbent of value 6.000000 after 8.97 sec. (8329.55 ticks)
+  14336  2989        4.0000    80        6.0000        4.0000   398129   33.33%
+                                                     Cone: 26                  
+                                                     Cuts: 22                  
+  17955  4504        5.0000    90        6.0000        4.0000   517460   33.33%
+* 18914+ 4297                            5.0000        4.0000            20.00%
+                                                     Cuts: 23                  
+Found incumbent of value 5.000000 after 10.86 sec. (9681.24 ticks)
+
+Clique cuts applied:  17
+Cover cuts applied:  252
+Implied bound cuts applied:  1
+Mixed integer rounding cuts applied:  6
+Zero-half cuts applied:  3
+Lift and project cuts applied:  2
+Gomory fractional cuts applied:  1
+Cone linearizations applied:  1055
+
+Root node processing (before b&c):
+  Real time             =    2.00 sec. (3412.45 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    9.39 sec. (6738.08 ticks)
+  Sync time (average)   =    2.29 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =   11.39 sec. (10150.54 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 11.39sec (det. 10150.54 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            5.000000    (616867 iterations, 19873 nodes)
+
+Best possible:           5.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m1
+***
+*** Solver did not provide marginals for model m1
+***
+--- Executing after solve: elapsed 0:00:11.458
+--- facility.gms(117) 5 Mb
+--- Generating MIQCP model m2
+--- facility.gms(120) 7 Mb
+---   451 rows  761 columns  2,251 non-zeroes
+---   3,750 nl-code  750 nl-non-zeroes
+---   375 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 6.250E-02, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.313E-03, 1.683E+00]
+--- facility.gms(120) 5 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:11.458
+
+IBM ILOG CPLEX   49.1.0 5c4d4ed6 Feb 15, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.03 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.73 Mb (peak 0.74 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.02 Mb (peak 0.07 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQCP Presolve eliminated 0 rows and 1 columns.
+Reduced MIQCP has 1940 rows, 2260 columns, and 5980 nonzeros.
+Reduced MIQCP has 375 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 375 quadratic constraints.
+Presolve time = 0.00 sec. (2.26 ticks)
+Probing time = 0.00 sec. (0.21 ticks)
+Clique table members: 75.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Tried aggregator 1 time.
+LP Presolve eliminated 1190 rows and 1510 columns.
+Aggregator did 750 substitutions.
+All rows and columns eliminated.
+Presolve time = 0.02 sec. (1.37 ticks)
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.02 sec. (2.38 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000     0                      0.0000       16         
+      0     0        0.0000    28                   Cone: 103       42         
+      0     0        0.0000    17                   Cone: 192       84         
+      0     0        0.0000    75                   Cone: 279      107         
+      0     0        0.0000    96                   Cone: 364      162         
+      0     0        0.0000   126                   Cone: 447      240         
+      0     0        0.0000   142                   Cone: 530      317         
+      0     0        0.0000   150                   Cone: 624      325         
+      0     0        0.0000   152                   Cone: 628      333         
+      0     0        0.0000   144                   Cone: 637      344         
+      0     0        0.0000   148                   Cone: 645      353         
+      0     0        0.0000   150                   Cone: 653      426         
+      0     0        0.0000   150                   Cone: 660      432         
+      0     0        0.0000   152                   Cone: 666      436         
+      0     0        0.0000   152                   Cone: 668      438         
+      0     0        0.0000   152                      0.0000      438         
+      0     2        0.0000    59                      0.0000      438         
+Elapsed time = 0.20 sec. (262.63 ticks, tree = 0.02 MB)
+   1483   756        0.0322    46                      0.0000    11880         
+                                                    Cuts: 131                  
+*  1980+  376                            2.3928        0.0000           100.00%
+                                                     Cuts: 22                  
+Found incumbent of value 2.392782 after 0.55 sec. (559.14 ticks)
+*  2750   741      integral     0        2.3513        0.0000    11797  100.00%
+                                                     Cuts: 27                  
+Found incumbent of value 2.351269 after 0.66 sec. (654.00 ticks)
+   3306  1528        0.0065   144        2.3513        0.0000    52985  100.00%
+                                                     Cuts: 45                  
+*  4538+ 1432                            2.3352        0.0000           100.00%
+                                                     Cuts: 36                  
+Found incumbent of value 2.335162 after 0.97 sec. (909.76 ticks)
+   4988  1943        0.0000   136        2.3352        0.0000   101338  100.00%
+                                                     Cuts: 31                  
+*  5186  1743      integral     0        2.2747        0.0000    82500  100.00%
+                                                    Covers: 2                  
+Found incumbent of value 2.274747 after 1.09 sec. (1017.46 ticks)
+   6778  2409        0.0692   127        2.2747        0.0000   146600  100.00%
+                                                     Cuts: 30                  
+   9001  3104    infeasible              2.2747        0.0000   202382  100.00%
+                                                     Cuts: 38                  
+* 10003  3077      integral     0        2.2731        0.0000   199345  100.00%
+                                                     Cuts: 29                  
+Found incumbent of value 2.273117 after 1.72 sec. (1555.31 ticks)
+* 10358  3117      integral     0        2.2692        0.0000   203176  100.00%
+Found incumbent of value 2.269219 after 1.75 sec. (1590.41 ticks)
+  11449  4064        0.0520   134        2.2692        0.0000   277598  100.00%
+                                                    Covers: 4                  
+  13826  4862        0.0567   128        2.2692        0.0000   345281  100.00%
+                                                   Covers: 20                  
+  16270  5344    infeasible              2.2692        0.0000   392112  100.00%
+                                                   Covers: 14                  
+  18164  5960        0.0000   148        2.2692        0.0000   459141  100.00%
+                                                     Cuts: 15                  
+* 23091  6924      integral     0        2.2579        0.0000   569119  100.00%
+                                                     Cuts: 33                  
+Found incumbent of value 2.257925 after 3.36 sec. (2968.09 ticks)
+  26413  8306        0.2761   114        2.2579        0.0000   714768  100.00%
+                                                   Covers: 18                  
+Elapsed time = 3.83 sec. (3363.90 ticks, tree = 8.89 MB)
+  35328 10317        0.4047   107        2.2579        0.0098   950253   99.57%
+                                                   Covers: 30                  
+  45454 12343        0.0499   147        2.2579        0.0384  1214487   98.30%
+                                                     Cuts: 43                  
+  54720 14238        0.1381   148        2.2579        0.0483  1452945   97.86%
+                                                     Cuts: 33                  
+  65112 15866        0.1007   136        2.2579        0.0611  1687053   97.30%
+                                                   Covers: 22                  
+  75108 16883        0.1019   133        2.2579        0.0702  1967886   96.89%
+                                                     Cuts: 25                  
+  85069 17108        0.2017   127        2.2579        0.0771  2151679   96.59%
+                                                     Cuts: 27                  
+  95308 17060        0.2164   128        2.2579        0.0948  2398584   95.80%
+                                                   Covers: 18                  
+ 105806 16475        0.1671   133        2.2579        0.1093  2671479   95.16%
+                                                     Cuts: 30                  
+ 116114 14717    infeasible              2.2579        0.1259  2915043   94.43%
+                                                   Covers: 17                  
+ 127637 12332    infeasible              2.2579        0.1451  3158977   93.57%
+                                                   Covers: 20                  
+Elapsed time = 15.66 sec. (12901.57 ticks, tree = 13.24 MB)
+*140652  9881      integral     0        2.2559        0.1698  3344417   92.47%
+                                                     Cuts: 14                  
+Found incumbent of value 2.255850 after 16.94 sec. (13819.14 ticks)
+ 141261  9148        0.3937   125        2.2559        0.1716  3384422   92.39%
+ 160876  5520        0.6023   110        2.2559        0.2473  3600901   89.04%
+                                                      Cone: 7                  
+*174223  4510      integral     0        2.2532        0.4506  3656830   80.00%
+Found incumbent of value 2.253157 after 19.33 sec. (15312.78 ticks)
+*181150  2083      integral     0        2.2532        1.8357  3690017   18.53%
+                                                     Cone: 14                  
+Found incumbent of value 2.253157 after 19.92 sec. (15636.09 ticks)
+*182302  2534      integral     0        2.2532        1.9256  3694649   14.54%
+                                                      Cone: 3                  
+Found incumbent of value 2.253157 after 20.03 sec. (15715.05 ticks)
+ 183022  3405        2.2208    10        2.2532        1.9642  3704553   12.82%
+                                                      Cone: 1                  
+*186529  3858      integral     0        2.2532        2.0236  3710191   10.19%
+                                                      Cone: 1                  
+Found incumbent of value 2.253157 after 20.49 sec. (16022.93 ticks)
+*188584  4368      integral     0        2.2532        2.0568  3716447    8.71%
+Found incumbent of value 2.253157 after 20.72 sec. (16207.18 ticks)
+ 196301  6145        cutoff              2.2532        2.1165  3745316    6.06%
+                                                      Cone: 3                  
+*204145  6421      integral     0        2.2532        2.1618  3761903    4.05%
+Found incumbent of value 2.253157 after 22.50 sec. (17392.17 ticks)
+ 207372  6021        cutoff              2.2532        2.1746  3776949    3.49%
+*208367  6082      integral     0        2.2532        2.1804  3775442    3.23%
+Found incumbent of value 2.253157 after 23.11 sec. (17800.18 ticks)
+ 215096  4218        cutoff              2.2532        2.2035  3798933    2.20%
+
+Cover cuts applied:  541
+Cone linearizations applied:  276
+
+Root node processing (before b&c):
+  Real time             =    0.19 sec. (261.68 ticks)
+Parallel b&c, 16 threads:
+  Real time             =   25.42 sec. (19008.08 ticks)
+  Sync time (average)   =    6.73 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =   25.61 sec. (19269.76 ticks)
+
+--- MIQCP status (102): integer optimal, tolerance.
+--- Cplex Time: 25.61sec (det. 19269.76 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Solution satisfies tolerances
+
+--- Reading solution for model m2
+***
+*** Solver did not provide marginals for model m2
+***
+--- Executing after solve: elapsed 0:00:37.108
+--- facility.gms(338) 6 Mb
+--- Putfile fdata C:\Users\erwin\Projects\blog\facility\data.js
+*** Status: Normal completion
+--- Job facility.gms Stop 04/11/25 11:19:07 elapsed 0:00:37.340
