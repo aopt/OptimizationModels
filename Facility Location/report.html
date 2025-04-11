@@ -1,0 +1,133 @@
+<html>
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+<script src="data.js" charset="utf-8"></script>
+<style>
+table,th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+p { max-width:800px; }
+</style>
+<body>
+<h1>Facility Location Model</h1>
+<h2>Data: demand points</h2>
+<p>The location of the demand points are randomly generated and drawn from the uniform distribution.</p>
+<div id="dataTable"></div>
+<div id="myPlot1" style="width:100%;max-width:700px;height:700px"></div>
+
+<p>
+
+<h2>Model 1: results</h2>
+
+<p>Model 1 finds the minimum number of facilities needed to serve all customers and
+obey the maximum distance constraint. To make the model quadratic, the constraint is
+formulated as a maximum quadratic distance constraint. It is noted that the solution
+is <b>not</b> an assignment with shortest distances between customers and facilities.</p>
+
+<div id="m1Table"></div>
+<div id="myPlot2" style="width:100%;max-width:700px;height:700px"></div>
+
+<h2>Model 2: results</h2>
+
+<p>Model 2 find the best location of the facilities and the optimal assignment of
+customers to the facilities. It uses the number of facilities found in model 1.</p>
+
+<div id="m2Table"></div>
+<div id="myPlot3" style="width:100%;max-width:700px;height:700px"></div>
+
+<script>
+
+colors = [
+    '#1f77b4',  // muted blue
+    '#ff7f0e',  // safety orange
+    '#2ca02c',  // cooked asparagus green
+    '#d62728',  // brick red
+    '#9467bd',  // muted purple
+    '#8c564b',  // chestnut brown
+    '#e377c2',  // raspberry yogurt pink
+    '#7f7f7f',  // middle gray
+    '#bcbd22',  // curry yellow-green
+    '#17becf'   // blue-teal
+];
+
+document.getElementById('dataTable').innerHTML = datatable;
+document.getElementById('m1Table').innerHTML = m1table;
+document.getElementById('m2Table').innerHTML = m2table;
+
+// extract coordinates as arrays 
+xpoints = points.map(({x})=>x);
+ypoints = points.map(({y})=>y);
+xfloc1 = floc1.map(({x})=>x);
+yfloc1 = floc1.map(({y})=>y);
+xfloc2 = floc2.map(({x})=>x);
+yfloc2 = floc2.map(({y})=>y);
+
+trace1 = {
+  x: xpoints,
+  y: ypoints,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color: 'black' }
+};
+
+trace2 = {
+  x: xfloc1,
+  y: yfloc1,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color: colors },
+};
+
+trace3 = {
+  x: xfloc2,
+  y: yfloc2,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color: colors },
+};
+
+
+assignments = [];
+for (k=0; k < assign1.length; ++k) {
+   item = assign1[k];
+   i = item['i']-1;
+   f = item['f']-1;
+   asg = {
+      type:'line',
+      x0:xpoints[i],
+      y0:ypoints[i],
+      x1:xfloc1[f],
+      y1:yfloc1[f],
+      line: { color:colors[f] }
+      }
+   assignments.push(asg);   
+} 
+var layout2 = {showlegend: false, shapes:assignments};
+
+assignments2 = [];
+for (k=0; k < assign2.length; ++k) {
+   item = assign2[k];
+   i = item['i']-1;
+   f = item['f']-1;
+   asg = {
+      type:'line',
+      x0:xpoints[i],
+      y0:ypoints[i],
+      x1:xfloc2[f],
+      y1:yfloc2[f],
+      line: { color:colors[f] }
+      }
+   assignments2.push(asg);   
+} 
+var layout3 = {showlegend: false, shapes:assignments2};
+
+
+Plotly.newPlot('myPlot1', [trace1]);
+Plotly.newPlot('myPlot2', [trace1,trace2], layout2);
+Plotly.newPlot('myPlot3', [trace1,trace3], layout3);
+
+</script>
+</body>
+</html>
