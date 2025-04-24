@@ -37,6 +37,25 @@ customers to the facilities. It uses the number of facilities found in model 1.<
 <div id="m2Table"></div>
 <div id="myPlot3" style="width:100%;max-width:700px;height:700px"></div>
 
+<h2>Model 4: results</h2>
+
+<p>Model 4 uses the demand points as candidate locations for the facilities. This
+is an easy MIP. It is solved here in two stages: first find the optimal number of
+facilities and then find the best locations.</p>
+
+<div id="m4Table"></div>
+<div id="myPlot4" style="width:100%;max-width:700px;height:700px"></div>
+
+<h2>Model 5: results</h2>
+
+<p>Model 5 is tracing the trade-off between <span style="font-family: courier;">maxdist</span> (the maximum distance
+limit) and <span style="font-family: courier;">numfacs</span> (the number of facilities). The results are based on
+Medoid based model: the candidate locations of the facilities is the set of demand
+points.</p>
+
+<div id="m5Table"></div>
+<div id="myPlot5" style="width:100%;max-width:700px;height:700px"></div>
+
 <script>
 
 colors = [
@@ -55,6 +74,8 @@ colors = [
 document.getElementById('dataTable').innerHTML = datatable;
 document.getElementById('m1Table').innerHTML = m1table;
 document.getElementById('m2Table').innerHTML = m2table;
+document.getElementById('m4Table').innerHTML = m4table;
+document.getElementById('m5Table').innerHTML = m5table;
 
 // extract coordinates as arrays 
 xpoints = points.map(({x})=>x);
@@ -63,6 +84,9 @@ xfloc1 = floc1.map(({x})=>x);
 yfloc1 = floc1.map(({y})=>y);
 xfloc2 = floc2.map(({x})=>x);
 yfloc2 = floc2.map(({y})=>y);
+numfacs = frontier.map(({numfacs})=>numfacs);
+maxdist = frontier.map(({maxdist})=>maxdist);
+
 
 trace1 = {
   x: xpoints,
@@ -88,6 +112,11 @@ trace3 = {
   marker: { color: colors },
 };
 
+trace4 = {
+  x: numfacs,
+  y: maxdist,
+};
+
 
 assignments = [];
 for (k=0; k < assign1.length; ++k) {
@@ -100,7 +129,7 @@ for (k=0; k < assign1.length; ++k) {
       y0:ypoints[i],
       x1:xfloc1[f],
       y1:yfloc1[f],
-      line: { color:colors[f] }
+      line: { color:colors[f],width:2 }
       }
    assignments.push(asg);   
 } 
@@ -111,22 +140,52 @@ for (k=0; k < assign2.length; ++k) {
    item = assign2[k];
    i = item['i']-1;
    f = item['f']-1;
+   ff = f % colors.length;
    asg = {
       type:'line',
       x0:xpoints[i],
       y0:ypoints[i],
       x1:xfloc2[f],
       y1:yfloc2[f],
-      line: { color:colors[f] }
+      line: { color:colors[ff],width:2 }
       }
    assignments2.push(asg);   
 } 
 var layout3 = {showlegend: false, shapes:assignments2};
 
 
+assignments4 = [];
+for (k=0; k < assign4.length; ++k) {
+   item = assign4[k];
+   i = item['i']-1;
+   ii = item['ii']-1;
+   cl = item['cl']-1;
+   ff = cl % colors.length;
+   asg = {
+      type:'line',
+      x0:xpoints[i],
+      y0:ypoints[i],
+      x1:xpoints[ii],
+      y1:ypoints[ii],
+      line: { color:colors[ff],width:2 }
+      }
+   assignments4.push(asg);   
+} 
+var layout4 = {showlegend: false, shapes:assignments4};
+
+
+var layout5 = {
+                xaxis : {title:{text:'number of facilities'}},
+                yaxis : {title:{text:'max distance'}},
+              }
+
 Plotly.newPlot('myPlot1', [trace1]);
 Plotly.newPlot('myPlot2', [trace1,trace2], layout2);
 Plotly.newPlot('myPlot3', [trace1,trace3], layout3);
+Plotly.newPlot('myPlot4', [trace1], layout4);
+Plotly.newPlot('myPlot5', [trace4], layout5);
+
+
 
 </script>
 </body>
