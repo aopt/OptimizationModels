@@ -7,8 +7,11 @@ $onText
 
   1. Dijkstra's shortest path algorithm implemented in GAMS
   2. Dijkstra's shortest path algorithm implemented in Python
-  3. Shortest path as LP
-  4. Visualization of network and shortest path
+  3. Shortest path as (primal) LP (single destination)
+  4. Dual LP, single destination
+  5. Primal LP, all destinations
+  6. Dual LP, all destinations
+  7. Visualization of network and shortest path
   
 $offText
 
@@ -17,26 +20,41 @@ $offText
 * set up network
 *-----------------------------------------------------
 
-set i 'nodes' /node1*node50/;
+Sets
+   i 'nodes' /node1*node50/
+   c 'coordinates' /x,y/
+   a(i,i) 'arcs of sparse network'
+;
 alias (i,j,v);
 
-set a(i,j) 'arcs of sparse network';
-* no self loops and density of 15%
-a(i,j)$(ord(i)<>ord(j)) = uniform(0,1)<0.15;
+Parameters
+   point(i,c) 'location of points'
+   cost(i,j) 'random costs (lengths)'
+   d(i,j) 'distances'
+;
 
+point(i,c) = uniform(0,100);
+d(i,j) = sqrt(sum(c,sqr(point(i,c)-point(j,c))));
+scalar dmin;
+a(i,j)$(ord(i)<>ord(j) and d(i,j) < 50) = uniform(0,1)<0.25;
+cost(a) = d(a);
+ 
 singleton sets
    source(i) /node1/
-   sink(i)   /node49/   
+   sink(i)   /node40/   
 ;
 * sink is chosen so optimal path needs quite a few hops
-
-parameter cost(i,j) 'random costs (lengths)';
-cost(a) = uniform(1,10);
 
 option a:0:0:7, cost:3:0:6;
 display$(card(i)<=50)
    "============== data ==============",
    i,source,sink,a,cost;
+
+parameter pointx(*,*);
+pointx(i,c) = point(i,c);
+pointx("min",c) = smin(i,point(i,c));
+pointx("max",c) = smax(i,point(i,c));
+display pointx;
 
 
 *=====================================================
@@ -99,6 +117,7 @@ display
    prev,dist;
 parameter results(*,*);
 results('Dijkstra (GAMS)','obj') = dist(sink);
+results('Dijkstra (GAMS)','sumobj') = sum(i,dist(i));
 display results;
 
 *-----------------------------------------------------
@@ -126,13 +145,21 @@ repeat
    loop(prev(v,n),
 * make room by moving all steps one down   
       steps(s,i,j) = steps(s-1,i,j);
-      steps('step1',prev) = cost(prev);
+      steps('step1',prev) = cost(prev)+EPS;
       p(v) = yes;
    );
    n(i) = p(i);  
 until card(n)=0;
 
 display steps;
+
+*-----------------------------------------------------
+* save path for visualization
+*-----------------------------------------------------
+
+set plotpath(i,j) 'for visualization';
+plotpath(i,j) = sum(s,steps(s,i,j));
+display plotpath;
 
 
 *=====================================================
@@ -142,6 +169,7 @@ display steps;
 parameters
    psteps(s,i,j) 'results from python code'
    pobj   'objective function value'
+   sumobj 'sum of all distances'
 ;
 
 * just in case we have arcs with costs=0
@@ -211,8 +239,10 @@ print(path)
 stepsdata = [(f"step{i}",path[i-1],path[i],cost[(path[i-1],path[i])]) for i in range(1,len(path))]
 gams.set("psteps",stepsdata)
 gams.set("pobj",[dist[sink]])
+sumobj = sum([dist[v] for v in nodes])
+gams.set("sumobj",[sumobj])
 
-endEmbeddedCode psteps,pobj
+endEmbeddedCode psteps,pobj,sumobj
 
 
 
@@ -222,8 +252,8 @@ display
    psteps,pobj;
 
 results('Dijkstra (Python)','obj') = pobj;
+results('Dijkstra (Python)','sumobj') = sumobj;
 display results;
-
 
 
 *=====================================================
@@ -254,6 +284,7 @@ display
 results('LP','obj') = z.l;
 display results;
 
+
 *-----------------------------------------------------
 * recover path
 *-----------------------------------------------------
@@ -272,9 +303,95 @@ loop(s$card(n),
 option lpsteps:3:0:1;
 display lpsteps;
 
+*=====================================================
+* 4. Dual LP, single destination
+*=====================================================
+
+free variable pi(i) 'dual variables';
+
+Equations
+   dualObj   'objective of dual LP'
+   dualCons  'constraint of dual LP'
+;
+
+dualObj.. z =e= sum(i, (supply(i)-demand(i))*pi(i));
+dualCons(a(i,j)).. pi(i) - pi(j) =l= cost(i,j);
+
+model dual /dualObj,dualCons/;
+solve dual maximizing z using lp;
+
+* the optimal flows are the dual values of equation dualCons
+* get rid of EPS values
+dualCons.m(a)$(dualCons.m(a)=EPS) = 0;
+
+display
+   "============== Dual LP model ==============",
+   pi.l,dualCons.m;
+results('dualLP','obj') = z.l
+display results;
+;
+
 
 *=====================================================
-* 4.  Visualization
+* 5.  LP Model: single source, multiple destinations
+*
+* Dijkstra find all shortest paths from a single source.
+* We adapt the LP model to do the same.
+*=====================================================
+
+
+* just change supply and demand: 
+*demand(i) = 1;
+*demand(source) = 0;
+*supply(source) = card(i)-1;
+
+* or even simpler:
+demand(i) = 1;
+supply(source) = card(i);
+
+solve m minimizing z using lp;
+display    "============== LP model, all destinations ==============",
+    z.l,x.l,nodebal.m;
+
+results('LP','sumobj') = z.l;
+display results;
+
+
+* now we need to move backwards from the destination node
+
+* initialization
+steps(s,i,j) = 0;
+prev(i,j) = x.l(i,j)>0.5;
+n(sink) = yes;
+
+* loop from last (sink) to first (source)
+repeat
+   p(i) = no;
+* loop finds v given n
+* body of loop is executed 0 or 1 times
+   loop(prev(v,n),
+* make room by moving all steps one down   
+      steps(s,i,j) = steps(s-1,i,j);
+      steps('step1',prev) = cost(prev);
+      p(v) = yes;
+   );
+   n(i) = p(i);  
+until card(n)=0;
+
+display steps;
+
+
+*=====================================================
+* 6.  Dual LP Model: single source, multiple destinations
+*=====================================================
+
+solve dual maximizing z using lp;
+results('dualLP','sumobj') = z.l;
+display results;
+
+
+*=====================================================
+* 7.  Visualization
 *=====================================================
 
 
@@ -299,13 +416,13 @@ loop(i,
     put$(demand(i)>0) ",color:'green'";
     put$(supply(i)=0 and demand(i)=0) ",size:1";
     put$(supply(i)>0 or demand(i)>0) ",size:2";
-    put "}}"/;
+    put "},position:{x:",point(i,'x'):0:2,",y:",point(i,'y'):0:2,"}}"/;
 );
 loop(a(i,j),
     put ",{data:{id:'",(ord(i)):0:0,'-',(ord(j)):0:0,"',";
     put "source:",(ord(i)):0:0,",target:",(ord(j)):0:0;
-    put$(x.l(i,j)>0.5) ",color:'red',width:0.2";
-    put$(x.l(i,j)<0.5) ",color:'grey',width:0.1";
+    put$(plotpath(a)) ",color:'red',width:0.2";
+    put$(not plotpath(a)) ",color:'grey',width:0.1";
     put "}}"/;
 );
 put '];'/;
@@ -321,7 +438,6 @@ put "'<tr><td colspan=2>Total cost</td><td><pre>",z.l:10:3,"</pre></td></tr>'+"/
 
 put "'</table><br>';";
 putclose;
-
 
 $ontext
 
@@ -386,7 +502,8 @@ table,th, td {
 
           }
         ],
-        layout: { name: 'cose' }
+        // layout: { name: 'cose' }
+        layout: { name: 'preset' }
       });
 
 
