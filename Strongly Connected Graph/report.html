@@ -1,0 +1,430 @@
+<html>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+<style>
+table,th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+p { max-width:800px; }
+</style>
+
+<script>
+
+nodes=[
+{x:4.421,y:38.227,comp1:2,comp2:1},
+{x:62.306,y:57.268,comp1:3,comp2:1},
+{x:46.068,y:87.792,comp1:3,comp2:1},
+{x:92.771,y:59.338,comp1:4,comp2:1},
+{x:27.269,y:83.898,comp1:2,comp2:1},
+{x:76.650,y:57.983,comp1:4,comp2:1},
+{x:90.958,y:77.730,comp1:5,comp2:1},
+{x:44.593,y:15.935,comp1:2,comp2:1},
+{x:39.514,y:27.723,comp1:2,comp2:1},
+{x:17.519,y:49.107,comp1:2,comp2:1},
+{x:56.134,y:61.680,comp1:3,comp2:1},
+{x:75.507,y:50.566,comp1:3,comp2:1},
+{x:25.469,y:81.568,comp1:2,comp2:1},
+{x:23.978,y:51.624,comp1:2,comp2:1},
+{x:87.866,y:29.493,comp1:4,comp2:1},
+{x:17.431,y:41.679,comp1:2,comp2:1},
+{x:21.801,y:37.073,comp1:2,comp2:1},
+{x:93.156,y:30.535,comp1:4,comp2:1},
+{x:86.431,y:31.005,comp1:4,comp2:1},
+{x:11.040,y:14.150,comp1:1,comp2:1},
+{x:35.467,y:61.779,comp1:2,comp2:1},
+{x:43.955,y:11.814,comp1:2,comp2:1},
+{x:25.659,y:46.821,comp1:2,comp2:1},
+{x:32.996,y:32.370,comp1:2,comp2:1},
+{x:0.684,y:65.249,comp1:2,comp2:1},
+];
+arcs1=[
+{i:1,j:10},
+{i:1,j:24},
+{i:1,j:25},
+{i:2,j:3},
+{i:2,j:11},
+{i:2,j:12},
+{i:3,j:2},
+{i:3,j:21},
+{i:4,j:6},
+{i:4,j:15},
+{i:4,j:18},
+{i:4,j:19},
+{i:5,j:25},
+{i:6,j:11},
+{i:6,j:15},
+{i:7,j:4},
+{i:8,j:9},
+{i:9,j:10},
+{i:9,j:16},
+{i:9,j:17},
+{i:9,j:24},
+{i:10,j:1},
+{i:10,j:14},
+{i:10,j:23},
+{i:10,j:25},
+{i:11,j:2},
+{i:11,j:12},
+{i:11,j:23},
+{i:12,j:11},
+{i:13,j:10},
+{i:13,j:14},
+{i:13,j:21},
+{i:14,j:1},
+{i:14,j:13},
+{i:14,j:21},
+{i:14,j:23},
+{i:15,j:6},
+{i:15,j:12},
+{i:15,j:18},
+{i:15,j:19},
+{i:16,j:9},
+{i:16,j:10},
+{i:16,j:14},
+{i:16,j:23},
+{i:16,j:25},
+{i:17,j:8},
+{i:17,j:9},
+{i:17,j:24},
+{i:18,j:4},
+{i:18,j:15},
+{i:19,j:12},
+{i:19,j:15},
+{i:19,j:18},
+{i:20,j:16},
+{i:21,j:14},
+{i:21,j:24},
+{i:21,j:25},
+{i:22,j:8},
+{i:22,j:24},
+{i:23,j:9},
+{i:23,j:14},
+{i:23,j:17},
+{i:23,j:21},
+{i:24,j:8},
+{i:24,j:17},
+{i:24,j:20},
+{i:24,j:22},
+{i:25,j:5},
+{i:25,j:10},
+{i:25,j:23},
+];
+arcs2=[
+{i:1,j:14},
+{i:1,j:16},
+{i:1,j:17},
+{i:1,j:21},
+{i:1,j:24},
+{i:1,j:25},
+{i:2,j:3},
+{i:2,j:6},
+{i:2,j:7},
+{i:2,j:9},
+{i:2,j:12},
+{i:2,j:14},
+{i:2,j:15},
+{i:2,j:21},
+{i:2,j:24},
+{i:3,j:11},
+{i:3,j:21},
+{i:4,j:2},
+{i:4,j:7},
+{i:4,j:12},
+{i:4,j:15},
+{i:5,j:11},
+{i:5,j:13},
+{i:5,j:23},
+{i:5,j:25},
+{i:6,j:11},
+{i:6,j:12},
+{i:6,j:18},
+{i:6,j:19},
+{i:7,j:2},
+{i:7,j:6},
+{i:8,j:22},
+{i:8,j:23},
+{i:8,j:24},
+{i:9,j:1},
+{i:9,j:10},
+{i:9,j:17},
+{i:9,j:21},
+{i:9,j:23},
+{i:9,j:24},
+{i:10,j:5},
+{i:10,j:13},
+{i:10,j:16},
+{i:10,j:20},
+{i:10,j:23},
+{i:10,j:25},
+{i:11,j:3},
+{i:11,j:4},
+{i:11,j:5},
+{i:11,j:6},
+{i:11,j:9},
+{i:11,j:13},
+{i:11,j:23},
+{i:11,j:24},
+{i:12,j:2},
+{i:12,j:6},
+{i:12,j:19},
+{i:13,j:3},
+{i:13,j:10},
+{i:13,j:11},
+{i:13,j:21},
+{i:14,j:10},
+{i:14,j:11},
+{i:14,j:13},
+{i:14,j:16},
+{i:15,j:2},
+{i:15,j:4},
+{i:15,j:12},
+{i:15,j:18},
+{i:15,j:19},
+{i:16,j:1},
+{i:16,j:8},
+{i:16,j:10},
+{i:16,j:20},
+{i:16,j:21},
+{i:16,j:22},
+{i:16,j:23},
+{i:17,j:10},
+{i:17,j:21},
+{i:18,j:4},
+{i:18,j:12},
+{i:18,j:15},
+{i:19,j:2},
+{i:19,j:6},
+{i:19,j:12},
+{i:20,j:1},
+{i:20,j:8},
+{i:20,j:9},
+{i:20,j:17},
+{i:21,j:1},
+{i:21,j:5},
+{i:21,j:9},
+{i:21,j:11},
+{i:21,j:13},
+{i:21,j:17},
+{i:21,j:23},
+{i:21,j:25},
+{i:22,j:8},
+{i:22,j:9},
+{i:22,j:16},
+{i:22,j:17},
+{i:23,j:2},
+{i:23,j:10},
+{i:23,j:11},
+{i:23,j:16},
+{i:23,j:17},
+{i:23,j:21},
+{i:23,j:24},
+{i:23,j:25},
+{i:24,j:2},
+{i:24,j:8},
+{i:24,j:11},
+{i:24,j:14},
+{i:24,j:20},
+{i:24,j:21},
+{i:24,j:22},
+{i:24,j:23},
+{i:25,j:1},
+{i:25,j:14},
+{i:25,j:16},
+];
+ncomp1=5;
+ncomp2=1;
+sol=[
+{i:1,j:16},
+{i:1,j:17},
+{i:2,j:6},
+{i:2,j:12},
+{i:2,j:21},
+{i:3,j:11},
+{i:4,j:7},
+{i:4,j:12},
+{i:5,j:13},
+{i:6,j:11},
+{i:6,j:12},
+{i:6,j:18},
+{i:7,j:6},
+{i:8,j:22},
+{i:8,j:24},
+{i:9,j:17},
+{i:9,j:24},
+{i:10,j:16},
+{i:10,j:23},
+{i:10,j:25},
+{i:11,j:6},
+{i:12,j:2},
+{i:12,j:6},
+{i:13,j:3},
+{i:14,j:10},
+{i:14,j:16},
+{i:15,j:18},
+{i:15,j:19},
+{i:16,j:1},
+{i:16,j:10},
+{i:16,j:20},
+{i:16,j:23},
+{i:17,j:10},
+{i:18,j:4},
+{i:18,j:15},
+{i:19,j:12},
+{i:20,j:1},
+{i:21,j:5},
+{i:21,j:11},
+{i:21,j:23},
+{i:22,j:8},
+{i:22,j:9},
+{i:23,j:10},
+{i:23,j:16},
+{i:23,j:17},
+{i:23,j:21},
+{i:23,j:24},
+{i:24,j:8},
+{i:24,j:23},
+{i:25,j:14},
+];
+
+
+// extract coordinates as arrays
+xpoints = nodes.map(({x})=>x);
+ypoints = nodes.map(({y})=>y);
+
+
+n = nodes.length;
+na1 = arcs1.length;
+na2 = arcs1.length;
+
+
+// color array
+colors = [
+    '#1f77b4',  // muted blue
+    '#ff7f0e',  // safety orange
+    '#2ca02c',  // cooked asparagus green
+    '#d62728',  // brick red
+    '#9467bd',  // muted purple
+    '#8c564b',  // chestnut brown
+    '#e377c2',  // raspberry yogurt pink
+    '#7f7f7f',  // middle gray
+    '#bcbd22',  // curry yellow-green
+    '#17becf'   // blue-teal
+];
+
+function formColorArray(comp) {
+    scolor = [];
+    for (i=0; i<n; ++i) {
+       c = nodes[i][comp]-1;
+       scolor.push(colors[c % colors.length]);
+    }
+    return scolor;
+}
+scol1 = formColorArray("comp1");
+scol2 = formColorArray("comp2");
+
+// plotly trace for node plot
+trace1 = {
+  x: xpoints,
+  y: ypoints,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color: 'black' }
+};
+
+// plotly trace for component plot
+
+trace2 = {
+  x: xpoints,
+  y: ypoints,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color:scol1, size:8 }
+};
+
+trace3 = {
+  x: xpoints,
+  y: ypoints,
+  mode: 'markers',
+  type: 'scatter',
+  marker: { color:scol2, size:8 }
+};
+
+
+// annotations are used to plot arrows
+
+function formAnnotations(arcs,comp,scolor) {
+    annots = [];  // array with annotations
+    for (k=0; k < arcs.length; ++k) {
+       // (i,j) are node numbers (zero based)
+       i = arcs[k]['i']-1;
+       j = arcs[k]['j']-1;
+       // colors are component numbers (zero based)
+       ci = scolor[i];
+       cj = scolor[j];
+       // if different then use a light gray arrow
+       if (ci===cj) {
+          col = ci;
+       }
+       else {
+          col = 'LightGray';
+       }
+ 
+       // populate annotation
+       ann = {
+         ax:xpoints[i], ay:ypoints[i],
+         x:xpoints[j], y:ypoints[j],
+         axref:"x", ayref:"y",
+         xref:"x", yref:"y",
+         text:'',  // if you want only the arrow
+         showarrow:true,
+         arrowhead:3,
+         arrowsize:1.4,
+         arrowwidth:1.3,
+         arrowcolor:col,
+       }
+       annots.push(ann);
+    }
+    return annots;
+}
+
+var layout2 = {showlegend: false, annotations:formAnnotations(arcs1,"comp1",scol1) };
+var layout3 = {showlegend: false, annotations:formAnnotations(arcs2,"comp2",scol2) };
+var layout4 = {showlegend: false, annotations:formAnnotations(sol,"comp2",scol2) };
+
+</script>
+
+<body>
+<h1>Generating Connected Graphs</h1>
+
+<h2>Nodes</h2>
+<p>The locations of the \(n=%numnodes%\) points are randomly generated and drawn from the uniform distribution.</p>
+<div id="myPlot1" style="width:100%;max-width:800px;height:600px"></div>
+<script>Plotly.newPlot('myPlot1', [trace1]);</script>
+
+<h2>Arcs</h2>
+
+<h3>Data set 1</h3>
+
+We used simple GAMS code to generate <script>document.write(na1)</script>
+arcs. The number of disconnected components is <script>document.write(ncomp1)</script>.
+
+<div id="myPlot2" style="width:100%;max-width:800px;height:600px"></div>
+<script>Plotly.newPlot('myPlot2', [trace2], layout2);</script>
+
+<h3>Data set 2</h3>
+
+This data set is yielding a strongly connected graph.
+
+<div id="myPlot3" style="width:100%;max-width:800px;height:600px"></div>
+<script>Plotly.newPlot('myPlot3', [trace3], layout3);</script>
+
+<h3>MIP model results</h3>
+
+<div id="myPlot4" style="width:100%;max-width:800px;height:600px"></div>
+<script>Plotly.newPlot('myPlot4', [trace3], layout4);</script>
+
+</body>
+</html>
