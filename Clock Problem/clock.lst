@@ -1,4 +1,4 @@
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 1
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -30,7 +30,7 @@ C o m p i l a t i o n
   27     assign(h,r) 'assign unique role to hand'
   28     rpos(r)     'position of hr/min/sec hand ∈[0,11.99]'
   29   
-  30  * reporting
+  30  * proper clock
   31     v(r)        '(integer) value in hours,minutes and seconds'
   32   
   33  * objective
@@ -82,50 +82,51 @@ C o m p i l a t i o n
   79   
   80  assignpos(r).. rpos(r) =e= sum(h, assign(h,r)*hpos(h));
   81   
-  82  seconds.. v('second') =e= rpos('second')*60/12;
-  83  minutes.. v('minute') =e= rpos('minute')*60/12 - v('second')/60;
-  84  hours..   v('hour') =e= rpos('hour') - v('minute')/60 - v('second')/60/60;
-  85   
-  86  obj.. z =e= 0;
-  87   
-  88  *------------------------------------------------
-  89  * nonconvex quadratic model
-  90  *------------------------------------------------
-  91   
-  92  model m1 /all/;
-  93  option miqcp=baron;
-  94  solve m1 minimizing z using miqcp;
-  95  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
-  96   
-  97  *------------------------------------------------
-  98  * linearized model
-  99  *------------------------------------------------
- 100   
- 101  positive variables prd(h,r) 'product prd(h,r)=assign(h,r)*hpos(h)';
- 102  prd.up(h,r) = hpos.up(h);
- 103   
- 104  equations
- 105     prod1(h,r) 'linearization of product'
- 106     prod2(h,r) 'linearization of product'
- 107     prod3(h,r) 'linearization of product'
- 108     assignpos2(r) 'linearization of product'
- 109  ;
- 110   
- 111  prod1(h,r).. prd(h,r) =l= hpos.up(h)*assign(h,r);
- 112  prod2(h,r).. prd(h,r) =l= hpos(h);
- 113  prod3(h,r).. prd(h,r) =g= hpos(h)-hpos.up(h)*(1-assign(h,r));
- 114   
- 115  assignpos2(r)..  rpos(r) =e= sum(h, prd(h,r));
- 116   
- 117  model m2 /m1-assignpos,prod1,prod2,prod3,assignpos2/;
- 118  solve m2 minimizing z using mip;
- 119  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
+  82  * proper clock values
+  83  seconds.. v('second') =e= rpos('second')*60/12;
+  84  minutes.. v('minute') =e= rpos('minute')*60/12 - v('second')/60;
+  85  hours..   v('hour') =e= rpos('hour') - v('minute')/60 - v('second')/60/60;
+  86   
+  87  obj.. z =e= 0;
+  88   
+  89  *------------------------------------------------
+  90  * nonconvex quadratic model
+  91  *------------------------------------------------
+  92   
+  93  model m1 /all/;
+  94  option miqcp=baron;
+  95  solve m1 minimizing z using miqcp;
+  96  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
+  97   
+  98  *------------------------------------------------
+  99  * linearized model
+ 100  *------------------------------------------------
+ 101   
+ 102  positive variables prd(h,r) 'product prd(h,r)=assign(h,r)*hpos(h)';
+ 103  prd.up(h,r) = hpos.up(h);
+ 104   
+ 105  equations
+ 106     prod1(h,r) 'linearization of product'
+ 107     prod2(h,r) 'linearization of product'
+ 108     prod3(h,r) 'linearization of product'
+ 109     assignpos2(r) 'linearization of product'
+ 110  ;
+ 111   
+ 112  prod1(h,r).. prd(h,r) =l= hpos.up(h)*assign(h,r);
+ 113  prod2(h,r).. prd(h,r) =l= hpos(h);
+ 114  prod3(h,r).. prd(h,r) =g= hpos(h)-hpos.up(h)*(1-assign(h,r));
+ 115   
+ 116  assignpos2(r)..  rpos(r) =e= sum(h, prd(h,r));
+ 117   
+ 118  model m2 /m1-assignpos,prod1,prod2,prod3,assignpos2/;
+ 119  solve m2 minimizing z using mip;
+ 120  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  51.1.0 2d039df5 WEX-WEI
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 2
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m1 Using MIQCP From line 94
+Equation Listing    SOLVE m1 Using MIQCP From line 95
 
 
 ---- obj  =E=  dummy objective
@@ -189,9 +190,9 @@ minutes..  - 5*rpos(minute) + v(minute) + 0.0166666666666667*v(second) =E= 0 ; (
 
 hours..  - rpos(hour) + v(hour) + 0.0166666666666667*v(minute) + 0.000277777777777778*v(second) =E= 0 ; (LHS = 0)
      
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 3
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m1 Using MIQCP From line 94
+Column Listing      SOLVE m1 Using MIQCP From line 95
 
 
 ---- relpos  relative position of hands (define h1=0)
@@ -323,9 +324,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 4
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m1 Using MIQCP From line 94
+Range Statistics    SOLVE m1 Using MIQCP From line 95
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -334,9 +335,9 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
 Matrix    [min, max] : [ 2.778E-04, 1.200E+01] - Zero values observed as well
 
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 5
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m1 Using MIQCP From line 94
+Model Statistics    SOLVE m1 Using MIQCP From line 95
 
 
 MODEL STATISTICS
@@ -347,17 +348,17 @@ NON ZERO ELEMENTS            61     NON LINEAR N-Z             18
 CODE LENGTH                  33     CONSTANT POOL              16     DISCRETE VARIABLES         16
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 6
+GENERATION TIME      =        0.016 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m1 Using MIQCP From line 94
+Solution Report     SOLVE m1 Using MIQCP From line 95
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m1                  OBJECTIVE  z
      TYPE    MIQCP               DIRECTION  MINIMIZE
-     SOLVER  BARON               FROM LINE  94
+     SOLVER  BARON               FROM LINE  95
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
@@ -516,24 +517,24 @@ second          .              .            59.0000         EPS
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 7
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     95 VARIABLE relpos.L  relative position of hands (define h1=0)
+----     96 VARIABLE relpos.L  relative position of hands (define h1=0)
 
 h2 2.000,    h3 6.833
 
 
-----     95 VARIABLE offset.L              =       10.000  from relpos
+----     96 VARIABLE offset.L              =       10.000  from relpos
 
-----     95 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
+----     96 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
 
 h1 10.000,    h3  4.833
 
 
-----     95 VARIABLE assign.L  assign unique role to hand
+----     96 VARIABLE assign.L  assign unique role to hand
 
           hour      minute      second
 
@@ -542,18 +543,18 @@ h2                               1.000
 h3       1.000
 
 
-----     95 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
+----     96 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
 
 hour    4.833,    minute 10.000
 
 
-----     95 VARIABLE v.L  (integer) value in hours,minutes and seconds
+----     96 VARIABLE v.L  (integer) value in hours,minutes and seconds
 
 hour    4.000,    minute 50.000
 
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 8
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m2 Using MIP From line 118
+Equation Listing    SOLVE m2 Using MIP From line 119
 
 
 ---- obj  =E=  dummy objective
@@ -646,9 +647,9 @@ assignpos2(minute)..  rpos(minute) - prd(h1,minute) - prd(h2,minute) - prd(h3,mi
      
 assignpos2(second)..  rpos(second) - prd(h1,second) - prd(h2,second) - prd(h3,second) =E= 0 ; (LHS = 0)
      
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 9
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m2 Using MIP From line 118
+Column Listing      SOLVE m2 Using MIP From line 119
 
 
 ---- relpos  relative position of hands (define h1=0)
@@ -815,9 +816,9 @@ prd(h1,second)
        -1       assignpos2(second)
 
 REMAINING 6 ENTRIES SKIPPED
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 10
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m2 Using MIP From line 118
+Range Statistics    SOLVE m2 Using MIP From line 119
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -826,9 +827,9 @@ RHS       [min, max] : [ 1.000E+00, 1.200E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
 Matrix    [min, max] : [ 2.778E-04, 1.200E+01]
 
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 11
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m2 Using MIP From line 118
+Model Statistics    SOLVE m2 Using MIP From line 119
 
 
 MODEL STATISTICS
@@ -839,22 +840,22 @@ NON ZERO ELEMENTS           115     DISCRETE VARIABLES         16
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 12
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m2 Using MIP From line 118
+Solution Report     SOLVE m2 Using MIP From line 119
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m2                  OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MINIMIZE
-     SOLVER  CPLEX               FROM LINE  118
+     SOLVER  CPLEX               FROM LINE  119
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                0.0000
 
- RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
  ITERATION COUNT, LIMIT        16    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -865,7 +866,7 @@ Solution Report     SOLVE m2 Using MIP From line 118
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.02sec (det. 1.60 ticks)
+--- Cplex Time: 0.00sec (det. 1.60 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
@@ -1058,24 +1059,24 @@ h3.second          .              .            11.9990         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 13
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 09:37:28 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    119 VARIABLE relpos.L  relative position of hands (define h1=0)
+----    120 VARIABLE relpos.L  relative position of hands (define h1=0)
 
 h2 2.000,    h3 6.833
 
 
-----    119 VARIABLE offset.L              =       10.000  from relpos
+----    120 VARIABLE offset.L              =       10.000  from relpos
 
-----    119 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
+----    120 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
 
 h1 10.000,    h3  4.833
 
 
-----    119 VARIABLE assign.L  assign unique role to hand
+----    120 VARIABLE assign.L  assign unique role to hand
 
           hour      minute      second
 
@@ -1084,12 +1085,12 @@ h2                               1.000
 h3       1.000
 
 
-----    119 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
+----    120 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
 
 hour    4.833,    minute 10.000
 
 
-----    119 VARIABLE v.L  (integer) value in hours,minutes and seconds
+----    120 VARIABLE v.L  (integer) value in hours,minutes and seconds
 
 hour    4.000,    minute 50.000
 

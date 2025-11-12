@@ -27,7 +27,7 @@ variable
    assign(h,r) 'assign unique role to hand'
    rpos(r)     'position of hr/min/sec hand ∈[0,11.99]'
    
-* reporting
+* proper clock
    v(r)        '(integer) value in hours,minutes and seconds'
 
 * objective
@@ -79,6 +79,7 @@ e_assign2(h).. sum(r,assign(h,r)) =e= 1;
 
 assignpos(r).. rpos(r) =e= sum(h, assign(h,r)*hpos(h));
 
+* proper clock values
 seconds.. v('second') =e= rpos('second')*60/12;
 minutes.. v('minute') =e= rpos('minute')*60/12 - v('second')/60;
 hours..   v('hour') =e= rpos('hour') - v('minute')/60 - v('second')/60/60;
