@@ -1,0 +1,1108 @@
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Clock problem
+         
+         References:
+         https://www.scientificamerican.com/game/math-puzzle-find-the-time/
+         https://yetanothermathprogrammingconsultant.blogspot.com/2025/11/clock-problem.html
+       
+  10   
+  11   
+  12  Set
+  13     h 'hand' /h1,h2,h3/
+  14     r 'role' /hour,minute,second/
+  15  ;
+  16  *alias (h,hh);
+  17   
+  18  variable
+  19   
+  20  * hands h1,h2,h3
+  21     relpos(h) 'relative position of hands (define h1=0)'
+  22     offset    'from relpos'
+  23     hpos(h)   'final position of hands (relpos + offset mod 12, in decimal hours)'
+  24     modulo(h) 'binary variable to implement mod 12'
+  25   
+  26  * role hour,minute,second
+  27     assign(h,r) 'assign unique role to hand'
+  28     rpos(r)     'position of hr/min/sec hand ∈[0,11.99]'
+  29   
+  30  * reporting
+  31     v(r)        '(integer) value in hours,minutes and seconds'
+  32   
+  33  * objective
+  34     z        'dummy objective variable'
+  35  ;
+  36  integer variable offset,v;
+  37  binary variable modulo, assign;
+  38   
+  39  offset.up = 11;
+  40   
+  41  hpos.lo(h) = 0;
+  42  hpos.up(h) = 11.999;
+  43   
+  44  v.lo(r) = 0;
+  45  v.up(r) = 59;
+  46  v.up('hour') = 11;
+  47   
+  48  * read relative positions from the clock:
+  49  * h1 = 0, h2 = 2, h3 ∈ [6.8,7]
+  50  table relposdata(h,*) 'relative position (interval) in units of hours (define h1=0)'
+  51         lo    up
+  52     h1   0    0
+  53     h2   2    2
+  54     h3   6.8  7
+  55  ;
+  56  relpos.lo(h) = relposdata(h,'lo');
+  57  relpos.up(h) = relposdata(h,'up');
+  58   
+  59  equations
+  60     obj 'dummy objective'
+  61   
+  62     e_hpos(h) 'position of hands (in decimal hours)'
+  63     e_assign1 'unique assignment hand <=> role'
+  64     e_assign2 'unique assignment hand <=> role'
+  65     assignpos 'calc rpos from hpos (nonlinear)'
+  66   
+  67  * unit conversions
+  68     seconds   'calc seconds from rpos'
+  69     minutes   'calc minutes from rpos'
+  70     hours     'calc hours from rpos'
+  71  ;
+  72   
+  73  * label(h) = (relpos(h) + offset) mod 12
+  74  e_hpos(h)..  hpos(h) =e= relpos(h) + offset - modulo(h)*12;
+  75   
+  76  * unique assignment hand <=> role
+  77  e_assign1(r).. sum(h,assign(h,r)) =e= 1;
+  78  e_assign2(h).. sum(r,assign(h,r)) =e= 1;
+  79   
+  80  assignpos(r).. rpos(r) =e= sum(h, assign(h,r)*hpos(h));
+  81   
+  82  seconds.. v('second') =e= rpos('second')*60/12;
+  83  minutes.. v('minute') =e= rpos('minute')*60/12 - v('second')/60;
+  84  hours..   v('hour') =e= rpos('hour') - v('minute')/60 - v('second')/60/60;
+  85   
+  86  obj.. z =e= 0;
+  87   
+  88  *------------------------------------------------
+  89  * nonconvex quadratic model
+  90  *------------------------------------------------
+  91   
+  92  model m1 /all/;
+  93  option miqcp=baron;
+  94  solve m1 minimizing z using miqcp;
+  95  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
+  96   
+  97  *------------------------------------------------
+  98  * linearized model
+  99  *------------------------------------------------
+ 100   
+ 101  positive variables prd(h,r) 'product prd(h,r)=assign(h,r)*hpos(h)';
+ 102  prd.up(h,r) = hpos.up(h);
+ 103   
+ 104  equations
+ 105     prod1(h,r) 'linearization of product'
+ 106     prod2(h,r) 'linearization of product'
+ 107     prod3(h,r) 'linearization of product'
+ 108     assignpos2(r) 'linearization of product'
+ 109  ;
+ 110   
+ 111  prod1(h,r).. prd(h,r) =l= hpos.up(h)*assign(h,r);
+ 112  prod2(h,r).. prd(h,r) =l= hpos(h);
+ 113  prod3(h,r).. prd(h,r) =g= hpos(h)-hpos.up(h)*(1-assign(h,r));
+ 114   
+ 115  assignpos2(r)..  rpos(r) =e= sum(h, prd(h,r));
+ 116   
+ 117  model m2 /m1-assignpos,prod1,prod2,prod3,assignpos2/;
+ 118  solve m2 minimizing z using mip;
+ 119  display relpos.l,offset.l,hpos.l,assign.l,rpos.l,v.l;
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  51.1.0 2d039df5 WEX-WEI
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using MIQCP From line 94
+
+
+---- obj  =E=  dummy objective
+
+obj..  z =E= 0 ; (LHS = 0)
+     
+
+---- e_hpos  =E=  position of hands (in decimal hours)
+
+e_hpos(h1)..  - relpos(h1) - offset + hpos(h1) + 12*modulo(h1) =E= 0 ; (LHS = 0)
+     
+e_hpos(h2)..  - relpos(h2) - offset + hpos(h2) + 12*modulo(h2) =E= 0 ; (LHS = -2, INFES = 2 ****)
+     
+e_hpos(h3)..  - relpos(h3) - offset + hpos(h3) + 12*modulo(h3) =E= 0 ; (LHS = -6.8, INFES = 6.8 ****)
+     
+
+---- e_assign1  =E=  unique assignment hand <=> role
+
+e_assign1(hour)..  assign(h1,hour) + assign(h2,hour) + assign(h3,hour) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+e_assign1(minute)..  assign(h1,minute) + assign(h2,minute) + assign(h3,minute) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+e_assign1(second)..  assign(h1,second) + assign(h2,second) + assign(h3,second) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- e_assign2  =E=  unique assignment hand <=> role
+
+e_assign2(h1)..  assign(h1,hour) + assign(h1,minute) + assign(h1,second) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+e_assign2(h2)..  assign(h2,hour) + assign(h2,minute) + assign(h2,second) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+e_assign2(h3)..  assign(h3,hour) + assign(h3,minute) + assign(h3,second) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- assignpos  =E=  calc rpos from hpos (nonlinear)
+
+assignpos(hour)..  (0)*hpos(h1) + (0)*hpos(h2) + (0)*hpos(h3) + (0)*assign(h1,hour) + (0)*assign(h2,hour) + (0)*assign(h3,hour)
+     
+      + rpos(hour) =E= 0 ; (LHS = 0)
+     
+assignpos(minute)..  (0)*hpos(h1) + (0)*hpos(h2) + (0)*hpos(h3) + (0)*assign(h1,minute) + (0)*assign(h2,minute)
+     
+      + (0)*assign(h3,minute) + rpos(minute) =E= 0 ; (LHS = 0)
+     
+assignpos(second)..  (0)*hpos(h1) + (0)*hpos(h2) + (0)*hpos(h3) + (0)*assign(h1,second) + (0)*assign(h2,second)
+     
+      + (0)*assign(h3,second) + rpos(second) =E= 0 ; (LHS = 0)
+     
+
+---- seconds  =E=  calc seconds from rpos
+
+seconds..  - 5*rpos(second) + v(second) =E= 0 ; (LHS = 0)
+     
+
+---- minutes  =E=  calc minutes from rpos
+
+minutes..  - 5*rpos(minute) + v(minute) + 0.0166666666666667*v(second) =E= 0 ; (LHS = 0)
+     
+
+---- hours  =E=  calc hours from rpos
+
+hours..  - rpos(hour) + v(hour) + 0.0166666666666667*v(minute) + 0.000277777777777778*v(second) =E= 0 ; (LHS = 0)
+     
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using MIQCP From line 94
+
+
+---- relpos  relative position of hands (define h1=0)
+
+relpos(h1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -1       e_hpos(h1)
+
+relpos(h2)
+                (.LO, .L, .UP, .M = 2, 2, 2, 0)
+       -1       e_hpos(h2)
+        0       (OLD LEVEL ****)
+
+relpos(h3)
+                (.LO, .L, .UP, .M = 6.8, 6.8, 7, 0)
+       -1       e_hpos(h3)
+        0       (OLD LEVEL ****)
+
+
+---- offset  from relpos
+
+offset
+                (.LO, .L, .UP, .M = 0, 0, 11, 0)
+       -1       e_hpos(h1)
+       -1       e_hpos(h2)
+       -1       e_hpos(h3)
+
+
+---- hpos  final position of hands (relpos + offset mod 12, in decimal hours)
+
+hpos(h1)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       e_hpos(h1)
+       (0)      assignpos(hour)
+       (0)      assignpos(minute)
+       (0)      assignpos(second)
+
+hpos(h2)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       e_hpos(h2)
+       (0)      assignpos(hour)
+       (0)      assignpos(minute)
+       (0)      assignpos(second)
+
+hpos(h3)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       e_hpos(h3)
+       (0)      assignpos(hour)
+       (0)      assignpos(minute)
+       (0)      assignpos(second)
+
+
+---- modulo  binary variable to implement mod 12
+
+modulo(h1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       12       e_hpos(h1)
+
+modulo(h2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       12       e_hpos(h2)
+
+modulo(h3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       12       e_hpos(h3)
+
+
+---- assign  assign unique role to hand
+
+assign(h1,hour)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       e_assign1(hour)
+        1       e_assign2(h1)
+       (0)      assignpos(hour)
+
+assign(h1,minute)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       e_assign1(minute)
+        1       e_assign2(h1)
+       (0)      assignpos(minute)
+
+assign(h1,second)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       e_assign1(second)
+        1       e_assign2(h1)
+       (0)      assignpos(second)
+
+REMAINING 6 ENTRIES SKIPPED
+
+---- rpos  position of hr/min/sec hand ∈[0,11.99]
+
+rpos(hour)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       assignpos(hour)
+       -1       hours
+
+rpos(minute)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       assignpos(minute)
+       -5       minutes
+
+rpos(second)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       assignpos(second)
+       -5       seconds
+
+
+---- v  (integer) value in hours,minutes and seconds
+
+v(hour)
+                (.LO, .L, .UP, .M = 0, 0, 11, 0)
+        1       hours
+
+v(minute)
+                (.LO, .L, .UP, .M = 0, 0, 59, 0)
+        1       minutes
+        0.0167  hours
+
+v(second)
+                (.LO, .L, .UP, .M = 0, 0, 59, 0)
+        1       seconds
+        0.0167  minutes
+        0.0003  hours
+
+
+---- z  dummy objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using MIQCP From line 94
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
+Matrix    [min, max] : [ 2.778E-04, 1.200E+01] - Zero values observed as well
+
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using MIQCP From line 94
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           8     SINGLE VARIABLES           26  2 projected
+NON ZERO ELEMENTS            61     NON LINEAR N-Z             18
+CODE LENGTH                  33     CONSTANT POOL              16     DISCRETE VARIABLES         16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using MIQCP From line 94
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    MIQCP               DIRECTION  MINIMIZE
+     SOLVER  BARON               FROM LINE  94
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.250 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS              0             0
+
+GAMS/BARON       51.1.0 2d039df5 Sep 13, 2025          WEI x86 64bit/MS Window
+
+BARON is a product of The Optimization Firm, LLC. http://www.minlp.com/
+Parts of the BARON software were created at the
+University of Illinois at Urbana-Champaign.
+
+
+===========================================================================
+ BARON version 25.8.12. Built: WIN-64 2025-08-12 08:08:06           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl (2024). 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+
+Solution      = 0  found at node 1
+Best possible = 0
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  dummy objective
+
+---- EQU e_hpos  position of hands (in decimal hours)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .              .              .          
+h2          .              .              .              .          
+h3          .              .              .              .          
+
+---- EQU e_assign1  unique assignment hand <=> role
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour           1.0000         1.0000         1.0000          .          
+minute         1.0000         1.0000         1.0000          .          
+second         1.0000         1.0000         1.0000          .          
+
+---- EQU e_assign2  unique assignment hand <=> role
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1         1.0000         1.0000         1.0000          .          
+h2         1.0000         1.0000         1.0000          .          
+h3         1.0000         1.0000         1.0000          .          
+
+---- EQU assignpos  calc rpos from hpos (nonlinear)
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour            .              .              .              .          
+minute          .              .              .              .          
+second          .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU seconds             .              .              .              .          
+---- EQU minutes             .              .              .              .          
+---- EQU hours               .              .              .              .          
+
+  seconds  calc seconds from rpos
+  minutes  calc minutes from rpos
+  hours  calc hours from rpos
+
+---- VAR relpos  relative position of hands (define h1=0)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .              .              .          
+h2         2.0000         2.0000         2.0000          .          
+h3         6.8000         6.8333         7.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR offset              .            10.0000        11.0000         EPS         
+
+  offset  from relpos
+
+---- VAR hpos  final position of hands (relpos + offset mod 12, in decimal hours)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .            10.0000        11.9990          .          
+h2          .              .            11.9990          .          
+h3          .             4.8333        11.9990          .          
+
+---- VAR modulo  binary variable to implement mod 12
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .             1.0000         EPS         
+h2          .             1.0000         1.0000         EPS         
+h3          .             1.0000         1.0000         EPS         
+
+---- VAR assign  assign unique role to hand
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour            .              .             1.0000         EPS         
+h1.minute          .             1.0000         1.0000         EPS         
+h1.second          .              .             1.0000         EPS         
+h2.hour            .              .             1.0000         EPS         
+h2.minute          .              .             1.0000         EPS         
+h2.second          .             1.0000         1.0000         EPS         
+h3.hour            .             1.0000         1.0000         EPS         
+h3.minute          .              .             1.0000         EPS         
+h3.second          .              .             1.0000         EPS         
+
+---- VAR rpos  position of hr/min/sec hand ∈[0,11.99]
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour          -INF            4.8333        +INF             .          
+minute        -INF           10.0000        +INF             .          
+second        -INF             .            +INF             .          
+
+---- VAR v  (integer) value in hours,minutes and seconds
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour            .             4.0000        11.0000         EPS         
+minute          .            50.0000        59.0000         EPS         
+second          .              .            59.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  dummy objective variable
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     95 VARIABLE relpos.L  relative position of hands (define h1=0)
+
+h2 2.000,    h3 6.833
+
+
+----     95 VARIABLE offset.L              =       10.000  from relpos
+
+----     95 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
+
+h1 10.000,    h3  4.833
+
+
+----     95 VARIABLE assign.L  assign unique role to hand
+
+          hour      minute      second
+
+h1                   1.000
+h2                               1.000
+h3       1.000
+
+
+----     95 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
+
+hour    4.833,    minute 10.000
+
+
+----     95 VARIABLE v.L  (integer) value in hours,minutes and seconds
+
+hour    4.000,    minute 50.000
+
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 118
+
+
+---- obj  =E=  dummy objective
+
+obj..  z =E= 0 ; (LHS = 0)
+     
+
+---- e_hpos  =E=  position of hands (in decimal hours)
+
+e_hpos(h1)..  - relpos(h1) - offset + hpos(h1) + 12*modulo(h1) =E= 0 ; (LHS = 0)
+     
+e_hpos(h2)..  - relpos(h2) - offset + hpos(h2) + 12*modulo(h2) =E= 0 ; (LHS = 0)
+     
+e_hpos(h3)..  - relpos(h3) - offset + hpos(h3) + 12*modulo(h3) =E= 0 ; (LHS = 0)
+     
+
+---- e_assign1  =E=  unique assignment hand <=> role
+
+e_assign1(hour)..  assign(h1,hour) + assign(h2,hour) + assign(h3,hour) =E= 1 ; (LHS = 1)
+     
+e_assign1(minute)..  assign(h1,minute) + assign(h2,minute) + assign(h3,minute) =E= 1 ; (LHS = 1)
+     
+e_assign1(second)..  assign(h1,second) + assign(h2,second) + assign(h3,second) =E= 1 ; (LHS = 1)
+     
+
+---- e_assign2  =E=  unique assignment hand <=> role
+
+e_assign2(h1)..  assign(h1,hour) + assign(h1,minute) + assign(h1,second) =E= 1 ; (LHS = 1)
+     
+e_assign2(h2)..  assign(h2,hour) + assign(h2,minute) + assign(h2,second) =E= 1 ; (LHS = 1)
+     
+e_assign2(h3)..  assign(h3,hour) + assign(h3,minute) + assign(h3,second) =E= 1 ; (LHS = 1)
+     
+
+---- seconds  =E=  calc seconds from rpos
+
+seconds..  - 5*rpos(second) + v(second) =E= 0 ; (LHS = 0)
+     
+
+---- minutes  =E=  calc minutes from rpos
+
+minutes..  - 5*rpos(minute) + v(minute) + 0.0166666666666667*v(second) =E= 0 ; (LHS = 0)
+     
+
+---- hours  =E=  calc hours from rpos
+
+hours..  - rpos(hour) + v(hour) + 0.0166666666666667*v(minute) + 0.000277777777777778*v(second) =E= 0 ; (LHS = 0)
+     
+
+---- prod1  =L=  linearization of product
+
+prod1(h1,hour)..  - 11.999*assign(h1,hour) + prd(h1,hour) =L= 0 ; (LHS = 0)
+     
+prod1(h1,minute)..  - 11.999*assign(h1,minute) + prd(h1,minute) =L= 0 ; (LHS = -11.999)
+     
+prod1(h1,second)..  - 11.999*assign(h1,second) + prd(h1,second) =L= 0 ; (LHS = 0)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- prod2  =L=  linearization of product
+
+prod2(h1,hour)..  - hpos(h1) + prd(h1,hour) =L= 0 ; (LHS = -10)
+     
+prod2(h1,minute)..  - hpos(h1) + prd(h1,minute) =L= 0 ; (LHS = -10)
+     
+prod2(h1,second)..  - hpos(h1) + prd(h1,second) =L= 0 ; (LHS = -10)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- prod3  =G=  linearization of product
+
+prod3(h1,hour)..  - hpos(h1) - 11.999*assign(h1,hour) + prd(h1,hour) =G= -11.999 ; (LHS = -10)
+     
+prod3(h1,minute)..  - hpos(h1) - 11.999*assign(h1,minute) + prd(h1,minute) =G= -11.999 ; (LHS = -21.999, INFES = 10 ****)
+     
+prod3(h1,second)..  - hpos(h1) - 11.999*assign(h1,second) + prd(h1,second) =G= -11.999 ; (LHS = -10)
+     
+REMAINING 6 ENTRIES SKIPPED
+
+
+---- assignpos2  =E=  linearization of product
+
+assignpos2(hour)..  rpos(hour) - prd(h1,hour) - prd(h2,hour) - prd(h3,hour) =E= 0 ;
+     
+      (LHS = 4.83333333333333, INFES = 4.83333333333333 ****)
+     
+assignpos2(minute)..  rpos(minute) - prd(h1,minute) - prd(h2,minute) - prd(h3,minute) =E= 0 ; (LHS = 10, INFES = 10 ****)
+     
+assignpos2(second)..  rpos(second) - prd(h1,second) - prd(h2,second) - prd(h3,second) =E= 0 ; (LHS = 0)
+     
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 118
+
+
+---- relpos  relative position of hands (define h1=0)
+
+relpos(h1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       -1       e_hpos(h1)
+
+relpos(h2)
+                (.LO, .L, .UP, .M = 2, 2, 2, 0)
+       -1       e_hpos(h2)
+
+relpos(h3)
+                (.LO, .L, .UP, .M = 6.8, 6.83333333333333, 7, 0)
+       -1       e_hpos(h3)
+
+
+---- offset  from relpos
+
+offset
+                (.LO, .L, .UP, .M = 0, 10, 11, EPS)
+       -1       e_hpos(h1)
+       -1       e_hpos(h2)
+       -1       e_hpos(h3)
+
+
+---- hpos  final position of hands (relpos + offset mod 12, in decimal hours)
+
+hpos(h1)
+                (.LO, .L, .UP, .M = 0, 10, 11.999, 0)
+        1       e_hpos(h1)
+       -1       prod2(h1,hour)
+       -1       prod2(h1,minute)
+       -1       prod2(h1,second)
+       -1       prod3(h1,hour)
+       -1       prod3(h1,minute)
+       -1       prod3(h1,second)
+
+hpos(h2)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       e_hpos(h2)
+       -1       prod2(h2,hour)
+       -1       prod2(h2,minute)
+       -1       prod2(h2,second)
+       -1       prod3(h2,hour)
+       -1       prod3(h2,minute)
+       -1       prod3(h2,second)
+
+hpos(h3)
+                (.LO, .L, .UP, .M = 0, 4.83333333333333, 11.999, 0)
+        1       e_hpos(h3)
+       -1       prod2(h3,hour)
+       -1       prod2(h3,minute)
+       -1       prod2(h3,second)
+       -1       prod3(h3,hour)
+       -1       prod3(h3,minute)
+       -1       prod3(h3,second)
+
+
+---- modulo  binary variable to implement mod 12
+
+modulo(h1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+       12       e_hpos(h1)
+
+modulo(h2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+       12       e_hpos(h2)
+
+modulo(h3)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+       12       e_hpos(h3)
+
+
+---- assign  assign unique role to hand
+
+assign(h1,hour)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       e_assign1(hour)
+        1       e_assign2(h1)
+      -11.999   prod1(h1,hour)
+      -11.999   prod3(h1,hour)
+
+assign(h1,minute)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       e_assign1(minute)
+        1       e_assign2(h1)
+      -11.999   prod1(h1,minute)
+      -11.999   prod3(h1,minute)
+
+assign(h1,second)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       e_assign1(second)
+        1       e_assign2(h1)
+      -11.999   prod1(h1,second)
+      -11.999   prod3(h1,second)
+
+REMAINING 6 ENTRIES SKIPPED
+
+---- rpos  position of hr/min/sec hand ∈[0,11.99]
+
+rpos(hour)
+                (.LO, .L, .UP, .M = -INF, 4.83333333333333, +INF, 0)
+       -1       hours
+        1       assignpos2(hour)
+
+rpos(minute)
+                (.LO, .L, .UP, .M = -INF, 10, +INF, 0)
+       -5       minutes
+        1       assignpos2(minute)
+
+rpos(second)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -5       seconds
+        1       assignpos2(second)
+
+
+---- v  (integer) value in hours,minutes and seconds
+
+v(hour)
+                (.LO, .L, .UP, .M = 0, 4, 11, EPS)
+        1       hours
+
+v(minute)
+                (.LO, .L, .UP, .M = 0, 50, 59, EPS)
+        1       minutes
+        0.0167  hours
+
+v(second)
+                (.LO, .L, .UP, .M = 0, 0, 59, EPS)
+        1       seconds
+        0.0167  minutes
+        0.0003  hours
+
+
+---- z  dummy objective variable
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+
+---- prd  product prd(h,r)=assign(h,r)*hpos(h)
+
+prd(h1,hour)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       prod1(h1,hour)
+        1       prod2(h1,hour)
+        1       prod3(h1,hour)
+       -1       assignpos2(hour)
+
+prd(h1,minute)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       prod1(h1,minute)
+        1       prod2(h1,minute)
+        1       prod3(h1,minute)
+       -1       assignpos2(minute)
+
+prd(h1,second)
+                (.LO, .L, .UP, .M = 0, 0, 11.999, 0)
+        1       prod1(h1,second)
+        1       prod2(h1,second)
+        1       prod3(h1,second)
+       -1       assignpos2(second)
+
+REMAINING 6 ENTRIES SKIPPED
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 118
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.200E+01] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
+Matrix    [min, max] : [ 2.778E-04, 1.200E+01]
+
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 118
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS          11     SINGLE EQUATIONS           43
+BLOCKS OF VARIABLES           9     SINGLE VARIABLES           35
+NON ZERO ELEMENTS           115     DISCRETE VARIABLES         16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 118
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  118
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT        16    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 1.60 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (16 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  dummy objective
+
+---- EQU e_hpos  position of hands (in decimal hours)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .              .             EPS         
+h2          .              .              .              .          
+h3          .              .              .             EPS         
+
+---- EQU e_assign1  unique assignment hand <=> role
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour           1.0000         1.0000         1.0000          .          
+minute         1.0000         1.0000         1.0000          .          
+second         1.0000         1.0000         1.0000          .          
+
+---- EQU e_assign2  unique assignment hand <=> role
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1         1.0000         1.0000         1.0000          .          
+h2         1.0000         1.0000         1.0000          .          
+h3         1.0000         1.0000         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU seconds             .              .              .             EPS         
+---- EQU minutes             .              .              .             EPS         
+---- EQU hours               .              .              .             EPS         
+
+  seconds  calc seconds from rpos
+  minutes  calc minutes from rpos
+  hours  calc hours from rpos
+
+---- EQU prod1  linearization of product
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour          -INF             .              .              .          
+h1.minute        -INF           -1.9990          .              .          
+h1.second        -INF             .              .              .          
+h2.hour          -INF             .              .              .          
+h2.minute        -INF             .              .              .          
+h2.second        -INF          -11.9990          .              .          
+h3.hour          -INF           -7.1657          .              .          
+h3.minute        -INF             .              .              .          
+h3.second        -INF             .              .              .          
+
+---- EQU prod2  linearization of product
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour          -INF          -10.0000          .              .          
+h1.minute        -INF             .              .              .          
+h1.second        -INF          -10.0000          .              .          
+h2.hour          -INF             .              .              .          
+h2.minute        -INF             .              .              .          
+h2.second        -INF             .              .              .          
+h3.hour          -INF             .              .             EPS         
+h3.minute        -INF           -4.8333          .              .          
+h3.second        -INF           -4.8333          .              .          
+
+---- EQU prod3  linearization of product
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour         -11.9990       -10.0000        +INF             .          
+h1.minute       -11.9990       -11.9990        +INF            EPS         
+h1.second       -11.9990       -10.0000        +INF             .          
+h2.hour         -11.9990          .            +INF             .          
+h2.minute       -11.9990          .            +INF             .          
+h2.second       -11.9990       -11.9990        +INF             .          
+h3.hour         -11.9990       -11.9990        +INF             .          
+h3.minute       -11.9990        -4.8333        +INF             .          
+h3.second       -11.9990        -4.8333        +INF             .          
+
+---- EQU assignpos2  linearization of product
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour            .              .              .             EPS         
+minute          .              .              .              .          
+second          .              .              .              .          
+
+---- VAR relpos  relative position of hands (define h1=0)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .              .             EPS         
+h2         2.0000         2.0000         2.0000         EPS         
+h3         6.8000         6.8333         7.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR offset              .            10.0000        11.0000         EPS         
+
+  offset  from relpos
+
+---- VAR hpos  final position of hands (relpos + offset mod 12, in decimal hours)
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .            10.0000        11.9990          .          
+h2          .              .            11.9990         EPS         
+h3          .             4.8333        11.9990          .          
+
+---- VAR modulo  binary variable to implement mod 12
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+h1          .              .             1.0000         EPS         
+h2          .             1.0000         1.0000         EPS         
+h3          .             1.0000         1.0000         EPS         
+
+---- VAR assign  assign unique role to hand
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour            .              .             1.0000         EPS         
+h1.minute          .             1.0000         1.0000         EPS         
+h1.second          .              .             1.0000         EPS         
+h2.hour            .              .             1.0000         EPS         
+h2.minute          .              .             1.0000         EPS         
+h2.second          .             1.0000         1.0000         EPS         
+h3.hour            .             1.0000         1.0000         EPS         
+h3.minute          .              .             1.0000         EPS         
+h3.second          .              .             1.0000         EPS         
+
+---- VAR rpos  position of hr/min/sec hand ∈[0,11.99]
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour          -INF            4.8333        +INF             .          
+minute        -INF           10.0000        +INF             .          
+second        -INF             .            +INF             .          
+
+---- VAR v  (integer) value in hours,minutes and seconds
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+hour            .             4.0000        11.0000         EPS         
+minute          .            50.0000        59.0000         EPS         
+second          .              .            59.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+  z  dummy objective variable
+
+---- VAR prd  product prd(h,r)=assign(h,r)*hpos(h)
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+h1.hour            .              .            11.9990         EPS         
+h1.minute          .            10.0000        11.9990          .          
+h1.second          .              .            11.9990         EPS         
+h2.hour            .              .            11.9990         EPS         
+h2.minute          .              .            11.9990         EPS         
+h2.second          .              .            11.9990         EPS         
+h3.hour            .             4.8333        11.9990          .          
+h3.minute          .              .            11.9990         EPS         
+h3.second          .              .            11.9990         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 51.1.0  2d039df5 Sep 13, 2025          WEX-WEI x86 64bit/MS Windows - 11/12/25 07:28:43 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    119 VARIABLE relpos.L  relative position of hands (define h1=0)
+
+h2 2.000,    h3 6.833
+
+
+----    119 VARIABLE offset.L              =       10.000  from relpos
+
+----    119 VARIABLE hpos.L  final position of hands (relpos + offset mod 12, in decimal hours)
+
+h1 10.000,    h3  4.833
+
+
+----    119 VARIABLE assign.L  assign unique role to hand
+
+          hour      minute      second
+
+h1                   1.000
+h2                               1.000
+h3       1.000
+
+
+----    119 VARIABLE rpos.L  position of hr/min/sec hand ∈[0,11.99]
+
+hour    4.833,    minute 10.000
+
+
+----    119 VARIABLE v.L  (integer) value in hours,minutes and seconds
+
+hour    4.000,    minute 50.000
+
+
+
+EXECUTION TIME       =        0.469 SECONDS      4 MB  51.1.0 2d039df5 WEX-WEI
+
+
+USER: Eval License                                   G250902+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\Users\erwin\Projects\blog\clock\clock.gms
+Output     C:\Users\erwin\Projects\blog\clock\clock.lst

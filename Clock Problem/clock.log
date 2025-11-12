@@ -1,0 +1,205 @@
+
+--- Job clock.gms Start 11/12/25 07:28:43 51.1.0 2d039df5 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\51\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input C:\Users\erwin\Projects\blog\clock\clock.gms
+    PageWidth 130
+    PageSize 0
+    ScrDir C:\Users\erwin\Projects\blog\clock\225a\
+    SysDir C:\GAMS\51\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G250902+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          node:23592203 mem:64 cores:8 ipport:63595 v:2                    
+          Evaluation license: Not for commercial or production use
+          The expiration date of time-limited license is Dec 31, 2025
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 51.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+--- Starting compilation
+--- clock.gms(119) 3 Mb
+--- Starting execution: elapsed 0:00:00.015
+--- clock.gms(93) 4 Mb
+--- Generating MIQCP model m1
+--- clock.gms(94) 6 Mb
+---   16 rows  26 columns  61 non-zeroes
+---   33 nl-code  18 nl-non-zeroes
+---   16 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 2.778E-04, 1.200E+01] - Zero values observed as well
+--- clock.gms(94) 4 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.019
+
+GAMS/BARON       51.1.0 2d039df5 Sep 13, 2025          WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 25.8.12. Built: WIN-64 2025-08-12 08:08:06           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl (2024). 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+===========================================================================
+ Doing local search
+ Solving bounding LP
+ Starting multi-start local search
+ Done with local search
+===========================================================================
+  Iteration       Time (s)     Mem   Lower bound     Upper bound   Progress
+*         1           0.17    13MB     0.00000         0.00000        NA
+          1           0.17    13MB     0.00000         0.00000      100.00%
+
+                         *** Normal completion ***            
+
+ Wall clock time:                     0.26
+ Total CPU time used:                 0.17
+
+ Total no. of BaR iterations:       1
+ Best solution found at node:       1
+ Max. no. of nodes in memory:       1
+ 
+ All done
+===========================================================================
+
+Solution      = 0  found at node 1
+Best possible = 0
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:00.419
+--- clock.gms(102) 4 Mb
+--- Generating MIP model m2
+--- clock.gms(118) 4 Mb
+---   43 rows  35 columns  115 non-zeroes
+---   16 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.200E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 2.778E-04, 1.200E+01]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.419
+
+IBM ILOG CPLEX   51.1.0 2d039df5 Sep 13, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.51 Mb (peak 0.51 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIP Presolve eliminated 0 rows and 4 columns.
+MIP Presolve modified 17 coefficients.
+Aggregator did 4 substitutions.
+Reduced MIP has 38 rows, 27 columns, and 103 nonzeros.
+Reduced MIP has 11 binaries, 4 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.10 ticks)
+Probing time = 0.00 sec. (0.02 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve modified 1 coefficients.
+Reduced MIP has 38 rows, 27 columns, and 103 nonzeros.
+Reduced MIP has 11 binaries, 5 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.06 ticks)
+Probing time = 0.00 sec. (0.02 ticks)
+Clique table members: 7.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 38 rows, 26 columns, and 102 nonzeros.
+Presolve time = 0.00 sec. (0.02 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Initializing dual steep norms . . .
+Root relaxation solution time = 0.00 sec. (0.06 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0        0.0000     2                      0.0000        1         
+      0     0        0.0000     8                     Cuts: 7        9         
+      0     0        0.0000     8                    Cuts: 11       16         
+*     0+    0                            0.0000        0.0000             0.00%
+Found incumbent of value 0.000000 after 0.02 sec. (1.59 ticks)
+      0     0        cutoff              0.0000        0.0000       16    0.00%
+Elapsed time = 0.02 sec. (1.60 ticks, tree = 0.01 MB)
+
+Implied bound cuts applied:  2
+Flow cuts applied:  3
+Mixed integer rounding cuts applied:  1
+Gomory fractional cuts applied:  4
+
+Root node processing (before b&c):
+  Real time             =    0.02 sec. (1.60 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.02 sec. (1.60 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 1.60 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 42 rows and 35 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.02 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.03 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (16 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:00.489
+--- clock.gms(119) 4 Mb
+*** Status: Normal completion
+--- Job clock.gms Stop 11/12/25 07:28:43 elapsed 0:00:00.489
