@@ -59,6 +59,7 @@ obj.. z =e= sum(arcs,f(arcs));
 nodbal(n)..  sum(arcs(n1,n),f(arcs)) + supply(n) =e= sum(arcs(n,n1),f(arcs)) + demand(n);
 
 model spath /all/;
+option limrow=0,limcol=0,solprint=off;
 solve spath minimizing z using lp;
 
 display f.l;
