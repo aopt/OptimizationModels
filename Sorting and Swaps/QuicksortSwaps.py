@@ -7,6 +7,8 @@
 #  BDADDDBCCC -> ABBCCCDDDD #swaps:28
 #  ABBCCCDDDD -> ABBCCCDDDD #swaps:54
 
+# string to sort
+input = "BDADDDBCCC"
 
 def partition(array, low, high):
     swaps = 0
@@ -38,7 +40,8 @@ def quicksort(array, low=0, high=None):
 def list2str(L):
     return ''.join(L)
 
-# sort characters in string
+# sort characters in string 
+# convert list of chars <-> string
 def strsort(s):
     L = list(s)
     n = quicksort(L)
@@ -46,7 +49,7 @@ def strsort(s):
     return s2,n
 
 # sort input 
-s = "BDADDDBCCC"  
+s = input  
 t,n=strsort(s)
 print(f"{s} -> {t} #swaps:{n}")
 
