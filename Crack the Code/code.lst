@@ -1,0 +1,717 @@
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+      Find
+       
+        |x1|x2|x3|  where x(i) ∈ {0,..,9}
+       
+      with the following rules
+       
+        |6|8|2|  One number is correct and well placed
+        
+        |6|1|4|  One number is correct but wrongly placed
+        
+        |2|0|6|  Two numbers are correct but wrongly placed
+        
+        |7|3|8|  Nothing is correct
+        
+        |7|8|0|  One number is correct but wrongly placed 
+       
+       
+      References:
+       
+         https://yetanothermathprogrammingconsultant.blogspot.com/2025/12/crack-passcode.html
+         https://www.reddit.com/r/mathmemes/comments/1bbld8t/okay_reddit_geniuses_what_is_the_answer_im_stuck/
+         https://www.youtube.com/watch?v=lK857tIT4X4
+         
+       
+      ---------------------------------------------------------------    
+       
+        |6|8|2|  One number is correct and well placed
+        <=> x[1,6]+x[2,8]+x[3,2]=1
+            
+        |6|1|4|  One number is correct but wrongly placed
+        <=> x[2,6]+x[3,6]+x[1,1]+x[3,1]+x[1,4]+x[2,4]=1
+          
+        |2|0|6|  Two numbers are correct but wrongly placed
+        <=> x[2,2]+x[3,2]+x[1,0]+x[3,0]+x[1,6]+x[2,6]=2    
+       
+        |7|3|8|  Nothing is correct
+        <=> x[1,7]+x[2,7]+x[3,7]+x[1,3]+x[2,3]+x[3,3]+x[1,8]+x[2,8]+x[3,8]=0
+          
+        |7|8|0|  One number is correct but wrongly placed 
+        <=> x[2,7]+x[3,7]+x[1,8]+x[3,8]+x[1,0]+x[2,0]=1
+          
+       
+  46   
+  47  *-----------------------------------------------------------------------
+  48  * base model
+  49  *-----------------------------------------------------------------------
+  50   
+  51   
+  52  Sets
+  53     i 'position' /i1,i2,i3/
+  54     v 'value'    /0*9/
+  55  ;
+  56   
+  57  binary variable x(i,v);
+  58   
+  59  equations
+  60     onevalue(i) 'each position has one value'
+  61     e1 '|6|8|2|  One number is correct and well placed'
+  62     e2 '|6|1|4|  One number is correct but wrongly placed'
+  63     e3 '|2|0|6|  Two numbers are correct but wrongly placed'
+  64     e4 '|7|3|8|  Nothing is correct'
+  65     e5 '|7|8|0|  One number is correct but wrongly placed'
+  66  ;
+  67   
+  68  onevalue(i).. sum(v, x(i,v)) =e= 1;
+  69  e1..   x['i1','6']+x['i2','8']+x['i3','2'] =e= 1;
+  70  e2..  x['i2','6']+x['i3','6']+x['i1','1']+x['i3','1']+x['i1','4']+x['i2','4'] =e= 1;
+  71  e3..  x['i2','2']+x['i3','2']+x['i1','0']+x['i3','0']+x['i1','6']+x['i2','6'] =e= 2;
+  72  e4..  sum(i,x[i,'7']+x[i,'3']+x[i,'8']) =e= 0;
+  73  e5..  x['i2','7']+x['i3','7']+x['i1','8']+x['i3','8']+x['i1','0']+x['i2','0'] =e= 1;
+  74   
+  75  variable z;
+  76  equation obj 'dummy';
+  77  obj.. z=e=0;
+  78   
+  79  * model 1: solve problem as is
+  80  model m1 /all/;
+  81  solve m1 minimizing z using mip;
+  82  display x.l;
+  83   
+  84  * result:
+  85  * |0|4|2|
+  86   
+  87   
+  88  *-----------------------------------------------------------------------
+  89  * check solution is unique
+  90  * this model should be infeasible
+  91  *-----------------------------------------------------------------------
+  92   
+  93  * model m2: forbid this solution (from m1)
+  94  * now should be infeasible
+  95  equation forbid 'cut off solution';
+  96  forbid.. sum((i,v)$(x.l[i,v]>0.5),x[i,v]) =l= 2;
+  97   
+  98  model m2/m1+forbid/;
+  99  solve m2 minimizing z using mip;
+ 100   
+ 101  abort$(m2.modelstat = 1 or m2.modelstat = 8) "This should be infeasible;";
+ 102   
+ 103  * result:
+ 104  * (integer) infeasible
+ 105   
+ 106   
+ 107  *-----------------------------------------------------------------------
+ 108  * can we find the same solution using just equations 1,2,3?
+ 109  * this will give a wrong solution
+ 110  *-----------------------------------------------------------------------
+ 111   
+ 112  model m3 /m1-e4-e5/;
+ 113  solve m3 minimizing z using mip;
+ 114  display x.l;
+ 115   
+ 116  * result (depending on solver):
+ 117  * |6|6|3|
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using MIP From line 81
+
+
+---- onevalue  =E=  each position has one value
+
+onevalue(i1)..  x(i1,0) + x(i1,1) + x(i1,2) + x(i1,3) + x(i1,4) + x(i1,5) + x(i1,6) + x(i1,7) + x(i1,8) + x(i1,9) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+onevalue(i2)..  x(i2,0) + x(i2,1) + x(i2,2) + x(i2,3) + x(i2,4) + x(i2,5) + x(i2,6) + x(i2,7) + x(i2,8) + x(i2,9) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+onevalue(i3)..  x(i3,0) + x(i3,1) + x(i3,2) + x(i3,3) + x(i3,4) + x(i3,5) + x(i3,6) + x(i3,7) + x(i3,8) + x(i3,9) =E= 1 ;
+     
+      (LHS = 0, INFES = 1 ****)
+     
+
+---- e1  =E=  |6|8|2|  One number is correct and well placed
+
+e1..  x(i1,6) + x(i2,8) + x(i3,2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- e2  =E=  |6|1|4|  One number is correct but wrongly placed
+
+e2..  x(i1,1) + x(i1,4) + x(i2,4) + x(i2,6) + x(i3,1) + x(i3,6) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- e3  =E=  |2|0|6|  Two numbers are correct but wrongly placed
+
+e3..  x(i1,0) + x(i1,6) + x(i2,2) + x(i2,6) + x(i3,0) + x(i3,2) =E= 2 ; (LHS = 0, INFES = 2 ****)
+     
+
+---- e4  =E=  |7|3|8|  Nothing is correct
+
+e4..  x(i1,3) + x(i1,7) + x(i1,8) + x(i2,3) + x(i2,7) + x(i2,8) + x(i3,3) + x(i3,7) + x(i3,8) =E= 0 ; (LHS = 0)
+     
+
+---- e5  =E=  |7|8|0|  One number is correct but wrongly placed
+
+e5..  x(i1,0) + x(i1,8) + x(i2,0) + x(i2,7) + x(i3,7) + x(i3,8) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+
+---- obj  =E=  dummy
+
+obj..  z =E= 0 ; (LHS = 0)
+     
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using MIP From line 81
+
+
+---- x  
+
+x(i1,0)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       onevalue(i1)
+        1       e3
+        1       e5
+
+x(i1,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       onevalue(i1)
+        1       e2
+
+x(i1,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       onevalue(i1)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using MIP From line 81
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 2.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using MIP From line 81
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS            9
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           31
+NON ZERO ELEMENTS            61     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using MIP From line 81
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  81
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.00sec (det. 0.04 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (0 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU onevalue  each position has one value
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1         1.0000         1.0000         1.0000          .          
+i2         1.0000         1.0000         1.0000          .          
+i3         1.0000         1.0000         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU e1                 1.0000         1.0000         1.0000          .          
+---- EQU e2                 1.0000         1.0000         1.0000          .          
+---- EQU e3                 2.0000         2.0000         2.0000          .          
+---- EQU e4                  .              .              .              .          
+---- EQU e5                 1.0000         1.0000         1.0000          .          
+---- EQU obj                 .              .              .             1.0000      
+
+  e1  |6|8|2|  One number is correct and well placed
+  e2  |6|1|4|  One number is correct but wrongly placed
+  e3  |2|0|6|  Two numbers are correct but wrongly placed
+  e4  |7|3|8|  Nothing is correct
+  e5  |7|8|0|  One number is correct but wrongly placed
+  obj  dummy
+
+---- VAR x  
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+i1.0          .             1.0000         1.0000         EPS         
+i1.1          .              .             1.0000         EPS         
+i1.2          .              .             1.0000         EPS         
+i1.3          .              .             1.0000         EPS         
+i1.4          .              .             1.0000         EPS         
+i1.5          .              .             1.0000         EPS         
+i1.6          .              .             1.0000         EPS         
+i1.7          .              .             1.0000         EPS         
+i1.8          .              .             1.0000         EPS         
+i1.9          .              .             1.0000         EPS         
+i2.0          .              .             1.0000         EPS         
+i2.1          .              .             1.0000         EPS         
+i2.2          .              .             1.0000         EPS         
+i2.3          .              .             1.0000         EPS         
+i2.4          .             1.0000         1.0000         EPS         
+i2.5          .              .             1.0000         EPS         
+i2.6          .              .             1.0000         EPS         
+i2.7          .              .             1.0000         EPS         
+i2.8          .              .             1.0000         EPS         
+i2.9          .              .             1.0000         EPS         
+i3.0          .              .             1.0000         EPS         
+i3.1          .              .             1.0000         EPS         
+i3.2          .             1.0000         1.0000         EPS         
+i3.3          .              .             1.0000         EPS         
+i3.4          .              .             1.0000         EPS         
+i3.5          .              .             1.0000         EPS         
+i3.6          .              .             1.0000         EPS         
+i3.7          .              .             1.0000         EPS         
+i3.8          .              .             1.0000         EPS         
+i3.9          .              .             1.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     82 VARIABLE x.L  
+
+             0           2           4
+
+i1       1.000
+i2                               1.000
+i3                   1.000
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 99
+
+
+---- onevalue  =E=  each position has one value
+
+onevalue(i1)..  x(i1,0) + x(i1,1) + x(i1,2) + x(i1,3) + x(i1,4) + x(i1,5) + x(i1,6) + x(i1,7) + x(i1,8) + x(i1,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+onevalue(i2)..  x(i2,0) + x(i2,1) + x(i2,2) + x(i2,3) + x(i2,4) + x(i2,5) + x(i2,6) + x(i2,7) + x(i2,8) + x(i2,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+onevalue(i3)..  x(i3,0) + x(i3,1) + x(i3,2) + x(i3,3) + x(i3,4) + x(i3,5) + x(i3,6) + x(i3,7) + x(i3,8) + x(i3,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+
+---- e1  =E=  |6|8|2|  One number is correct and well placed
+
+e1..  x(i1,6) + x(i2,8) + x(i3,2) =E= 1 ; (LHS = 1)
+     
+
+---- e2  =E=  |6|1|4|  One number is correct but wrongly placed
+
+e2..  x(i1,1) + x(i1,4) + x(i2,4) + x(i2,6) + x(i3,1) + x(i3,6) =E= 1 ; (LHS = 1)
+     
+
+---- e3  =E=  |2|0|6|  Two numbers are correct but wrongly placed
+
+e3..  x(i1,0) + x(i1,6) + x(i2,2) + x(i2,6) + x(i3,0) + x(i3,2) =E= 2 ; (LHS = 2)
+     
+
+---- e4  =E=  |7|3|8|  Nothing is correct
+
+e4..  x(i1,3) + x(i1,7) + x(i1,8) + x(i2,3) + x(i2,7) + x(i2,8) + x(i3,3) + x(i3,7) + x(i3,8) =E= 0 ; (LHS = 0)
+     
+
+---- e5  =E=  |7|8|0|  One number is correct but wrongly placed
+
+e5..  x(i1,0) + x(i1,8) + x(i2,0) + x(i2,7) + x(i3,7) + x(i3,8) =E= 1 ; (LHS = 1)
+     
+
+---- obj  =E=  dummy
+
+obj..  z =E= 0 ; (LHS = 0)
+     
+
+---- forbid  =L=  cut off solution
+
+forbid..  x(i1,0) + x(i2,4) + x(i3,2) =L= 2 ; (LHS = 3, INFES = 1 ****)
+     
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 99
+
+
+---- x  
+
+x(i1,0)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       onevalue(i1)
+        1       e3
+        1       e5
+        1       forbid
+
+x(i1,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       onevalue(i1)
+        1       e2
+
+x(i1,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       onevalue(i1)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 99
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 2.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 99
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS           10
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           31
+NON ZERO ELEMENTS            64     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 99
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  99
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      10 Integer Infeasible
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (103): integer infeasible.
+--- Cplex Time: 0.00sec (det. 0.05 ticks)
+
+--- Problem is integer infeasible
+
+No solution returned
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m3 Using MIP From line 113
+
+
+---- onevalue  =E=  each position has one value
+
+onevalue(i1)..  x(i1,0) + x(i1,1) + x(i1,2) + x(i1,3) + x(i1,4) + x(i1,5) + x(i1,6) + x(i1,7) + x(i1,8) + x(i1,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+onevalue(i2)..  x(i2,0) + x(i2,1) + x(i2,2) + x(i2,3) + x(i2,4) + x(i2,5) + x(i2,6) + x(i2,7) + x(i2,8) + x(i2,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+onevalue(i3)..  x(i3,0) + x(i3,1) + x(i3,2) + x(i3,3) + x(i3,4) + x(i3,5) + x(i3,6) + x(i3,7) + x(i3,8) + x(i3,9) =E= 1 ;
+     
+      (LHS = 1)
+     
+
+---- e1  =E=  |6|8|2|  One number is correct and well placed
+
+e1..  x(i1,6) + x(i2,8) + x(i3,2) =E= 1 ; (LHS = 1)
+     
+
+---- e2  =E=  |6|1|4|  One number is correct but wrongly placed
+
+e2..  x(i1,1) + x(i1,4) + x(i2,4) + x(i2,6) + x(i3,1) + x(i3,6) =E= 1 ; (LHS = 1)
+     
+
+---- e3  =E=  |2|0|6|  Two numbers are correct but wrongly placed
+
+e3..  x(i1,0) + x(i1,6) + x(i2,2) + x(i2,6) + x(i3,0) + x(i3,2) =E= 2 ; (LHS = 2)
+     
+
+---- obj  =E=  dummy
+
+obj..  z =E= 0 ; (LHS = 0)
+     
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m3 Using MIP From line 113
+
+
+---- x  
+
+x(i1,0)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       onevalue(i1)
+        1       e3
+
+x(i1,1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       onevalue(i1)
+        1       e2
+
+x(i1,2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       onevalue(i1)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m3 Using MIP From line 113
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 2.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m3 Using MIP From line 113
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS            7
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           31
+NON ZERO ELEMENTS            46     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m3 Using MIP From line 113
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m3                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  113
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.0000
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.50 Mb (peak 0.50 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.00 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 0.06 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.01 ticks)
+
+
+Proven optimal solution
+MIP Solution:            0.000000    (0 iterations, 0 nodes)
+Final Solve:             0.000000    (0 iterations)
+
+Best possible:           0.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU onevalue  each position has one value
+
+          LOWER          LEVEL          UPPER         MARGINAL
+
+i1         1.0000         1.0000         1.0000          .          
+i2         1.0000         1.0000         1.0000          .          
+i3         1.0000         1.0000         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU e1                 1.0000         1.0000         1.0000          .          
+---- EQU e2                 1.0000         1.0000         1.0000          .          
+---- EQU e3                 2.0000         2.0000         2.0000          .          
+---- EQU obj                 .              .              .             1.0000      
+
+  e1  |6|8|2|  One number is correct and well placed
+  e2  |6|1|4|  One number is correct but wrongly placed
+  e3  |2|0|6|  Two numbers are correct but wrongly placed
+  obj  dummy
+
+---- VAR x  
+
+            LOWER          LEVEL          UPPER         MARGINAL
+
+i1.0          .              .             1.0000         EPS         
+i1.1          .              .             1.0000         EPS         
+i1.2          .              .             1.0000         EPS         
+i1.3          .              .             1.0000         EPS         
+i1.4          .              .             1.0000         EPS         
+i1.5          .              .             1.0000         EPS         
+i1.6          .             1.0000         1.0000         EPS         
+i1.7          .              .             1.0000         EPS         
+i1.8          .              .             1.0000         EPS         
+i1.9          .              .             1.0000         EPS         
+i2.0          .              .             1.0000         EPS         
+i2.1          .              .             1.0000         EPS         
+i2.2          .              .             1.0000         EPS         
+i2.3          .              .             1.0000         EPS         
+i2.4          .              .             1.0000         EPS         
+i2.5          .              .             1.0000         EPS         
+i2.6          .             1.0000         1.0000         EPS         
+i2.7          .              .             1.0000         EPS         
+i2.8          .              .             1.0000         EPS         
+i2.9          .              .             1.0000         EPS         
+i3.0          .              .             1.0000         EPS         
+i3.1          .              .             1.0000         EPS         
+i3.2          .              .             1.0000         EPS         
+i3.3          .             1.0000         1.0000         EPS         
+i3.4          .              .             1.0000         EPS         
+i3.5          .              .             1.0000         EPS         
+i3.6          .              .             1.0000         EPS         
+i3.7          .              .             1.0000         EPS         
+i3.8          .              .             1.0000         EPS         
+i3.9          .              .             1.0000         EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF             .            +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/09/25 06:59:45 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    114 VARIABLE x.L  
+
+             3           6
+
+i1                   1.000
+i2                   1.000
+i3       1.000
+
+
+
+EXECUTION TIME       =        0.172 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+
+
+USER: Eval License                                   G250902+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Crack the Code\code.gms
+Output     C:\projects\OptimizationModels\Crack the Code\code.lst
