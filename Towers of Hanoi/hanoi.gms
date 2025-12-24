@@ -4,7 +4,6 @@ $onText
    
 $offText
 
-
 *-----------------------------------------------------------------------------------
 * size of problem
 *-----------------------------------------------------------------------------------
@@ -33,7 +32,6 @@ cnt = hanoi(N,'A','B','C')
 print(f"{cnt} moves")
 
 $offEmbeddedCode
-
 
 *-----------------------------------------------------------------------------------
 * data
@@ -76,11 +74,9 @@ final(disk,'pegB') = 1;
 
 display n,size,maxsize,initial,final;
 
-
 *-----------------------------------------------------------------------------------
 * MIP model
 *-----------------------------------------------------------------------------------
-
 
 binary variable
    move(t,disk,peg,peg)   'disk is moved from one peg to another'
@@ -168,7 +164,6 @@ loop(t,
 );
 display sinv;
 
-
 *-----------------------------------------------------------------------------------
 * Visualization
 *-----------------------------------------------------------------------------------
@@ -194,8 +189,7 @@ parameter ndisks(*,peg) 'number of disks on each peg';
 ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
 display ndisks;
 
-scalar nd,dw,x,y,w,k /0/;
-
+scalar nd,x,y,w,k /0/;
 
 loop(t1$sum(sinv(t1,disk,peg),1),
    if (k=4,
@@ -214,7 +208,6 @@ loop(t1$sum(sinv(t1,disk,peg),1),
    loop(peg,
       nd = ndisks(t1,peg);
       loop(sinv(t1,disk,peg),
-         dw = size(disk);
          y = n+1-nd+1;
          w = size(disk)*3/n;
          x = 3*ord(peg)-0.5*w;
@@ -231,4 +224,3 @@ loop(t1$sum(sinv(t1,disk,peg),1),
 put '</tr></table>';
 putclose;
 executetool 'win32.ShellExecute "%svg%"';
-

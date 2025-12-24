@@ -1,4 +1,4 @@
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 1
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -7,248 +7,240 @@ C o m p i l a t i o n
          Towers of Hanoi
          
    6   
-   7   
-   8  *-----------------------------------------------------------------------------------
-   9  * size of problem
-  10  *-----------------------------------------------------------------------------------
-  11   
-  14   
-  15  *-----------------------------------------------------------------------------------
-  16  * recursion in Python
-  17  *-----------------------------------------------------------------------------------
+   7  *-----------------------------------------------------------------------------------
+   8  * size of problem
+   9  *-----------------------------------------------------------------------------------
+  10   
+  13   
+  14  *-----------------------------------------------------------------------------------
+  15  * recursion in Python
+  16  *-----------------------------------------------------------------------------------
+  17   
   18   
-  19   
-  36   
-  37   
+  35   
+  36  *-----------------------------------------------------------------------------------
+  37  * data
   38  *-----------------------------------------------------------------------------------
-  39  * data
-  40  *-----------------------------------------------------------------------------------
-  41   
-  42  * max number of moves
-  43  * we can guess (overestimate) or use the known value 2^n-1
-  44  *$set tmax 25
-  46   
-  47  sets
-  48     dummy 'for ordering' /initial/
-  49     peg /pegA,pegB,pegC/
-  50     disk  /disk1*disk3/
-  51     t 'moves or timesteps' /t1*t7/
-  52  ;
-  53  display peg,disk,t;
+  39   
+  40  * max number of moves
+  41  * we can guess (overestimate) or use the known value 2^n-1
+  42  *$set tmax 25
+  44   
+  45  sets
+  46     dummy 'for ordering' /initial/
+  47     peg /pegA,pegB,pegC/
+  48     disk  /disk1*disk3/
+  49     t 'moves or timesteps' /t1*t7/
+  50  ;
+  51  display peg,disk,t;
+  52   
+  53  alias (peg,peg1,peg2);
   54   
-  55  alias (peg,peg1,peg2);
-  56   
-  57  Parameters
-  58      n 'number of disks' /3/
-  59      size(disk) 'size of each disk: 1..n'
-  60      maxsize 'maximum size of disk'
-  61      initial(t,disk,peg) 'initial inventory (state)'
-  62      final(disk,peg) 'final inventory (state)'
-  63  ;
+  55  Parameters
+  56      n 'number of disks' /3/
+  57      size(disk) 'size of each disk: 1..n'
+  58      maxsize 'maximum size of disk'
+  59      initial(t,disk,peg) 'initial inventory (state)'
+  60      final(disk,peg) 'final inventory (state)'
+  61  ;
+  62   
+  63  abort$(card(t)<2**n-1) "increase size of set t";
   64   
-  65  abort$(card(t)<2**n-1) "increase size of set t";
-  66   
-  67  size(disk) = ord(disk);
-  68  maxsize = smax(disk,size(disk));
-  69   
-  70  * initial state: all disks on peg A
-  71  * has t index to make it easier to use in the constraints
-  72  initial('t1',disk,'pegA') = 1;
-  73   
-  74  * final state: all disks on peg B
-  75  final(disk,'pegB') = 1;
+  65  size(disk) = ord(disk);
+  66  maxsize = smax(disk,size(disk));
+  67   
+  68  * initial state: all disks on peg A
+  69  * has t index to make it easier to use in the constraints
+  70  initial('t1',disk,'pegA') = 1;
+  71   
+  72  * final state: all disks on peg B
+  73  final(disk,'pegB') = 1;
+  74   
+  75  display n,size,maxsize,initial,final;
   76   
-  77  display n,size,maxsize,initial,final;
-  78   
-  79   
-  80  *-----------------------------------------------------------------------------------
-  81  * MIP model
-  82  *-----------------------------------------------------------------------------------
-  83   
-  84   
-  85  binary variable
-  86     move(t,disk,peg,peg)   'disk is moved from one peg to another'
-  87     inv(t,disk,peg)        'inventory after move'
-  88     done(t)                'we are done'
-  89  ;
-  90  variable smallestPrev(t,peg) 'smallest disk in previous iteration';
-  91  smallestPrev.lo(t,peg) = 1;
-  92  smallestPrev.up(t,peg) = maxsize;
-  93   
-  94  variable z 'obj';
-  95   
-  96  equations
-  97     move1disk(t)           'move 1 disk (or 0 if done)'
-  98     bndsmall(t,disk,peg)   'bound on smallest size of disk'
-  99     smallfrom(t,peg)       'need to select smallest disk from source peg'
- 100     smallto(t,peg)         'size restriction on destination peg'
- 101     inventory(t,disk,peg)  'inventory balance'
- 102     isdone(t)              'we are done'
- 103     ordering(t)            'optional'
- 104     assignment(t,disk)     'optional assignment constraint'
- 105     obj                    'objective'
- 106  ;
- 107   
+  77  *-----------------------------------------------------------------------------------
+  78  * MIP model
+  79  *-----------------------------------------------------------------------------------
+  80   
+  81  binary variable
+  82     move(t,disk,peg,peg)   'disk is moved from one peg to another'
+  83     inv(t,disk,peg)        'inventory after move'
+  84     done(t)                'we are done'
+  85  ;
+  86  variable smallestPrev(t,peg) 'smallest disk in previous iteration';
+  87  smallestPrev.lo(t,peg) = 1;
+  88  smallestPrev.up(t,peg) = maxsize;
+  89   
+  90  variable z 'obj';
+  91   
+  92  equations
+  93     move1disk(t)           'move 1 disk (or 0 if done)'
+  94     bndsmall(t,disk,peg)   'bound on smallest size of disk'
+  95     smallfrom(t,peg)       'need to select smallest disk from source peg'
+  96     smallto(t,peg)         'size restriction on destination peg'
+  97     inventory(t,disk,peg)  'inventory balance'
+  98     isdone(t)              'we are done'
+  99     ordering(t)            'optional'
+ 100     assignment(t,disk)     'optional assignment constraint'
+ 101     obj                    'objective'
+ 102  ;
+ 103   
+ 104   
+ 105  * if done=1: move zero disks
+ 106  * if done=0: move exactly one disk
+ 107  move1disk(t).. sum((disk,peg1,peg2),move(t,disk,peg1,peg2)) =e= 1-done(t-1);
  108   
- 109  * if done=1: move zero disks
- 110  * if done=0: move exactly one disk
- 111  move1disk(t).. sum((disk,peg1,peg2),move(t,disk,peg1,peg2)) =e= 1-done(t-1);
- 112   
- 113  * don't move a disk from and to the same peg
- 114  move.fx(t,disk,peg,peg) = 0;
- 115   
- 116  * we can only move the smallest disk
- 117  parameter initsmallest(t,peg);
- 118  initsmallest('t1',peg) = maxsize;
- 119  initsmallest('t1','pegA') = smin(disk,size(disk));
- 120  display initsmallest;
- 121   
- 122  smallestPrev.fx('t1',peg) = initsmallest('t1',peg);
- 123  bndsmall(t,disk,peg)$(ord(t)>1).. smallestPrev(t,peg) =l= size(disk)*inv(t-1,disk,peg) + n*(1-inv(t-1,disk,peg));
- 124  smallfrom(t,peg)..     sum((disk,peg2),size(disk)*move(t,disk,peg,peg2)) =l= smallestPrev(t,peg);
- 125  smallto(t,peg)..       sum((disk,peg1),size(disk)*move(t,disk,peg1,peg)) =l= smallestPrev(t,peg);
- 126   
- 127  * inventory balance
- 128  inventory(t,disk,peg)..
- 129    inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + initial(t,disk
+ 109  * don't move a disk from and to the same peg
+ 110  move.fx(t,disk,peg,peg) = 0;
+ 111   
+ 112  * we can only move the smallest disk
+ 113  parameter initsmallest(t,peg);
+ 114  initsmallest('t1',peg) = maxsize;
+ 115  initsmallest('t1','pegA') = smin(disk,size(disk));
+ 116  display initsmallest;
+ 117   
+ 118  smallestPrev.fx('t1',peg) = initsmallest('t1',peg);
+ 119  bndsmall(t,disk,peg)$(ord(t)>1).. smallestPrev(t,peg) =l= size(disk)*inv(t-1,disk,peg) + n*(1-inv(t-1,disk,peg));
+ 120  smallfrom(t,peg)..     sum((disk,peg2),size(disk)*move(t,disk,peg,peg2)) =l= smallestPrev(t,peg);
+ 121  smallto(t,peg)..       sum((disk,peg1),size(disk)*move(t,disk,peg1,peg)) =l= smallestPrev(t,peg);
+ 122   
+ 123  * inventory balance
+ 124  inventory(t,disk,peg)..
+ 125    inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + initial(t,disk
       ,peg);
- 130   
- 131  * done if all disks are at peg B
- 132  isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
- 133   
- 134  obj.. z =e= sum(t,done(t));
+ 126   
+ 127  * done if all disks are at peg B
+ 128  isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
+ 129   
+ 130  obj.. z =e= sum(t,done(t));
+ 131   
+ 132  * optional constraints
+ 133  ordering(t-1).. done(t) =g= done(t-1);
+ 134  assignment(t,disk).. sum(peg,inv(t,disk,peg)) =e= 1;
  135   
- 136  * optional constraints
- 137  ordering(t-1).. done(t) =g= done(t-1);
- 138  assignment(t,disk).. sum(peg,inv(t,disk,peg)) =e= 1;
- 139   
- 140  * optional fixes
- 141  set lastt(t);
- 142  lastt(t) = ord(t)=card(t);
- 143  done.fx(lastt) = 1;
- 144  inv.fx(lastt,disk,peg) = final(disk,peg);
- 145   
- 146  model m /all/;
+ 136  * optional fixes
+ 137  set lastt(t);
+ 138  lastt(t) = ord(t)=card(t);
+ 139  done.fx(lastt) = 1;
+ 140  inv.fx(lastt,disk,peg) = final(disk,peg);
+ 141   
+ 142  model m /all/;
+ 143   
+ 144  *-----------------------------------------------------------------------------------
+ 145  * Solve
+ 146  *-----------------------------------------------------------------------------------
  147   
- 148  *-----------------------------------------------------------------------------------
- 149  * Solve
- 150  *-----------------------------------------------------------------------------------
- 151   
- 152  solve m maximizing z using mip;
- 153  abort$(m.modelstat <> 1 and m.modelstat <> 8) "no solution";
+ 148  solve m maximizing z using mip;
+ 149  abort$(m.modelstat <> 1 and m.modelstat <> 8) "no solution";
+ 150   
+ 151  * raw results
+ 152  option move:0:2:2;
+ 153  display smallestPrev.l,move.l,inv.l,done.l;
  154   
- 155  * raw results
- 156  option move:0:2:2;
- 157  display smallestPrev.l,move.l,inv.l,done.l;
+ 155  *-----------------------------------------------------------------------------------
+ 156  * Reporting
+ 157  *-----------------------------------------------------------------------------------
  158   
- 159  *-----------------------------------------------------------------------------------
- 160  * Reporting
- 161  *-----------------------------------------------------------------------------------
- 162   
- 163  set sinv(*,disk,peg) 'include initial, and stop after done';
- 164  sinv('initial',disk,peg) = initial('t1',disk,peg);
- 165  loop(t,
- 166     sinv(t,disk,peg) = inv.l(t,disk,peg)>0.5;
- 167     break$(done.l(t)>0.5);
- 168  );
- 169  display sinv;
+ 159  set sinv(*,disk,peg) 'include initial, and stop after done';
+ 160  sinv('initial',disk,peg) = initial('t1',disk,peg);
+ 161  loop(t,
+ 162     sinv(t,disk,peg) = inv.l(t,disk,peg)>0.5;
+ 163     break$(done.l(t)>0.5);
+ 164  );
+ 165  display sinv;
+ 166   
+ 167  *-----------------------------------------------------------------------------------
+ 168  * Visualization
+ 169  *-----------------------------------------------------------------------------------
  170   
- 171   
- 172  *-----------------------------------------------------------------------------------
- 173  * Visualization
- 174  *-----------------------------------------------------------------------------------
- 175   
- 176  abort.noError$(n>6 or 1=0) "skipping plot";
+ 171  abort.noError$(n>6 or 1=0) "skipping plot";
+ 172   
+ 174   
+ 175  file f /hanoiplots.html/;
+ 176  put f;
  177   
- 179   
- 180  file f /hanoiplots.html/;
- 181  put f;
- 182   
- 183  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
- 184  put '<h2>Towers of Hanoi Results</h2>'/;
- 185  put 'Number of disks: 3'/;
+ 178  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
+ 179  put '<h2>Towers of Hanoi Results</h2>'/;
+ 180  put 'Number of disks: 3'/;
+ 181   
+ 182  put '<table border="1">'/;
+ 183  put '<tr>'/;
+ 184   
  186   
- 187  put '<table border="1">'/;
- 188  put '<tr>'/;
- 189   
+ 187  alias (t1,*);
+ 188  parameter ndisks(*,peg) 'number of disks on each peg';
+ 189  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
+ 190  display ndisks;
  191   
- 192  alias (t1,*);
- 193  parameter ndisks(*,peg) 'number of disks on each peg';
- 194  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
- 195  display ndisks;
- 196   
- 197  scalar nd,dw,x,y,w,k /0/;
- 198   
- 199   
- 200  loop(t1$sum(sinv(t1,disk,peg),1),
- 201     if (k=4,
- 202         put "</tr><tr>"/;
- 203         k = 0;
- 204      );
- 205     k = k + 1;
- 206   
- 207     put '<td style="text-align: center">'/;
- 208     put '<svg height="100" width="300" viewBox="0 0 12 5">'/;
- 209  * draw pegs
- 210     put '<line x1="3" y1="1" x2="3" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
- 211     put '<line x1="6" y1="1" x2="6" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
- 212     put '<line x1="9" y1="1" x2="9" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
- 213   
- 214     loop(peg,
- 215        nd = ndisks(t1,peg);
- 216        loop(sinv(t1,disk,peg),
- 217           dw = size(disk);
- 218           y = n+1-nd+1;
- 219           w = size(disk)*3/n;
- 220           x = 3*ord(peg)-0.5*w;
- 221  *         display x,w,y;
- 222           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
- 223           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
+ 192  scalar nd,x,y,w,k /0/;
+ 193   
+ 194  loop(t1$sum(sinv(t1,disk,peg),1),
+ 195     if (k=4,
+ 196         put "</tr><tr>"/;
+ 197         k = 0;
+ 198      );
+ 199     k = k + 1;
+ 200   
+ 201     put '<td style="text-align: center">'/;
+ 202     put '<svg height="100" width="300" viewBox="0 0 12 5">'/;
+ 203  * draw pegs
+ 204     put '<line x1="3" y1="1" x2="3" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
+ 205     put '<line x1="6" y1="1" x2="6" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
+ 206     put '<line x1="9" y1="1" x2="9" y2="5" style="stroke:brown;stroke-width:0.1"/>'/;
+ 207   
+ 208     loop(peg,
+ 209        nd = ndisks(t1,peg);
+ 210        loop(sinv(t1,disk,peg),
+ 211           y = n+1-nd+1;
+ 212           w = size(disk)*3/n;
+ 213           x = 3*ord(peg)-0.5*w;
+ 214  *         display x,w,y;
+ 215           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
+ 216           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
       0.6">',(ord(disk)):0:0,'</text>'/;
- 224           nd = nd-1;
- 225        );
- 226     );
- 227     put '</svg><br>',t1.tl:0/;
- 228     put '</td>'/;
- 229  );
- 230   
- 231  put '</tr></table>';
- 232  putclose;
- 233  executetool 'win32.ShellExecute "hanoiplots.html"';
- 234   
+ 217           nd = nd-1;
+ 218        );
+ 219     );
+ 220     put '</svg><br>',t1.tl:0/;
+ 221     put '</td>'/;
+ 222  );
+ 223   
+ 224  put '</tr></table>';
+ 225  putclose;
+ 226  executetool 'win32.ShellExecute "hanoiplots.html"';
 
 
-COMPILATION TIME     =        1.109 SECONDS      3 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 2
+COMPILATION TIME     =        3.375 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     53 SET peg  
+----     51 SET peg  
 
 pegA,    pegB,    pegC
 
 
-----     53 SET disk  
+----     51 SET disk  
 
 disk1,    disk2,    disk3
 
 
-----     53 SET t  moves or timesteps
+----     51 SET t  moves or timesteps
 
 t1,    t2,    t3,    t4,    t5,    t6,    t7
 
 
-----     77 PARAMETER n                    =        3.000  number of disks
+----     75 PARAMETER n                    =        3.000  number of disks
 
-----     77 PARAMETER size  size of each disk: 1..n
+----     75 PARAMETER size  size of each disk: 1..n
 
 disk1 1.000,    disk2 2.000,    disk3 3.000
 
 
-----     77 PARAMETER maxsize              =        3.000  maximum size of disk
+----     75 PARAMETER maxsize              =        3.000  maximum size of disk
 
-----     77 PARAMETER initial  initial inventory (state)
+----     75 PARAMETER initial  initial inventory (state)
 
                 pegA
 
@@ -257,7 +249,7 @@ t1.disk2       1.000
 t1.disk3       1.000
 
 
-----     77 PARAMETER final  final inventory (state)
+----     75 PARAMETER final  final inventory (state)
 
              pegB
 
@@ -266,15 +258,15 @@ disk2       1.000
 disk3       1.000
 
 
-----    120 PARAMETER initsmallest  
+----    116 PARAMETER initsmallest  
 
           pegA        pegB        pegC
 
 t1       1.000       3.000       3.000
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 3
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MIP From line 152
+Equation Listing    SOLVE m Using MIP From line 148
 
 
 ---- move1disk  =E=  move 1 disk (or 0 if done)
@@ -323,66 +315,8 @@ move1disk(t3)..  move(t3,disk1,pegA,pegA) + move(t3,disk1,pegA,pegB) + move(t3,d
       + move(t3,disk3,pegC,pegA) + move(t3,disk3,pegC,pegB) + move(t3,disk3,pegC,pegC) + done(t2) =E= 1 ; (LHS = 0
      , INFES = 1 ****)
      
-move1disk(t4)..  move(t4,disk1,pegA,pegA) + move(t4,disk1,pegA,pegB) + move(t4,disk1,pegA,pegC) + move(t4,disk1,pegB,pegA)
-     
-      + move(t4,disk1,pegB,pegB) + move(t4,disk1,pegB,pegC) + move(t4,disk1,pegC,pegA) + move(t4,disk1,pegC,pegB)
-     
-      + move(t4,disk1,pegC,pegC) + move(t4,disk2,pegA,pegA) + move(t4,disk2,pegA,pegB) + move(t4,disk2,pegA,pegC)
-     
-      + move(t4,disk2,pegB,pegA) + move(t4,disk2,pegB,pegB) + move(t4,disk2,pegB,pegC) + move(t4,disk2,pegC,pegA)
-     
-      + move(t4,disk2,pegC,pegB) + move(t4,disk2,pegC,pegC) + move(t4,disk3,pegA,pegA) + move(t4,disk3,pegA,pegB)
-     
-      + move(t4,disk3,pegA,pegC) + move(t4,disk3,pegB,pegA) + move(t4,disk3,pegB,pegB) + move(t4,disk3,pegB,pegC)
-     
-      + move(t4,disk3,pegC,pegA) + move(t4,disk3,pegC,pegB) + move(t4,disk3,pegC,pegC) + done(t3) =E= 1 ; (LHS = 0
-     , INFES = 1 ****)
-     
-move1disk(t5)..  move(t5,disk1,pegA,pegA) + move(t5,disk1,pegA,pegB) + move(t5,disk1,pegA,pegC) + move(t5,disk1,pegB,pegA)
-     
-      + move(t5,disk1,pegB,pegB) + move(t5,disk1,pegB,pegC) + move(t5,disk1,pegC,pegA) + move(t5,disk1,pegC,pegB)
-     
-      + move(t5,disk1,pegC,pegC) + move(t5,disk2,pegA,pegA) + move(t5,disk2,pegA,pegB) + move(t5,disk2,pegA,pegC)
-     
-      + move(t5,disk2,pegB,pegA) + move(t5,disk2,pegB,pegB) + move(t5,disk2,pegB,pegC) + move(t5,disk2,pegC,pegA)
-     
-      + move(t5,disk2,pegC,pegB) + move(t5,disk2,pegC,pegC) + move(t5,disk3,pegA,pegA) + move(t5,disk3,pegA,pegB)
-     
-      + move(t5,disk3,pegA,pegC) + move(t5,disk3,pegB,pegA) + move(t5,disk3,pegB,pegB) + move(t5,disk3,pegB,pegC)
-     
-      + move(t5,disk3,pegC,pegA) + move(t5,disk3,pegC,pegB) + move(t5,disk3,pegC,pegC) + done(t4) =E= 1 ; (LHS = 0
-     , INFES = 1 ****)
-     
-move1disk(t6)..  move(t6,disk1,pegA,pegA) + move(t6,disk1,pegA,pegB) + move(t6,disk1,pegA,pegC) + move(t6,disk1,pegB,pegA)
-     
-      + move(t6,disk1,pegB,pegB) + move(t6,disk1,pegB,pegC) + move(t6,disk1,pegC,pegA) + move(t6,disk1,pegC,pegB)
-     
-      + move(t6,disk1,pegC,pegC) + move(t6,disk2,pegA,pegA) + move(t6,disk2,pegA,pegB) + move(t6,disk2,pegA,pegC)
-     
-      + move(t6,disk2,pegB,pegA) + move(t6,disk2,pegB,pegB) + move(t6,disk2,pegB,pegC) + move(t6,disk2,pegC,pegA)
-     
-      + move(t6,disk2,pegC,pegB) + move(t6,disk2,pegC,pegC) + move(t6,disk3,pegA,pegA) + move(t6,disk3,pegA,pegB)
-     
-      + move(t6,disk3,pegA,pegC) + move(t6,disk3,pegB,pegA) + move(t6,disk3,pegB,pegB) + move(t6,disk3,pegB,pegC)
-     
-      + move(t6,disk3,pegC,pegA) + move(t6,disk3,pegC,pegB) + move(t6,disk3,pegC,pegC) + done(t5) =E= 1 ; (LHS = 0
-     , INFES = 1 ****)
-     
-move1disk(t7)..  move(t7,disk1,pegA,pegA) + move(t7,disk1,pegA,pegB) + move(t7,disk1,pegA,pegC) + move(t7,disk1,pegB,pegA)
-     
-      + move(t7,disk1,pegB,pegB) + move(t7,disk1,pegB,pegC) + move(t7,disk1,pegC,pegA) + move(t7,disk1,pegC,pegB)
-     
-      + move(t7,disk1,pegC,pegC) + move(t7,disk2,pegA,pegA) + move(t7,disk2,pegA,pegB) + move(t7,disk2,pegA,pegC)
-     
-      + move(t7,disk2,pegB,pegA) + move(t7,disk2,pegB,pegB) + move(t7,disk2,pegB,pegC) + move(t7,disk2,pegC,pegA)
-     
-      + move(t7,disk2,pegC,pegB) + move(t7,disk2,pegC,pegC) + move(t7,disk3,pegA,pegA) + move(t7,disk3,pegA,pegB)
-     
-      + move(t7,disk3,pegA,pegC) + move(t7,disk3,pegB,pegA) + move(t7,disk3,pegB,pegB) + move(t7,disk3,pegB,pegC)
-     
-      + move(t7,disk3,pegC,pegA) + move(t7,disk3,pegC,pegB) + move(t7,disk3,pegC,pegC) + done(t6) =E= 1 ; (LHS = 0
-     , INFES = 1 ****)
-     
+REMAINING 4 ENTRIES SKIPPED
+
 
 ---- bndsmall  =L=  bound on smallest size of disk
 
@@ -392,108 +326,8 @@ bndsmall(t2,disk1,pegB)..  2*inv(t1,disk1,pegB) + smallestPrev(t2,pegB) =L= 3 ; 
      
 bndsmall(t2,disk1,pegC)..  2*inv(t1,disk1,pegC) + smallestPrev(t2,pegC) =L= 3 ; (LHS = 1)
      
-bndsmall(t2,disk2,pegA)..  inv(t1,disk2,pegA) + smallestPrev(t2,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t2,disk2,pegB)..  inv(t1,disk2,pegB) + smallestPrev(t2,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t2,disk2,pegC)..  inv(t1,disk2,pegC) + smallestPrev(t2,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t2,disk3,pegA)..  smallestPrev(t2,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t2,disk3,pegB)..  smallestPrev(t2,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t2,disk3,pegC)..  smallestPrev(t2,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk1,pegA)..  2*inv(t2,disk1,pegA) + smallestPrev(t3,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk1,pegB)..  2*inv(t2,disk1,pegB) + smallestPrev(t3,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk1,pegC)..  2*inv(t2,disk1,pegC) + smallestPrev(t3,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk2,pegA)..  inv(t2,disk2,pegA) + smallestPrev(t3,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk2,pegB)..  inv(t2,disk2,pegB) + smallestPrev(t3,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk2,pegC)..  inv(t2,disk2,pegC) + smallestPrev(t3,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk3,pegA)..  smallestPrev(t3,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk3,pegB)..  smallestPrev(t3,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t3,disk3,pegC)..  smallestPrev(t3,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk1,pegA)..  2*inv(t3,disk1,pegA) + smallestPrev(t4,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk1,pegB)..  2*inv(t3,disk1,pegB) + smallestPrev(t4,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk1,pegC)..  2*inv(t3,disk1,pegC) + smallestPrev(t4,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk2,pegA)..  inv(t3,disk2,pegA) + smallestPrev(t4,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk2,pegB)..  inv(t3,disk2,pegB) + smallestPrev(t4,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk2,pegC)..  inv(t3,disk2,pegC) + smallestPrev(t4,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk3,pegA)..  smallestPrev(t4,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk3,pegB)..  smallestPrev(t4,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t4,disk3,pegC)..  smallestPrev(t4,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk1,pegA)..  2*inv(t4,disk1,pegA) + smallestPrev(t5,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk1,pegB)..  2*inv(t4,disk1,pegB) + smallestPrev(t5,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk1,pegC)..  2*inv(t4,disk1,pegC) + smallestPrev(t5,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk2,pegA)..  inv(t4,disk2,pegA) + smallestPrev(t5,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk2,pegB)..  inv(t4,disk2,pegB) + smallestPrev(t5,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk2,pegC)..  inv(t4,disk2,pegC) + smallestPrev(t5,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk3,pegA)..  smallestPrev(t5,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk3,pegB)..  smallestPrev(t5,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t5,disk3,pegC)..  smallestPrev(t5,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk1,pegA)..  2*inv(t5,disk1,pegA) + smallestPrev(t6,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk1,pegB)..  2*inv(t5,disk1,pegB) + smallestPrev(t6,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk1,pegC)..  2*inv(t5,disk1,pegC) + smallestPrev(t6,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk2,pegA)..  inv(t5,disk2,pegA) + smallestPrev(t6,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk2,pegB)..  inv(t5,disk2,pegB) + smallestPrev(t6,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk2,pegC)..  inv(t5,disk2,pegC) + smallestPrev(t6,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk3,pegA)..  smallestPrev(t6,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk3,pegB)..  smallestPrev(t6,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t6,disk3,pegC)..  smallestPrev(t6,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk1,pegA)..  2*inv(t6,disk1,pegA) + smallestPrev(t7,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk1,pegB)..  2*inv(t6,disk1,pegB) + smallestPrev(t7,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk1,pegC)..  2*inv(t6,disk1,pegC) + smallestPrev(t7,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk2,pegA)..  inv(t6,disk2,pegA) + smallestPrev(t7,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk2,pegB)..  inv(t6,disk2,pegB) + smallestPrev(t7,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk2,pegC)..  inv(t6,disk2,pegC) + smallestPrev(t7,pegC) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk3,pegA)..  smallestPrev(t7,pegA) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk3,pegB)..  smallestPrev(t7,pegB) =L= 3 ; (LHS = 1)
-     
-bndsmall(t7,disk3,pegC)..  smallestPrev(t7,pegC) =L= 3 ; (LHS = 1)
-     
+REMAINING 51 ENTRIES SKIPPED
+
 
 ---- smallfrom  =L=  need to select smallest disk from source peg
 
@@ -515,114 +349,8 @@ smallfrom(t1,pegC)..  move(t1,disk1,pegC,pegA) + move(t1,disk1,pegC,pegB) + move
      
       + 3*move(t1,disk3,pegC,pegC) - smallestPrev(t1,pegC) =L= 0 ; (LHS = -3)
      
-smallfrom(t2,pegA)..  move(t2,disk1,pegA,pegA) + move(t2,disk1,pegA,pegB) + move(t2,disk1,pegA,pegC) + 2*move(t2,disk2,pegA,pegA)
-     
-      + 2*move(t2,disk2,pegA,pegB) + 2*move(t2,disk2,pegA,pegC) + 3*move(t2,disk3,pegA,pegA) + 3*move(t2,disk3,pegA,pegB)
-     
-      + 3*move(t2,disk3,pegA,pegC) - smallestPrev(t2,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t2,pegB)..  move(t2,disk1,pegB,pegA) + move(t2,disk1,pegB,pegB) + move(t2,disk1,pegB,pegC) + 2*move(t2,disk2,pegB,pegA)
-     
-      + 2*move(t2,disk2,pegB,pegB) + 2*move(t2,disk2,pegB,pegC) + 3*move(t2,disk3,pegB,pegA) + 3*move(t2,disk3,pegB,pegB)
-     
-      + 3*move(t2,disk3,pegB,pegC) - smallestPrev(t2,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t2,pegC)..  move(t2,disk1,pegC,pegA) + move(t2,disk1,pegC,pegB) + move(t2,disk1,pegC,pegC) + 2*move(t2,disk2,pegC,pegA)
-     
-      + 2*move(t2,disk2,pegC,pegB) + 2*move(t2,disk2,pegC,pegC) + 3*move(t2,disk3,pegC,pegA) + 3*move(t2,disk3,pegC,pegB)
-     
-      + 3*move(t2,disk3,pegC,pegC) - smallestPrev(t2,pegC) =L= 0 ; (LHS = -1)
-     
-smallfrom(t3,pegA)..  move(t3,disk1,pegA,pegA) + move(t3,disk1,pegA,pegB) + move(t3,disk1,pegA,pegC) + 2*move(t3,disk2,pegA,pegA)
-     
-      + 2*move(t3,disk2,pegA,pegB) + 2*move(t3,disk2,pegA,pegC) + 3*move(t3,disk3,pegA,pegA) + 3*move(t3,disk3,pegA,pegB)
-     
-      + 3*move(t3,disk3,pegA,pegC) - smallestPrev(t3,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t3,pegB)..  move(t3,disk1,pegB,pegA) + move(t3,disk1,pegB,pegB) + move(t3,disk1,pegB,pegC) + 2*move(t3,disk2,pegB,pegA)
-     
-      + 2*move(t3,disk2,pegB,pegB) + 2*move(t3,disk2,pegB,pegC) + 3*move(t3,disk3,pegB,pegA) + 3*move(t3,disk3,pegB,pegB)
-     
-      + 3*move(t3,disk3,pegB,pegC) - smallestPrev(t3,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t3,pegC)..  move(t3,disk1,pegC,pegA) + move(t3,disk1,pegC,pegB) + move(t3,disk1,pegC,pegC) + 2*move(t3,disk2,pegC,pegA)
-     
-      + 2*move(t3,disk2,pegC,pegB) + 2*move(t3,disk2,pegC,pegC) + 3*move(t3,disk3,pegC,pegA) + 3*move(t3,disk3,pegC,pegB)
-     
-      + 3*move(t3,disk3,pegC,pegC) - smallestPrev(t3,pegC) =L= 0 ; (LHS = -1)
-     
-smallfrom(t4,pegA)..  move(t4,disk1,pegA,pegA) + move(t4,disk1,pegA,pegB) + move(t4,disk1,pegA,pegC) + 2*move(t4,disk2,pegA,pegA)
-     
-      + 2*move(t4,disk2,pegA,pegB) + 2*move(t4,disk2,pegA,pegC) + 3*move(t4,disk3,pegA,pegA) + 3*move(t4,disk3,pegA,pegB)
-     
-      + 3*move(t4,disk3,pegA,pegC) - smallestPrev(t4,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t4,pegB)..  move(t4,disk1,pegB,pegA) + move(t4,disk1,pegB,pegB) + move(t4,disk1,pegB,pegC) + 2*move(t4,disk2,pegB,pegA)
-     
-      + 2*move(t4,disk2,pegB,pegB) + 2*move(t4,disk2,pegB,pegC) + 3*move(t4,disk3,pegB,pegA) + 3*move(t4,disk3,pegB,pegB)
-     
-      + 3*move(t4,disk3,pegB,pegC) - smallestPrev(t4,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t4,pegC)..  move(t4,disk1,pegC,pegA) + move(t4,disk1,pegC,pegB) + move(t4,disk1,pegC,pegC) + 2*move(t4,disk2,pegC,pegA)
-     
-      + 2*move(t4,disk2,pegC,pegB) + 2*move(t4,disk2,pegC,pegC) + 3*move(t4,disk3,pegC,pegA) + 3*move(t4,disk3,pegC,pegB)
-     
-      + 3*move(t4,disk3,pegC,pegC) - smallestPrev(t4,pegC) =L= 0 ; (LHS = -1)
-     
-smallfrom(t5,pegA)..  move(t5,disk1,pegA,pegA) + move(t5,disk1,pegA,pegB) + move(t5,disk1,pegA,pegC) + 2*move(t5,disk2,pegA,pegA)
-     
-      + 2*move(t5,disk2,pegA,pegB) + 2*move(t5,disk2,pegA,pegC) + 3*move(t5,disk3,pegA,pegA) + 3*move(t5,disk3,pegA,pegB)
-     
-      + 3*move(t5,disk3,pegA,pegC) - smallestPrev(t5,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t5,pegB)..  move(t5,disk1,pegB,pegA) + move(t5,disk1,pegB,pegB) + move(t5,disk1,pegB,pegC) + 2*move(t5,disk2,pegB,pegA)
-     
-      + 2*move(t5,disk2,pegB,pegB) + 2*move(t5,disk2,pegB,pegC) + 3*move(t5,disk3,pegB,pegA) + 3*move(t5,disk3,pegB,pegB)
-     
-      + 3*move(t5,disk3,pegB,pegC) - smallestPrev(t5,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t5,pegC)..  move(t5,disk1,pegC,pegA) + move(t5,disk1,pegC,pegB) + move(t5,disk1,pegC,pegC) + 2*move(t5,disk2,pegC,pegA)
-     
-      + 2*move(t5,disk2,pegC,pegB) + 2*move(t5,disk2,pegC,pegC) + 3*move(t5,disk3,pegC,pegA) + 3*move(t5,disk3,pegC,pegB)
-     
-      + 3*move(t5,disk3,pegC,pegC) - smallestPrev(t5,pegC) =L= 0 ; (LHS = -1)
-     
-smallfrom(t6,pegA)..  move(t6,disk1,pegA,pegA) + move(t6,disk1,pegA,pegB) + move(t6,disk1,pegA,pegC) + 2*move(t6,disk2,pegA,pegA)
-     
-      + 2*move(t6,disk2,pegA,pegB) + 2*move(t6,disk2,pegA,pegC) + 3*move(t6,disk3,pegA,pegA) + 3*move(t6,disk3,pegA,pegB)
-     
-      + 3*move(t6,disk3,pegA,pegC) - smallestPrev(t6,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t6,pegB)..  move(t6,disk1,pegB,pegA) + move(t6,disk1,pegB,pegB) + move(t6,disk1,pegB,pegC) + 2*move(t6,disk2,pegB,pegA)
-     
-      + 2*move(t6,disk2,pegB,pegB) + 2*move(t6,disk2,pegB,pegC) + 3*move(t6,disk3,pegB,pegA) + 3*move(t6,disk3,pegB,pegB)
-     
-      + 3*move(t6,disk3,pegB,pegC) - smallestPrev(t6,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t6,pegC)..  move(t6,disk1,pegC,pegA) + move(t6,disk1,pegC,pegB) + move(t6,disk1,pegC,pegC) + 2*move(t6,disk2,pegC,pegA)
-     
-      + 2*move(t6,disk2,pegC,pegB) + 2*move(t6,disk2,pegC,pegC) + 3*move(t6,disk3,pegC,pegA) + 3*move(t6,disk3,pegC,pegB)
-     
-      + 3*move(t6,disk3,pegC,pegC) - smallestPrev(t6,pegC) =L= 0 ; (LHS = -1)
-     
-smallfrom(t7,pegA)..  move(t7,disk1,pegA,pegA) + move(t7,disk1,pegA,pegB) + move(t7,disk1,pegA,pegC) + 2*move(t7,disk2,pegA,pegA)
-     
-      + 2*move(t7,disk2,pegA,pegB) + 2*move(t7,disk2,pegA,pegC) + 3*move(t7,disk3,pegA,pegA) + 3*move(t7,disk3,pegA,pegB)
-     
-      + 3*move(t7,disk3,pegA,pegC) - smallestPrev(t7,pegA) =L= 0 ; (LHS = -1)
-     
-smallfrom(t7,pegB)..  move(t7,disk1,pegB,pegA) + move(t7,disk1,pegB,pegB) + move(t7,disk1,pegB,pegC) + 2*move(t7,disk2,pegB,pegA)
-     
-      + 2*move(t7,disk2,pegB,pegB) + 2*move(t7,disk2,pegB,pegC) + 3*move(t7,disk3,pegB,pegA) + 3*move(t7,disk3,pegB,pegB)
-     
-      + 3*move(t7,disk3,pegB,pegC) - smallestPrev(t7,pegB) =L= 0 ; (LHS = -1)
-     
-smallfrom(t7,pegC)..  move(t7,disk1,pegC,pegA) + move(t7,disk1,pegC,pegB) + move(t7,disk1,pegC,pegC) + 2*move(t7,disk2,pegC,pegA)
-     
-      + 2*move(t7,disk2,pegC,pegB) + 2*move(t7,disk2,pegC,pegC) + 3*move(t7,disk3,pegC,pegA) + 3*move(t7,disk3,pegC,pegB)
-     
-      + 3*move(t7,disk3,pegC,pegC) - smallestPrev(t7,pegC) =L= 0 ; (LHS = -1)
-     
+REMAINING 18 ENTRIES SKIPPED
+
 
 ---- smallto  =L=  size restriction on destination peg
 
@@ -644,114 +372,8 @@ smallto(t1,pegC)..  move(t1,disk1,pegA,pegC) + move(t1,disk1,pegB,pegC) + move(t
      
       + 3*move(t1,disk3,pegC,pegC) - smallestPrev(t1,pegC) =L= 0 ; (LHS = -3)
      
-smallto(t2,pegA)..  move(t2,disk1,pegA,pegA) + move(t2,disk1,pegB,pegA) + move(t2,disk1,pegC,pegA) + 2*move(t2,disk2,pegA,pegA)
-     
-      + 2*move(t2,disk2,pegB,pegA) + 2*move(t2,disk2,pegC,pegA) + 3*move(t2,disk3,pegA,pegA) + 3*move(t2,disk3,pegB,pegA)
-     
-      + 3*move(t2,disk3,pegC,pegA) - smallestPrev(t2,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t2,pegB)..  move(t2,disk1,pegA,pegB) + move(t2,disk1,pegB,pegB) + move(t2,disk1,pegC,pegB) + 2*move(t2,disk2,pegA,pegB)
-     
-      + 2*move(t2,disk2,pegB,pegB) + 2*move(t2,disk2,pegC,pegB) + 3*move(t2,disk3,pegA,pegB) + 3*move(t2,disk3,pegB,pegB)
-     
-      + 3*move(t2,disk3,pegC,pegB) - smallestPrev(t2,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t2,pegC)..  move(t2,disk1,pegA,pegC) + move(t2,disk1,pegB,pegC) + move(t2,disk1,pegC,pegC) + 2*move(t2,disk2,pegA,pegC)
-     
-      + 2*move(t2,disk2,pegB,pegC) + 2*move(t2,disk2,pegC,pegC) + 3*move(t2,disk3,pegA,pegC) + 3*move(t2,disk3,pegB,pegC)
-     
-      + 3*move(t2,disk3,pegC,pegC) - smallestPrev(t2,pegC) =L= 0 ; (LHS = -1)
-     
-smallto(t3,pegA)..  move(t3,disk1,pegA,pegA) + move(t3,disk1,pegB,pegA) + move(t3,disk1,pegC,pegA) + 2*move(t3,disk2,pegA,pegA)
-     
-      + 2*move(t3,disk2,pegB,pegA) + 2*move(t3,disk2,pegC,pegA) + 3*move(t3,disk3,pegA,pegA) + 3*move(t3,disk3,pegB,pegA)
-     
-      + 3*move(t3,disk3,pegC,pegA) - smallestPrev(t3,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t3,pegB)..  move(t3,disk1,pegA,pegB) + move(t3,disk1,pegB,pegB) + move(t3,disk1,pegC,pegB) + 2*move(t3,disk2,pegA,pegB)
-     
-      + 2*move(t3,disk2,pegB,pegB) + 2*move(t3,disk2,pegC,pegB) + 3*move(t3,disk3,pegA,pegB) + 3*move(t3,disk3,pegB,pegB)
-     
-      + 3*move(t3,disk3,pegC,pegB) - smallestPrev(t3,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t3,pegC)..  move(t3,disk1,pegA,pegC) + move(t3,disk1,pegB,pegC) + move(t3,disk1,pegC,pegC) + 2*move(t3,disk2,pegA,pegC)
-     
-      + 2*move(t3,disk2,pegB,pegC) + 2*move(t3,disk2,pegC,pegC) + 3*move(t3,disk3,pegA,pegC) + 3*move(t3,disk3,pegB,pegC)
-     
-      + 3*move(t3,disk3,pegC,pegC) - smallestPrev(t3,pegC) =L= 0 ; (LHS = -1)
-     
-smallto(t4,pegA)..  move(t4,disk1,pegA,pegA) + move(t4,disk1,pegB,pegA) + move(t4,disk1,pegC,pegA) + 2*move(t4,disk2,pegA,pegA)
-     
-      + 2*move(t4,disk2,pegB,pegA) + 2*move(t4,disk2,pegC,pegA) + 3*move(t4,disk3,pegA,pegA) + 3*move(t4,disk3,pegB,pegA)
-     
-      + 3*move(t4,disk3,pegC,pegA) - smallestPrev(t4,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t4,pegB)..  move(t4,disk1,pegA,pegB) + move(t4,disk1,pegB,pegB) + move(t4,disk1,pegC,pegB) + 2*move(t4,disk2,pegA,pegB)
-     
-      + 2*move(t4,disk2,pegB,pegB) + 2*move(t4,disk2,pegC,pegB) + 3*move(t4,disk3,pegA,pegB) + 3*move(t4,disk3,pegB,pegB)
-     
-      + 3*move(t4,disk3,pegC,pegB) - smallestPrev(t4,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t4,pegC)..  move(t4,disk1,pegA,pegC) + move(t4,disk1,pegB,pegC) + move(t4,disk1,pegC,pegC) + 2*move(t4,disk2,pegA,pegC)
-     
-      + 2*move(t4,disk2,pegB,pegC) + 2*move(t4,disk2,pegC,pegC) + 3*move(t4,disk3,pegA,pegC) + 3*move(t4,disk3,pegB,pegC)
-     
-      + 3*move(t4,disk3,pegC,pegC) - smallestPrev(t4,pegC) =L= 0 ; (LHS = -1)
-     
-smallto(t5,pegA)..  move(t5,disk1,pegA,pegA) + move(t5,disk1,pegB,pegA) + move(t5,disk1,pegC,pegA) + 2*move(t5,disk2,pegA,pegA)
-     
-      + 2*move(t5,disk2,pegB,pegA) + 2*move(t5,disk2,pegC,pegA) + 3*move(t5,disk3,pegA,pegA) + 3*move(t5,disk3,pegB,pegA)
-     
-      + 3*move(t5,disk3,pegC,pegA) - smallestPrev(t5,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t5,pegB)..  move(t5,disk1,pegA,pegB) + move(t5,disk1,pegB,pegB) + move(t5,disk1,pegC,pegB) + 2*move(t5,disk2,pegA,pegB)
-     
-      + 2*move(t5,disk2,pegB,pegB) + 2*move(t5,disk2,pegC,pegB) + 3*move(t5,disk3,pegA,pegB) + 3*move(t5,disk3,pegB,pegB)
-     
-      + 3*move(t5,disk3,pegC,pegB) - smallestPrev(t5,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t5,pegC)..  move(t5,disk1,pegA,pegC) + move(t5,disk1,pegB,pegC) + move(t5,disk1,pegC,pegC) + 2*move(t5,disk2,pegA,pegC)
-     
-      + 2*move(t5,disk2,pegB,pegC) + 2*move(t5,disk2,pegC,pegC) + 3*move(t5,disk3,pegA,pegC) + 3*move(t5,disk3,pegB,pegC)
-     
-      + 3*move(t5,disk3,pegC,pegC) - smallestPrev(t5,pegC) =L= 0 ; (LHS = -1)
-     
-smallto(t6,pegA)..  move(t6,disk1,pegA,pegA) + move(t6,disk1,pegB,pegA) + move(t6,disk1,pegC,pegA) + 2*move(t6,disk2,pegA,pegA)
-     
-      + 2*move(t6,disk2,pegB,pegA) + 2*move(t6,disk2,pegC,pegA) + 3*move(t6,disk3,pegA,pegA) + 3*move(t6,disk3,pegB,pegA)
-     
-      + 3*move(t6,disk3,pegC,pegA) - smallestPrev(t6,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t6,pegB)..  move(t6,disk1,pegA,pegB) + move(t6,disk1,pegB,pegB) + move(t6,disk1,pegC,pegB) + 2*move(t6,disk2,pegA,pegB)
-     
-      + 2*move(t6,disk2,pegB,pegB) + 2*move(t6,disk2,pegC,pegB) + 3*move(t6,disk3,pegA,pegB) + 3*move(t6,disk3,pegB,pegB)
-     
-      + 3*move(t6,disk3,pegC,pegB) - smallestPrev(t6,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t6,pegC)..  move(t6,disk1,pegA,pegC) + move(t6,disk1,pegB,pegC) + move(t6,disk1,pegC,pegC) + 2*move(t6,disk2,pegA,pegC)
-     
-      + 2*move(t6,disk2,pegB,pegC) + 2*move(t6,disk2,pegC,pegC) + 3*move(t6,disk3,pegA,pegC) + 3*move(t6,disk3,pegB,pegC)
-     
-      + 3*move(t6,disk3,pegC,pegC) - smallestPrev(t6,pegC) =L= 0 ; (LHS = -1)
-     
-smallto(t7,pegA)..  move(t7,disk1,pegA,pegA) + move(t7,disk1,pegB,pegA) + move(t7,disk1,pegC,pegA) + 2*move(t7,disk2,pegA,pegA)
-     
-      + 2*move(t7,disk2,pegB,pegA) + 2*move(t7,disk2,pegC,pegA) + 3*move(t7,disk3,pegA,pegA) + 3*move(t7,disk3,pegB,pegA)
-     
-      + 3*move(t7,disk3,pegC,pegA) - smallestPrev(t7,pegA) =L= 0 ; (LHS = -1)
-     
-smallto(t7,pegB)..  move(t7,disk1,pegA,pegB) + move(t7,disk1,pegB,pegB) + move(t7,disk1,pegC,pegB) + 2*move(t7,disk2,pegA,pegB)
-     
-      + 2*move(t7,disk2,pegB,pegB) + 2*move(t7,disk2,pegC,pegB) + 3*move(t7,disk3,pegA,pegB) + 3*move(t7,disk3,pegB,pegB)
-     
-      + 3*move(t7,disk3,pegC,pegB) - smallestPrev(t7,pegB) =L= 0 ; (LHS = -1)
-     
-smallto(t7,pegC)..  move(t7,disk1,pegA,pegC) + move(t7,disk1,pegB,pegC) + move(t7,disk1,pegC,pegC) + 2*move(t7,disk2,pegA,pegC)
-     
-      + 2*move(t7,disk2,pegB,pegC) + 2*move(t7,disk2,pegC,pegC) + 3*move(t7,disk3,pegA,pegC) + 3*move(t7,disk3,pegB,pegC)
-     
-      + 3*move(t7,disk3,pegC,pegC) - smallestPrev(t7,pegC) =L= 0 ; (LHS = -1)
-     
+REMAINING 18 ENTRIES SKIPPED
+
 
 ---- inventory  =E=  inventory balance
 
@@ -767,246 +389,8 @@ inventory(t1,disk1,pegC)..  - move(t1,disk1,pegA,pegC) - move(t1,disk1,pegB,pegC
      
       + move(t1,disk1,pegC,pegB) + inv(t1,disk1,pegC) =E= 0 ; (LHS = 0)
      
-inventory(t1,disk2,pegA)..  move(t1,disk2,pegA,pegB) + move(t1,disk2,pegA,pegC) - move(t1,disk2,pegB,pegA)
-     
-      - move(t1,disk2,pegC,pegA) + inv(t1,disk2,pegA) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-inventory(t1,disk2,pegB)..  - move(t1,disk2,pegA,pegB) + move(t1,disk2,pegB,pegA) + move(t1,disk2,pegB,pegC)
-     
-      - move(t1,disk2,pegC,pegB) + inv(t1,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t1,disk2,pegC)..  - move(t1,disk2,pegA,pegC) - move(t1,disk2,pegB,pegC) + move(t1,disk2,pegC,pegA)
-     
-      + move(t1,disk2,pegC,pegB) + inv(t1,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t1,disk3,pegA)..  move(t1,disk3,pegA,pegB) + move(t1,disk3,pegA,pegC) - move(t1,disk3,pegB,pegA)
-     
-      - move(t1,disk3,pegC,pegA) + inv(t1,disk3,pegA) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-inventory(t1,disk3,pegB)..  - move(t1,disk3,pegA,pegB) + move(t1,disk3,pegB,pegA) + move(t1,disk3,pegB,pegC)
-     
-      - move(t1,disk3,pegC,pegB) + inv(t1,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t1,disk3,pegC)..  - move(t1,disk3,pegA,pegC) - move(t1,disk3,pegB,pegC) + move(t1,disk3,pegC,pegA)
-     
-      + move(t1,disk3,pegC,pegB) + inv(t1,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk1,pegA)..  move(t2,disk1,pegA,pegB) + move(t2,disk1,pegA,pegC) - move(t2,disk1,pegB,pegA)
-     
-      - move(t2,disk1,pegC,pegA) - inv(t1,disk1,pegA) + inv(t2,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk1,pegB)..  - move(t2,disk1,pegA,pegB) + move(t2,disk1,pegB,pegA) + move(t2,disk1,pegB,pegC)
-     
-      - move(t2,disk1,pegC,pegB) - inv(t1,disk1,pegB) + inv(t2,disk1,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk1,pegC)..  - move(t2,disk1,pegA,pegC) - move(t2,disk1,pegB,pegC) + move(t2,disk1,pegC,pegA)
-     
-      + move(t2,disk1,pegC,pegB) - inv(t1,disk1,pegC) + inv(t2,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk2,pegA)..  move(t2,disk2,pegA,pegB) + move(t2,disk2,pegA,pegC) - move(t2,disk2,pegB,pegA)
-     
-      - move(t2,disk2,pegC,pegA) - inv(t1,disk2,pegA) + inv(t2,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk2,pegB)..  - move(t2,disk2,pegA,pegB) + move(t2,disk2,pegB,pegA) + move(t2,disk2,pegB,pegC)
-     
-      - move(t2,disk2,pegC,pegB) - inv(t1,disk2,pegB) + inv(t2,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk2,pegC)..  - move(t2,disk2,pegA,pegC) - move(t2,disk2,pegB,pegC) + move(t2,disk2,pegC,pegA)
-     
-      + move(t2,disk2,pegC,pegB) - inv(t1,disk2,pegC) + inv(t2,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk3,pegA)..  move(t2,disk3,pegA,pegB) + move(t2,disk3,pegA,pegC) - move(t2,disk3,pegB,pegA)
-     
-      - move(t2,disk3,pegC,pegA) - inv(t1,disk3,pegA) + inv(t2,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk3,pegB)..  - move(t2,disk3,pegA,pegB) + move(t2,disk3,pegB,pegA) + move(t2,disk3,pegB,pegC)
-     
-      - move(t2,disk3,pegC,pegB) - inv(t1,disk3,pegB) + inv(t2,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t2,disk3,pegC)..  - move(t2,disk3,pegA,pegC) - move(t2,disk3,pegB,pegC) + move(t2,disk3,pegC,pegA)
-     
-      + move(t2,disk3,pegC,pegB) - inv(t1,disk3,pegC) + inv(t2,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk1,pegA)..  move(t3,disk1,pegA,pegB) + move(t3,disk1,pegA,pegC) - move(t3,disk1,pegB,pegA)
-     
-      - move(t3,disk1,pegC,pegA) - inv(t2,disk1,pegA) + inv(t3,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk1,pegB)..  - move(t3,disk1,pegA,pegB) + move(t3,disk1,pegB,pegA) + move(t3,disk1,pegB,pegC)
-     
-      - move(t3,disk1,pegC,pegB) - inv(t2,disk1,pegB) + inv(t3,disk1,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk1,pegC)..  - move(t3,disk1,pegA,pegC) - move(t3,disk1,pegB,pegC) + move(t3,disk1,pegC,pegA)
-     
-      + move(t3,disk1,pegC,pegB) - inv(t2,disk1,pegC) + inv(t3,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk2,pegA)..  move(t3,disk2,pegA,pegB) + move(t3,disk2,pegA,pegC) - move(t3,disk2,pegB,pegA)
-     
-      - move(t3,disk2,pegC,pegA) - inv(t2,disk2,pegA) + inv(t3,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk2,pegB)..  - move(t3,disk2,pegA,pegB) + move(t3,disk2,pegB,pegA) + move(t3,disk2,pegB,pegC)
-     
-      - move(t3,disk2,pegC,pegB) - inv(t2,disk2,pegB) + inv(t3,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk2,pegC)..  - move(t3,disk2,pegA,pegC) - move(t3,disk2,pegB,pegC) + move(t3,disk2,pegC,pegA)
-     
-      + move(t3,disk2,pegC,pegB) - inv(t2,disk2,pegC) + inv(t3,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk3,pegA)..  move(t3,disk3,pegA,pegB) + move(t3,disk3,pegA,pegC) - move(t3,disk3,pegB,pegA)
-     
-      - move(t3,disk3,pegC,pegA) - inv(t2,disk3,pegA) + inv(t3,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk3,pegB)..  - move(t3,disk3,pegA,pegB) + move(t3,disk3,pegB,pegA) + move(t3,disk3,pegB,pegC)
-     
-      - move(t3,disk3,pegC,pegB) - inv(t2,disk3,pegB) + inv(t3,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t3,disk3,pegC)..  - move(t3,disk3,pegA,pegC) - move(t3,disk3,pegB,pegC) + move(t3,disk3,pegC,pegA)
-     
-      + move(t3,disk3,pegC,pegB) - inv(t2,disk3,pegC) + inv(t3,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk1,pegA)..  move(t4,disk1,pegA,pegB) + move(t4,disk1,pegA,pegC) - move(t4,disk1,pegB,pegA)
-     
-      - move(t4,disk1,pegC,pegA) - inv(t3,disk1,pegA) + inv(t4,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk1,pegB)..  - move(t4,disk1,pegA,pegB) + move(t4,disk1,pegB,pegA) + move(t4,disk1,pegB,pegC)
-     
-      - move(t4,disk1,pegC,pegB) - inv(t3,disk1,pegB) + inv(t4,disk1,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk1,pegC)..  - move(t4,disk1,pegA,pegC) - move(t4,disk1,pegB,pegC) + move(t4,disk1,pegC,pegA)
-     
-      + move(t4,disk1,pegC,pegB) - inv(t3,disk1,pegC) + inv(t4,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk2,pegA)..  move(t4,disk2,pegA,pegB) + move(t4,disk2,pegA,pegC) - move(t4,disk2,pegB,pegA)
-     
-      - move(t4,disk2,pegC,pegA) - inv(t3,disk2,pegA) + inv(t4,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk2,pegB)..  - move(t4,disk2,pegA,pegB) + move(t4,disk2,pegB,pegA) + move(t4,disk2,pegB,pegC)
-     
-      - move(t4,disk2,pegC,pegB) - inv(t3,disk2,pegB) + inv(t4,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk2,pegC)..  - move(t4,disk2,pegA,pegC) - move(t4,disk2,pegB,pegC) + move(t4,disk2,pegC,pegA)
-     
-      + move(t4,disk2,pegC,pegB) - inv(t3,disk2,pegC) + inv(t4,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk3,pegA)..  move(t4,disk3,pegA,pegB) + move(t4,disk3,pegA,pegC) - move(t4,disk3,pegB,pegA)
-     
-      - move(t4,disk3,pegC,pegA) - inv(t3,disk3,pegA) + inv(t4,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk3,pegB)..  - move(t4,disk3,pegA,pegB) + move(t4,disk3,pegB,pegA) + move(t4,disk3,pegB,pegC)
-     
-      - move(t4,disk3,pegC,pegB) - inv(t3,disk3,pegB) + inv(t4,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t4,disk3,pegC)..  - move(t4,disk3,pegA,pegC) - move(t4,disk3,pegB,pegC) + move(t4,disk3,pegC,pegA)
-     
-      + move(t4,disk3,pegC,pegB) - inv(t3,disk3,pegC) + inv(t4,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk1,pegA)..  move(t5,disk1,pegA,pegB) + move(t5,disk1,pegA,pegC) - move(t5,disk1,pegB,pegA)
-     
-      - move(t5,disk1,pegC,pegA) - inv(t4,disk1,pegA) + inv(t5,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk1,pegB)..  - move(t5,disk1,pegA,pegB) + move(t5,disk1,pegB,pegA) + move(t5,disk1,pegB,pegC)
-     
-      - move(t5,disk1,pegC,pegB) - inv(t4,disk1,pegB) + inv(t5,disk1,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk1,pegC)..  - move(t5,disk1,pegA,pegC) - move(t5,disk1,pegB,pegC) + move(t5,disk1,pegC,pegA)
-     
-      + move(t5,disk1,pegC,pegB) - inv(t4,disk1,pegC) + inv(t5,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk2,pegA)..  move(t5,disk2,pegA,pegB) + move(t5,disk2,pegA,pegC) - move(t5,disk2,pegB,pegA)
-     
-      - move(t5,disk2,pegC,pegA) - inv(t4,disk2,pegA) + inv(t5,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk2,pegB)..  - move(t5,disk2,pegA,pegB) + move(t5,disk2,pegB,pegA) + move(t5,disk2,pegB,pegC)
-     
-      - move(t5,disk2,pegC,pegB) - inv(t4,disk2,pegB) + inv(t5,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk2,pegC)..  - move(t5,disk2,pegA,pegC) - move(t5,disk2,pegB,pegC) + move(t5,disk2,pegC,pegA)
-     
-      + move(t5,disk2,pegC,pegB) - inv(t4,disk2,pegC) + inv(t5,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk3,pegA)..  move(t5,disk3,pegA,pegB) + move(t5,disk3,pegA,pegC) - move(t5,disk3,pegB,pegA)
-     
-      - move(t5,disk3,pegC,pegA) - inv(t4,disk3,pegA) + inv(t5,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk3,pegB)..  - move(t5,disk3,pegA,pegB) + move(t5,disk3,pegB,pegA) + move(t5,disk3,pegB,pegC)
-     
-      - move(t5,disk3,pegC,pegB) - inv(t4,disk3,pegB) + inv(t5,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t5,disk3,pegC)..  - move(t5,disk3,pegA,pegC) - move(t5,disk3,pegB,pegC) + move(t5,disk3,pegC,pegA)
-     
-      + move(t5,disk3,pegC,pegB) - inv(t4,disk3,pegC) + inv(t5,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk1,pegA)..  move(t6,disk1,pegA,pegB) + move(t6,disk1,pegA,pegC) - move(t6,disk1,pegB,pegA)
-     
-      - move(t6,disk1,pegC,pegA) - inv(t5,disk1,pegA) + inv(t6,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk1,pegB)..  - move(t6,disk1,pegA,pegB) + move(t6,disk1,pegB,pegA) + move(t6,disk1,pegB,pegC)
-     
-      - move(t6,disk1,pegC,pegB) - inv(t5,disk1,pegB) + inv(t6,disk1,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk1,pegC)..  - move(t6,disk1,pegA,pegC) - move(t6,disk1,pegB,pegC) + move(t6,disk1,pegC,pegA)
-     
-      + move(t6,disk1,pegC,pegB) - inv(t5,disk1,pegC) + inv(t6,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk2,pegA)..  move(t6,disk2,pegA,pegB) + move(t6,disk2,pegA,pegC) - move(t6,disk2,pegB,pegA)
-     
-      - move(t6,disk2,pegC,pegA) - inv(t5,disk2,pegA) + inv(t6,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk2,pegB)..  - move(t6,disk2,pegA,pegB) + move(t6,disk2,pegB,pegA) + move(t6,disk2,pegB,pegC)
-     
-      - move(t6,disk2,pegC,pegB) - inv(t5,disk2,pegB) + inv(t6,disk2,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk2,pegC)..  - move(t6,disk2,pegA,pegC) - move(t6,disk2,pegB,pegC) + move(t6,disk2,pegC,pegA)
-     
-      + move(t6,disk2,pegC,pegB) - inv(t5,disk2,pegC) + inv(t6,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk3,pegA)..  move(t6,disk3,pegA,pegB) + move(t6,disk3,pegA,pegC) - move(t6,disk3,pegB,pegA)
-     
-      - move(t6,disk3,pegC,pegA) - inv(t5,disk3,pegA) + inv(t6,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk3,pegB)..  - move(t6,disk3,pegA,pegB) + move(t6,disk3,pegB,pegA) + move(t6,disk3,pegB,pegC)
-     
-      - move(t6,disk3,pegC,pegB) - inv(t5,disk3,pegB) + inv(t6,disk3,pegB) =E= 0 ; (LHS = 0)
-     
-inventory(t6,disk3,pegC)..  - move(t6,disk3,pegA,pegC) - move(t6,disk3,pegB,pegC) + move(t6,disk3,pegC,pegA)
-     
-      + move(t6,disk3,pegC,pegB) - inv(t5,disk3,pegC) + inv(t6,disk3,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk1,pegA)..  move(t7,disk1,pegA,pegB) + move(t7,disk1,pegA,pegC) - move(t7,disk1,pegB,pegA)
-     
-      - move(t7,disk1,pegC,pegA) - inv(t6,disk1,pegA) + inv(t7,disk1,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk1,pegB)..  - move(t7,disk1,pegA,pegB) + move(t7,disk1,pegB,pegA) + move(t7,disk1,pegB,pegC)
-     
-      - move(t7,disk1,pegC,pegB) - inv(t6,disk1,pegB) + inv(t7,disk1,pegB) =E= 0 ; (LHS = 1, INFES = 1 ****)
-     
-inventory(t7,disk1,pegC)..  - move(t7,disk1,pegA,pegC) - move(t7,disk1,pegB,pegC) + move(t7,disk1,pegC,pegA)
-     
-      + move(t7,disk1,pegC,pegB) - inv(t6,disk1,pegC) + inv(t7,disk1,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk2,pegA)..  move(t7,disk2,pegA,pegB) + move(t7,disk2,pegA,pegC) - move(t7,disk2,pegB,pegA)
-     
-      - move(t7,disk2,pegC,pegA) - inv(t6,disk2,pegA) + inv(t7,disk2,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk2,pegB)..  - move(t7,disk2,pegA,pegB) + move(t7,disk2,pegB,pegA) + move(t7,disk2,pegB,pegC)
-     
-      - move(t7,disk2,pegC,pegB) - inv(t6,disk2,pegB) + inv(t7,disk2,pegB) =E= 0 ; (LHS = 1, INFES = 1 ****)
-     
-inventory(t7,disk2,pegC)..  - move(t7,disk2,pegA,pegC) - move(t7,disk2,pegB,pegC) + move(t7,disk2,pegC,pegA)
-     
-      + move(t7,disk2,pegC,pegB) - inv(t6,disk2,pegC) + inv(t7,disk2,pegC) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk3,pegA)..  move(t7,disk3,pegA,pegB) + move(t7,disk3,pegA,pegC) - move(t7,disk3,pegB,pegA)
-     
-      - move(t7,disk3,pegC,pegA) - inv(t6,disk3,pegA) + inv(t7,disk3,pegA) =E= 0 ; (LHS = 0)
-     
-inventory(t7,disk3,pegB)..  - move(t7,disk3,pegA,pegB) + move(t7,disk3,pegB,pegA) + move(t7,disk3,pegB,pegC)
-     
-      - move(t7,disk3,pegC,pegB) - inv(t6,disk3,pegB) + inv(t7,disk3,pegB) =E= 0 ; (LHS = 1, INFES = 1 ****)
-     
-inventory(t7,disk3,pegC)..  - move(t7,disk3,pegA,pegC) - move(t7,disk3,pegB,pegC) + move(t7,disk3,pegC,pegA)
-     
-      + move(t7,disk3,pegC,pegB) - inv(t6,disk3,pegC) + inv(t7,disk3,pegC) =E= 0 ; (LHS = 0)
-     
+REMAINING 60 ENTRIES SKIPPED
+
 
 ---- isdone  =G=  we are done
 
@@ -1016,14 +400,8 @@ isdone(t2)..  inv(t2,disk1,pegB) + inv(t2,disk2,pegB) + inv(t2,disk3,pegB) - 3*d
      
 isdone(t3)..  inv(t3,disk1,pegB) + inv(t3,disk2,pegB) + inv(t3,disk3,pegB) - 3*done(t3) =G= 0 ; (LHS = 0)
      
-isdone(t4)..  inv(t4,disk1,pegB) + inv(t4,disk2,pegB) + inv(t4,disk3,pegB) - 3*done(t4) =G= 0 ; (LHS = 0)
-     
-isdone(t5)..  inv(t5,disk1,pegB) + inv(t5,disk2,pegB) + inv(t5,disk3,pegB) - 3*done(t5) =G= 0 ; (LHS = 0)
-     
-isdone(t6)..  inv(t6,disk1,pegB) + inv(t6,disk2,pegB) + inv(t6,disk3,pegB) - 3*done(t6) =G= 0 ; (LHS = 0)
-     
-isdone(t7)..  inv(t7,disk1,pegB) + inv(t7,disk2,pegB) + inv(t7,disk3,pegB) - 3*done(t7) =G= 0 ; (LHS = 0)
-     
+REMAINING 4 ENTRIES SKIPPED
+
 
 ---- ordering  =G=  optional
 
@@ -1033,12 +411,8 @@ ordering(t2)..  - done(t2) + done(t3) =G= 0 ; (LHS = 0)
      
 ordering(t3)..  - done(t3) + done(t4) =G= 0 ; (LHS = 0)
      
-ordering(t4)..  - done(t4) + done(t5) =G= 0 ; (LHS = 0)
-     
-ordering(t5)..  - done(t5) + done(t6) =G= 0 ; (LHS = 0)
-     
-ordering(t6)..  - done(t6) + done(t7) =G= 0 ; (LHS = 1)
-     
+REMAINING 3 ENTRIES SKIPPED
+
 
 ---- assignment  =E=  optional assignment constraint
 
@@ -1048,50 +422,16 @@ assignment(t1,disk2)..  inv(t1,disk2,pegA) + inv(t1,disk2,pegB) + inv(t1,disk2,p
      
 assignment(t1,disk3)..  inv(t1,disk3,pegA) + inv(t1,disk3,pegB) + inv(t1,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
      
-assignment(t2,disk1)..  inv(t2,disk1,pegA) + inv(t2,disk1,pegB) + inv(t2,disk1,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t2,disk2)..  inv(t2,disk2,pegA) + inv(t2,disk2,pegB) + inv(t2,disk2,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t2,disk3)..  inv(t2,disk3,pegA) + inv(t2,disk3,pegB) + inv(t2,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t3,disk1)..  inv(t3,disk1,pegA) + inv(t3,disk1,pegB) + inv(t3,disk1,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t3,disk2)..  inv(t3,disk2,pegA) + inv(t3,disk2,pegB) + inv(t3,disk2,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t3,disk3)..  inv(t3,disk3,pegA) + inv(t3,disk3,pegB) + inv(t3,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t4,disk1)..  inv(t4,disk1,pegA) + inv(t4,disk1,pegB) + inv(t4,disk1,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t4,disk2)..  inv(t4,disk2,pegA) + inv(t4,disk2,pegB) + inv(t4,disk2,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t4,disk3)..  inv(t4,disk3,pegA) + inv(t4,disk3,pegB) + inv(t4,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t5,disk1)..  inv(t5,disk1,pegA) + inv(t5,disk1,pegB) + inv(t5,disk1,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t5,disk2)..  inv(t5,disk2,pegA) + inv(t5,disk2,pegB) + inv(t5,disk2,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t5,disk3)..  inv(t5,disk3,pegA) + inv(t5,disk3,pegB) + inv(t5,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t6,disk1)..  inv(t6,disk1,pegA) + inv(t6,disk1,pegB) + inv(t6,disk1,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t6,disk2)..  inv(t6,disk2,pegA) + inv(t6,disk2,pegB) + inv(t6,disk2,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t6,disk3)..  inv(t6,disk3,pegA) + inv(t6,disk3,pegB) + inv(t6,disk3,pegC) =E= 1 ; (LHS = 0, INFES = 1 ****)
-     
-assignment(t7,disk1)..  inv(t7,disk1,pegA) + inv(t7,disk1,pegB) + inv(t7,disk1,pegC) =E= 1 ; (LHS = 1)
-     
-assignment(t7,disk2)..  inv(t7,disk2,pegA) + inv(t7,disk2,pegB) + inv(t7,disk2,pegC) =E= 1 ; (LHS = 1)
-     
-assignment(t7,disk3)..  inv(t7,disk3,pegA) + inv(t7,disk3,pegB) + inv(t7,disk3,pegC) =E= 1 ; (LHS = 1)
-     
+REMAINING 18 ENTRIES SKIPPED
+
 
 ---- obj  =E=  objective
 
 obj..  - done(t1) - done(t2) - done(t3) - done(t4) - done(t5) - done(t6) - done(t7) + z =E= 0 ; (LHS = -1, INFES = 1 ****)
      
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 4
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MIP From line 152
+Column Listing      SOLVE m Using MIP From line 148
 
 
 ---- move  disk is moved from one peg to another
@@ -1198,9 +538,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 5
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m Using MIP From line 152
+Range Statistics    SOLVE m Using MIP From line 148
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -1209,9 +549,9 @@ RHS       [min, max] : [ 1.000E+00, 3.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 3.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 3.000E+00]
 
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 6
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MIP From line 152
+Model Statistics    SOLVE m Using MIP From line 148
 
 
 MODEL STATISTICS
@@ -1221,43 +561,43 @@ BLOCKS OF VARIABLES           5     SINGLE VARIABLES          281  18 projected
 NON ZERO ELEMENTS         1,185     DISCRETE VARIABLES        259
 
 
-GENERATION TIME      =        0.063 SECONDS      4 MB  49.1.0 5c4d4ed6 WEX-WEI
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 7
+GENERATION TIME      =        0.078 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MIP From line 152
+Solution Report     SOLVE m Using MIP From line 148
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  152
+     SOLVER  CPLEX               FROM LINE  148
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                1.0000
 
- RESOURCE USAGE, LIMIT          0.015 10000000000.000
+ RESOURCE USAGE, LIMIT          0.047 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
 --- Space for names approximately 0.01 Mb
 --- Use option 'names no' to turn use of names off
---- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- GMO memory 0.55 Mb (peak 0.56 Mb)
 --- Dictionary memory 0.00 Mb
 --- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
 --- Starting Cplex
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.00sec (det. 2.58 ticks)
+--- Cplex Time: 0.02sec (det. 2.58 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
 
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.21 ticks)
+--- Cplex Time: 0.02sec (det. 0.21 ticks)
 
 
 Proven optimal solution
@@ -1825,12 +1165,12 @@ t7.pegC         1.0000         1.0000         3.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 49.1.0  5c4d4ed6 Feb 15, 2025          WEX-WEI x86 64bit/MS Windows - 04/01/25 10:48:30 Page 8
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 12/24/25 05:55:48 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    157 VARIABLE smallestPrev.L  smallest disk in previous iteration
+----    153 VARIABLE smallestPrev.L  smallest disk in previous iteration
 
           pegA        pegB        pegC
 
@@ -1843,7 +1183,7 @@ t6       1.000       2.000       2.000
 t7       1.000       1.000       1.000
 
 
-----    157 VARIABLE move.L  disk is moved from one peg to another
+----    153 VARIABLE move.L  disk is moved from one peg to another
 
            pegA.pegB   pegA.pegC   pegB.pegC   pegC.pegA   pegC.pegB
 
@@ -1856,7 +1196,7 @@ t6.disk2                                                           1
 t7.disk1           1
 
 
-----    157 VARIABLE inv.L  inventory after move
+----    153 VARIABLE inv.L  inventory after move
 
                 pegA        pegB        pegC
 
@@ -1883,12 +1223,12 @@ t7.disk2                   1.000
 t7.disk3                   1.000
 
 
-----    157 VARIABLE done.L  we are done
+----    153 VARIABLE done.L  we are done
 
 t7 1.000
 
 
-----    169 SET sinv  include initial, and stop after done
+----    165 SET sinv  include initial, and stop after done
 
                      pegA        pegB        pegC
 
@@ -1918,7 +1258,7 @@ t7     .disk2                     YES
 t7     .disk3                     YES
 
 
-----    195 PARAMETER ndisks  number of disks on each peg
+----    190 PARAMETER ndisks  number of disks on each peg
 
                pegA        pegB        pegC
 
@@ -1934,17 +1274,17 @@ t7                        3.000
 
 **** REPORT FILE SUMMARY
 
-f C:\Users\erwin\Projects\blog\hanoi\hanoiplots.html
+f C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots.html
 
 
-EXECUTION TIME       =        0.469 SECONDS      6 MB  49.1.0 5c4d4ed6 WEX-WEI
+EXECUTION TIME       =        2.062 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
 
 
-USER: Eval License                                   S241129|0002CO-GEN
-      Amsterdam Optimization Modeling Group,                     DCE378
+USER: Eval License                                   G250902+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
 
 
 **** FILE SUMMARY
 
-Input      C:\Users\erwin\Projects\blog\hanoi\hanoi.gms
-Output     C:\Users\erwin\Projects\blog\hanoi\hanoi.lst
+Input      C:\projects\OptimizationModels\Towers of Hanoi\hanoi.gms
+Output     C:\projects\OptimizationModels\Towers of Hanoi\hanoi.lst

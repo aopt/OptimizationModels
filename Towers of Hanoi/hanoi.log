@@ -1,62 +1,49 @@
-
---- Job hanoi.gms Start 04/01/25 10:48:30 49.1.0 5c4d4ed6 WEX-WEI x86 64bit/MS Windows
+--- Job hanoi Start 12/24/25 05:55:48 52.1.0 4f802a74 WEX-WEI x86 64bit/MS Windows
 --- Applying:
-    C:\GAMS\49\gmsprmNT.txt
+    C:\gams\52\gmsprmNT.txt
     C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
 --- GAMS Parameters defined
     MIP CPLEX
-    Input C:\Users\erwin\Projects\blog\hanoi\hanoi.gms
+    Input "C:\projects\OptimizationModels\Towers of Hanoi\hanoi.gms"
     PageWidth 130
-    PageSize 0
-    ScrDir C:\Users\erwin\Projects\blog\hanoi\225a\
-    SysDir C:\GAMS\49\
-    LogOption 3
-    ErrMsg 1
-    ErrorLog 99
-    LimRow 999
-    IDE 1
-    LstTitleLeftAligned 1
-Licensee: Eval License                                   S241129|0002CO-GEN
-          Amsterdam Optimization Modeling Group,                     DCE378
-          C:\Users\erwin\Documents\GAMS\gamslice.txt
-          License Admin: Erwin Kalvelagen, info@amsterdamoptimization.com  
+    ScrDir "C:\projects\OptimizationModels\Towers of Hanoi\225a\"
+    SysDir C:\gams\52\
+    LogOption 2
+    LogFile "C:\projects\OptimizationModels\Towers of Hanoi\hanoi.log"
+    AppendLog 1
+Licensee: Eval License                                   G250902+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:52800 v:2                    
           Evaluation license: Not for commercial or production use
-          The expiration date of time-limited license is Dec 24, 2025
-System information: 8 physical cores and 64 Gb memory detected
-GAMS 49.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+          The time-limited license stops working on : Jan 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 52.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
 --- Starting compilation
---- hanoi.gms(35) 2 Mb
+--- hanoi.gms(34) 2 Mb
 --- Initialize embedded library embpycclib64.dll
 --- Execute embedded library embpycclib64.dll
-N=3
-move disk from peg A to B
-move disk from peg A to C
-move disk from peg B to C
-move disk from peg A to B
-move disk from peg C to A
-move disk from peg C to B
-move disk from peg A to B
-7 moves
---- hanoi.gms(234) 3 Mb
---- Starting execution: elapsed 0:00:01.118
---- hanoi.gms(144) 4 Mb
+--- hanoi.gms(226) 3 Mb
+--- Starting execution: elapsed 0:00:03.411
+--- hanoi.gms(140) 4 Mb
 --- Generating MIP model m
---- hanoi.gms(152) 4 Mb
+--- hanoi.gms(148) 4 Mb
 ---   201 rows  281 columns  1,185 non-zeroes
 ---   259 discrete-columns
 --- Range statistics (absolute non-zero finite values)
 --- RHS       [min, max] : [ 1.000E+00, 3.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 3.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.000E+00, 3.000E+00]
---- Executing CPLEX (Solvelink=2): elapsed 0:00:01.182
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:03.480
 
-IBM ILOG CPLEX   49.1.0 5c4d4ed6 Feb 15, 2025          WEI x86 64bit/MS Window
+IBM ILOG CPLEX   52.1.0 4f802a74 Nov 28, 2025          WEI x86 64bit/MS Window
 
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
 --- Space for names approximately 0.01 Mb
 --- Use option 'names no' to turn use of names off
---- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- GMO memory 0.55 Mb (peak 0.56 Mb)
 --- Dictionary memory 0.00 Mb
 --- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
 --- Starting Cplex
@@ -74,7 +61,7 @@ Aggregator did 21 substitutions.
 Reduced MIP has 106 rows, 116 columns, and 474 nonzeros.
 Reduced MIP has 104 binaries, 0 generals, 0 SOSs, and 0 indicators.
 Presolve time = 0.00 sec. (1.27 ticks)
-Found incumbent of value 1.000000 after 0.00 sec. (2.38 ticks)
+Found incumbent of value 1.000000 after 0.02 sec. (2.38 ticks)
 Probing fixed 104 vars, tightened 10 bounds.
 Probing time = 0.00 sec. (0.10 ticks)
 Tried aggregator 1 time.
@@ -83,16 +70,16 @@ All rows and columns eliminated.
 Presolve time = 0.00 sec. (0.07 ticks)
 
 Root node processing (before b&c):
-  Real time             =    0.00 sec. (2.58 ticks)
+  Real time             =    0.02 sec. (2.58 ticks)
 Parallel b&c, 16 threads:
   Real time             =    0.00 sec. (0.00 ticks)
   Sync time (average)   =    0.00 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    0.00 sec. (2.58 ticks)
+Total (root+branch&cut) =    0.02 sec. (2.58 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.00sec (det. 2.58 ticks)
+--- Cplex Time: 0.02sec (det. 2.58 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
@@ -108,7 +95,7 @@ All rows and columns eliminated.
 Presolve time = 0.00 sec. (0.14 ticks)
 
 --- Fixed MIP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.21 ticks)
+--- Cplex Time: 0.02sec (det. 0.21 ticks)
 
 
 Proven optimal solution
@@ -120,8 +107,8 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m
---- Executing after solve: elapsed 0:00:01.342
---- hanoi.gms(233) 6 Mb
---- Putfile f C:\Users\erwin\Projects\blog\hanoi\hanoiplots.html
+--- Executing after solve: elapsed 0:00:03.705
+--- hanoi.gms(226) 6 Mb
+--- Putfile f C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots.html
 *** Status: Normal completion
---- Job hanoi.gms Stop 04/01/25 10:48:32 elapsed 0:00:01.605
+--- Job hanoi.gms Stop 12/24/25 05:55:54 elapsed 0:00:05.493
