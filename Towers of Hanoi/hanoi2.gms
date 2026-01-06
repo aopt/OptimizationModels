@@ -11,6 +11,7 @@ $offText
 *-----------------------------------------------------------------------------------
 
 $set n 4
+$set makeplot 1
 
 *-----------------------------------------------------------------------------------
 * nodes
@@ -131,3 +132,68 @@ loop(move$card(cur),
 
 option trace:0:0:1;
 display trace;
+
+*-----------------------------------------------------------------------------------
+* Visualization
+*-----------------------------------------------------------------------------------
+
+abort.noError$(n>6 or %makeplot%=0) "skipping plot";
+
+$set svg hanoiplots2.html
+
+file fname /%svg%/;
+put fname;
+
+put '<style>table,th,td {border-collapse: collapse;}</style>'/;
+put '<h2>Towers of Hanoi Network Results</h2>'/;
+put 'Number of pegs: ',card(peg):0:0,'<br>'/;
+put 'Number of disks: %n% <br>'/;
+put 'Number of moves: ',z.l:0:0,'<br>'/;
+put 'Nodes, arcs: ',nn:0:0,', ',narcs:0:0/;
+
+put '<table border="1">'/;
+put '<tr>'/;
+
+$eval n2 %n%+2
+
+scalar nd,x,y,w,k /0/;
+parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
+
+cur(node) = supply(node)>0;
+
+loop(move$card(cur),
+   if (k=4,
+       put "</tr><tr>"/;
+       k = 0;
+    );
+   k = k + 1;
+
+   put '<td style="text-align: center">'/;
+   put '<svg height="100" width="300" viewBox="0 0 12 %n2%">'/;
+   
+   loop(peg,
+* draw peg
+      put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+* draw disk
+      nd = sum(nodes(cur,disk,peg),1);
+      loop(nodes(cur,disk,peg),
+         y = n+1-nd+1;
+         w = ord(disk)*3/n;
+         x = 3*ord(peg)-0.5*w;
+*         display x,w,y;
+         put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
+         put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
+         nd = nd-1;
+      );
+   );
+   put '</svg><br>',cur.tl:0/;
+   put '</td>'/;
+   
+   next(node) = f.l(cur,node)>0.5;
+   cur(node) = next(node);  
+
+);
+
+put '</tr></table>';
+putclose;
+executetool 'win32.ShellExecute "%svg%"';
