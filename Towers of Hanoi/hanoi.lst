@@ -1,4 +1,4 @@
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 1
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -45,198 +45,192 @@ C o m p i l a t i o n
   61      n 'number of disks' /4/
   62      size(disk) 'size of each disk: 1..n'
   63      maxsize 'maximum size of disk'
-  64      initial(t,disk,peg) 'initial inventory (state)'
-  65      final(disk,peg) 'final inventory (state)'
-  66  ;
-  67   
-  68  abort$(card(t)<2**n-1) "increase size of set t";
+  64  ;
+  65   
+  66  Sets
+  67    initial(disk,peg) 'initial inventory (state)'
+  68    final(disk,peg) 'final inventory (state)'
   69   
-  70  size(disk) = ord(disk);
-  71  maxsize = smax(disk,size(disk));
+  70   
+  71  abort$(card(t)<2**n-1) "increase size of set t";
   72   
-  73  * initial state: all disks on peg A
-  74  * has t index to make it easier to use in the constraints
-  75  *initial('t1',disk,'pegA') = 1;
-  76  initial('t1','disk1','pegA') = 1;
-  77  initial('t1','disk2','pegA') = 1;
-  78  initial('t1','disk3','pegA') = 1;
-  79  initial('t1','disk4','pegA') = 1;
-  80   
-  81  * final state: all disks on peg B
-  82  *final(disk,'pegB') = 1;
-  83  final('disk1','pegB') = 1;
-  84  final('disk2','pegB') = 1;
-  85  final('disk3','pegB') = 1;
-  86  final('disk4','pegB') = 1;
-  87   
-  88  display n,size,maxsize,initial,final;
+  73  size(disk) = ord(disk);
+  74  maxsize = smax(disk,size(disk));
+  75   
+  76  * initial state: all disks on peg A
+  77  * has t index to make it easier to use in the constraints
+  78  initial(disk,'pegA') = yes;
+  79   
+  80  * final state: all disks on peg B
+  81  final(disk,'pegB') = yes;
+  82   
+  83  display n,size,maxsize,initial,final;
+  84   
+  85   
+  86  *-----------------------------------------------------------------------------------
+  87  * MIP model
+  88  *-----------------------------------------------------------------------------------
   89   
   90   
-  91  *-----------------------------------------------------------------------------------
-  92  * MIP model
-  93  *-----------------------------------------------------------------------------------
-  94   
-  95   
-  96  binary variable
-  97     move(t,disk,peg,peg)   'disk is moved from one peg to another'
-  98     inv(t,disk,peg)        'inventory after move'
-  99     done(t)                'we are done'
- 100  ;
- 101  variable smallestPrev(t,peg) 'smallest disk in previous iteration';
- 102  smallestPrev.lo(t,peg) = 1;
- 103  smallestPrev.up(t,peg) = maxsize;
- 104   
- 105  variable z 'obj';
- 106   
- 107  equations
- 108     move1disk(t)           'move 1 disk (or 0 if done)'
- 109     bndsmall(t,disk,peg)   'bound on smallest size of disk'
- 110     smallfrom(t,peg)       'need to select smallest disk from source peg'
- 111     smallto(t,peg)         'size restriction on destination peg'
- 112     inventory(t,disk,peg)  'inventory balance'
- 113     isdone(t)              'we are done'
- 114     ordering(t)            'optional'
- 115     assignment(t,disk)     'optional assignment constraint'
- 116     obj                    'objective'
- 117  ;
+  91  binary variable
+  92     move(t,disk,peg,peg)   'disk is moved from one peg to another'
+  93     inv(t,disk,peg)        'inventory after move'
+  94     done(t)                'we are done'
+  95  ;
+  96  variable smallestPrev(t,peg) 'smallest disk in previous iteration';
+  97  smallestPrev.lo(t,peg) = 1;
+  98  smallestPrev.up(t,peg) = maxsize;
+  99   
+ 100  variable z 'obj';
+ 101   
+ 102  equations
+ 103     move1disk(t)           'move 1 disk (or 0 if done)'
+ 104     bndsmall(t,disk,peg)   'bound on smallest size of disk'
+ 105     smallfrom(t,peg)       'need to select smallest disk from source peg'
+ 106     smallto(t,peg)         'size restriction on destination peg'
+ 107     inventory(t,disk,peg)  'inventory balance'
+ 108     isdone(t)              'we are done'
+ 109     ordering(t)            'optional'
+ 110     assignment(t,disk)     'optional assignment constraint'
+ 111     obj                    'objective'
+ 112  ;
+ 113   
+ 114   
+ 115  * if done=1: move zero disks
+ 116  * if done=0: move exactly one disk
+ 117  move1disk(t).. sum((disk,peg1,peg2),move(t,disk,peg1,peg2)) =e= 1-done(t-1);
  118   
- 119   
- 120  * if done=1: move zero disks
- 121  * if done=0: move exactly one disk
- 122  move1disk(t).. sum((disk,peg1,peg2),move(t,disk,peg1,peg2)) =e= 1-done(t-1);
- 123   
- 124  * don't move a disk from and to the same peg
- 125  move.fx(t,disk,peg,peg) = 0;
- 126   
- 127  * we can only move the smallest disk
- 128  parameter initsmallest(t,peg);
- 129  initsmallest('t1',peg) = maxsize;
- 130  initsmallest('t1','pegA') = smin(disk,size(disk));
- 131  display initsmallest;
+ 119  * don't move a disk from and to the same peg
+ 120  move.fx(t,disk,peg,peg) = 0;
+ 121   
+ 122  * we can only move the smallest disk
+ 123  parameter initsmallest(t,peg) 'smallest disk on each peg for initial configuration';
+ 124  initsmallest('t1',peg)$(sum(initial(disk,peg),1)=0) = maxsize;
+ 125  initsmallest('t1',peg)$(sum(initial(disk,peg),1)>0) = smin(initial(disk,peg),size(disk));
+ 126  display initsmallest;
+ 127   
+ 128  smallestPrev.fx('t1',peg) = initsmallest('t1',peg);
+ 129  bndsmall(t,disk,peg)$(ord(t)>1).. smallestPrev(t,peg) =l= size(disk)*inv(t-1,disk,peg) + n*(1-inv(t-1,disk,peg));
+ 130  smallfrom(t,peg)..     sum((disk,peg2),size(disk)*move(t,disk,peg,peg2)) =l= smallestPrev(t,peg);
+ 131  smallto(t,peg)..       sum((disk,peg1),size(disk)*move(t,disk,peg1,peg)) =l= smallestPrev(t,peg);
  132   
- 133  smallestPrev.fx('t1',peg) = initsmallest('t1',peg);
- 134  bndsmall(t,disk,peg)$(ord(t)>1).. smallestPrev(t,peg) =l= size(disk)*inv(t-1,disk,peg) + n*(1-inv(t-1,disk,peg));
- 135  smallfrom(t,peg)..     sum((disk,peg2),size(disk)*move(t,disk,peg,peg2)) =l= smallestPrev(t,peg);
- 136  smallto(t,peg)..       sum((disk,peg1),size(disk)*move(t,disk,peg1,peg)) =l= smallestPrev(t,peg);
- 137   
- 138  * inventory balance
- 139  inventory(t,disk,peg)..
- 140    inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + initial(t,disk
-      ,peg);
+ 133  * inventory balance
+ 134  inventory(t,disk,peg)..
+ 135    inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + 1$(initial(dis
+      k,peg) and ord(t)=1);
+ 136   
+ 137  * done if all disks are at peg B
+ 138  isdone(t).. sum((disk,peg)$final(disk,peg),inv(t,disk,peg)) =g= n*done(t);
+ 139   
+ 140  obj.. z =e= sum(t,done(t));
  141   
- 142  * done if all disks are at peg B
- 143  *isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
- 144  isdone(t).. sum((disk,peg)$final(disk,peg),inv(t,disk,peg)) =g= n*done(t);
+ 142  * optional constraints
+ 143  ordering(t-1).. done(t) =g= done(t-1);
+ 144  assignment(t,disk).. sum(peg,inv(t,disk,peg)) =e= 1;
  145   
- 146  obj.. z =e= sum(t,done(t));
- 147   
- 148  * optional constraints
- 149  ordering(t-1).. done(t) =g= done(t-1);
- 150  assignment(t,disk).. sum(peg,inv(t,disk,peg)) =e= 1;
+ 146  * optional fixes
+ 147  set lastt(t);
+ 148  lastt(t) = ord(t)=card(t);
+ 149  done.fx(lastt) = 1;
+ 150  inv.fx(lastt,disk,peg) = final(disk,peg);
  151   
- 152  * optional fixes
- 153  set lastt(t);
- 154  lastt(t) = ord(t)=card(t);
- 155  done.fx(lastt) = 1;
- 156  inv.fx(lastt,disk,peg) = final(disk,peg);
+ 152  model m /all/;
+ 153   
+ 154  *-----------------------------------------------------------------------------------
+ 155  * Solve
+ 156  *-----------------------------------------------------------------------------------
  157   
- 158  model m /all/;
- 159   
- 160  *-----------------------------------------------------------------------------------
- 161  * Solve
- 162  *-----------------------------------------------------------------------------------
- 163   
- 164  solve m maximizing z using mip;
- 165  abort$(m.modelstat <> 1 and m.modelstat <> 8) "no solution";
- 166   
- 167  * raw results
- 168  option move:0:2:2;
- 169  display smallestPrev.l,move.l,inv.l,done.l;
- 170   
- 171  *-----------------------------------------------------------------------------------
- 172  * Reporting
- 173  *-----------------------------------------------------------------------------------
- 174   
- 175  set sinv(*,disk,peg) 'include initial, and stop after done';
- 176  sinv('initial',disk,peg) = initial('t1',disk,peg);
- 177  loop(t,
- 178     sinv(t,disk,peg) = inv.l(t,disk,peg)>0.5;
- 179     break$(done.l(t)>0.5);
- 180  );
- 181  display sinv;
- 182   
- 183  scalar numMoves 'number of moves';
- 184  numMoves = sum(t$sum(sinv(t,disk,peg),1),1);
- 185  display numMoves;
+ 158  solve m maximizing z using mip;
+ 159  abort$(m.modelstat <> 1 and m.modelstat <> 8) "no solution";
+ 160   
+ 161  * raw results
+ 162  option move:0:2:2;
+ 163  display smallestPrev.l,move.l,inv.l,done.l;
+ 164   
+ 165  *-----------------------------------------------------------------------------------
+ 166  * Reporting
+ 167  *-----------------------------------------------------------------------------------
+ 168   
+ 169  set sinv(*,disk,peg) 'include initial, and stop after done';
+ 170  sinv('initial',initial) = yes;
+ 171  loop(t,
+ 172     sinv(t,disk,peg) = inv.l(t,disk,peg)>0.5;
+ 173     break$(done.l(t)>0.5);
+ 174  );
+ 175  display sinv;
+ 176   
+ 177  scalar numMoves 'number of moves';
+ 178  numMoves = sum(t$sum(sinv(t,disk,peg),1),1);
+ 179  display numMoves;
+ 180   
+ 181  *-----------------------------------------------------------------------------------
+ 182  * Visualization
+ 183  *-----------------------------------------------------------------------------------
+ 184   
+ 185  abort.noError$(n>6 or 1=0) "skipping plot";
  186   
- 187  *-----------------------------------------------------------------------------------
- 188  * Visualization
- 189  *-----------------------------------------------------------------------------------
- 190   
- 191  abort.noError$(n>6 or 1=0) "skipping plot";
- 192   
- 194   
- 195  file f /hanoiplots.html/;
- 196  put f;
- 197   
- 198  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
- 199  put '<h2>Towers of Hanoi MIP Results</h2>'/;
- 200  put 'Number of pegs: ',card(peg):0:0,'<br>'/;
- 201  put 'Number of disks: 4 <br>'/;
- 202  put 'Number of moves: ',numMoves:0:0,'<br>'/;
- 203  put 'MIP model has ',m.numvar:0:0,' variables (of which ',m.numdvar:0:0,' binary) and ',m.numequ:0:0,' equations<br><br>'/;
- 204   
- 205  put '<table border="1">'/;
- 206  put '<tr>'/;
- 207   
- 209   
- 210  alias (t1,*);
- 211  parameter ndisks(*,peg) 'number of disks on each peg';
- 212  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
- 213  display ndisks;
- 214   
- 215  scalar nd,x,y,w,k /0/;
- 216  parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
- 217   
- 218  loop(t1$sum(sinv(t1,disk,peg),1),
- 219     if (k=4,
- 220         put "</tr><tr>"/;
- 221         k = 0;
- 222      );
- 223     k = k + 1;
- 224   
- 225     put '<td style="text-align: center">'/;
- 226     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
- 227   
- 228     loop(peg,
- 229  * draw peg
- 230        put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>
+ 188   
+ 189  file f /hanoiplots.html/;
+ 190  put f;
+ 191   
+ 192  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
+ 193  put '<h2>Towers of Hanoi MIP Results</h2>'/;
+ 194  put 'Number of pegs: ',card(peg):0:0,'<br>'/;
+ 195  put 'Number of disks: 4 <br>'/;
+ 196  put 'Number of moves: ',numMoves:0:0,'<br>'/;
+ 197  put 'MIP model has ',m.numvar:0:0,' variables (of which ',m.numdvar:0:0,' binary) and ',m.numequ:0:0,' equations<br><br>'/;
+ 198   
+ 199  put '<table border="1">'/;
+ 200  put '<tr>'/;
+ 201   
+ 203   
+ 204  alias (t1,*);
+ 205  parameter ndisks(*,peg) 'number of disks on each peg';
+ 206  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
+ 207  display ndisks;
+ 208   
+ 209  scalar nd,x,y,w,k /0/;
+ 210  parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
+ 211   
+ 212  loop(t1$sum(sinv(t1,disk,peg),1),
+ 213     if (k=4,
+ 214         put "</tr><tr>"/;
+ 215         k = 0;
+ 216      );
+ 217     k = k + 1;
+ 218   
+ 219     put '<td style="text-align: center">'/;
+ 220     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
+ 221   
+ 222     loop(peg,
+ 223  * draw peg
+ 224        put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>
       '/;
- 231  * draw disk
- 232        nd = ndisks(t1,peg);
- 233        loop(sinv(t1,disk,peg),
- 234           y = n+1-nd+1;
- 235           w = size(disk)*3/n;
- 236           x = 3*ord(peg)-0.5*w;
- 237  *         display x,w,y;
- 238           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
- 239           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
+ 225  * draw disk
+ 226        nd = ndisks(t1,peg);
+ 227        loop(sinv(t1,disk,peg),
+ 228           y = n+1-nd+1;
+ 229           w = size(disk)*3/n;
+ 230           x = 3*ord(peg)-0.5*w;
+ 231  *         display x,w,y;
+ 232           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
+ 233           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
       0.6">',(ord(disk)):0:0,'</text>'/;
- 240           nd = nd-1;
- 241        );
- 242     );
- 243     put '</svg><br>',t1.tl:0/;
- 244     put '</td>'/;
- 245  );
- 246   
- 247  put '</tr></table>';
- 248  putclose;
- 249  executetool 'win32.ShellExecute "hanoiplots.html"';
- 250   
+ 234           nd = nd-1;
+ 235        );
+ 236     );
+ 237     put '</svg><br>',t1.tl:0/;
+ 238     put '</td>'/;
+ 239  );
+ 240   
+ 241  put '</tr></table>';
+ 242  putclose;
+ 243  executetool 'win32.ShellExecute "hanoiplots.html"';
+ 244   
 
 
 COMPILATION TIME     =        0.125 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 2
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -256,44 +250,44 @@ disk1,    disk2,    disk3,    disk4
 t1 ,    t2 ,    t3 ,    t4 ,    t5 ,    t6 ,    t7 ,    t8 ,    t9 ,    t10,    t11,    t12,    t13,    t14,    t15
 
 
-----     88 PARAMETER n                    =        4.000  number of disks
+----     83 PARAMETER n                    =        4.000  number of disks
 
-----     88 PARAMETER size  size of each disk: 1..n
+----     83 PARAMETER size  size of each disk: 1..n
 
 disk1 1.000,    disk2 2.000,    disk3 3.000,    disk4 4.000
 
 
-----     88 PARAMETER maxsize              =        4.000  maximum size of disk
+----     83 PARAMETER maxsize              =        4.000  maximum size of disk
 
-----     88 PARAMETER initial  initial inventory (state)
+----     83 SET initial  initial inventory (state)
 
-                pegA
+             pegA
 
-t1.disk1       1.000
-t1.disk2       1.000
-t1.disk3       1.000
-t1.disk4       1.000
+disk1         YES
+disk2         YES
+disk3         YES
+disk4         YES
 
 
-----     88 PARAMETER final  final inventory (state)
+----     83 SET final  final inventory (state)
 
              pegB
 
-disk1       1.000
-disk2       1.000
-disk3       1.000
-disk4       1.000
+disk1         YES
+disk2         YES
+disk3         YES
+disk4         YES
 
 
-----    131 PARAMETER initsmallest  
+----    126 PARAMETER initsmallest  smallest disk on each peg for initial configuration
 
           pegA        pegB        pegC
 
 t1       1.000       4.000       4.000
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 3
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MIP From line 164
+Equation Listing    SOLVE m Using MIP From line 158
 
 
 ---- move1disk  =E=  move 1 disk (or 0 if done)
@@ -484,9 +478,9 @@ obj..  - done(t1) - done(t2) - done(t3) - done(t4) - done(t5) - done(t6) - done(
      
       - done(t12) - done(t13) - done(t14) - done(t15) + z =E= 0 ; (LHS = -1, INFES = 1 ****)
      
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 4
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MIP From line 164
+Column Listing      SOLVE m Using MIP From line 158
 
 
 ---- move  disk is moved from one peg to another
@@ -593,9 +587,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 5
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m Using MIP From line 164
+Range Statistics    SOLVE m Using MIP From line 158
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -604,9 +598,9 @@ RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 4.000E+00]
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 6
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MIP From line 164
+Model Statistics    SOLVE m Using MIP From line 158
 
 
 MODEL STATISTICS
@@ -616,23 +610,23 @@ BLOCKS OF VARIABLES           5     SINGLE VARIABLES          781  42 projected
 NON ZERO ELEMENTS         3,385     DISCRETE VARIABLES        735
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 7
+GENERATION TIME      =        0.015 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MIP From line 164
+Solution Report     SOLVE m Using MIP From line 158
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  z
      TYPE    MIP                 DIRECTION  MAXIMIZE
-     SOLVER  CPLEX               FROM LINE  164
+     SOLVER  CPLEX               FROM LINE  158
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                1.0000
 
- RESOURCE USAGE, LIMIT          0.031 10000000000.000
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -645,7 +639,7 @@ Solution Report     SOLVE m Using MIP From line 164
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.03sec (det. 20.55 ticks)
+--- Cplex Time: 0.02sec (det. 20.55 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
@@ -2062,12 +2056,12 @@ t15.pegC         1.0000         1.0000         4.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:38:04 Page 8
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 04:45:33 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    169 VARIABLE smallestPrev.L  smallest disk in previous iteration
+----    163 VARIABLE smallestPrev.L  smallest disk in previous iteration
 
            pegA        pegB        pegC
 
@@ -2088,7 +2082,7 @@ t14       2.000       2.000       1.000
 t15       1.000       1.000       1.000
 
 
-----    169 VARIABLE move.L  disk is moved from one peg to another
+----    163 VARIABLE move.L  disk is moved from one peg to another
 
             pegA.pegB   pegA.pegC   pegB.pegA   pegB.pegC   pegC.pegA   pegC.pegB
 
@@ -2109,7 +2103,7 @@ t14.disk2           1
 t15.disk1                                                                       1
 
 
-----    169 VARIABLE inv.L  inventory after move
+----    163 VARIABLE inv.L  inventory after move
 
                  pegA        pegB        pegC
 
@@ -2175,12 +2169,12 @@ t15.disk3                   1.000
 t15.disk4                   1.000
 
 
-----    169 VARIABLE done.L  we are done
+----    163 VARIABLE done.L  we are done
 
 t15 1.000
 
 
-----    181 SET sinv  include initial, and stop after done
+----    175 SET sinv  include initial, and stop after done
 
                      pegA        pegB        pegC
 
@@ -2250,9 +2244,9 @@ t15    .disk3                     YES
 t15    .disk4                     YES
 
 
-----    185 PARAMETER numMoves             =       15.000  number of moves
+----    179 PARAMETER numMoves             =       15.000  number of moves
 
-----    213 PARAMETER ndisks  number of disks on each peg
+----    207 PARAMETER ndisks  number of disks on each peg
 
                pegA        pegB        pegC
 
@@ -2279,7 +2273,7 @@ t15                       4.000
 f C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots.html
 
 
-EXECUTION TIME       =        0.219 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
+EXECUTION TIME       =        0.234 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
 
 
 USER: Eval License                                   G250902+0003Cc-GEN

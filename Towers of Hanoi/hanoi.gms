@@ -61,9 +61,12 @@ Parameters
     n 'number of disks' /%n%/
     size(disk) 'size of each disk: 1..n'
     maxsize 'maximum size of disk'
-    initial(t,disk,peg) 'initial inventory (state)'
-    final(disk,peg) 'final inventory (state)'
 ;
+
+Sets
+  initial(disk,peg) 'initial inventory (state)'
+  final(disk,peg) 'final inventory (state)'
+
 
 abort$(card(t)<2**n-1) "increase size of set t";
 
@@ -72,18 +75,10 @@ maxsize = smax(disk,size(disk));
 
 * initial state: all disks on peg A
 * has t index to make it easier to use in the constraints
-*initial('t1',disk,'pegA') = 1;
-initial('t1','disk1','pegA') = 1;
-initial('t1','disk2','pegA') = 1;
-initial('t1','disk3','pegA') = 1;
-initial('t1','disk4','pegA') = 1;
+initial(disk,'pegA') = yes;
 
 * final state: all disks on peg B
-*final(disk,'pegB') = 1;
-final('disk1','pegB') = 1;
-final('disk2','pegB') = 1;
-final('disk3','pegB') = 1;
-final('disk4','pegB') = 1;
+final(disk,'pegB') = yes;
 
 display n,size,maxsize,initial,final;
 
@@ -125,9 +120,9 @@ move1disk(t).. sum((disk,peg1,peg2),move(t,disk,peg1,peg2)) =e= 1-done(t-1);
 move.fx(t,disk,peg,peg) = 0;
 
 * we can only move the smallest disk
-parameter initsmallest(t,peg);
-initsmallest('t1',peg) = maxsize;
-initsmallest('t1','pegA') = smin(disk,size(disk));
+parameter initsmallest(t,peg) 'smallest disk on each peg for initial configuration';
+initsmallest('t1',peg)$(sum(initial(disk,peg),1)=0) = maxsize;
+initsmallest('t1',peg)$(sum(initial(disk,peg),1)>0) = smin(initial(disk,peg),size(disk));
 display initsmallest;
 
 smallestPrev.fx('t1',peg) = initsmallest('t1',peg);
@@ -137,10 +132,9 @@ smallto(t,peg)..       sum((disk,peg1),size(disk)*move(t,disk,peg1,peg)) =l= sma
 
 * inventory balance
 inventory(t,disk,peg)..
-  inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + initial(t,disk,peg);
+  inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + 1$(initial(disk,peg) and ord(t)=1);
   
 * done if all disks are at peg B
-*isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
 isdone(t).. sum((disk,peg)$final(disk,peg),inv(t,disk,peg)) =g= n*done(t);
 
 obj.. z =e= sum(t,done(t));
@@ -173,7 +167,7 @@ display smallestPrev.l,move.l,inv.l,done.l;
 *-----------------------------------------------------------------------------------
 
 set sinv(*,disk,peg) 'include initial, and stop after done';
-sinv('initial',disk,peg) = initial('t1',disk,peg);
+sinv('initial',initial) = yes;
 loop(t,
    sinv(t,disk,peg) = inv.l(t,disk,peg)>0.5;
    break$(done.l(t)>0.5);
