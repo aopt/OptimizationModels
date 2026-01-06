@@ -2,17 +2,13 @@ $onText
 
    Towers of Hanoi
    
-   Standard problem can be solved with a simple recursion. Here we use a MIP
-   model that uses an inventory modeling paradigm.
-   
 $offText
-
 
 *-----------------------------------------------------------------------------------
 * size of problem
 *-----------------------------------------------------------------------------------
 
-$set n 4
+$set n 3
 $set makeplot 1
 
 *-----------------------------------------------------------------------------------
@@ -36,7 +32,6 @@ cnt = hanoi(N,'A','B','C')
 print(f"{cnt} moves")
 
 $offEmbeddedCode
-
 
 *-----------------------------------------------------------------------------------
 * data
@@ -72,26 +67,16 @@ maxsize = smax(disk,size(disk));
 
 * initial state: all disks on peg A
 * has t index to make it easier to use in the constraints
-*initial('t1',disk,'pegA') = 1;
-initial('t1','disk1','pegA') = 1;
-initial('t1','disk2','pegA') = 1;
-initial('t1','disk3','pegA') = 1;
-initial('t1','disk4','pegA') = 1;
+initial('t1',disk,'pegA') = 1;
 
 * final state: all disks on peg B
-*final(disk,'pegB') = 1;
-final('disk1','pegB') = 1;
-final('disk2','pegB') = 1;
-final('disk3','pegB') = 1;
-final('disk4','pegB') = 1;
+final(disk,'pegB') = 1;
 
 display n,size,maxsize,initial,final;
-
 
 *-----------------------------------------------------------------------------------
 * MIP model
 *-----------------------------------------------------------------------------------
-
 
 binary variable
    move(t,disk,peg,peg)   'disk is moved from one peg to another'
@@ -140,8 +125,7 @@ inventory(t,disk,peg)..
   inv(t,disk,peg) =e= inv(t-1,disk,peg) - sum(peg2,move(t,disk,peg,peg2)) + sum(peg1,move(t,disk,peg1,peg)) + initial(t,disk,peg);
   
 * done if all disks are at peg B
-*isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
-isdone(t).. sum((disk,peg)$final(disk,peg),inv(t,disk,peg)) =g= n*done(t);
+isdone(t).. sum(disk,inv(t,disk,'pegB')) =g= n*done(t);
 
 obj.. z =e= sum(t,done(t));
 
@@ -180,10 +164,6 @@ loop(t,
 );
 display sinv;
 
-scalar numMoves 'number of moves';
-numMoves = sum(t$sum(sinv(t,disk,peg),1),1);
-display numMoves;
-
 *-----------------------------------------------------------------------------------
 * Visualization
 *-----------------------------------------------------------------------------------
@@ -196,11 +176,8 @@ file f /%svg%/;
 put f;
 
 put '<style>table,th,td {border-collapse: collapse;}</style>'/;
-put '<h2>Towers of Hanoi MIP Results</h2>'/;
-put 'Number of pegs: ',card(peg):0:0,'<br>'/;
-put 'Number of disks: %n% <br>'/;
-put 'Number of moves: ',numMoves:0:0,'<br>'/;
-put 'MIP model has ',m.numvar:0:0,' variables (of which ',m.numdvar:0:0,' binary) and ',m.numequ:0:0,' equations<br><br>'/;
+put '<h2>Towers of Hanoi Results</h2>'/;
+put 'Number of disks: %n%'/;
 
 put '<table border="1">'/;
 put '<tr>'/;
@@ -213,7 +190,6 @@ ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
 display ndisks;
 
 scalar nd,x,y,w,k /0/;
-parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
 
 loop(t1$sum(sinv(t1,disk,peg),1),
    if (k=4,
@@ -224,11 +200,12 @@ loop(t1$sum(sinv(t1,disk,peg),1),
 
    put '<td style="text-align: center">'/;
    put '<svg height="100" width="300" viewBox="0 0 12 %n2%">'/;
-   
+* draw pegs   
+   put '<line x1="3" y1="1" x2="3" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+   put '<line x1="6" y1="1" x2="6" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+   put '<line x1="9" y1="1" x2="9" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+
    loop(peg,
-* draw peg
-      put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
-* draw disk
       nd = ndisks(t1,peg);
       loop(sinv(t1,disk,peg),
          y = n+1-nd+1;
@@ -247,4 +224,3 @@ loop(t1$sum(sinv(t1,disk,peg),1),
 put '</tr></table>';
 putclose;
 executetool 'win32.ShellExecute "%svg%"';
-

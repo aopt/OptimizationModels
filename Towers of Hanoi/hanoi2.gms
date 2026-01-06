@@ -149,7 +149,7 @@ put '<h2>Towers of Hanoi Network Results</h2>'/;
 put 'Number of pegs: ',card(peg):0:0,'<br>'/;
 put 'Number of disks: %n% <br>'/;
 put 'Number of moves: ',z.l:0:0,'<br>'/;
-put 'Nodes, arcs: ',nn:0:0,', ',narcs:0:0/;
+put 'Network has ',nn:0:0,' nodes and ',narcs:0:0,' arcs<br><br>';
 
 put '<table border="1">'/;
 put '<tr>'/;

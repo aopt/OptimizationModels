@@ -1,4 +1,4 @@
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 1
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -148,7 +148,7 @@ C o m p i l a t i o n
  149  put 'Number of pegs: ',card(peg):0:0,'<br>'/;
  150  put 'Number of disks: 4 <br>'/;
  151  put 'Number of moves: ',z.l:0:0,'<br>'/;
- 152  put 'Nodes, arcs: ',nn:0:0,', ',narcs:0:0/;
+ 152  put 'Network has ',nn:0:0,' nodes and ',narcs:0:0,' arcs<br><br>';
  153   
  154  put '<table border="1">'/;
  155  put '<tr>'/;
@@ -200,7 +200,7 @@ C o m p i l a t i o n
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 2
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -2175,7 +2175,7 @@ node80.node79                                             YES
 node81.node27         YES
 node81.node54         YES
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 3
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE shortestpath Using RMIP From line 101
 
@@ -2276,7 +2276,7 @@ obj..  - f(node1,node28) - f(node1,node55) - f(node2,node3) - f(node2,node29) - 
      
       - f(node80,node79) - f(node81,node27) - f(node81,node54) + z =E= 0 ; (LHS = 0)
      
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 4
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE shortestpath Using RMIP From line 101
 
@@ -2309,7 +2309,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 5
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE shortestpath Using RMIP From line 101
 
@@ -2320,7 +2320,7 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 6
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE shortestpath Using RMIP From line 101
 
@@ -2333,7 +2333,7 @@ NON ZERO ELEMENTS           721     DISCRETE VARIABLES        240
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 7
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE shortestpath Using RMIP From line 101
 
@@ -2348,7 +2348,7 @@ Solution Report     SOLVE shortestpath Using RMIP From line 101
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               15.0000
 
- RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
  ITERATION COUNT, LIMIT        49    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -2359,7 +2359,7 @@ Solution Report     SOLVE shortestpath Using RMIP From line 101
 
 
 --- LP status (1): optimal.
---- Cplex Time: 0.02sec (det. 0.53 ticks)
+--- Cplex Time: 0.00sec (det. 0.53 ticks)
 
 
 Optimal solution found
@@ -2713,7 +2713,7 @@ node81.node54          .              .             1.0000         2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 01:23:04 Page 8
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -2766,7 +2766,7 @@ move15.node68.node41.disk1.PegC.pegB
 fname C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots2.html
 
 
-EXECUTION TIME       =        0.329 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
+EXECUTION TIME       =        0.328 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
 
 
 USER: Eval License                                   G250902+0003Cc-GEN
