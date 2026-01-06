@@ -1,0 +1,2784 @@
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Towers of Hanoi, network formulation
+       
+         This model finds a solution from a given starting configuration to
+         a given final configuration.
+         
+         This can't be done with a standard recursive Towers of Hanoi algorithm
+       
+        
+  12   
+  13   
+  14  *-----------------------------------------------------------------------------------
+  15  * size of problem
+  16  *-----------------------------------------------------------------------------------
+  17   
+  20   
+  21  *-----------------------------------------------------------------------------------
+  22  * nodes
+  23  *-----------------------------------------------------------------------------------
+  24   
+  26   
+  27  set
+  28    node /node1*node81/
+  29    disk /disk1*disk4/
+  30    peg /pegA,pegB,PegC/
+  31    nodes(node,disk,peg) / system.powersetRight /
+  32  ;
+  33   
+  34  scalars
+  35     n  'number of disks' /4/
+  36     nn 'number of nodes' /81/
+  37  ;
+  38   
+  39  display disk,peg,node,nodes;
+  40   
+  41  *-----------------------------------------------------------------------------------
+  42  * arcs
+  43  *-----------------------------------------------------------------------------------
+  44   
+  45  set arc(node,node);
+  46   
+  47  alias (node,node1,node2), (disk,disk1,disk2), (peg,peg1,peg2), (nodes,nodes1,nodes2);
+  48   
+  49  set smallest(node,disk,peg) 'smallest disk on peg';
+  50  smallest(node,disk,peg) = smin(disk2$nodes(node,disk2,peg),ord(disk2)) = ord(disk);
+  51  display smallest;
+  52   
+  53  parameter nodeVal(node,disk) 'peg number of (node,disk)';
+  54  nodeVal(node,disk) = sum(nodes(node,disk,peg),ord(peg));
+  55  display nodeVal;
+  56   
+  57  set nodediff1(node,node) '(node1,node2) combos with one difference';
+  58  nodediff1(node1,node2) = sum(disk$(abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5),1)=1;
+  59  display nodediff1;
+  60   
+  61  set nodeDiff1disk(node,node,disk) 'augment nodediff1 with disk id';
+  62  nodeDiff1Disk(nodeDiff1(node1,node2),disk) = abs(nodeVal(node1,disk)-nodeVal(node2,disk))>0.5;
+  63  display nodeDiff1Disk;
+  64   
+  65  set diskMoved(node,node,disk) 'feasible moves';
+  66  singleton set p1(peg),p2(peg);
+  67  loop(nodeDiff1disk(node1,node2,disk),
+  68     p1(peg) = nodeval(node1,disk)=ord(peg);
+  69     p2(peg) = nodeval(node2,disk)=ord(peg);
+  70     diskMoved(node1,node2,disk) = smallest(node1,disk,p1) and smallest(node2,disk,p2);
+  71  );
+  72  display diskMoved;
+  73   
+  74  arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
+  75   
+  76  * check
+  77  scalar narcs 'number of directed arcs in Hanoi graph';
+  78  narcs = 3*(power(3,n) - 1);
+  79  abort$(card(arc)<>narcs) "number of arcs is incorrect";
+  80   
+  81  *----------------------------------------------------------------------
+  82  * shortest path model
+  83  *----------------------------------------------------------------------
+  84   
+  85  Sets
+  86    initial(disk,peg) 'initial inventory (state)' / (disk1,disk2).pegA, (disk3,disk4).pegB /
+  87    final(disk,peg) 'final inventory (state)'     / (disk1,disk2).pegB, (disk3,disk4).pegC /
+  88  ;
+  89   
+  90   
+  91  Parameters
+  92     supply(node)
+  93     demand(node)
+  94  ;
+  95  supply(node)$(sum(nodes(node,initial),1) = n) = 1;
+  96  demand(node)$(sum(nodes(node,final),1) = n) = 1;
+  97   
+  98  binary variable f(node,node) 'flow';
+  99  variable z 'objective';
+ 100   
+ 101  equations
+ 102     flowbal(node) 'flow balance'
+ 103     obj           'objective'
+ 104  ;
+ 105   
+ 106  obj.. z =e= sum(arc,f(arc));
+ 107   
+ 108  flowbal(node1)..
+ 109     sum(arc(node2,node1),f(node2,node1)) + supply(node1) =e= sum(arc(node1,node2),f(node1,node2)) + demand(node1);
+ 110   
+ 111  model shortestpath /all/;
+ 112  solve shortestpath minimizing z using rmip;
+ 113  display f.l;
+ 114   
+ 115  *----------------------------------------------------------------------
+ 116  * reporting
+ 117  *----------------------------------------------------------------------
+ 118   
+ 119  set
+ 120      move/move1*move100/
+ 121      trace(move,node,node,disk,peg,peg)
+ 122  ;
+ 123   
+ 124  singleton sets
+ 125    cur(node) 'current node' /node1/
+ 126    next(node) 'next node'
+ 127  ;
+ 128   
+ 129  cur(node) = supply(node)>0;
+ 130   
+ 131  loop(move$card(cur),
+ 132   
+ 133      next(node) = f.l(cur,node)>0.5;
+ 134   
+ 135      loop(diskMoved(cur,next,disk),
+ 136          p1(peg) = nodeval(cur,disk)=ord(peg);
+ 137          p2(peg) = nodeval(next,disk)=ord(peg);
+ 138          trace(move,cur,next,disk,p1,p2) = yes;
+ 139      );
+ 140   
+ 141      cur(node) = next(node);
+ 142  );
+ 143   
+ 144  option trace:0:0:1;
+ 145  display trace;
+ 146   
+ 147  *-----------------------------------------------------------------------------------
+ 148  * Visualization
+ 149  *-----------------------------------------------------------------------------------
+ 150   
+ 151  abort.noError$(n>6 or 1=0) "skipping plot";
+ 152   
+ 154   
+ 155  file fname /hanoiplots4.html/;
+ 156  put fname;
+ 157   
+ 158  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
+ 159  put '<h2>Towers of Hanoi Extension 1 Network Results</h2>'/;
+ 160  put 'Number of pegs: ',card(peg):0:0,'<br>'/;
+ 161  put 'Number of disks: 4 <br>'/;
+ 162  put 'Number of moves: ',z.l:0:0,'<br>'/;
+ 163  put 'Network has ',nn:0:0,' nodes and ',narcs:0:0,' arcs<br><br>';
+ 164   
+ 165  put '<table border="1">'/;
+ 166  put '<tr>'/;
+ 167   
+ 169   
+ 170  scalar nd,x,y,w,k /0/;
+ 171  parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
+ 172   
+ 173  cur(node) = supply(node)>0;
+ 174   
+ 175  loop(move$card(cur),
+ 176     if (k=4,
+ 177         put "</tr><tr>"/;
+ 178         k = 0;
+ 179      );
+ 180     k = k + 1;
+ 181   
+ 182     put '<td style="text-align: center">'/;
+ 183     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
+ 184   
+ 185     loop(peg,
+ 186  * draw peg
+ 187        put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>
+      '/;
+ 188  * draw disk
+ 189        nd = sum(nodes(cur,disk,peg),1);
+ 190        loop(nodes(cur,disk,peg),
+ 191           y = n+1-nd+1;
+ 192           w = ord(disk)*3/n;
+ 193           x = 3*ord(peg)-0.5*w;
+ 194  *         display x,w,y;
+ 195           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
+ 196           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
+      0.6">',(ord(disk)):0:0,'</text>'/;
+ 197           nd = nd-1;
+ 198        );
+ 199     );
+ 200     put '</svg><br>',cur.tl:0/;
+ 201     put '</td>'/;
+ 202   
+ 203     next(node) = f.l(cur,node)>0.5;
+ 204     cur(node) = next(node);
+ 205   
+ 206  );
+ 207   
+ 208  put '</tr></table>';
+ 209  putclose;
+ 210  executetool 'win32.ShellExecute "hanoiplots4.html"';
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     39 SET disk  
+
+disk1,    disk2,    disk3,    disk4
+
+
+----     39 SET peg  
+
+pegA,    pegB,    PegC
+
+
+----     39 SET node  
+
+node1 ,    node2 ,    node3 ,    node4 ,    node5 ,    node6 ,    node7 ,    node8 ,    node9 ,    node10,    node11,    node12
+node13,    node14,    node15,    node16,    node17,    node18,    node19,    node20,    node21,    node22,    node23,    node24
+node25,    node26,    node27,    node28,    node29,    node30,    node31,    node32,    node33,    node34,    node35,    node36
+node37,    node38,    node39,    node40,    node41,    node42,    node43,    node44,    node45,    node46,    node47,    node48
+node49,    node50,    node51,    node52,    node53,    node54,    node55,    node56,    node57,    node58,    node59,    node60
+node61,    node62,    node63,    node64,    node65,    node66,    node67,    node68,    node69,    node70,    node71,    node72
+node73,    node74,    node75,    node76,    node77,    node78,    node79,    node80,    node81
+
+
+----     39 SET nodes  
+
+                    pegA        pegB        PegC
+
+node1 .disk1         YES
+node1 .disk2         YES
+node1 .disk3         YES
+node1 .disk4         YES
+node2 .disk1         YES
+node2 .disk2         YES
+node2 .disk3         YES
+node2 .disk4                     YES
+node3 .disk1         YES
+node3 .disk2         YES
+node3 .disk3         YES
+node3 .disk4                                 YES
+node4 .disk1         YES
+node4 .disk2         YES
+node4 .disk3                     YES
+node4 .disk4         YES
+node5 .disk1         YES
+node5 .disk2         YES
+node5 .disk3                     YES
+node5 .disk4                     YES
+node6 .disk1         YES
+node6 .disk2         YES
+node6 .disk3                     YES
+node6 .disk4                                 YES
+node7 .disk1         YES
+node7 .disk2         YES
+node7 .disk3                                 YES
+node7 .disk4         YES
+node8 .disk1         YES
+node8 .disk2         YES
+node8 .disk3                                 YES
+node8 .disk4                     YES
+node9 .disk1         YES
+node9 .disk2         YES
+node9 .disk3                                 YES
+node9 .disk4                                 YES
+node10.disk1         YES
+node10.disk2                     YES
+node10.disk3         YES
+node10.disk4         YES
+node11.disk1         YES
+node11.disk2                     YES
+node11.disk3         YES
+node11.disk4                     YES
+node12.disk1         YES
+node12.disk2                     YES
+node12.disk3         YES
+node12.disk4                                 YES
+node13.disk1         YES
+node13.disk2                     YES
+node13.disk3                     YES
+node13.disk4         YES
+node14.disk1         YES
+node14.disk2                     YES
+node14.disk3                     YES
+node14.disk4                     YES
+node15.disk1         YES
+node15.disk2                     YES
+node15.disk3                     YES
+node15.disk4                                 YES
+node16.disk1         YES
+node16.disk2                     YES
+node16.disk3                                 YES
+node16.disk4         YES
+node17.disk1         YES
+node17.disk2                     YES
+node17.disk3                                 YES
+node17.disk4                     YES
+node18.disk1         YES
+node18.disk2                     YES
+node18.disk3                                 YES
+node18.disk4                                 YES
+node19.disk1         YES
+node19.disk2                                 YES
+node19.disk3         YES
+node19.disk4         YES
+node20.disk1         YES
+node20.disk2                                 YES
+node20.disk3         YES
+node20.disk4                     YES
+node21.disk1         YES
+node21.disk2                                 YES
+node21.disk3         YES
+node21.disk4                                 YES
+node22.disk1         YES
+node22.disk2                                 YES
+node22.disk3                     YES
+node22.disk4         YES
+node23.disk1         YES
+node23.disk2                                 YES
+node23.disk3                     YES
+node23.disk4                     YES
+node24.disk1         YES
+node24.disk2                                 YES
+node24.disk3                     YES
+node24.disk4                                 YES
+node25.disk1         YES
+node25.disk2                                 YES
+node25.disk3                                 YES
+node25.disk4         YES
+node26.disk1         YES
+node26.disk2                                 YES
+node26.disk3                                 YES
+node26.disk4                     YES
+node27.disk1         YES
+node27.disk2                                 YES
+node27.disk3                                 YES
+node27.disk4                                 YES
+node28.disk1                     YES
+node28.disk2         YES
+node28.disk3         YES
+node28.disk4         YES
+node29.disk1                     YES
+node29.disk2         YES
+node29.disk3         YES
+node29.disk4                     YES
+node30.disk1                     YES
+node30.disk2         YES
+node30.disk3         YES
+node30.disk4                                 YES
+node31.disk1                     YES
+node31.disk2         YES
+node31.disk3                     YES
+node31.disk4         YES
+node32.disk1                     YES
+node32.disk2         YES
+node32.disk3                     YES
+node32.disk4                     YES
+node33.disk1                     YES
+node33.disk2         YES
+node33.disk3                     YES
+node33.disk4                                 YES
+node34.disk1                     YES
+node34.disk2         YES
+node34.disk3                                 YES
+node34.disk4         YES
+node35.disk1                     YES
+node35.disk2         YES
+node35.disk3                                 YES
+node35.disk4                     YES
+node36.disk1                     YES
+node36.disk2         YES
+node36.disk3                                 YES
+node36.disk4                                 YES
+node37.disk1                     YES
+node37.disk2                     YES
+node37.disk3         YES
+node37.disk4         YES
+node38.disk1                     YES
+node38.disk2                     YES
+node38.disk3         YES
+node38.disk4                     YES
+node39.disk1                     YES
+node39.disk2                     YES
+node39.disk3         YES
+node39.disk4                                 YES
+node40.disk1                     YES
+node40.disk2                     YES
+node40.disk3                     YES
+node40.disk4         YES
+node41.disk1                     YES
+node41.disk2                     YES
+node41.disk3                     YES
+node41.disk4                     YES
+node42.disk1                     YES
+node42.disk2                     YES
+node42.disk3                     YES
+node42.disk4                                 YES
+node43.disk1                     YES
+node43.disk2                     YES
+node43.disk3                                 YES
+node43.disk4         YES
+node44.disk1                     YES
+node44.disk2                     YES
+node44.disk3                                 YES
+node44.disk4                     YES
+node45.disk1                     YES
+node45.disk2                     YES
+node45.disk3                                 YES
+node45.disk4                                 YES
+node46.disk1                     YES
+node46.disk2                                 YES
+node46.disk3         YES
+node46.disk4         YES
+node47.disk1                     YES
+node47.disk2                                 YES
+node47.disk3         YES
+node47.disk4                     YES
+node48.disk1                     YES
+node48.disk2                                 YES
+node48.disk3         YES
+node48.disk4                                 YES
+node49.disk1                     YES
+node49.disk2                                 YES
+node49.disk3                     YES
+node49.disk4         YES
+node50.disk1                     YES
+node50.disk2                                 YES
+node50.disk3                     YES
+node50.disk4                     YES
+node51.disk1                     YES
+node51.disk2                                 YES
+node51.disk3                     YES
+node51.disk4                                 YES
+node52.disk1                     YES
+node52.disk2                                 YES
+node52.disk3                                 YES
+node52.disk4         YES
+node53.disk1                     YES
+node53.disk2                                 YES
+node53.disk3                                 YES
+node53.disk4                     YES
+node54.disk1                     YES
+node54.disk2                                 YES
+node54.disk3                                 YES
+node54.disk4                                 YES
+node55.disk1                                 YES
+node55.disk2         YES
+node55.disk3         YES
+node55.disk4         YES
+node56.disk1                                 YES
+node56.disk2         YES
+node56.disk3         YES
+node56.disk4                     YES
+node57.disk1                                 YES
+node57.disk2         YES
+node57.disk3         YES
+node57.disk4                                 YES
+node58.disk1                                 YES
+node58.disk2         YES
+node58.disk3                     YES
+node58.disk4         YES
+node59.disk1                                 YES
+node59.disk2         YES
+node59.disk3                     YES
+node59.disk4                     YES
+node60.disk1                                 YES
+node60.disk2         YES
+node60.disk3                     YES
+node60.disk4                                 YES
+node61.disk1                                 YES
+node61.disk2         YES
+node61.disk3                                 YES
+node61.disk4         YES
+node62.disk1                                 YES
+node62.disk2         YES
+node62.disk3                                 YES
+node62.disk4                     YES
+node63.disk1                                 YES
+node63.disk2         YES
+node63.disk3                                 YES
+node63.disk4                                 YES
+node64.disk1                                 YES
+node64.disk2                     YES
+node64.disk3         YES
+node64.disk4         YES
+node65.disk1                                 YES
+node65.disk2                     YES
+node65.disk3         YES
+node65.disk4                     YES
+node66.disk1                                 YES
+node66.disk2                     YES
+node66.disk3         YES
+node66.disk4                                 YES
+node67.disk1                                 YES
+node67.disk2                     YES
+node67.disk3                     YES
+node67.disk4         YES
+node68.disk1                                 YES
+node68.disk2                     YES
+node68.disk3                     YES
+node68.disk4                     YES
+node69.disk1                                 YES
+node69.disk2                     YES
+node69.disk3                     YES
+node69.disk4                                 YES
+node70.disk1                                 YES
+node70.disk2                     YES
+node70.disk3                                 YES
+node70.disk4         YES
+node71.disk1                                 YES
+node71.disk2                     YES
+node71.disk3                                 YES
+node71.disk4                     YES
+node72.disk1                                 YES
+node72.disk2                     YES
+node72.disk3                                 YES
+node72.disk4                                 YES
+node73.disk1                                 YES
+node73.disk2                                 YES
+node73.disk3         YES
+node73.disk4         YES
+node74.disk1                                 YES
+node74.disk2                                 YES
+node74.disk3         YES
+node74.disk4                     YES
+node75.disk1                                 YES
+node75.disk2                                 YES
+node75.disk3         YES
+node75.disk4                                 YES
+node76.disk1                                 YES
+node76.disk2                                 YES
+node76.disk3                     YES
+node76.disk4         YES
+node77.disk1                                 YES
+node77.disk2                                 YES
+node77.disk3                     YES
+node77.disk4                     YES
+node78.disk1                                 YES
+node78.disk2                                 YES
+node78.disk3                     YES
+node78.disk4                                 YES
+node79.disk1                                 YES
+node79.disk2                                 YES
+node79.disk3                                 YES
+node79.disk4         YES
+node80.disk1                                 YES
+node80.disk2                                 YES
+node80.disk3                                 YES
+node80.disk4                     YES
+node81.disk1                                 YES
+node81.disk2                                 YES
+node81.disk3                                 YES
+node81.disk4                                 YES
+
+
+----     51 SET smallest  smallest disk on peg
+
+                    pegA        pegB        PegC
+
+node1 .disk1         YES
+node2 .disk1         YES
+node2 .disk4                     YES
+node3 .disk1         YES
+node3 .disk4                                 YES
+node4 .disk1         YES
+node4 .disk3                     YES
+node5 .disk1         YES
+node5 .disk3                     YES
+node6 .disk1         YES
+node6 .disk3                     YES
+node6 .disk4                                 YES
+node7 .disk1         YES
+node7 .disk3                                 YES
+node8 .disk1         YES
+node8 .disk3                                 YES
+node8 .disk4                     YES
+node9 .disk1         YES
+node9 .disk3                                 YES
+node10.disk1         YES
+node10.disk2                     YES
+node11.disk1         YES
+node11.disk2                     YES
+node12.disk1         YES
+node12.disk2                     YES
+node12.disk4                                 YES
+node13.disk1         YES
+node13.disk2                     YES
+node14.disk1         YES
+node14.disk2                     YES
+node15.disk1         YES
+node15.disk2                     YES
+node15.disk4                                 YES
+node16.disk1         YES
+node16.disk2                     YES
+node16.disk3                                 YES
+node17.disk1         YES
+node17.disk2                     YES
+node17.disk3                                 YES
+node18.disk1         YES
+node18.disk2                     YES
+node18.disk3                                 YES
+node19.disk1         YES
+node19.disk2                                 YES
+node20.disk1         YES
+node20.disk2                                 YES
+node20.disk4                     YES
+node21.disk1         YES
+node21.disk2                                 YES
+node22.disk1         YES
+node22.disk2                                 YES
+node22.disk3                     YES
+node23.disk1         YES
+node23.disk2                                 YES
+node23.disk3                     YES
+node24.disk1         YES
+node24.disk2                                 YES
+node24.disk3                     YES
+node25.disk1         YES
+node25.disk2                                 YES
+node26.disk1         YES
+node26.disk2                                 YES
+node26.disk4                     YES
+node27.disk1         YES
+node27.disk2                                 YES
+node28.disk1                     YES
+node28.disk2         YES
+node29.disk1                     YES
+node29.disk2         YES
+node30.disk1                     YES
+node30.disk2         YES
+node30.disk4                                 YES
+node31.disk1                     YES
+node31.disk2         YES
+node32.disk1                     YES
+node32.disk2         YES
+node33.disk1                     YES
+node33.disk2         YES
+node33.disk4                                 YES
+node34.disk1                     YES
+node34.disk2         YES
+node34.disk3                                 YES
+node35.disk1                     YES
+node35.disk2         YES
+node35.disk3                                 YES
+node36.disk1                     YES
+node36.disk2         YES
+node36.disk3                                 YES
+node37.disk1                     YES
+node37.disk3         YES
+node38.disk1                     YES
+node38.disk3         YES
+node39.disk1                     YES
+node39.disk3         YES
+node39.disk4                                 YES
+node40.disk1                     YES
+node40.disk4         YES
+node41.disk1                     YES
+node42.disk1                     YES
+node42.disk4                                 YES
+node43.disk1                     YES
+node43.disk3                                 YES
+node43.disk4         YES
+node44.disk1                     YES
+node44.disk3                                 YES
+node45.disk1                     YES
+node45.disk3                                 YES
+node46.disk1                     YES
+node46.disk2                                 YES
+node46.disk3         YES
+node47.disk1                     YES
+node47.disk2                                 YES
+node47.disk3         YES
+node48.disk1                     YES
+node48.disk2                                 YES
+node48.disk3         YES
+node49.disk1                     YES
+node49.disk2                                 YES
+node49.disk4         YES
+node50.disk1                     YES
+node50.disk2                                 YES
+node51.disk1                     YES
+node51.disk2                                 YES
+node52.disk1                     YES
+node52.disk2                                 YES
+node52.disk4         YES
+node53.disk1                     YES
+node53.disk2                                 YES
+node54.disk1                     YES
+node54.disk2                                 YES
+node55.disk1                                 YES
+node55.disk2         YES
+node56.disk1                                 YES
+node56.disk2         YES
+node56.disk4                     YES
+node57.disk1                                 YES
+node57.disk2         YES
+node58.disk1                                 YES
+node58.disk2         YES
+node58.disk3                     YES
+node59.disk1                                 YES
+node59.disk2         YES
+node59.disk3                     YES
+node60.disk1                                 YES
+node60.disk2         YES
+node60.disk3                     YES
+node61.disk1                                 YES
+node61.disk2         YES
+node62.disk1                                 YES
+node62.disk2         YES
+node62.disk4                     YES
+node63.disk1                                 YES
+node63.disk2         YES
+node64.disk1                                 YES
+node64.disk2                     YES
+node64.disk3         YES
+node65.disk1                                 YES
+node65.disk2                     YES
+node65.disk3         YES
+node66.disk1                                 YES
+node66.disk2                     YES
+node66.disk3         YES
+node67.disk1                                 YES
+node67.disk2                     YES
+node67.disk4         YES
+node68.disk1                                 YES
+node68.disk2                     YES
+node69.disk1                                 YES
+node69.disk2                     YES
+node70.disk1                                 YES
+node70.disk2                     YES
+node70.disk4         YES
+node71.disk1                                 YES
+node71.disk2                     YES
+node72.disk1                                 YES
+node72.disk2                     YES
+node73.disk1                                 YES
+node73.disk3         YES
+node74.disk1                                 YES
+node74.disk3         YES
+node74.disk4                     YES
+node75.disk1                                 YES
+node75.disk3         YES
+node76.disk1                                 YES
+node76.disk3                     YES
+node76.disk4         YES
+node77.disk1                                 YES
+node77.disk3                     YES
+node78.disk1                                 YES
+node78.disk3                     YES
+node79.disk1                                 YES
+node79.disk4         YES
+node80.disk1                                 YES
+node80.disk4                     YES
+node81.disk1                                 YES
+
+
+----     55 PARAMETER nodeVal  peg number of (node,disk)
+
+             disk1       disk2       disk3       disk4
+
+node1        1.000       1.000       1.000       1.000
+node2        1.000       1.000       1.000       2.000
+node3        1.000       1.000       1.000       3.000
+node4        1.000       1.000       2.000       1.000
+node5        1.000       1.000       2.000       2.000
+node6        1.000       1.000       2.000       3.000
+node7        1.000       1.000       3.000       1.000
+node8        1.000       1.000       3.000       2.000
+node9        1.000       1.000       3.000       3.000
+node10       1.000       2.000       1.000       1.000
+node11       1.000       2.000       1.000       2.000
+node12       1.000       2.000       1.000       3.000
+node13       1.000       2.000       2.000       1.000
+node14       1.000       2.000       2.000       2.000
+node15       1.000       2.000       2.000       3.000
+node16       1.000       2.000       3.000       1.000
+node17       1.000       2.000       3.000       2.000
+node18       1.000       2.000       3.000       3.000
+node19       1.000       3.000       1.000       1.000
+node20       1.000       3.000       1.000       2.000
+node21       1.000       3.000       1.000       3.000
+node22       1.000       3.000       2.000       1.000
+node23       1.000       3.000       2.000       2.000
+node24       1.000       3.000       2.000       3.000
+node25       1.000       3.000       3.000       1.000
+node26       1.000       3.000       3.000       2.000
+node27       1.000       3.000       3.000       3.000
+node28       2.000       1.000       1.000       1.000
+node29       2.000       1.000       1.000       2.000
+node30       2.000       1.000       1.000       3.000
+node31       2.000       1.000       2.000       1.000
+node32       2.000       1.000       2.000       2.000
+node33       2.000       1.000       2.000       3.000
+node34       2.000       1.000       3.000       1.000
+node35       2.000       1.000       3.000       2.000
+node36       2.000       1.000       3.000       3.000
+node37       2.000       2.000       1.000       1.000
+node38       2.000       2.000       1.000       2.000
+node39       2.000       2.000       1.000       3.000
+node40       2.000       2.000       2.000       1.000
+node41       2.000       2.000       2.000       2.000
+node42       2.000       2.000       2.000       3.000
+node43       2.000       2.000       3.000       1.000
+node44       2.000       2.000       3.000       2.000
+node45       2.000       2.000       3.000       3.000
+node46       2.000       3.000       1.000       1.000
+node47       2.000       3.000       1.000       2.000
+node48       2.000       3.000       1.000       3.000
+node49       2.000       3.000       2.000       1.000
+node50       2.000       3.000       2.000       2.000
+node51       2.000       3.000       2.000       3.000
+node52       2.000       3.000       3.000       1.000
+node53       2.000       3.000       3.000       2.000
+node54       2.000       3.000       3.000       3.000
+node55       3.000       1.000       1.000       1.000
+node56       3.000       1.000       1.000       2.000
+node57       3.000       1.000       1.000       3.000
+node58       3.000       1.000       2.000       1.000
+node59       3.000       1.000       2.000       2.000
+node60       3.000       1.000       2.000       3.000
+node61       3.000       1.000       3.000       1.000
+node62       3.000       1.000       3.000       2.000
+node63       3.000       1.000       3.000       3.000
+node64       3.000       2.000       1.000       1.000
+node65       3.000       2.000       1.000       2.000
+node66       3.000       2.000       1.000       3.000
+node67       3.000       2.000       2.000       1.000
+node68       3.000       2.000       2.000       2.000
+node69       3.000       2.000       2.000       3.000
+node70       3.000       2.000       3.000       1.000
+node71       3.000       2.000       3.000       2.000
+node72       3.000       2.000       3.000       3.000
+node73       3.000       3.000       1.000       1.000
+node74       3.000       3.000       1.000       2.000
+node75       3.000       3.000       1.000       3.000
+node76       3.000       3.000       2.000       1.000
+node77       3.000       3.000       2.000       2.000
+node78       3.000       3.000       2.000       3.000
+node79       3.000       3.000       3.000       1.000
+node80       3.000       3.000       3.000       2.000
+node81       3.000       3.000       3.000       3.000
+
+
+----     59 SET nodediff1  (node1,node2) combos with one difference
+
+             node1       node2       node3       node4       node5       node6       node7       node8       node9      node10
+
+node1                      YES         YES         YES                                 YES                                 YES
+node2          YES                     YES                     YES                                 YES
+node3          YES         YES                                             YES                                 YES
+node4          YES                                             YES         YES         YES
+node5                      YES                     YES                     YES                     YES
+node6                                  YES         YES         YES                                             YES
+node7          YES                                 YES                                             YES         YES
+node8                      YES                                 YES                     YES                     YES
+node9                                  YES                                 YES         YES         YES
+node10         YES
+node11                     YES                                                                                             YES
+node12                                 YES                                                                                 YES
+node13                                             YES                                                                     YES
+node14                                                         YES
+node15                                                                     YES
+node16                                                                                 YES                                 YES
+node17                                                                                             YES
+node18                                                                                                         YES
+node19         YES                                                                                                         YES
+node20                     YES
+node21                                 YES
+node22                                             YES
+node23                                                         YES
+node24                                                                     YES
+node25                                                                                 YES
+node26                                                                                             YES
+node27                                                                                                         YES
+node28         YES
+node29                     YES
+node30                                 YES
+node31                                             YES
+node32                                                         YES
+node33                                                                     YES
+node34                                                                                 YES
+node35                                                                                             YES
+node36                                                                                                         YES
+node37                                                                                                                     YES
+node55         YES
+node56                     YES
+node57                                 YES
+node58                                             YES
+node59                                                         YES
+node60                                                                     YES
+node61                                                                                 YES
+node62                                                                                             YES
+node63                                                                                                         YES
+node64                                                                                                                     YES
+
+     +      node11      node12      node13      node14      node15      node16      node17      node18      node19      node20
+
+node1                                                                                                          YES
+node2          YES                                                                                                         YES
+node3                      YES
+node4                                  YES
+node5                                              YES
+node6                                                          YES
+node7                                                                      YES
+node8                                                                                  YES
+node9                                                                                              YES
+node10         YES         YES         YES                                 YES                                 YES
+node11                     YES                     YES                                 YES                                 YES
+node12         YES                                             YES                                 YES
+node13                                             YES         YES         YES
+node14         YES                     YES                     YES                     YES
+node15                     YES         YES         YES                                             YES
+node16                                 YES                                             YES         YES
+node17         YES                                 YES                     YES                     YES
+node18                     YES                                 YES         YES         YES
+node19                                                                                                                     YES
+node20         YES                                                                                             YES
+node21                     YES                                                                                 YES         YES
+node22                                 YES                                                                     YES
+node23                                             YES                                                                     YES
+node24                                                         YES
+node25                                                                     YES                                 YES
+node26                                                                                 YES                                 YES
+node27                                                                                             YES
+node38         YES
+node39                     YES
+node40                                 YES
+node41                                             YES
+node42                                                         YES
+node43                                                                     YES
+node44                                                                                 YES
+node45                                                                                             YES
+node46                                                                                                         YES
+node47                                                                                                                     YES
+node65         YES
+node66                     YES
+node67                                 YES
+node68                                             YES
+node69                                                         YES
+node70                                                                     YES
+node71                                                                                 YES
+node72                                                                                             YES
+node73                                                                                                         YES
+node74                                                                                                                     YES
+
+     +      node21      node22      node23      node24      node25      node26      node27      node28      node29      node30
+
+node1                                                                                              YES
+node2                                                                                                          YES
+node3          YES                                                                                                         YES
+node4                      YES
+node5                                  YES
+node6                                              YES
+node7                                                          YES
+node8                                                                      YES
+node9                                                                                  YES
+node12         YES
+node13                     YES
+node14                                 YES
+node15                                             YES
+node16                                                         YES
+node17                                                                     YES
+node18                                                                                 YES
+node19         YES         YES                                 YES
+node20         YES                     YES                                 YES
+node21                                             YES                                 YES
+node22                                 YES         YES         YES
+node23                     YES                     YES                     YES
+node24         YES         YES         YES                                             YES
+node25                     YES                                             YES         YES
+node26                                 YES                     YES                     YES
+node27         YES                                 YES         YES         YES
+node28                                                                                                         YES         YES
+node29                                                                                             YES                     YES
+node30                                                                                             YES         YES
+node31                                                                                             YES
+node32                                                                                                         YES
+node33                                                                                                                     YES
+node34                                                                                             YES
+node35                                                                                                         YES
+node36                                                                                                                     YES
+node37                                                                                             YES
+node38                                                                                                         YES
+node39                                                                                                                     YES
+node46                                                                                             YES
+node47                                                                                                         YES
+node48         YES                                                                                                         YES
+node49                     YES
+node50                                 YES
+node51                                             YES
+node52                                                         YES
+node53                                                                     YES
+node54                                                                                 YES
+node55                                                                                             YES
+node56                                                                                                         YES
+node57                                                                                                                     YES
+node75         YES
+node76                     YES
+node77                                 YES
+node78                                             YES
+node79                                                         YES
+node80                                                                     YES
+node81                                                                                 YES
+
+     +      node31      node32      node33      node34      node35      node36      node37      node38      node39      node40
+
+node4          YES
+node5                      YES
+node6                                  YES
+node7                                              YES
+node8                                                          YES
+node9                                                                      YES
+node10                                                                                 YES
+node11                                                                                             YES
+node12                                                                                                         YES
+node13                                                                                                                     YES
+node28         YES                                 YES                                 YES
+node29                     YES                                 YES                                 YES
+node30                                 YES                                 YES                                 YES
+node31                     YES         YES         YES                                                                     YES
+node32         YES                     YES                     YES
+node33         YES         YES                                             YES
+node34         YES                                             YES         YES
+node35                     YES                     YES                     YES
+node36                                 YES         YES         YES
+node37                                                                                             YES         YES         YES
+node38                                                                                 YES                     YES
+node39                                                                                 YES         YES
+node40         YES                                                                     YES
+node41                     YES                                                                     YES                     YES
+node42                                 YES                                                                     YES         YES
+node43                                             YES                                 YES                                 YES
+node44                                                         YES                                 YES
+node45                                                                     YES                                 YES
+node46                                                                                 YES
+node47                                                                                             YES
+node48                                                                                                         YES
+node49         YES                                                                                                         YES
+node50                     YES
+node51                                 YES
+node52                                             YES
+node53                                                         YES
+node54                                                                     YES
+node58         YES
+node59                     YES
+node60                                 YES
+node61                                             YES
+node62                                                         YES
+node63                                                                     YES
+node64                                                                                 YES
+node65                                                                                             YES
+node66                                                                                                         YES
+node67                                                                                                                     YES
+
+     +      node41      node42      node43      node44      node45      node46      node47      node48      node49      node50
+
+node14         YES
+node15                     YES
+node16                                 YES
+node17                                             YES
+node18                                                         YES
+node19                                                                     YES
+node20                                                                                 YES
+node21                                                                                             YES
+node22                                                                                                         YES
+node23                                                                                                                     YES
+node28                                                                     YES
+node29                                                                                 YES
+node30                                                                                             YES
+node31                                                                                                         YES
+node32         YES                                                                                                         YES
+node33                     YES
+node34                                 YES
+node35                                             YES
+node36                                                         YES
+node37                                 YES                                 YES
+node38         YES                                 YES                                 YES
+node39                     YES                                 YES                                 YES
+node40         YES         YES         YES                                                                     YES
+node41                     YES                     YES                                                                     YES
+node42         YES                                             YES
+node43                                             YES         YES
+node44         YES                     YES                     YES
+node45                     YES         YES         YES
+node46                                                                                 YES         YES         YES
+node47                                                                     YES                     YES                     YES
+node48                                                                     YES         YES
+node49                                                                     YES                                             YES
+node50         YES                                                                     YES                     YES
+node51                     YES                                                                     YES         YES         YES
+node52                                 YES                                 YES                                 YES
+node53                                             YES                                 YES                                 YES
+node54                                                         YES                                 YES
+node68         YES
+node69                     YES
+node70                                 YES
+node71                                             YES
+node72                                                         YES
+node73                                                                     YES
+node74                                                                                 YES
+node75                                                                                             YES
+node76                                                                                                         YES
+node77                                                                                                                     YES
+
+     +      node51      node52      node53      node54      node55      node56      node57      node58      node59      node60
+
+node1                                                          YES
+node2                                                                      YES
+node3                                                                                  YES
+node4                                                                                              YES
+node5                                                                                                          YES
+node6                                                                                                                      YES
+node24         YES
+node25                     YES
+node26                                 YES
+node27                                             YES
+node28                                                         YES
+node29                                                                     YES
+node30                                                                                 YES
+node31                                                                                             YES
+node32                                                                                                         YES
+node33         YES                                                                                                         YES
+node34                     YES
+node35                                 YES
+node36                                             YES
+node42         YES
+node43                     YES
+node44                                 YES
+node45                                             YES
+node46                     YES
+node47                                 YES
+node48         YES                                 YES
+node49         YES         YES
+node50         YES                     YES
+node51                                             YES
+node52                                 YES         YES
+node53                     YES                     YES
+node54         YES         YES         YES
+node55                                                                     YES         YES         YES
+node56                                                         YES                     YES                     YES
+node57                                                         YES         YES                                             YES
+node58                                                         YES                                             YES         YES
+node59                                                                     YES                     YES                     YES
+node60                                                                                 YES         YES         YES
+node61                                                         YES                                 YES
+node62                                                                     YES                                 YES
+node63                                                                                 YES                                 YES
+node64                                                         YES
+node65                                                                     YES
+node66                                                                                 YES
+node67                                                                                             YES
+node68                                                                                                         YES
+node69                                                                                                                     YES
+node73                                                         YES
+node74                                                                     YES
+node75                                                                                 YES
+node76                                                                                             YES
+node77                                                                                                         YES
+node78         YES                                                                                                         YES
+node79                     YES
+node80                                 YES
+node81                                             YES
+
+     +      node61      node62      node63      node64      node65      node66      node67      node68      node69      node70
+
+node7          YES
+node8                      YES
+node9                                  YES
+node10                                             YES
+node11                                                         YES
+node12                                                                     YES
+node13                                                                                 YES
+node14                                                                                             YES
+node15                                                                                                         YES
+node16                                                                                                                     YES
+node34         YES
+node35                     YES
+node36                                 YES
+node37                                             YES
+node38                                                         YES
+node39                                                                     YES
+node40                                                                                 YES
+node41                                                                                             YES
+node42                                                                                                         YES
+node43                                                                                                                     YES
+node55         YES                                 YES
+node56                     YES                                 YES
+node57                                 YES                                 YES
+node58         YES                                                                     YES
+node59                     YES                                                                     YES
+node60                                 YES                                                                     YES
+node61                     YES         YES                                                                                 YES
+node62         YES                     YES
+node63         YES         YES
+node64                                                         YES         YES         YES                                 YES
+node65                                             YES                     YES                     YES
+node66                                             YES         YES                                             YES
+node67                                             YES                                             YES         YES         YES
+node68                                                         YES                     YES                     YES
+node69                                                                     YES         YES         YES
+node70         YES                                 YES                                 YES
+node71                     YES                                 YES                                 YES                     YES
+node72                                 YES                                 YES                                 YES         YES
+node73                                             YES
+node74                                                         YES
+node75                                                                     YES
+node76                                                                                 YES
+node77                                                                                             YES
+node78                                                                                                         YES
+node79         YES                                                                                                         YES
+node80                     YES
+node81                                 YES
+
+     +      node71      node72      node73      node74      node75      node76      node77      node78      node79      node80
+
+node17         YES
+node18                     YES
+node19                                 YES
+node20                                             YES
+node21                                                         YES
+node22                                                                     YES
+node23                                                                                 YES
+node24                                                                                             YES
+node25                                                                                                         YES
+node26                                                                                                                     YES
+node44         YES
+node45                     YES
+node46                                 YES
+node47                                             YES
+node48                                                         YES
+node49                                                                     YES
+node50                                                                                 YES
+node51                                                                                             YES
+node52                                                                                                         YES
+node53                                                                                                                     YES
+node55                                 YES
+node56                                             YES
+node57                                                         YES
+node58                                                                     YES
+node59                                                                                 YES
+node60                                                                                             YES
+node61                                                                                                         YES
+node62         YES                                                                                                         YES
+node63                     YES
+node64                                 YES
+node65         YES                                 YES
+node66                     YES                                 YES
+node67                                                                     YES
+node68         YES                                                                     YES
+node69                     YES                                                                     YES
+node70         YES         YES                                                                                 YES
+node71                     YES                                                                                             YES
+node72         YES
+node73                                             YES         YES         YES                                 YES
+node74                                 YES                     YES                     YES                                 YES
+node75                                 YES         YES                                             YES
+node76                                 YES                                             YES         YES         YES
+node77                                             YES                     YES                     YES                     YES
+node78                                                         YES         YES         YES
+node79                                 YES                                 YES                                             YES
+node80         YES                                 YES                                 YES                     YES
+node81                     YES                                 YES                                 YES         YES         YES
+
+     +      node81
+
+node27         YES
+node54         YES
+node63         YES
+node72         YES
+node75         YES
+node78         YES
+node79         YES
+node80         YES
+
+
+----     63 SET nodeDiff1disk  augment nodediff1 with disk id
+
+                    disk1       disk2       disk3       disk4
+
+node1 .node2                                              YES
+node1 .node3                                              YES
+node1 .node4                                  YES
+node1 .node7                                  YES
+node1 .node10                     YES
+node1 .node19                     YES
+node1 .node28         YES
+node1 .node55         YES
+node2 .node1                                              YES
+node2 .node3                                              YES
+node2 .node5                                  YES
+node2 .node8                                  YES
+node2 .node11                     YES
+node2 .node20                     YES
+node2 .node29         YES
+node2 .node56         YES
+node3 .node1                                              YES
+node3 .node2                                              YES
+node3 .node6                                  YES
+node3 .node9                                  YES
+node3 .node12                     YES
+node3 .node21                     YES
+node3 .node30         YES
+node3 .node57         YES
+node4 .node1                                  YES
+node4 .node5                                              YES
+node4 .node6                                              YES
+node4 .node7                                  YES
+node4 .node13                     YES
+node4 .node22                     YES
+node4 .node31         YES
+node4 .node58         YES
+node5 .node2                                  YES
+node5 .node4                                              YES
+node5 .node6                                              YES
+node5 .node8                                  YES
+node5 .node14                     YES
+node5 .node23                     YES
+node5 .node32         YES
+node5 .node59         YES
+node6 .node3                                  YES
+node6 .node4                                              YES
+node6 .node5                                              YES
+node6 .node9                                  YES
+node6 .node15                     YES
+node6 .node24                     YES
+node6 .node33         YES
+node6 .node60         YES
+node7 .node1                                  YES
+node7 .node4                                  YES
+node7 .node8                                              YES
+node7 .node9                                              YES
+node7 .node16                     YES
+node7 .node25                     YES
+node7 .node34         YES
+node7 .node61         YES
+node8 .node2                                  YES
+node8 .node5                                  YES
+node8 .node7                                              YES
+node8 .node9                                              YES
+node8 .node17                     YES
+node8 .node26                     YES
+node8 .node35         YES
+node8 .node62         YES
+node9 .node3                                  YES
+node9 .node6                                  YES
+node9 .node7                                              YES
+node9 .node8                                              YES
+node9 .node18                     YES
+node9 .node27                     YES
+node9 .node36         YES
+node9 .node63         YES
+node10.node1                      YES
+node10.node11                                             YES
+node10.node12                                             YES
+node10.node13                                 YES
+node10.node16                                 YES
+node10.node19                     YES
+node10.node37         YES
+node10.node64         YES
+node11.node2                      YES
+node11.node10                                             YES
+node11.node12                                             YES
+node11.node14                                 YES
+node11.node17                                 YES
+node11.node20                     YES
+node11.node38         YES
+node11.node65         YES
+node12.node3                      YES
+node12.node10                                             YES
+node12.node11                                             YES
+node12.node15                                 YES
+node12.node18                                 YES
+node12.node21                     YES
+node12.node39         YES
+node12.node66         YES
+node13.node4                      YES
+node13.node10                                 YES
+node13.node14                                             YES
+node13.node15                                             YES
+node13.node16                                 YES
+node13.node22                     YES
+node13.node40         YES
+node13.node67         YES
+node14.node5                      YES
+node14.node11                                 YES
+node14.node13                                             YES
+node14.node15                                             YES
+node14.node17                                 YES
+node14.node23                     YES
+node14.node41         YES
+node14.node68         YES
+node15.node6                      YES
+node15.node12                                 YES
+node15.node13                                             YES
+node15.node14                                             YES
+node15.node18                                 YES
+node15.node24                     YES
+node15.node42         YES
+node15.node69         YES
+node16.node7                      YES
+node16.node10                                 YES
+node16.node13                                 YES
+node16.node17                                             YES
+node16.node18                                             YES
+node16.node25                     YES
+node16.node43         YES
+node16.node70         YES
+node17.node8                      YES
+node17.node11                                 YES
+node17.node14                                 YES
+node17.node16                                             YES
+node17.node18                                             YES
+node17.node26                     YES
+node17.node44         YES
+node17.node71         YES
+node18.node9                      YES
+node18.node12                                 YES
+node18.node15                                 YES
+node18.node16                                             YES
+node18.node17                                             YES
+node18.node27                     YES
+node18.node45         YES
+node18.node72         YES
+node19.node1                      YES
+node19.node10                     YES
+node19.node20                                             YES
+node19.node21                                             YES
+node19.node22                                 YES
+node19.node25                                 YES
+node19.node46         YES
+node19.node73         YES
+node20.node2                      YES
+node20.node11                     YES
+node20.node19                                             YES
+node20.node21                                             YES
+node20.node23                                 YES
+node20.node26                                 YES
+node20.node47         YES
+node20.node74         YES
+node21.node3                      YES
+node21.node12                     YES
+node21.node19                                             YES
+node21.node20                                             YES
+node21.node24                                 YES
+node21.node27                                 YES
+node21.node48         YES
+node21.node75         YES
+node22.node4                      YES
+node22.node13                     YES
+node22.node19                                 YES
+node22.node23                                             YES
+node22.node24                                             YES
+node22.node25                                 YES
+node22.node49         YES
+node22.node76         YES
+node23.node5                      YES
+node23.node14                     YES
+node23.node20                                 YES
+node23.node22                                             YES
+node23.node24                                             YES
+node23.node26                                 YES
+node23.node50         YES
+node23.node77         YES
+node24.node6                      YES
+node24.node15                     YES
+node24.node21                                 YES
+node24.node22                                             YES
+node24.node23                                             YES
+node24.node27                                 YES
+node24.node51         YES
+node24.node78         YES
+node25.node7                      YES
+node25.node16                     YES
+node25.node19                                 YES
+node25.node22                                 YES
+node25.node26                                             YES
+node25.node27                                             YES
+node25.node52         YES
+node25.node79         YES
+node26.node8                      YES
+node26.node17                     YES
+node26.node20                                 YES
+node26.node23                                 YES
+node26.node25                                             YES
+node26.node27                                             YES
+node26.node53         YES
+node26.node80         YES
+node27.node9                      YES
+node27.node18                     YES
+node27.node21                                 YES
+node27.node24                                 YES
+node27.node25                                             YES
+node27.node26                                             YES
+node27.node54         YES
+node27.node81         YES
+node28.node1          YES
+node28.node29                                             YES
+node28.node30                                             YES
+node28.node31                                 YES
+node28.node34                                 YES
+node28.node37                     YES
+node28.node46                     YES
+node28.node55         YES
+node29.node2          YES
+node29.node28                                             YES
+node29.node30                                             YES
+node29.node32                                 YES
+node29.node35                                 YES
+node29.node38                     YES
+node29.node47                     YES
+node29.node56         YES
+node30.node3          YES
+node30.node28                                             YES
+node30.node29                                             YES
+node30.node33                                 YES
+node30.node36                                 YES
+node30.node39                     YES
+node30.node48                     YES
+node30.node57         YES
+node31.node4          YES
+node31.node28                                 YES
+node31.node32                                             YES
+node31.node33                                             YES
+node31.node34                                 YES
+node31.node40                     YES
+node31.node49                     YES
+node31.node58         YES
+node32.node5          YES
+node32.node29                                 YES
+node32.node31                                             YES
+node32.node33                                             YES
+node32.node35                                 YES
+node32.node41                     YES
+node32.node50                     YES
+node32.node59         YES
+node33.node6          YES
+node33.node30                                 YES
+node33.node31                                             YES
+node33.node32                                             YES
+node33.node36                                 YES
+node33.node42                     YES
+node33.node51                     YES
+node33.node60         YES
+node34.node7          YES
+node34.node28                                 YES
+node34.node31                                 YES
+node34.node35                                             YES
+node34.node36                                             YES
+node34.node43                     YES
+node34.node52                     YES
+node34.node61         YES
+node35.node8          YES
+node35.node29                                 YES
+node35.node32                                 YES
+node35.node34                                             YES
+node35.node36                                             YES
+node35.node44                     YES
+node35.node53                     YES
+node35.node62         YES
+node36.node9          YES
+node36.node30                                 YES
+node36.node33                                 YES
+node36.node34                                             YES
+node36.node35                                             YES
+node36.node45                     YES
+node36.node54                     YES
+node36.node63         YES
+node37.node10         YES
+node37.node28                     YES
+node37.node38                                             YES
+node37.node39                                             YES
+node37.node40                                 YES
+node37.node43                                 YES
+node37.node46                     YES
+node37.node64         YES
+node38.node11         YES
+node38.node29                     YES
+node38.node37                                             YES
+node38.node39                                             YES
+node38.node41                                 YES
+node38.node44                                 YES
+node38.node47                     YES
+node38.node65         YES
+node39.node12         YES
+node39.node30                     YES
+node39.node37                                             YES
+node39.node38                                             YES
+node39.node42                                 YES
+node39.node45                                 YES
+node39.node48                     YES
+node39.node66         YES
+node40.node13         YES
+node40.node31                     YES
+node40.node37                                 YES
+node40.node41                                             YES
+node40.node42                                             YES
+node40.node43                                 YES
+node40.node49                     YES
+node40.node67         YES
+node41.node14         YES
+node41.node32                     YES
+node41.node38                                 YES
+node41.node40                                             YES
+node41.node42                                             YES
+node41.node44                                 YES
+node41.node50                     YES
+node41.node68         YES
+node42.node15         YES
+node42.node33                     YES
+node42.node39                                 YES
+node42.node40                                             YES
+node42.node41                                             YES
+node42.node45                                 YES
+node42.node51                     YES
+node42.node69         YES
+node43.node16         YES
+node43.node34                     YES
+node43.node37                                 YES
+node43.node40                                 YES
+node43.node44                                             YES
+node43.node45                                             YES
+node43.node52                     YES
+node43.node70         YES
+node44.node17         YES
+node44.node35                     YES
+node44.node38                                 YES
+node44.node41                                 YES
+node44.node43                                             YES
+node44.node45                                             YES
+node44.node53                     YES
+node44.node71         YES
+node45.node18         YES
+node45.node36                     YES
+node45.node39                                 YES
+node45.node42                                 YES
+node45.node43                                             YES
+node45.node44                                             YES
+node45.node54                     YES
+node45.node72         YES
+node46.node19         YES
+node46.node28                     YES
+node46.node37                     YES
+node46.node47                                             YES
+node46.node48                                             YES
+node46.node49                                 YES
+node46.node52                                 YES
+node46.node73         YES
+node47.node20         YES
+node47.node29                     YES
+node47.node38                     YES
+node47.node46                                             YES
+node47.node48                                             YES
+node47.node50                                 YES
+node47.node53                                 YES
+node47.node74         YES
+node48.node21         YES
+node48.node30                     YES
+node48.node39                     YES
+node48.node46                                             YES
+node48.node47                                             YES
+node48.node51                                 YES
+node48.node54                                 YES
+node48.node75         YES
+node49.node22         YES
+node49.node31                     YES
+node49.node40                     YES
+node49.node46                                 YES
+node49.node50                                             YES
+node49.node51                                             YES
+node49.node52                                 YES
+node49.node76         YES
+node50.node23         YES
+node50.node32                     YES
+node50.node41                     YES
+node50.node47                                 YES
+node50.node49                                             YES
+node50.node51                                             YES
+node50.node53                                 YES
+node50.node77         YES
+node51.node24         YES
+node51.node33                     YES
+node51.node42                     YES
+node51.node48                                 YES
+node51.node49                                             YES
+node51.node50                                             YES
+node51.node54                                 YES
+node51.node78         YES
+node52.node25         YES
+node52.node34                     YES
+node52.node43                     YES
+node52.node46                                 YES
+node52.node49                                 YES
+node52.node53                                             YES
+node52.node54                                             YES
+node52.node79         YES
+node53.node26         YES
+node53.node35                     YES
+node53.node44                     YES
+node53.node47                                 YES
+node53.node50                                 YES
+node53.node52                                             YES
+node53.node54                                             YES
+node53.node80         YES
+node54.node27         YES
+node54.node36                     YES
+node54.node45                     YES
+node54.node48                                 YES
+node54.node51                                 YES
+node54.node52                                             YES
+node54.node53                                             YES
+node54.node81         YES
+node55.node1          YES
+node55.node28         YES
+node55.node56                                             YES
+node55.node57                                             YES
+node55.node58                                 YES
+node55.node61                                 YES
+node55.node64                     YES
+node55.node73                     YES
+node56.node2          YES
+node56.node29         YES
+node56.node55                                             YES
+node56.node57                                             YES
+node56.node59                                 YES
+node56.node62                                 YES
+node56.node65                     YES
+node56.node74                     YES
+node57.node3          YES
+node57.node30         YES
+node57.node55                                             YES
+node57.node56                                             YES
+node57.node60                                 YES
+node57.node63                                 YES
+node57.node66                     YES
+node57.node75                     YES
+node58.node4          YES
+node58.node31         YES
+node58.node55                                 YES
+node58.node59                                             YES
+node58.node60                                             YES
+node58.node61                                 YES
+node58.node67                     YES
+node58.node76                     YES
+node59.node5          YES
+node59.node32         YES
+node59.node56                                 YES
+node59.node58                                             YES
+node59.node60                                             YES
+node59.node62                                 YES
+node59.node68                     YES
+node59.node77                     YES
+node60.node6          YES
+node60.node33         YES
+node60.node57                                 YES
+node60.node58                                             YES
+node60.node59                                             YES
+node60.node63                                 YES
+node60.node69                     YES
+node60.node78                     YES
+node61.node7          YES
+node61.node34         YES
+node61.node55                                 YES
+node61.node58                                 YES
+node61.node62                                             YES
+node61.node63                                             YES
+node61.node70                     YES
+node61.node79                     YES
+node62.node8          YES
+node62.node35         YES
+node62.node56                                 YES
+node62.node59                                 YES
+node62.node61                                             YES
+node62.node63                                             YES
+node62.node71                     YES
+node62.node80                     YES
+node63.node9          YES
+node63.node36         YES
+node63.node57                                 YES
+node63.node60                                 YES
+node63.node61                                             YES
+node63.node62                                             YES
+node63.node72                     YES
+node63.node81                     YES
+node64.node10         YES
+node64.node37         YES
+node64.node55                     YES
+node64.node65                                             YES
+node64.node66                                             YES
+node64.node67                                 YES
+node64.node70                                 YES
+node64.node73                     YES
+node65.node11         YES
+node65.node38         YES
+node65.node56                     YES
+node65.node64                                             YES
+node65.node66                                             YES
+node65.node68                                 YES
+node65.node71                                 YES
+node65.node74                     YES
+node66.node12         YES
+node66.node39         YES
+node66.node57                     YES
+node66.node64                                             YES
+node66.node65                                             YES
+node66.node69                                 YES
+node66.node72                                 YES
+node66.node75                     YES
+node67.node13         YES
+node67.node40         YES
+node67.node58                     YES
+node67.node64                                 YES
+node67.node68                                             YES
+node67.node69                                             YES
+node67.node70                                 YES
+node67.node76                     YES
+node68.node14         YES
+node68.node41         YES
+node68.node59                     YES
+node68.node65                                 YES
+node68.node67                                             YES
+node68.node69                                             YES
+node68.node71                                 YES
+node68.node77                     YES
+node69.node15         YES
+node69.node42         YES
+node69.node60                     YES
+node69.node66                                 YES
+node69.node67                                             YES
+node69.node68                                             YES
+node69.node72                                 YES
+node69.node78                     YES
+node70.node16         YES
+node70.node43         YES
+node70.node61                     YES
+node70.node64                                 YES
+node70.node67                                 YES
+node70.node71                                             YES
+node70.node72                                             YES
+node70.node79                     YES
+node71.node17         YES
+node71.node44         YES
+node71.node62                     YES
+node71.node65                                 YES
+node71.node68                                 YES
+node71.node70                                             YES
+node71.node72                                             YES
+node71.node80                     YES
+node72.node18         YES
+node72.node45         YES
+node72.node63                     YES
+node72.node66                                 YES
+node72.node69                                 YES
+node72.node70                                             YES
+node72.node71                                             YES
+node72.node81                     YES
+node73.node19         YES
+node73.node46         YES
+node73.node55                     YES
+node73.node64                     YES
+node73.node74                                             YES
+node73.node75                                             YES
+node73.node76                                 YES
+node73.node79                                 YES
+node74.node20         YES
+node74.node47         YES
+node74.node56                     YES
+node74.node65                     YES
+node74.node73                                             YES
+node74.node75                                             YES
+node74.node77                                 YES
+node74.node80                                 YES
+node75.node21         YES
+node75.node48         YES
+node75.node57                     YES
+node75.node66                     YES
+node75.node73                                             YES
+node75.node74                                             YES
+node75.node78                                 YES
+node75.node81                                 YES
+node76.node22         YES
+node76.node49         YES
+node76.node58                     YES
+node76.node67                     YES
+node76.node73                                 YES
+node76.node77                                             YES
+node76.node78                                             YES
+node76.node79                                 YES
+node77.node23         YES
+node77.node50         YES
+node77.node59                     YES
+node77.node68                     YES
+node77.node74                                 YES
+node77.node76                                             YES
+node77.node78                                             YES
+node77.node80                                 YES
+node78.node24         YES
+node78.node51         YES
+node78.node60                     YES
+node78.node69                     YES
+node78.node75                                 YES
+node78.node76                                             YES
+node78.node77                                             YES
+node78.node81                                 YES
+node79.node25         YES
+node79.node52         YES
+node79.node61                     YES
+node79.node70                     YES
+node79.node73                                 YES
+node79.node76                                 YES
+node79.node80                                             YES
+node79.node81                                             YES
+node80.node26         YES
+node80.node53         YES
+node80.node62                     YES
+node80.node71                     YES
+node80.node74                                 YES
+node80.node77                                 YES
+node80.node79                                             YES
+node80.node81                                             YES
+node81.node27         YES
+node81.node54         YES
+node81.node63                     YES
+node81.node72                     YES
+node81.node75                                 YES
+node81.node78                                 YES
+node81.node79                                             YES
+node81.node80                                             YES
+
+
+----     72 SET diskMoved  feasible moves
+
+                    disk1       disk2       disk3       disk4
+
+node1 .node28         YES
+node1 .node55         YES
+node2 .node3                                              YES
+node2 .node29         YES
+node2 .node56         YES
+node3 .node2                                              YES
+node3 .node30         YES
+node3 .node57         YES
+node4 .node7                                  YES
+node4 .node31         YES
+node4 .node58         YES
+node5 .node8                                  YES
+node5 .node32         YES
+node5 .node59         YES
+node6 .node9                                  YES
+node6 .node33         YES
+node6 .node60         YES
+node7 .node4                                  YES
+node7 .node34         YES
+node7 .node61         YES
+node8 .node5                                  YES
+node8 .node35         YES
+node8 .node62         YES
+node9 .node6                                  YES
+node9 .node36         YES
+node9 .node63         YES
+node10.node19                     YES
+node10.node37         YES
+node10.node64         YES
+node11.node20                     YES
+node11.node38         YES
+node11.node65         YES
+node12.node21                     YES
+node12.node39         YES
+node12.node66         YES
+node13.node22                     YES
+node13.node40         YES
+node13.node67         YES
+node14.node23                     YES
+node14.node41         YES
+node14.node68         YES
+node15.node24                     YES
+node15.node42         YES
+node15.node69         YES
+node16.node25                     YES
+node16.node43         YES
+node16.node70         YES
+node17.node26                     YES
+node17.node44         YES
+node17.node71         YES
+node18.node27                     YES
+node18.node45         YES
+node18.node72         YES
+node19.node10                     YES
+node19.node46         YES
+node19.node73         YES
+node20.node11                     YES
+node20.node47         YES
+node20.node74         YES
+node21.node12                     YES
+node21.node48         YES
+node21.node75         YES
+node22.node13                     YES
+node22.node49         YES
+node22.node76         YES
+node23.node14                     YES
+node23.node50         YES
+node23.node77         YES
+node24.node15                     YES
+node24.node51         YES
+node24.node78         YES
+node25.node16                     YES
+node25.node52         YES
+node25.node79         YES
+node26.node17                     YES
+node26.node53         YES
+node26.node80         YES
+node27.node18                     YES
+node27.node54         YES
+node27.node81         YES
+node28.node1          YES
+node28.node46                     YES
+node28.node55         YES
+node29.node2          YES
+node29.node47                     YES
+node29.node56         YES
+node30.node3          YES
+node30.node48                     YES
+node30.node57         YES
+node31.node4          YES
+node31.node49                     YES
+node31.node58         YES
+node32.node5          YES
+node32.node50                     YES
+node32.node59         YES
+node33.node6          YES
+node33.node51                     YES
+node33.node60         YES
+node34.node7          YES
+node34.node52                     YES
+node34.node61         YES
+node35.node8          YES
+node35.node53                     YES
+node35.node62         YES
+node36.node9          YES
+node36.node54                     YES
+node36.node63         YES
+node37.node10         YES
+node37.node43                                 YES
+node37.node64         YES
+node38.node11         YES
+node38.node44                                 YES
+node38.node65         YES
+node39.node12         YES
+node39.node45                                 YES
+node39.node66         YES
+node40.node13         YES
+node40.node42                                             YES
+node40.node67         YES
+node41.node14         YES
+node41.node68         YES
+node42.node15         YES
+node42.node40                                             YES
+node42.node69         YES
+node43.node16         YES
+node43.node37                                 YES
+node43.node70         YES
+node44.node17         YES
+node44.node38                                 YES
+node44.node71         YES
+node45.node18         YES
+node45.node39                                 YES
+node45.node72         YES
+node46.node19         YES
+node46.node28                     YES
+node46.node73         YES
+node47.node20         YES
+node47.node29                     YES
+node47.node74         YES
+node48.node21         YES
+node48.node30                     YES
+node48.node75         YES
+node49.node22         YES
+node49.node31                     YES
+node49.node76         YES
+node50.node23         YES
+node50.node32                     YES
+node50.node77         YES
+node51.node24         YES
+node51.node33                     YES
+node51.node78         YES
+node52.node25         YES
+node52.node34                     YES
+node52.node79         YES
+node53.node26         YES
+node53.node35                     YES
+node53.node80         YES
+node54.node27         YES
+node54.node36                     YES
+node54.node81         YES
+node55.node1          YES
+node55.node28         YES
+node55.node64                     YES
+node56.node2          YES
+node56.node29         YES
+node56.node65                     YES
+node57.node3          YES
+node57.node30         YES
+node57.node66                     YES
+node58.node4          YES
+node58.node31         YES
+node58.node67                     YES
+node59.node5          YES
+node59.node32         YES
+node59.node68                     YES
+node60.node6          YES
+node60.node33         YES
+node60.node69                     YES
+node61.node7          YES
+node61.node34         YES
+node61.node70                     YES
+node62.node8          YES
+node62.node35         YES
+node62.node71                     YES
+node63.node9          YES
+node63.node36         YES
+node63.node72                     YES
+node64.node10         YES
+node64.node37         YES
+node64.node55                     YES
+node65.node11         YES
+node65.node38         YES
+node65.node56                     YES
+node66.node12         YES
+node66.node39         YES
+node66.node57                     YES
+node67.node13         YES
+node67.node40         YES
+node67.node58                     YES
+node68.node14         YES
+node68.node41         YES
+node68.node59                     YES
+node69.node15         YES
+node69.node42         YES
+node69.node60                     YES
+node70.node16         YES
+node70.node43         YES
+node70.node61                     YES
+node71.node17         YES
+node71.node44         YES
+node71.node62                     YES
+node72.node18         YES
+node72.node45         YES
+node72.node63                     YES
+node73.node19         YES
+node73.node46         YES
+node73.node76                                 YES
+node74.node20         YES
+node74.node47         YES
+node74.node77                                 YES
+node75.node21         YES
+node75.node48         YES
+node75.node78                                 YES
+node76.node22         YES
+node76.node49         YES
+node76.node73                                 YES
+node77.node23         YES
+node77.node50         YES
+node77.node74                                 YES
+node78.node24         YES
+node78.node51         YES
+node78.node75                                 YES
+node79.node25         YES
+node79.node52         YES
+node79.node80                                             YES
+node80.node26         YES
+node80.node53         YES
+node80.node79                                             YES
+node81.node27         YES
+node81.node54         YES
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE shortestpath Using RMIP From line 112
+
+
+---- flowbal  =E=  flow balance
+
+flowbal(node1)..  - f(node1,node28) - f(node1,node55) + f(node28,node1) + f(node55,node1) =E= 0 ; (LHS = 0)
+     
+flowbal(node2)..  - f(node2,node3) - f(node2,node29) - f(node2,node56) + f(node3,node2) + f(node29,node2) + f(node56,node2) =E= 0
+      ; (LHS = 0)
+     
+flowbal(node3)..  f(node2,node3) - f(node3,node2) - f(node3,node30) - f(node3,node57) + f(node30,node3) + f(node57,node3) =E= 0 ;
+     
+      (LHS = 0)
+     
+REMAINING 78 ENTRIES SKIPPED
+
+
+---- obj  =E=  objective
+
+obj..  - f(node1,node28) - f(node1,node55) - f(node2,node3) - f(node2,node29) - f(node2,node56) - f(node3,node2) - f(node3,node30)
+     
+      - f(node3,node57) - f(node4,node7) - f(node4,node31) - f(node4,node58) - f(node5,node8) - f(node5,node32) - f(node5,node59)
+     
+      - f(node6,node9) - f(node6,node33) - f(node6,node60) - f(node7,node4) - f(node7,node34) - f(node7,node61) - f(node8,node5)
+     
+      - f(node8,node35) - f(node8,node62) - f(node9,node6) - f(node9,node36) - f(node9,node63) - f(node10,node19)
+     
+      - f(node10,node37) - f(node10,node64) - f(node11,node20) - f(node11,node38) - f(node11,node65) - f(node12,node21)
+     
+      - f(node12,node39) - f(node12,node66) - f(node13,node22) - f(node13,node40) - f(node13,node67) - f(node14,node23)
+     
+      - f(node14,node41) - f(node14,node68) - f(node15,node24) - f(node15,node42) - f(node15,node69) - f(node16,node25)
+     
+      - f(node16,node43) - f(node16,node70) - f(node17,node26) - f(node17,node44) - f(node17,node71) - f(node18,node27)
+     
+      - f(node18,node45) - f(node18,node72) - f(node19,node10) - f(node19,node46) - f(node19,node73) - f(node20,node11)
+     
+      - f(node20,node47) - f(node20,node74) - f(node21,node12) - f(node21,node48) - f(node21,node75) - f(node22,node13)
+     
+      - f(node22,node49) - f(node22,node76) - f(node23,node14) - f(node23,node50) - f(node23,node77) - f(node24,node15)
+     
+      - f(node24,node51) - f(node24,node78) - f(node25,node16) - f(node25,node52) - f(node25,node79) - f(node26,node17)
+     
+      - f(node26,node53) - f(node26,node80) - f(node27,node18) - f(node27,node54) - f(node27,node81) - f(node28,node1)
+     
+      - f(node28,node46) - f(node28,node55) - f(node29,node2) - f(node29,node47) - f(node29,node56) - f(node30,node3)
+     
+      - f(node30,node48) - f(node30,node57) - f(node31,node4) - f(node31,node49) - f(node31,node58) - f(node32,node5)
+     
+      - f(node32,node50) - f(node32,node59) - f(node33,node6) - f(node33,node51) - f(node33,node60) - f(node34,node7)
+     
+      - f(node34,node52) - f(node34,node61) - f(node35,node8) - f(node35,node53) - f(node35,node62) - f(node36,node9)
+     
+      - f(node36,node54) - f(node36,node63) - f(node37,node10) - f(node37,node43) - f(node37,node64) - f(node38,node11)
+     
+      - f(node38,node44) - f(node38,node65) - f(node39,node12) - f(node39,node45) - f(node39,node66) - f(node40,node13)
+     
+      - f(node40,node42) - f(node40,node67) - f(node41,node14) - f(node41,node68) - f(node42,node15) - f(node42,node40)
+     
+      - f(node42,node69) - f(node43,node16) - f(node43,node37) - f(node43,node70) - f(node44,node17) - f(node44,node38)
+     
+      - f(node44,node71) - f(node45,node18) - f(node45,node39) - f(node45,node72) - f(node46,node19) - f(node46,node28)
+     
+      - f(node46,node73) - f(node47,node20) - f(node47,node29) - f(node47,node74) - f(node48,node21) - f(node48,node30)
+     
+      - f(node48,node75) - f(node49,node22) - f(node49,node31) - f(node49,node76) - f(node50,node23) - f(node50,node32)
+     
+      - f(node50,node77) - f(node51,node24) - f(node51,node33) - f(node51,node78) - f(node52,node25) - f(node52,node34)
+     
+      - f(node52,node79) - f(node53,node26) - f(node53,node35) - f(node53,node80) - f(node54,node27) - f(node54,node36)
+     
+      - f(node54,node81) - f(node55,node1) - f(node55,node28) - f(node55,node64) - f(node56,node2) - f(node56,node29)
+     
+      - f(node56,node65) - f(node57,node3) - f(node57,node30) - f(node57,node66) - f(node58,node4) - f(node58,node31)
+     
+      - f(node58,node67) - f(node59,node5) - f(node59,node32) - f(node59,node68) - f(node60,node6) - f(node60,node33)
+     
+      - f(node60,node69) - f(node61,node7) - f(node61,node34) - f(node61,node70) - f(node62,node8) - f(node62,node35)
+     
+      - f(node62,node71) - f(node63,node9) - f(node63,node36) - f(node63,node72) - f(node64,node10) - f(node64,node37)
+     
+      - f(node64,node55) - f(node65,node11) - f(node65,node38) - f(node65,node56) - f(node66,node12) - f(node66,node39)
+     
+      - f(node66,node57) - f(node67,node13) - f(node67,node40) - f(node67,node58) - f(node68,node14) - f(node68,node41)
+     
+      - f(node68,node59) - f(node69,node15) - f(node69,node42) - f(node69,node60) - f(node70,node16) - f(node70,node43)
+     
+      - f(node70,node61) - f(node71,node17) - f(node71,node44) - f(node71,node62) - f(node72,node18) - f(node72,node45)
+     
+      - f(node72,node63) - f(node73,node19) - f(node73,node46) - f(node73,node76) - f(node74,node20) - f(node74,node47)
+     
+      - f(node74,node77) - f(node75,node21) - f(node75,node48) - f(node75,node78) - f(node76,node22) - f(node76,node49)
+     
+      - f(node76,node73) - f(node77,node23) - f(node77,node50) - f(node77,node74) - f(node78,node24) - f(node78,node51)
+     
+      - f(node78,node75) - f(node79,node25) - f(node79,node52) - f(node79,node80) - f(node80,node26) - f(node80,node53)
+     
+      - f(node80,node79) - f(node81,node27) - f(node81,node54) + z =E= 0 ; (LHS = 0)
+     
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE shortestpath Using RMIP From line 112
+
+
+---- f  flow
+
+f(node1,node28)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node1)
+        1       flowbal(node28)
+       -1       obj
+
+f(node1,node55)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node1)
+        1       flowbal(node55)
+       -1       obj
+
+f(node2,node3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       -1       flowbal(node2)
+        1       flowbal(node3)
+       -1       obj
+
+REMAINING 237 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       obj
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE shortestpath Using RMIP From line 112
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
+
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE shortestpath Using RMIP From line 112
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           82
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES          241
+NON ZERO ELEMENTS           721     DISCRETE VARIABLES        240
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE shortestpath Using RMIP From line 112
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   shortestpath        OBJECTIVE  z
+     TYPE    RMIP                DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  112
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               12.0000
+
+ RESOURCE USAGE, LIMIT          0.000 10000000000.000
+ ITERATION COUNT, LIMIT        49    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- GMO memory 0.54 Mb (peak 0.54 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.52 ticks)
+
+
+Optimal solution found
+Objective:           12.000000
+
+
+---- EQU flowbal  flow balance
+
+              LOWER          LEVEL          UPPER         MARGINAL
+
+node1           .              .              .             1.0000      
+node2           .              .              .             EPS         
+node3           .              .              .             1.0000      
+node4           .              .              .              .          
+node5         -1.0000        -1.0000        -1.0000        -7.0000      
+node6           .              .              .             1.0000      
+node7           .              .              .              .          
+node8           .              .              .            -6.0000      
+node9           .              .              .             2.0000      
+node10          .              .              .              .          
+node11          .              .              .            -1.0000      
+node12          .              .              .             3.0000      
+node13          .              .              .              .          
+node14          .              .              .            -4.0000      
+node15          .              .              .              .          
+node16          .              .              .             EPS         
+node17          .              .              .            -3.0000      
+node18          .              .              .             4.0000      
+node19          .              .              .              .          
+node20          .              .              .            -2.0000      
+node21          .              .              .             2.0000      
+node22          .              .              .              .          
+node23          .              .              .            -4.0000      
+node24          .              .              .              .          
+node25          .              .              .            -1.0000      
+node26          .              .              .            -3.0000      
+node27          .              .              .             3.0000      
+node28          .              .              .              .          
+node29          .              .              .            -1.0000      
+node30          .              .              .             1.0000      
+node31          .              .              .              .          
+node32          .              .              .            -6.0000      
+node33          .              .              .              .          
+node34          .              .              .             EPS         
+node35          .              .              .            -5.0000      
+node36          .              .              .             2.0000      
+node37          .              .              .              .          
+node38          .              .              .            -2.0000      
+node39          .              .              .             4.0000      
+node40          .              .              .              .          
+node41          .              .              .            -4.0000      
+node42          .              .              .              .          
+node43          .              .              .              .          
+node44          .              .              .            -3.0000      
+node45         1.0000         1.0000         1.0000         5.0000      
+node46          .              .              .              .          
+node47          .              .              .            -2.0000      
+node48          .              .              .             1.0000      
+node49          .              .              .              .          
+node50          .              .              .            -5.0000      
+node51          .              .              .              .          
+node52          .              .              .            -1.0000      
+node53          .              .              .            -4.0000      
+node54          .              .              .             2.0000      
+node55          .              .              .              .          
+node56          .              .              .             EPS         
+node57          .              .              .             2.0000      
+node58          .              .              .              .          
+node59          .              .              .            -6.0000      
+node60          .              .              .              .          
+node61          .              .              .              .          
+node62          .              .              .            -5.0000      
+node63          .              .              .             3.0000      
+node64          .              .              .              .          
+node65          .              .              .            -1.0000      
+node66          .              .              .             3.0000      
+node67          .              .              .              .          
+node68          .              .              .            -5.0000      
+node69          .              .              .              .          
+node70          .              .              .              .          
+node71          .              .              .            -4.0000      
+node72          .              .              .             4.0000      
+node73          .              .              .              .          
+node74          .              .              .            -3.0000      
+node75          .              .              .             1.0000      
+node76          .              .              .              .          
+node77          .              .              .            -4.0000      
+node78          .              .              .              .          
+node79          .              .              .            -2.0000      
+node80          .              .              .            -3.0000      
+node81          .              .              .             3.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU obj                 .              .              .             1.0000      
+
+  obj  objective
+
+---- VAR f  flow
+
+                     LOWER          LEVEL          UPPER         MARGINAL
+
+node1 .node28          .              .             1.0000         2.0000      
+node1 .node55          .              .             1.0000         2.0000      
+node2 .node3           .             1.0000         1.0000          .          
+node2 .node29          .              .             1.0000         2.0000      
+node2 .node56          .              .             1.0000         1.0000      
+node3 .node2           .              .             1.0000         2.0000      
+node3 .node30          .              .             1.0000         1.0000      
+node3 .node57          .             1.0000         1.0000          .          
+node4 .node7           .              .             1.0000         1.0000      
+node4 .node31          .              .             1.0000         1.0000      
+node4 .node58          .              .             1.0000         1.0000      
+node5 .node8           .              .             1.0000          .          
+node5 .node32          .             1.0000         1.0000          .          
+node5 .node59          .              .             1.0000          .          
+node6 .node9           .              .             1.0000          .          
+node6 .node33          .              .             1.0000         2.0000      
+node6 .node60          .              .             1.0000         2.0000      
+node7 .node4           .              .             1.0000         1.0000      
+node7 .node34          .              .             1.0000         1.0000      
+node7 .node61          .              .             1.0000         1.0000      
+node8 .node5           .              .             1.0000         2.0000      
+node8 .node35          .              .             1.0000          .          
+node8 .node62          .              .             1.0000          .          
+node9 .node6           .              .             1.0000         2.0000      
+node9 .node36          .              .             1.0000         1.0000      
+node9 .node63          .              .             1.0000          .          
+node10.node19          .              .             1.0000         1.0000      
+node10.node37          .              .             1.0000         1.0000      
+node10.node64          .              .             1.0000         1.0000      
+node11.node20          .              .             1.0000         2.0000      
+node11.node38          .              .             1.0000         2.0000      
+node11.node65          .              .             1.0000         1.0000      
+node12.node21          .              .             1.0000         2.0000      
+node12.node39          .              .             1.0000          .          
+node12.node66          .              .             1.0000         1.0000      
+node13.node22          .              .             1.0000         1.0000      
+node13.node40          .              .             1.0000         1.0000      
+node13.node67          .              .             1.0000         1.0000      
+node14.node23          .              .             1.0000         1.0000      
+node14.node41          .              .             1.0000         1.0000      
+node14.node68          .              .             1.0000         2.0000      
+node15.node24          .              .             1.0000         1.0000      
+node15.node42          .              .             1.0000         1.0000      
+node15.node69          .              .             1.0000         1.0000      
+node16.node25          .              .             1.0000         2.0000      
+node16.node43          .              .             1.0000         1.0000      
+node16.node70          .              .             1.0000         1.0000      
+node17.node26          .              .             1.0000         1.0000      
+node17.node44          .              .             1.0000         1.0000      
+node17.node71          .              .             1.0000         2.0000      
+node18.node27          .              .             1.0000         2.0000      
+node18.node45          .              .             1.0000          .          
+node18.node72          .              .             1.0000         1.0000      
+node19.node10          .              .             1.0000         1.0000      
+node19.node46          .              .             1.0000         1.0000      
+node19.node73          .              .             1.0000         1.0000      
+node20.node11          .              .             1.0000         EPS         
+node20.node47          .              .             1.0000         1.0000      
+node20.node74          .              .             1.0000         2.0000      
+node21.node12          .              .             1.0000          .          
+node21.node48          .              .             1.0000         2.0000      
+node21.node75          .              .             1.0000         2.0000      
+node22.node13          .              .             1.0000         1.0000      
+node22.node49          .              .             1.0000         1.0000      
+node22.node76          .              .             1.0000         1.0000      
+node23.node14          .              .             1.0000         1.0000      
+node23.node50          .              .             1.0000         2.0000      
+node23.node77          .              .             1.0000         1.0000      
+node24.node15          .              .             1.0000         1.0000      
+node24.node51          .              .             1.0000         1.0000      
+node24.node78          .              .             1.0000         1.0000      
+node25.node16          .              .             1.0000          .          
+node25.node52          .              .             1.0000         1.0000      
+node25.node79          .              .             1.0000         2.0000      
+node26.node17          .              .             1.0000         1.0000      
+node26.node53          .              .             1.0000         2.0000      
+node26.node80          .              .             1.0000         1.0000      
+node27.node18          .              .             1.0000          .          
+node27.node54          .              .             1.0000         2.0000      
+node27.node81          .              .             1.0000         1.0000      
+node28.node1           .              .             1.0000          .          
+node28.node46          .              .             1.0000         1.0000      
+node28.node55          .              .             1.0000         1.0000      
+node29.node2           .             1.0000         1.0000          .          
+node29.node47          .              .             1.0000         2.0000      
+node29.node56          .              .             1.0000          .          
+node30.node3           .              .             1.0000         1.0000      
+node30.node48          .              .             1.0000         1.0000      
+node30.node57          .              .             1.0000          .          
+node31.node4           .              .             1.0000         1.0000      
+node31.node49          .              .             1.0000         1.0000      
+node31.node58          .              .             1.0000         1.0000      
+node32.node5           .              .             1.0000         2.0000      
+node32.node50          .             1.0000         1.0000          .          
+node32.node59          .              .             1.0000         1.0000      
+node33.node6           .              .             1.0000          .          
+node33.node51          .              .             1.0000         1.0000      
+node33.node60          .              .             1.0000         1.0000      
+node34.node7           .              .             1.0000         1.0000      
+node34.node52          .              .             1.0000         2.0000      
+node34.node61          .              .             1.0000         1.0000      
+node35.node8           .              .             1.0000         2.0000      
+node35.node53          .              .             1.0000          .          
+node35.node62          .              .             1.0000         1.0000      
+node36.node9           .              .             1.0000         1.0000      
+node36.node54          .              .             1.0000         1.0000      
+node36.node63          .              .             1.0000          .          
+node37.node10          .              .             1.0000         1.0000      
+node37.node43          .              .             1.0000         1.0000      
+node37.node64          .              .             1.0000         1.0000      
+node38.node11          .              .             1.0000          .          
+node38.node44          .              .             1.0000         2.0000      
+node38.node65          .              .             1.0000          .          
+node39.node12          .              .             1.0000         2.0000      
+node39.node45          .             1.0000         1.0000          .          
+node39.node66          .              .             1.0000         2.0000      
+node40.node13          .              .             1.0000         1.0000      
+node40.node42          .              .             1.0000         1.0000      
+node40.node67          .              .             1.0000         1.0000      
+node41.node14          .              .             1.0000         1.0000      
+node41.node68          .              .             1.0000         2.0000      
+node42.node15          .              .             1.0000         1.0000      
+node42.node40          .              .             1.0000         1.0000      
+node42.node69          .              .             1.0000         1.0000      
+node43.node16          .              .             1.0000         1.0000      
+node43.node37          .              .             1.0000         1.0000      
+node43.node70          .              .             1.0000         1.0000      
+node44.node17          .              .             1.0000         1.0000      
+node44.node38          .              .             1.0000          .          
+node44.node71          .              .             1.0000         2.0000      
+node45.node18          .              .             1.0000         2.0000      
+node45.node39          .              .             1.0000         2.0000      
+node45.node72          .              .             1.0000         2.0000      
+node46.node19          .              .             1.0000         1.0000      
+node46.node28          .              .             1.0000         1.0000      
+node46.node73          .              .             1.0000         1.0000      
+node47.node20          .              .             1.0000         1.0000      
+node47.node29          .             1.0000         1.0000          .          
+node47.node74          .              .             1.0000         2.0000      
+node48.node21          .              .             1.0000          .          
+node48.node30          .              .             1.0000         1.0000      
+node48.node75          .              .             1.0000         1.0000      
+node49.node22          .              .             1.0000         1.0000      
+node49.node31          .              .             1.0000         1.0000      
+node49.node76          .              .             1.0000         1.0000      
+node50.node23          .              .             1.0000          .          
+node50.node32          .              .             1.0000         2.0000      
+node50.node77          .             1.0000         1.0000          .          
+node51.node24          .              .             1.0000         1.0000      
+node51.node33          .              .             1.0000         1.0000      
+node51.node78          .              .             1.0000         1.0000      
+node52.node25          .              .             1.0000         1.0000      
+node52.node34          .              .             1.0000          .          
+node52.node79          .              .             1.0000         2.0000      
+node53.node26          .              .             1.0000          .          
+node53.node35          .              .             1.0000         2.0000      
+node53.node80          .              .             1.0000          .          
+node54.node27          .              .             1.0000          .          
+node54.node36          .              .             1.0000         1.0000      
+node54.node81          .              .             1.0000          .          
+node55.node1           .              .             1.0000         EPS         
+node55.node28          .              .             1.0000         1.0000      
+node55.node64          .              .             1.0000         1.0000      
+node56.node2           .              .             1.0000         1.0000      
+node56.node29          .              .             1.0000         2.0000      
+node56.node65          .              .             1.0000         2.0000      
+node57.node3           .              .             1.0000         2.0000      
+node57.node30          .              .             1.0000         2.0000      
+node57.node66          .             1.0000         1.0000          .          
+node58.node4           .              .             1.0000         1.0000      
+node58.node31          .              .             1.0000         1.0000      
+node58.node67          .              .             1.0000         1.0000      
+node59.node5           .              .             1.0000         2.0000      
+node59.node32          .              .             1.0000         1.0000      
+node59.node68          .              .             1.0000          .          
+node60.node6           .              .             1.0000         EPS         
+node60.node33          .              .             1.0000         1.0000      
+node60.node69          .              .             1.0000         1.0000      
+node61.node7           .              .             1.0000         1.0000      
+node61.node34          .              .             1.0000         1.0000      
+node61.node70          .              .             1.0000         1.0000      
+node62.node8           .              .             1.0000         2.0000      
+node62.node35          .              .             1.0000         1.0000      
+node62.node71          .              .             1.0000          .          
+node63.node9           .              .             1.0000         2.0000      
+node63.node36          .              .             1.0000         2.0000      
+node63.node72          .              .             1.0000          .          
+node64.node10          .              .             1.0000         1.0000      
+node64.node37          .              .             1.0000         1.0000      
+node64.node55          .              .             1.0000         1.0000      
+node65.node11          .              .             1.0000         1.0000      
+node65.node38          .              .             1.0000         2.0000      
+node65.node56          .              .             1.0000         EPS         
+node66.node12          .              .             1.0000         1.0000      
+node66.node39          .             1.0000         1.0000          .          
+node66.node57          .              .             1.0000         2.0000      
+node67.node13          .              .             1.0000         1.0000      
+node67.node40          .              .             1.0000         1.0000      
+node67.node58          .              .             1.0000         1.0000      
+node68.node14          .              .             1.0000          .          
+node68.node41          .              .             1.0000          .          
+node68.node59          .              .             1.0000         2.0000      
+node69.node15          .              .             1.0000         1.0000      
+node69.node42          .              .             1.0000         1.0000      
+node69.node60          .              .             1.0000         1.0000      
+node70.node16          .              .             1.0000         1.0000      
+node70.node43          .              .             1.0000         1.0000      
+node70.node61          .              .             1.0000         1.0000      
+node71.node17          .              .             1.0000          .          
+node71.node44          .              .             1.0000          .          
+node71.node62          .              .             1.0000         2.0000      
+node72.node18          .              .             1.0000         1.0000      
+node72.node45          .              .             1.0000          .          
+node72.node63          .              .             1.0000         2.0000      
+node73.node19          .              .             1.0000         1.0000      
+node73.node46          .              .             1.0000         1.0000      
+node73.node76          .              .             1.0000         1.0000      
+node74.node20          .              .             1.0000          .          
+node74.node47          .             1.0000         1.0000          .          
+node74.node77          .              .             1.0000         2.0000      
+node75.node21          .              .             1.0000          .          
+node75.node48          .              .             1.0000         1.0000      
+node75.node78          .              .             1.0000         2.0000      
+node76.node22          .              .             1.0000         1.0000      
+node76.node49          .              .             1.0000         1.0000      
+node76.node73          .              .             1.0000         1.0000      
+node77.node23          .              .             1.0000         1.0000      
+node77.node50          .              .             1.0000         2.0000      
+node77.node74          .             1.0000         1.0000          .          
+node78.node24          .              .             1.0000         1.0000      
+node78.node51          .              .             1.0000         1.0000      
+node78.node75          .              .             1.0000         EPS         
+node79.node25          .              .             1.0000          .          
+node79.node52          .              .             1.0000          .          
+node79.node80          .              .             1.0000         2.0000      
+node80.node26          .              .             1.0000         1.0000      
+node80.node53          .              .             1.0000         2.0000      
+node80.node79          .              .             1.0000          .          
+node81.node27          .              .             1.0000         1.0000      
+node81.node54          .              .             1.0000         2.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF           12.0000        +INF             .          
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:51:49 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    113 VARIABLE f.L  flow
+
+             node2       node3      node29      node32      node39      node45      node47      node50      node57      node66
+
+node2                    1.000
+node3                                                                                                        1.000
+node5                                            1.000
+node29       1.000
+node32                                                                                           1.000
+node39                                                                   1.000
+node47                               1.000
+node57                                                                                                                   1.000
+node66                                                       1.000
+node74                                                                               1.000
+
+     +      node74      node77
+
+node50                   1.000
+node77       1.000
+
+
+----    145 SET trace  
+
+move1 .node5 .node32.disk1.pegA.pegB
+move2 .node32.node50.disk2.pegA.PegC
+move3 .node50.node77.disk1.pegB.PegC
+move4 .node77.node74.disk3.pegB.pegA
+move5 .node74.node47.disk1.PegC.pegB
+move6 .node47.node29.disk2.PegC.pegA
+move7 .node29.node2 .disk1.pegB.pegA
+move8 .node2 .node3 .disk4.pegB.PegC
+move9 .node3 .node57.disk1.pegA.PegC
+move10.node57.node66.disk2.pegA.pegB
+move11.node66.node39.disk1.PegC.pegB
+move12.node39.node45.disk3.pegA.PegC
+
+
+**** REPORT FILE SUMMARY
+
+fname C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots4.html
+
+
+EXECUTION TIME       =        0.344 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
+
+
+USER: Eval License                                   G250902+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Towers of Hanoi\hanoi4.gms
+Output     C:\projects\OptimizationModels\Towers of Hanoi\hanoi4.lst
