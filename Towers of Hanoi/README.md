@@ -1,7 +1,9 @@
 # Towers of Hanoi
 
 Two different formulations for the Towers of Hanoi problem:
-1. Inventory Model (MIP)
-2. Shortest-path Network Model (LP)
+1. `hanoi.gms`: Inventory Model (MIP) of original Towers of Hanoi model.
+2. `hanoi2.gms`: Shortest-path Network Model (LP) of original Towers of Hanoi model.
+3. `hanoi3.gms`: MIP formulation illustrating that we can go from any initial configuration to any final configuration.
+4. `hanoi4.gms`: Network formulation illustrating that we can go from any initial configuration to any final configuration.
 
 See: https://yetanothermathprogrammingconsultant.blogspot.com/2025/04/towers-of-hanoi-inventory-and-network.html
