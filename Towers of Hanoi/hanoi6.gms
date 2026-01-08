@@ -154,7 +154,7 @@ display trace;
 
 abort.noError$(n>6 or %makeplot%=0) "skipping plot";
 
-$set svg hanoiplots4.html
+$set svg hanoiplots6.html
 
 file fname /%svg%/;
 put fname;
