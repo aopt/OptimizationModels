@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<style>table,th,td {border-collapse: collapse;}</style>
+<h2>Towers of Hanoi Extension 2</h2>
+Number of disks: 4
+<table border="1">
+<tr>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 2.62 y="2.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 3.00 y="2.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 2.25 y="3.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 3.00 y="3.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x= 1.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 3.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 1.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 3.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+</svg><br>initial
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 2.25 y="3.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 3.00 y="3.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x= 1.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 3.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 1.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 3.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 5.62 y="5.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+</svg><br>t1
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 1.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 3.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 1.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 3.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 5.62 y="5.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+</svg><br>t2
+</td>
+</tr><tr>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 1.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 3.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 5.62 y="5.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x=10.88 y="5.00" height="1" width="2.25" fill="lightblue"/>
+<text x=12.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+</svg><br>t3
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 1.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 3.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 8.62 y="4.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 9.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x=10.88 y="5.00" height="1" width="2.25" fill="lightblue"/>
+<text x=12.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+</svg><br>t4
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 4.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 8.62 y="4.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 9.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x=10.88 y="5.00" height="1" width="2.25" fill="lightblue"/>
+<text x=12.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+</svg><br>t5
+</td>
+</tr><tr>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 4.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 6.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 4.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 8.62 y="4.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 9.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+</svg><br>t6
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 4.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 6.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 4.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x= 8.25 y="5.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 9.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x=11.62 y="5.00" height="1" width="0.75" fill="lightblue"/>
+<text x=12.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+</svg><br>t7
+</td>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 5.25 y="3.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 6.00 y="3.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x= 4.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 6.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 4.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+<rect x=11.62 y="5.00" height="1" width="0.75" fill="lightblue"/>
+<text x=12.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+</svg><br>t8
+</td>
+</tr><tr>
+<td style="text-align: center">
+<svg height="100" width="300" viewBox="0 0 16 6">
+<line x1="3" y1="1" x2="3" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="6" y1="1" x2="6" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="9" y1="1" x2="9" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<line x1="12" y1="1" x2="12" y2="6" style="stroke:brown;stroke-width:0.1"/>
+<rect x= 5.62 y="2.00" height="1" width="0.75" fill="lightblue"/>
+<text x= 6.00 y="2.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">1</text>
+<rect x= 5.25 y="3.00" height="1" width="1.50" fill="lightblue"/>
+<text x= 6.00 y="3.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">2</text>
+<rect x= 4.88 y="4.00" height="1" width="2.25" fill="lightblue"/>
+<text x= 6.00 y="4.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">3</text>
+<rect x= 4.50 y="5.00" height="1" width="3.00" fill="lightblue"/>
+<text x= 6.00 y="5.60" dominant-baseline="middle" text-anchor="middle" font-size="0.6">4</text>
+</svg><br>t9
+</td>
+</tr></table>

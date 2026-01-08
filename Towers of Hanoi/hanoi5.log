@@ -1,0 +1,174 @@
+
+--- Job hanoi5.gms Start 01/08/26 00:48:22 52.1.0 4f802a74 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\52\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Towers of Hanoi\hanoi5.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Towers of Hanoi\225a\"
+    SysDir C:\GAMS\52\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G250902+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:53942 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Jan 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 52.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+--- Starting compilation
+--- hanoi5.gms(214) 3 Mb
+--- Starting execution: elapsed 0:00:00.015
+--- hanoi5.gms(112) 4 Mb
+--- Generating MIP model m
+--- hanoi5.gms(120) 5 Mb
+---   1,159 rows  2,126 columns  9,479 non-zeroes
+---   2,025 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 4.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.022
+
+IBM ILOG CPLEX   52.1.0 4f802a74 Nov 28, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.10 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.87 Mb (peak 0.89 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.05 Mb (peak 0.31 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 3 times.
+MIP Presolve eliminated 178 rows and 598 columns.
+MIP Presolve modified 249 coefficients.
+Aggregator did 28 substitutions.
+Reduced MIP has 952 rows, 1500 columns, and 6585 nonzeros.
+Reduced MIP has 1408 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (9.60 ticks)
+Probing fixed 84 vars, tightened 9 bounds.
+Probing time = 0.02 sec. (13.66 ticks)
+Cover probing fixed 8 vars, tightened 0 bounds.
+Tried aggregator 3 times.
+Detecting symmetries...
+MIP Presolve eliminated 51 rows and 100 columns.
+MIP Presolve added 2 rows and 0 columns.
+MIP Presolve modified 23 coefficients.
+Aggregator did 11 substitutions.
+Reduced MIP has 892 rows, 1389 columns, and 6062 nonzeros.
+Reduced MIP has 1305 binaries, 84 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.01 sec. (14.26 ticks)
+Probing fixed 16 vars, tightened 0 bounds.
+Probing time = 0.02 sec. (11.85 ticks)
+Clique table members: 3232.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 13 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 11 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 16 columns.
+Aggregator did 3 substitutions.
+Reduced LP has 887 rows, 1370 columns, and 5966 nonzeros.
+Presolve time = 0.00 sec. (0.88 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual objective     =            21.000000
+Perturbation started.
+Iteration:   101   Dual objective     =            21.000000
+Iteration:   170   Dual objective     =            20.967942
+Iteration:   248   Dual objective     =            20.907703
+Iteration:   339   Dual objective     =            20.887413
+Iteration:   407   Dual objective     =            20.885241
+Iteration:   489   Dual objective     =            20.883483
+Removing perturbation.
+Initializing dual steep norms . . .
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.02 sec. (16.62 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       20.8825   219                     20.8825      530         
+      0     0       19.7890   244                    Cuts: 75      607         
+      0     0       19.6361   194                    Cuts: 49      687         
+      0     0       19.5930   200                    Cuts: 19      743         
+      0     0       19.5557   193                    Cuts: 22      827         
+*     0+    0                           17.0000       19.5557            15.03%
+Found incumbent of value 17.000000 after 0.22 sec. (207.85 ticks)
+      0     0        cutoff             17.0000       17.0000      981    0.00%
+Elapsed time = 0.22 sec. (207.95 ticks, tree = 0.01 MB)
+
+Clique cuts applied:  10
+Cover cuts applied:  2
+Implied bound cuts applied:  11
+Mixed integer rounding cuts applied:  9
+Zero-half cuts applied:  24
+Gomory fractional cuts applied:  2
+
+Root node processing (before b&c):
+  Real time             =    0.22 sec. (208.01 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.22 sec. (208.01 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.22sec (det. 208.02 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 1158 rows and 2126 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (1.01 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 1.47 ticks)
+
+
+Proven optimal solution
+MIP Solution:           17.000000    (981 iterations, 0 nodes)
+Final Solve:            17.000000    (0 iterations)
+
+Best possible:          17.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:00.302
+--- hanoi5.gms(212) 6 Mb
+--- hanoi5.gms(214) 6 Mb
+--- Putfile f C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots5.html
+*** Status: Normal completion
+--- Job hanoi5.gms Stop 01/08/26 00:48:23 elapsed 0:00:00.569
