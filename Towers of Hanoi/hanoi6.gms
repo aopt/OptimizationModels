@@ -160,7 +160,7 @@ file fname /%svg%/;
 put fname;
 
 put '<style>table,th,td {border-collapse: collapse;}</style>'/;
-put '<h2>Towers of Hanoi Extension 1 Network Results</h2>'/;
+put '<h2>Towers of Hanoi Extension 2 Network Results</h2>'/;
 put 'Number of pegs: ',card(peg):0:0,'<br>'/;
 put 'Number of disks: %n% <br>'/;
 put 'Number of moves: ',z.l:0:0,'<br>'/;
