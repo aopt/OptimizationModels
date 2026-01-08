@@ -2,12 +2,8 @@ $onText
 
    Towers of Hanoi, network formulation
 
-   This model finds a solution from a given starting configuration to
-   a given final configuration.
-   
-   This can't be done with a standard recursive Towers of Hanoi algorithm
-
-  
+   4 disks, 4 pegs
+    
 $offText
 
 
@@ -22,19 +18,21 @@ $set makeplot 1
 * nodes
 *-----------------------------------------------------------------------------------
 
-$eval nn power(3,%n%)
+$eval nn power(4,%n%)
 
 set
   node /node1*node%nn%/
   disk /disk1*disk%n%/
-  peg /pegA,pegB,PegC/
+  peg /pegA,pegB,PegC,PegD/
   nodes(node,disk,peg) / system.powersetRight /
 ;
 
 scalars
    n  'number of disks' /%n%/
    nn 'number of nodes' /%nn%/
+   p  'number of pegs'
 ;
+p = card(peg);
 
 display disk,peg,node,nodes;
 
@@ -73,18 +71,24 @@ display diskMoved;
 
 arc(node1,node2) = sum(diskMoved(node1,node2,disk),1);
 
+
 * check
-scalar narcs 'number of directed arcs in Hanoi graph';
-narcs = 3*(power(3,n) - 1);
-abort$(card(arc)<>narcs) "number of arcs is incorrect";
+scalars
+   narcs 'number of directed arcs in Hanoi graph'
+   narcs2 'card(arc)'   
+;
+narcs = p*(p-1)*[power(p,n) - power(p-2,n)]/2;
+narcs2 = card(arc);
+abort$(narcs<>narcs2) "number of arcs is incorrect",narcs,narcs2;
+
 
 *----------------------------------------------------------------------
 * shortest path model
 *----------------------------------------------------------------------
 
 Sets
-  initial(disk,peg) 'initial inventory (state)' / (disk1,disk2).pegA, (disk3,disk4).pegB /
-  final(disk,peg) 'final inventory (state)'     / (disk1,disk2).pegB, (disk3,disk4).pegC /
+  initial(disk,peg) 'initial inventory (state)' / (disk1*disk4).pegA /
+  final(disk,peg) 'final inventory (state)'     / (disk1*disk4).pegB /
 ;
 
 

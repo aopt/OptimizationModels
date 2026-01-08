@@ -163,10 +163,9 @@ ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
 display ndisks;
 
 scalar nd,x,y,w,k /0/;
-parameter pegpos(peg) /pegA 3, pegB 6, pegC 9, pegD 12/;
+parameter pegpos(peg) 'x position of pegs';
+pegpos(peg) = 3*ord(peg);
 
-
-parameter debug(*,peg,disk,*);
 
 loop(t1$sum(sinv(t1,disk,peg),1),
    if (k=3,
@@ -189,17 +188,9 @@ loop(t1$sum(sinv(t1,disk,peg),1),
          y = n+1-nd+1;
          w = size(disk)*3/n;
          x = pegpos(peg)-0.5*w;
-*         display x,w,y;
-         debug(t1,peg,disk,'x') = x;
-         debug(t1,peg,disk,'w') = w;
-         debug(t1,peg,disk,'y') = y;
-         
-*         put '<rect x="',x:5:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
-*         put '<text x="',pegpos(peg):5:2,'" y="',(y+0.6):4:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
-         put '<rect x=',x:5:2,' y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
-         put '<text x=',pegpos(peg):5:2,' y="',(y+0.6):4:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
-         debug(t1,peg,disk,'tx') = pegpos(peg);
-         debug(t1,peg,disk,'ty') = (y+0.6);
+*         display x,w,y;         
+         put '<rect x="',x:0:2,'" y="',y:0:2,'" height="1" width="',w:0:2,'" fill="lightblue"/>'/;
+         put '<text x="',pegpos(peg):0:2,'" y="',(y+0.6):0:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
          nd = nd-1;
       );
    );
@@ -211,4 +202,3 @@ put '</tr></table>';
 putclose;
 executetool 'win32.ShellExecute "%svg%"';
 
-display sinv,debug;

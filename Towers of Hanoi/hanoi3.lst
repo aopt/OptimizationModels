@@ -1,4 +1,4 @@
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 1
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -143,70 +143,79 @@ C o m p i l a t i o n
  142  );
  143  display sinv;
  144   
- 145  *-----------------------------------------------------------------------------------
- 146  * Visualization
- 147  *-----------------------------------------------------------------------------------
+ 145  scalar numMoves 'number of moves';
+ 146  numMoves = sum(t$sum(sinv(t,disk,peg),1),1);
+ 147  display numMoves;
  148   
- 149  abort.noError$(n>6 or 1=0) "skipping plot";
- 150   
- 152   
- 153  file f /hanoiplots3.html/;
- 154  put f;
+ 149   
+ 150  *-----------------------------------------------------------------------------------
+ 151  * Visualization
+ 152  *-----------------------------------------------------------------------------------
+ 153   
+ 154  abort.noError$(n>6 or 1=0) "skipping plot";
  155   
- 156  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
- 157  put '<h2>Towers of Hanoi Extension 1</h2>'/;
- 158  put 'Number of disks: 4'/;
- 159   
- 160  put '<table border="1">'/;
- 161  put '<tr>'/;
- 162   
- 164   
- 165  alias (t1,*);
- 166  parameter ndisks(*,peg) 'number of disks on each peg';
- 167  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
- 168  display ndisks;
- 169   
- 170  scalar nd,x,y,w,k /0/;
- 171  parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
- 172   
- 173  loop(t1$sum(sinv(t1,disk,peg),1),
- 174     if (k=4,
- 175         put "</tr><tr>"/;
- 176         k = 0;
- 177      );
- 178     k = k + 1;
- 179   
- 180     put '<td style="text-align: center">'/;
- 181     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
+ 157   
+ 158  file f /hanoiplots3.html/;
+ 159  put f;
+ 160   
+ 161  put '<style>table,th,td {border-collapse: collapse;}</style>'/;
+ 162  put '<h2>Towers of Hanoi Extension 1</h2>'/;
+ 163  put 'Number of pegs: ',card(peg):0:0,'<br>'/;
+ 164  put 'Number of disks: 4 <br>'/;
+ 165  put 'Number of moves: ',numMoves:0:0,'<br>'/;
+ 166  put 'MIP model has ',m.numvar:0:0,' variables (of which ',m.numdvar:0:0,' binary) and ',m.numequ:0:0,' equations<br><br>'/;
+ 167   
+ 168   
+ 169  put '<table border="1">'/;
+ 170  put '<tr>'/;
+ 171   
+ 173   
+ 174  alias (t1,*);
+ 175  parameter ndisks(*,peg) 'number of disks on each peg';
+ 176  ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
+ 177  display ndisks;
+ 178   
+ 179  scalar nd,x,y,w,k /0/;
+ 180  parameter pegpos(peg) 'x position of pegs';
+ 181  pegpos(peg) = 3*ord(peg);
  182   
- 183     loop(peg,
- 184  * draw peg
- 185        put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>
-      '/;
- 186  * draw disk
- 187        nd = ndisks(t1,peg);
- 188        loop(sinv(t1,disk,peg),
- 189           y = n+1-nd+1;
- 190           w = size(disk)*3/n;
- 191           x = 3*ord(peg)-0.5*w;
- 192  *         display x,w,y;
- 193           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
- 194           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
-      0.6">',(ord(disk)):0:0,'</text>'/;
- 195           nd = nd-1;
- 196        );
- 197     );
- 198     put '</svg><br>',t1.tl:0/;
- 199     put '</td>'/;
- 200  );
- 201   
- 202  put '</tr></table>';
- 203  putclose;
- 204  executetool 'win32.ShellExecute "hanoiplots3.html"';
+ 183  loop(t1$sum(sinv(t1,disk,peg),1),
+ 184     if (k=4,
+ 185         put "</tr><tr>"/;
+ 186         k = 0;
+ 187      );
+ 188     k = k + 1;
+ 189   
+ 190     put '<td style="text-align: center">'/;
+ 191     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
+ 192   
+ 193     loop(peg,
+ 194  * draw peg
+ 195        put '<line x1="',pegpos(peg):0:0,'" y1="1" x2="',pegpos(peg):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>'/;
+ 196  * draw disk
+ 197        nd = ndisks(t1,peg);
+ 198        loop(sinv(t1,disk,peg),
+ 199           y = n+1-nd+1;
+ 200           w = size(disk)*3/n;
+ 201           x = 3*ord(peg)-0.5*w;
+ 202  *         display x,w,y;
+ 203           put '<rect x="',x:0:2,'" y="',y:0:2,'" height="1" width="',w:0:2,'" fill="lightblue"/>'/;
+ 204           put '<text x="',pegpos(peg):0:2,'" y="',(y+0.6):0:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0
+      .6">',(ord(disk)):0:0,'</text>'/;
+ 205           nd = nd-1;
+ 206        );
+ 207     );
+ 208     put '</svg><br>',t1.tl:0/;
+ 209     put '</td>'/;
+ 210  );
+ 211   
+ 212  put '</tr></table>';
+ 213  putclose;
+ 214  executetool 'win32.ShellExecute "hanoiplots3.html"';
 
 
-COMPILATION TIME     =        0.016 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -262,7 +271,7 @@ disk4                     YES
 
 t1       1.000       3.000       4.000
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 3
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m Using MIP From line 126
 
@@ -457,7 +466,7 @@ obj..  - done(t1) - done(t2) - done(t3) - done(t4) - done(t5) - done(t6) - done(
      
       - done(t22) - done(t23) - done(t24) - done(t25) + z =E= 0 ; (LHS = -1, INFES = 1 ****)
      
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 4
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m Using MIP From line 126
 
@@ -566,7 +575,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 5
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m Using MIP From line 126
 
@@ -577,7 +586,7 @@ RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 4.000E+00]
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 6
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m Using MIP From line 126
 
@@ -590,7 +599,7 @@ NON ZERO ELEMENTS         5,665     DISCRETE VARIABLES      1,225
 
 
 GENERATION TIME      =        0.000 SECONDS      5 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 7
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m Using MIP From line 126
 
@@ -605,7 +614,7 @@ Solution Report     SOLVE m Using MIP From line 126
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE               14.0000
 
- RESOURCE USAGE, LIMIT          0.172 10000000000.000
+ RESOURCE USAGE, LIMIT          0.141 10000000000.000
  ITERATION COUNT, LIMIT       779    2147483647
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
@@ -618,7 +627,7 @@ Solution Report     SOLVE m Using MIP From line 126
 
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.17sec (det. 101.02 ticks)
+--- Cplex Time: 0.14sec (det. 101.02 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
@@ -2925,7 +2934,7 @@ t25.pegC         1.0000         1.0000         4.0000         EPS
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 05:07:21 Page 8
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 05:04:04 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -3149,7 +3158,9 @@ t12    .disk3                                 YES
 t12    .disk4                                 YES
 
 
-----    168 PARAMETER ndisks  number of disks on each peg
+----    147 PARAMETER numMoves             =       12.000  number of moves
+
+----    177 PARAMETER ndisks  number of disks on each peg
 
                pegA        pegB        pegC
 
@@ -3173,7 +3184,7 @@ t12                       2.000       2.000
 f C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots3.html
 
 
-EXECUTION TIME       =        0.484 SECONDS      7 MB  52.1.0 4f802a74 WEX-WEI
+EXECUTION TIME       =        0.469 SECONDS      7 MB  52.1.0 4f802a74 WEX-WEI
 
 
 USER: Eval License                                   G250902+0003Cc-GEN

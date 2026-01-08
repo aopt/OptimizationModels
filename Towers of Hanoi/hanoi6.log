@@ -1,11 +1,10 @@
-
---- Job hanoi2.gms Start 01/08/26 04:38:44 52.1.0 4f802a74 WEX-WEI x86 64bit/MS Windows
+--- Job hanoi6.gms Start 01/08/26 05:20:08 52.1.0 4f802a74 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\52\gmsprmNT.txt
     C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
 --- GAMS Parameters defined
     MIP CPLEX
-    Input "C:\projects\OptimizationModels\Towers of Hanoi\hanoi2.gms"
+    Input "C:\projects\OptimizationModels\Towers of Hanoi\hanoi6.gms"
     PageWidth 130
     PageSize 0
     ScrDir "C:\projects\OptimizationModels\Towers of Hanoi\225a\"
@@ -20,32 +19,34 @@ Licensee: Eval License                                   G250902+0003Cc-GEN
           Amsterdam Optimization Modeling Group                     DCE4744
           225a\gamslice.dat
           8ed7e271-7287-4ff2
-          node:23592203 mem:64 cores:8 ipport:59226 v:2                    
+          node:23592203 mem:64 cores:8 ipport:51106 v:2                    
           Evaluation license: Not for commercial or production use
           The time-limited license stops working on : Jan 30, 2026
 System information: 8 physical cores and 64 Gb physical memory detected
 GAMS 52.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
 --- Starting compilation
---- hanoi2.gms(200) 3 Mb
---- Starting execution: elapsed 0:00:00.014
---- hanoi2.gms(85) 4 Mb
+--- hanoi6.gms(215) 3 Mb
+--- Starting execution: elapsed 0:00:00.015
+--- hanoi6.gms(100) 5 Mb
 --- Generating RMIP model shortestpath
---- hanoi2.gms(101) 4 Mb
----   82 rows  241 columns  721 non-zeroes
----   240 discrete-columns
+--- hanoi6.gms(116) 5 Mb
+---   257 rows  1,441 columns  4,321 non-zeroes
+---   1,440 discrete-columns
 --- Range statistics (absolute non-zero finite values)
 --- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.025
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.069
 
 IBM ILOG CPLEX   52.1.0 4f802a74 Nov 28, 2025          WEI x86 64bit/MS Window
 
 --- GAMS/CPLEX licensed for continuous and discrete problems.
 --- GMO setup time: 0.00s
---- GMO memory 0.54 Mb (peak 0.54 Mb)
+--- Space for names approximately 0.04 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.69 Mb (peak 0.71 Mb)
 --- Dictionary memory 0.00 Mb
---- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.02 Mb)
+--- Cplex 22.1.2.0 link memory 0.03 Mb (peak 0.13 Mb)
 --- Starting Cplex
 
 Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
@@ -54,25 +55,33 @@ CPXPARAM_MIP_Display                             4
 CPXPARAM_MIP_Pool_Capacity                       0
 CPXPARAM_MIP_Tolerances_AbsMIPGap                0
 Tried aggregator 1 time.
-LP Presolve eliminated 1 rows and 7 columns.
-Aggregator did 2 substitutions.
-Reduced LP has 77 rows, 232 columns, and 458 nonzeros.
-Presolve time = 0.00 sec. (0.35 ticks)
-Initializing dual steep norms . . .
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 256 rows, 1440 columns, and 2880 nonzeros.
+Presolve time = 0.00 sec. (1.27 ticks)
+Symmetry aggregator did 832 additional substitutions.
 
 Iteration log . . .
-Iteration:     1   Dual objective     =             3.000000
+Iteration:     1   Dual objective     =             1.000000
+
+Dual crossover.
+  Dual:  Fixing 62 variables.
+       61 DMoves:  Infeasibility  0.00000000e+00  Objective  9.00000000e+00
+        0 DMoves:  Infeasibility  0.00000000e+00  Objective  9.00000000e+00
+  Dual:  Pushed 0, exchanged 62.
+  Primal:  Fixing 1 variable.
+        0 PMoves:  Infeasibility  0.00000000e+00  Objective  9.00000000e+00
+  Primal:  Pushed 1, exchanged 0.
 
 --- LP status (1): optimal.
---- Cplex Time: 0.00sec (det. 0.53 ticks)
+--- Cplex Time: 0.00sec (det. 2.36 ticks)
 
 
 Optimal solution found
-Objective:           15.000000
+Objective:            9.000000
 
 --- Reading solution for model shortestpath
---- Executing after solve: elapsed 0:00:00.073
---- hanoi2.gms(200) 6 Mb
---- Putfile fname C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots2.html
+--- Executing after solve: elapsed 0:00:00.125
+--- hanoi6.gms(215) 6 Mb
+--- Putfile fname C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots4.html
 *** Status: Normal completion
---- Job hanoi2.gms Stop 01/08/26 04:38:44 elapsed 0:00:00.338
+--- Job hanoi6.gms Stop 01/08/26 05:20:08 elapsed 0:00:00.383

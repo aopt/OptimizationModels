@@ -1,4 +1,4 @@
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 1
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -155,52 +155,52 @@ C o m p i l a t i o n
  156   
  158   
  159  scalar nd,x,y,w,k /0/;
- 160  parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
- 161   
- 162  cur(node) = supply(node)>0;
- 163   
- 164  loop(move$card(cur),
- 165     if (k=4,
- 166         put "</tr><tr>"/;
- 167         k = 0;
- 168      );
- 169     k = k + 1;
- 170   
- 171     put '<td style="text-align: center">'/;
- 172     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
- 173   
- 174     loop(peg,
- 175  * draw peg
- 176        put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>
-      '/;
- 177  * draw disk
- 178        nd = sum(nodes(cur,disk,peg),1);
- 179        loop(nodes(cur,disk,peg),
- 180           y = n+1-nd+1;
- 181           w = ord(disk)*3/n;
- 182           x = 3*ord(peg)-0.5*w;
- 183  *         display x,w,y;
- 184           put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
- 185           put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="
-      0.6">',(ord(disk)):0:0,'</text>'/;
- 186           nd = nd-1;
- 187        );
- 188     );
- 189     put '</svg><br>',cur.tl:0/;
- 190     put '</td>'/;
- 191   
- 192     next(node) = f.l(cur,node)>0.5;
- 193     cur(node) = next(node);
- 194   
- 195  );
- 196   
- 197  put '</tr></table>';
- 198  putclose;
- 199  executetool 'win32.ShellExecute "hanoiplots2.html"';
+ 160  parameter pegpos(peg) 'x position of pegs';
+ 161  pegpos(peg) = 3*ord(peg);
+ 162   
+ 163  cur(node) = supply(node)>0;
+ 164   
+ 165  loop(move$card(cur),
+ 166     if (k=4,
+ 167         put "</tr><tr>"/;
+ 168         k = 0;
+ 169      );
+ 170     k = k + 1;
+ 171   
+ 172     put '<td style="text-align: center">'/;
+ 173     put '<svg height="100" width="300" viewBox="0 0 12 6">'/;
+ 174   
+ 175     loop(peg,
+ 176  * draw peg
+ 177        put '<line x1="',pegpos(peg):0:0,'" y1="1" x2="',pegpos(peg):0:0,'" y2="6" style="stroke:brown;stroke-width:0.1"/>'/;
+ 178  * draw disk
+ 179        nd = sum(nodes(cur,disk,peg),1);
+ 180        loop(nodes(cur,disk,peg),
+ 181           y = n+1-nd+1;
+ 182           w = ord(disk)*3/n;
+ 183           x = 3*ord(peg)-0.5*w;
+ 184  *         display x,w,y;
+ 185           put '<rect x="',x:0:2,'" y="',y:0:2,'" height="1" width="',w:0:2,'" fill="lightblue"/>'/;
+ 186           put '<text x="',pegpos(peg):0:2,'" y="',(y+0.6):0:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0
+      .6">',(ord(disk)):0:0,'</text>'/;
+ 187           nd = nd-1;
+ 188        );
+ 189     );
+ 190     put '</svg><br>',cur.tl:0/;
+ 191     put '</td>'/;
+ 192   
+ 193     next(node) = f.l(cur,node)>0.5;
+ 194     cur(node) = next(node);
+ 195   
+ 196  );
+ 197   
+ 198  put '</tr></table>';
+ 199  putclose;
+ 200  executetool 'win32.ShellExecute "hanoiplots2.html"';
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 2
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -2175,7 +2175,7 @@ node80.node79                                             YES
 node81.node27         YES
 node81.node54         YES
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 3
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE shortestpath Using RMIP From line 101
 
@@ -2276,7 +2276,7 @@ obj..  - f(node1,node28) - f(node1,node55) - f(node2,node3) - f(node2,node29) - 
      
       - f(node80,node79) - f(node81,node27) - f(node81,node54) + z =E= 0 ; (LHS = 0)
      
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 4
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE shortestpath Using RMIP From line 101
 
@@ -2309,7 +2309,7 @@ z
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 5
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE shortestpath Using RMIP From line 101
 
@@ -2320,7 +2320,7 @@ RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00]
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 6
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE shortestpath Using RMIP From line 101
 
@@ -2333,7 +2333,7 @@ NON ZERO ELEMENTS           721     DISCRETE VARIABLES        240
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 7
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE shortestpath Using RMIP From line 101
 
@@ -2713,7 +2713,7 @@ node81.node54          .              .             1.0000         2.0000
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/06/26 03:39:53 Page 8
+GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 01/08/26 04:38:44 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -2766,7 +2766,7 @@ move15.node68.node41.disk1.PegC.pegB
 fname C:\projects\OptimizationModels\Towers of Hanoi\hanoiplots2.html
 
 
-EXECUTION TIME       =        0.328 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
+EXECUTION TIME       =        0.313 SECONDS      6 MB  52.1.0 4f802a74 WEX-WEI
 
 
 USER: Eval License                                   G250902+0003Cc-GEN

@@ -142,6 +142,11 @@ loop(t,
 );
 display sinv;
 
+scalar numMoves 'number of moves';
+numMoves = sum(t$sum(sinv(t,disk,peg),1),1);
+display numMoves;
+
+
 *-----------------------------------------------------------------------------------
 * Visualization
 *-----------------------------------------------------------------------------------
@@ -155,7 +160,11 @@ put f;
 
 put '<style>table,th,td {border-collapse: collapse;}</style>'/;
 put '<h2>Towers of Hanoi Extension 1</h2>'/;
-put 'Number of disks: %n%'/;
+put 'Number of pegs: ',card(peg):0:0,'<br>'/;
+put 'Number of disks: %n% <br>'/;
+put 'Number of moves: ',numMoves:0:0,'<br>'/;
+put 'MIP model has ',m.numvar:0:0,' variables (of which ',m.numdvar:0:0,' binary) and ',m.numequ:0:0,' equations<br><br>'/;
+
 
 put '<table border="1">'/;
 put '<tr>'/;
@@ -168,7 +177,8 @@ ndisks(t1,peg) = sum(sinv(t1,disk,peg),1);
 display ndisks;
 
 scalar nd,x,y,w,k /0/;
-parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
+parameter pegpos(peg) 'x position of pegs';
+pegpos(peg) = 3*ord(peg);
 
 loop(t1$sum(sinv(t1,disk,peg),1),
    if (k=4,
@@ -182,7 +192,7 @@ loop(t1$sum(sinv(t1,disk,peg),1),
    
    loop(peg,
 * draw peg
-      put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+      put '<line x1="',pegpos(peg):0:0,'" y1="1" x2="',pegpos(peg):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
 * draw disk
       nd = ndisks(t1,peg);
       loop(sinv(t1,disk,peg),
@@ -190,8 +200,8 @@ loop(t1$sum(sinv(t1,disk,peg),1),
          w = size(disk)*3/n;
          x = 3*ord(peg)-0.5*w;
 *         display x,w,y;
-         put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
-         put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
+         put '<rect x="',x:0:2,'" y="',y:0:2,'" height="1" width="',w:0:2,'" fill="lightblue"/>'/;
+         put '<text x="',pegpos(peg):0:2,'" y="',(y+0.6):0:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
          nd = nd-1;
       );
    );

@@ -157,7 +157,8 @@ put '<tr>'/;
 $eval n2 %n%+2
 
 scalar nd,x,y,w,k /0/;
-parameter pegpos(peg) /pegA 3, pegB 6, pegC 9/;
+parameter pegpos(peg) 'x position of pegs';
+pegpos(peg) = 3*ord(peg);
 
 cur(node) = supply(node)>0;
 
@@ -173,7 +174,7 @@ loop(move$card(cur),
    
    loop(peg,
 * draw peg
-      put '<line x1="',(pegpos(peg)):0:0,'" y1="1" x2="',(pegpos(peg)):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
+      put '<line x1="',pegpos(peg):0:0,'" y1="1" x2="',pegpos(peg):0:0,'" y2="%n2%" style="stroke:brown;stroke-width:0.1"/>'/;
 * draw disk
       nd = sum(nodes(cur,disk,peg),1);
       loop(nodes(cur,disk,peg),
@@ -181,8 +182,8 @@ loop(move$card(cur),
          w = ord(disk)*3/n;
          x = 3*ord(peg)-0.5*w;
 *         display x,w,y;
-         put '<rect x="',x:4:2,'" y="',y:4:2,'" height="1" width="',w:4:2,'" fill="lightblue"/>'/;
-         put '<text x="',(3*ord(peg)):0:0,'" y="',(y+0.6):3:1,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
+         put '<rect x="',x:0:2,'" y="',y:0:2,'" height="1" width="',w:0:2,'" fill="lightblue"/>'/;
+         put '<text x="',pegpos(peg):0:2,'" y="',(y+0.6):0:2,'" dominant-baseline="middle" text-anchor="middle" font-size="0.6">',(ord(disk)):0:0,'</text>'/;
          nd = nd-1;
       );
    );
