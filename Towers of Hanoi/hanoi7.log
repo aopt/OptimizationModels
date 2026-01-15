@@ -1,0 +1,210 @@
+
+--- Job hanoi7.gms Start 01/15/26 15:54:51 52.1.0 4f802a74 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\52\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Towers of Hanoi\hanoi7.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Towers of Hanoi\225a\"
+    SysDir C:\GAMS\52\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Eval License                                   G250902+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:54067 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Jan 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 52.1.0   Copyright (C) 1987-2025 GAMS Development. All rights reserved
+--- Starting compilation
+--- hanoi7.gms(171) 3 Mb
+--- Starting execution: elapsed 0:00:00.016
+--- hanoi7.gms(125) 4 Mb
+--- Generating MIP model m
+--- hanoi7.gms(133) 4 Mb
+---   543 rows  781 columns  3,385 non-zeroes
+---   735 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 4.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.081
+
+IBM ILOG CPLEX   52.1.0 4f802a74 Nov 28, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.04 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.65 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.02 Mb (peak 0.12 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 3 times.
+MIP Presolve eliminated 111 rows and 290 columns.
+MIP Presolve modified 110 coefficients.
+Aggregator did 20 substitutions.
+Reduced MIP has 411 rows, 471 columns, and 2060 nonzeros.
+Reduced MIP has 432 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.33 ticks)
+Probing fixed 101 vars, tightened 7 bounds.
+Probing time = 0.00 sec. (2.70 ticks)
+Cover probing fixed 1 vars, tightened 0 bounds.
+Tried aggregator 3 times.
+MIP Presolve eliminated 76 rows and 110 columns.
+MIP Presolve added 4 rows and 0 columns.
+MIP Presolve modified 28 coefficients.
+Aggregator did 11 substitutions.
+Reduced MIP has 328 rows, 350 columns, and 1483 nonzeros.
+Reduced MIP has 317 binaries, 33 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.63 ticks)
+Probing fixed 84 vars, tightened 0 bounds.
+Probing changed sense of 1 constraints.
+Probing time = 0.00 sec. (1.70 ticks)
+Cover probing fixed 4 vars, tightened 7 bounds.
+Tried aggregator 3 times.
+MIP Presolve eliminated 60 rows and 93 columns.
+MIP Presolve modified 88 coefficients.
+Aggregator did 32 substitutions.
+Reduced MIP has 236 rows, 225 columns, and 937 nonzeros.
+Reduced MIP has 206 binaries, 19 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.06 ticks)
+Probing fixed 206 vars, tightened 18 bounds.
+Probing time = 0.01 sec. (0.82 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 236 rows and 225 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.17 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.03 sec. (20.55 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.03 sec. (20.55 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.03sec (det. 20.55 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 542 rows and 781 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.39 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.58 ticks)
+
+
+Proven optimal solution
+MIP Solution:            1.000000    (0 iterations, 0 nodes)
+Final Solve:             1.000000    (0 iterations)
+
+Best possible:           1.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:00.299
+--- hanoi7.gms(163) 4 Mb
+--- Generating MIP model m2
+--- hanoi7.gms(169) 4 Mb
+---   544 rows  781 columns  3,565 non-zeroes
+---   735 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 5.900E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 4.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 4.000E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.302
+
+IBM ILOG CPLEX   52.1.0 4f802a74 Nov 28, 2025          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.04 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.65 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.02 Mb (peak 0.12 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 3 times.
+MIP Presolve eliminated 111 rows and 290 columns.
+MIP Presolve modified 214 coefficients.
+Aggregator did 20 substitutions.
+Reduced MIP has 412 rows, 471 columns, and 2109 nonzeros.
+Reduced MIP has 432 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.02 sec. (4.01 ticks)
+Probing fixed 101 vars, tightened 7 bounds.
+Probing time = 0.00 sec. (2.69 ticks)
+Cover probing fixed 1 vars, tightened 0 bounds.
+Tried aggregator 3 times.
+MIP Presolve eliminated 78 rows and 112 columns.
+MIP Presolve added 4 rows and 0 columns.
+MIP Presolve modified 28 coefficients.
+Aggregator did 8 substitutions.
+Reduced MIP has 330 rows, 351 columns, and 1523 nonzeros.
+Reduced MIP has 318 binaries, 33 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.74 ticks)
+Probing fixed 158 vars, tightened 6 bounds.
+Probing changed sense of 1 constraints.
+Probing time = 0.01 sec. (1.45 ticks)
+Cover probing fixed 9 vars, tightened 39 bounds.
+Tried aggregator 7 times.
+MIP Presolve eliminated 217 rows and 240 columns.
+MIP Presolve modified 103 coefficients.
+Aggregator did 57 substitutions.
+Reduced MIP has 56 rows, 54 columns, and 215 nonzeros.
+Reduced MIP has 51 binaries, 3 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (3.30 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.03 sec. (20.80 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.03 sec. (20.80 ticks)
+
+--- MIP status (103): integer infeasible.
+--- Cplex Time: 0.03sec (det. 20.81 ticks)
+
+CPLEX Error  1217: No solution exists.
+--- Problem is integer infeasible
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:00.377
+--- hanoi7.gms(170) 4 Mb
+*** Status: Normal completion
+--- Job hanoi7.gms Stop 01/15/26 15:54:52 elapsed 0:00:00.377
