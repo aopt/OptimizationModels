@@ -1,0 +1,235 @@
+<!--- needs some work to make it more general and callable from GAMS -->
+<html>
+<head>
+<title>Hanoi Animation</title>
+</head>
+<body>
+
+
+<h3>Hanoi Animation</h3>
+
+<div id="animation"></div>
+
+<div id="buttondiv">
+<button onclick="movUp(0)">Start</button>
+</div>
+
+<script 
+src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" 
+integrity="sha512-NcZdtrT77bJr4STcmsGAESr06BYGE8woZdSdEgqnpyqac7sugNO+Tr4bGwGF3MsnEkGKhU2KL2xh6Ec+BqsaHA==" 
+crossorigin="anonymous" 
+referrerpolicy="no-referrer">
+</script>
+
+<script>
+n = 4; // Number of disks
+pegno = [0,0,0,0]; // initial position: peg number (0,1,2) for each disk 
+
+// Select the container where the SVG will be appended
+const svgcontainer = document.getElementById("animation");
+
+
+//-------------------------------------------------------------------
+// viewbox = (0,-eps) - (12,n+1)
+//-------------------------------------------------------------------
+
+// Create SVG element
+const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+svg.setAttribute("width", 600);   
+svg.setAttribute("height", 240);
+svg.setAttribute("viewBox", "0 -0.1 12 " + (n+3));
+
+//-------------------------------------------------------------------
+// draw (static) pegs at x=4,8,12
+//-------------------------------------------------------------------
+
+pegsPos = [4,8,12];
+
+drawPeg = function(x1,y1,x2,y2) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("stroke", "brown");
+    line.setAttribute("stroke-width", 0.1);
+    svg.appendChild(line);
+}
+drawPegs = function() {
+    for (i=0; i<pegsPos.length; i++) {
+        x = pegsPos[i];
+        drawPeg(x,1.5,x,1.5+n+1);
+    }
+}
+drawPegs();
+
+//-------------------------------------------------------------------
+// discs
+//-------------------------------------------------------------------
+
+
+createDisk = function(d) {
+
+    let w = 3*(d+1)/n;            // width of disk
+    let h = 1;                    // height of disk
+    let x0 = pegsPos[pegno[d]] - 2  // outer x position of svg element
+    let x = 2-0.5*w;               // inner x position of rect  
+    let y0 = 1.5 + d+1 - h + 1;         // outer y position of svg element
+
+
+    // svg will hold rect and text
+    let svgDisk = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgDisk.setAttribute("x", x0);
+    svgDisk.setAttribute("y", y0);
+
+    let r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    r.setAttribute("width", w);
+    r.setAttribute("height", h);
+    r.setAttribute("fill", "lightblue");
+    r.setAttribute("x", x);
+    r.setAttribute("y", 0);
+    svgDisk.appendChild(r);
+
+    let t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.setAttribute("x", 2);
+    t.setAttribute("y", 0.5 + 0.1);
+    t.setAttribute("font-size", 0.5);
+    t.setAttribute("text-anchor", "middle");
+    t.textContent = d+1;
+    svgDisk.appendChild(t);
+    
+    return svgDisk;
+}
+
+disks = []; 
+createDisks = function() {
+    for (d=0; d<n; d++) {
+        let disk = createDisk(d);
+        svg.appendChild(disk);
+        disks.push(disk);
+    }
+}
+createDisks();
+
+
+// Append SVG to container
+svgcontainer.appendChild(svg);
+
+movUp = function(d) {
+    disk = disks[d];
+    let y = parseFloat(disk.getAttribute("y"));
+    y = y - 0.1;
+    let hitlimit = false;
+    if (y < 0) {
+        y = 0;
+        hitlimit = true;
+    }
+    disk.setAttribute("y", y);
+    return hitlimit;
+} 
+
+let tl = gsap.timeline();
+
+animation = function() {
+    dt = 2;
+    //dt = 0.1;
+
+    // disk1 from A to C
+    let d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt, delay: 3 });
+    tl.to(d, { x: 8, duration: dt });
+    tl.to(d, { y: 3, duration: dt });
+
+    // disk 2 from A to B
+    d = disks[1];
+    tl.to(d, { y: -3.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 1 from C to B
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 3 from A to C
+    d = disks[2];
+    tl.to(d, { y: -4.5, duration: dt });
+    tl.to(d, { x: 8, duration: dt });
+    tl.to(d, { y: 1, duration: dt });
+
+    // disk 1 from B to A
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 0, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 2 from B to C
+    d = disks[1];
+    tl.to(d, { y: -3.5, duration: dt });
+    tl.to(d, { x: 8, duration: dt });
+    tl.to(d, { y: 1, duration: dt });
+
+    // disk 1 from A to C
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 8, duration: dt });
+    tl.to(d, { y: 1, duration: dt });
+
+    // disk 4 from A to B
+    d = disks[3];
+    tl.to(d, { y: -5.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 0, duration: dt });
+
+    // disk 1 from C to B
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 2 from C to A
+    d = disks[1];
+    tl.to(d, { y: -3.5, duration: dt });
+    tl.to(d, { x: 0, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 1 from B to A
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 0, duration: dt });
+    tl.to(d, { y: 2, duration: dt });
+
+    // disk 3 from C to B
+    d = disks[2];
+    tl.to(d, { y: -4.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 0, duration: dt });
+
+    // disk 1 from A to C
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 8, duration: dt });
+    tl.to(d, { y: 3, duration: dt });
+
+    // disk 2 from A to B
+    d = disks[1];
+    tl.to(d, { y: -3.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 0, duration: dt });
+
+    // disk 1 from C to B
+    d = disks[0];
+    tl.to(d, { y: -2.5, duration: dt });
+    tl.to(d, { x: 4, duration: dt });
+    tl.to(d, { y: 0, duration: dt });
+
+}
+
+animation();
+
+</script>
+
+
+</body>
+</html>
