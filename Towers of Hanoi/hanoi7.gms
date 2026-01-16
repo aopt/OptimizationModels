@@ -163,7 +163,7 @@ sol(t,disk,peg,'1') = inv.l(t,disk,peg)>0.5;
 sol(t,disk,peg,'0') = inv.l(t,disk,peg)<0.5;
 
 equation cut;
-cut.. sum(sol(t,disk,peg,'1'),inv(t,disk,peg)) - sum(sol(t,disk,peg,'0'),inv(t,disk,peg)) =l= sum(sol(t,disk,peg,'1'),1) - 1;
+cut.. sum(sol(t,disk,peg,'0'),inv(t,disk,peg)) + sum(sol(t,disk,peg,'1'),1-inv(t,disk,peg)) =g= 1;
 
 model m2 /m,cut/;
 solve m2 maximizing z using mip;
