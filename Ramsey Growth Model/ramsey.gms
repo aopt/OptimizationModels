@@ -18,9 +18,9 @@ $ontext
        
 $offtext
 
-*
-* data for the model
-*
+*-------------------------------------------------------------------------------
+* data 
+*-------------------------------------------------------------------------------
 
 set t 'time periods' / t0*t25 /;
 scalars
@@ -77,6 +77,11 @@ a = (C0 + I0) / (K0**b * L0**(1-b));
 display a;
 
 
+*-------------------------------------------------------------------------------
+* model 
+*-------------------------------------------------------------------------------
+
+
 positive variables
    C(t) 'consumption'
    Y(t) 'production output'
@@ -96,8 +101,8 @@ equation
 ;
 
 utility..                   W =e= sum(t,beta(t)*log(C(t)));
-production(t)..             Y(t)=e= a * (K(t)**b) * (L(t)**(1-b));
-allocation(t)..             Y(t)=e= C(t) + I(t);
+production(t)..             Y(t) =e= a * (K(t)**b) * (L(t)**(1-b));
+allocation(t)..             Y(t) =e= C(t) + I(t);
 accumulation(tnotlast(t)).. K(t+1) =e= (1-delta)*K(t) + I(t);
 final(tlast)..              I(tlast) =g= (g+delta)*K(tlast);
 
@@ -120,7 +125,7 @@ K.l(t) = K0;
 C.l(t) = C0;
 
 model ramsey /all/;
-*option nlp=conopt;
+option nlp=conopt;
 solve ramsey maximizing W using nlp;
 
 

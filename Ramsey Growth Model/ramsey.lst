@@ -1,4 +1,4 @@
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 1
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -99,8 +99,8 @@ C o m p i l a t i o n
   96  ;
   97   
   98  utility..                   W =e= sum(t,beta(t)*log(C(t)));
-  99  production(t)..             Y(t)=e= a * (K(t)**b) * (L(t)**(1-b));
- 100  allocation(t)..             Y(t)=e= C(t) + I(t);
+  99  production(t)..             Y(t) =e= a * (K(t)**b) * (L(t)**(1-b));
+ 100  allocation(t)..             Y(t) =e= C(t) + I(t);
  101  accumulation(tnotlast(t)).. K(t+1) =e= (1-delta)*K(t) + I(t);
  102  final(tlast)..              I(tlast) =g= (g+delta)*K(tlast);
  103   
@@ -123,7 +123,7 @@ C o m p i l a t i o n
  120  C.l(t) = C0;
  121   
  122  model ramsey /all/;
- 123  *option nlp=conopt;
+ 123  option nlp=conopt;
  124  solve ramsey maximizing W using nlp;
  125   
  126   
@@ -136,8 +136,8 @@ C o m p i l a t i o n
  133  display results,W.l;
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -157,7 +157,7 @@ t18 1.702,    t19 1.754,    t20 1.806,    t21 1.860,    t22 1.916,    t23 1.974,
 
 
 ----     77 PARAMETER a                    =        0.760  Cobb-Douglas coefficient
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 3
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE ramsey Using NLP From line 124
 
@@ -216,7 +216,7 @@ utility..  - (1.05263157894737)*C(t0) - (1.00250626566416)*C(t1) - (0.9547678720
 
 final(t25)..  - 0.05*K(t25) + I(t25) =G= 0 ; (LHS = -0.15, INFES = 0.15 ****)
      
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 4
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE ramsey Using NLP From line 124
 
@@ -305,7 +305,7 @@ W
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       utility
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 5
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE ramsey Using NLP From line 124
 
@@ -316,7 +316,7 @@ RHS       [min, max] : [        NA,        NA] - Zero values observed as well
 Bound     [min, max] : [ 1.000E-03, 3.000E+00] - Zero values observed as well
 Matrix    [min, max] : [ 5.000E-02, 6.528E+00]
 
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 6
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE ramsey Using NLP From line 124
 
@@ -329,8 +329,8 @@ NON ZERO ELEMENTS           234     NON LINEAR N-Z             52
 CODE LENGTH                 287     CONSTANT POOL              67
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 7
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE ramsey Using NLP From line 124
 
@@ -345,12 +345,12 @@ Solution Report     SOLVE ramsey Using NLP From line 124
 **** MODEL STATUS      2 Locally Optimal
 **** OBJECTIVE VALUE                5.4534
 
- RESOURCE USAGE, LIMIT          0.110 10000000000.000
+ RESOURCE USAGE, LIMIT          0.141 10000000000.000
  ITERATION COUNT, LIMIT         8    2147483647
  EVALUATION ERRORS              0             0
  
  
-    C O N O P T   version 4.38.2
+    C O N O P T   version 4.39.0
     Copyright (C) GAMS Software GmbH
                   GAMS Development Corporation
  
@@ -372,12 +372,12 @@ Solution Report     SOLVE ramsey Using NLP From line 124
  ** Optimal solution. Reduced gradient less than tolerance.
  
  
- CONOPT time Total                            0.024 seconds
+ CONOPT time Total                            0.021 seconds
    of which: Function evaluations             0.000 =  0.0%
              1st Derivative evaluations       0.000 =  0.0%
              2nd Derivative evaluations       0.000 =  0.0%
              Directional 2nd Deriv(Hess)      0.000 =  0.0%
-             Interval derivative evals        0.000 =  0.0%
+             Interval derivative evals        0.001 =  4.8%
  
 
 ---- EQU production  Cobb-Douglas production function
@@ -619,7 +619,7 @@ t25          .             0.2427        +INF             .
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 52.1.0  4f802a74 Nov 28, 2025          WEX-WEI x86 64bit/MS Windows - 02/26/26 13:31:33 Page 8
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/03/26 10:07:33 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
@@ -659,7 +659,7 @@ t25  1.72037444  1.96304868  4.85348490  0.24267424
 ----    133 VARIABLE W.L                   =   5.45342754  total utility
 
 
-EXECUTION TIME       =        0.203 SECONDS      4 MB  52.1.0 4f802a74 WEX-WEI
+EXECUTION TIME       =        0.250 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
