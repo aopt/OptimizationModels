@@ -5,7 +5,8 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/experience
 
 | Files | Description |
 |-------| ----------- |
-| ramsey.gms, ramsey.log, ramsey.lst | Original GAMS model |
-| ramsey1.py, ramsey1.output | Python, scipy, SLSQP, fails |
-| ramsey2.py, ramsey2.output| Python, scipy, SLSQP, success |
+| `ramsey.gms`, `ramsey.log`, `ramsey.lst` | Original GAMS model |
+| `ramsey1.py`, `ramsey1.output` | Python, scipy, SLSQP, fails |
+| `ramsey2.py`, `ramsey2.output` | Python, scipy, SLSQP, success |
+| `ramsey3.py`, `ramsey3.output` | Python, scipy, trust region, success but very slow |
 
