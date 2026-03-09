@@ -6,6 +6,6 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/experience
 | Files | Description |
 |-------| ----------- |
 | ramsey.gms | Original GAMS model |
-| ramsey1.py | Python, scipy, SQSQP, fails |
-| ramsey2.py | Python, scipy, SQSQP, success |
+| ramsey1.py | Python, scipy, SLSQP, fails |
+| ramsey2.py | Python, scipy, SLSQP, success |
 
