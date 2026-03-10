@@ -49,11 +49,11 @@ fix(I[1],I0;force=true)
 set_start_value.(K, K0)
 set_start_value.(C, C0)
 
-@NLobjective(model,  Max, sum(β[t]*log(C[t]) for t in 1:T))
-@NLconstraint(model, production[t in 1:T],      Y[t] == a * (K[t]^b) * (L[t]^(1-b)))
-@constraint(model,   allocation[t in 1:T],      Y[t] == C[t] + I[t])
-@constraint(model,   accumulation[t in 1:T-1],  K[t+1] == (1-δ)*K[t] + I[t])
-@constraint(model,   final,                     I[T] >= (g + δ) * K[T])
+@objective(model,  Max, sum(β[t]*log(C[t]) for t in 1:T))
+@constraint(model, production[t in 1:T],      Y[t] == a * (K[t]^b) * (L[t]^(1-b)))
+@constraint(model, allocation[t in 1:T],      Y[t] == C[t] + I[t])
+@constraint(model, accumulation[t in 1:T-1],  K[t+1] == (1-δ)*K[t] + I[t])
+@constraint(model, final,                     I[T] >= (g + δ) * K[T])
 
 optimize!(model)
 
