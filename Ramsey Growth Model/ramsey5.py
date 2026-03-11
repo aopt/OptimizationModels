@@ -77,8 +77,8 @@ m.K[0].fix(K0)
 m.I[0].fix(I0)
 m.C[0].fix(C0)
 
-# fixed variables are not printed correctly
-# we can't really see what is sent to the solver.
+# print the complete model
+# this is useful for debugging, but can be commented out for large models
 m.pprint()
 
 #----------------------------------------------------------------
