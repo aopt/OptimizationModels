@@ -12,6 +12,7 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/experience
 | `ramsey4.py`, `ramsey4.output` | Python, scipy, trust region, faster |
 | `ramsey5.py`, `ramsey5.output` | Python, Pyomo, IPOPT |
 | `ramsey6.py`, `ramsey6.output` | Python, Pyomo, IPOPT with decorators |
+| `ramsey7.py`, `ramsey7.output` | Python, GAMSPy |
 | `ramsey.R`, `R.output` | R, auglag |
 | `ramsey.jl`, `julia.output` | Julia, JuMP, IPOPT |
 
