@@ -1,4 +1,7 @@
-import sys
+#
+# GAMSpy version 
+#
+
 import gamspy as gp
 
 #----------------------------------------------------------------
