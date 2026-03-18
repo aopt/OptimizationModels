@@ -1,4 +1,4 @@
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 1
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -8,91 +8,93 @@ C o m p i l a t i o n
         Find the smallest triangle that contains all points.
        
         Global NLP solvers have problems with this model.
-        The lower bound does not move from 0.
-        
+        The lower bound does not move from 0, even if we reduce
+        the size of the problem to 3 points.
+       
+       
         https://yetanothermathprogrammingconsultant.blogspot.com/2023/01/tiny-non-convex-quadratic-model-brings.html
         https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/revisiting-crazy-global-nlp-problem.html
         
         
-  14   
-  15  option nlp=scip, reslim=1000;
   16   
-  17  *---------------------------------------------------------------------
-  18  * data: points
+  17  option nlp=scip, reslim=1000;
+  18   
   19  *---------------------------------------------------------------------
-  20   
-  21  set
-  22     i 'points'   /point1*point25/
-  23     c 'coordinates' /x,y/
-  24  ;
-  25   
-  26  parameter p(i,c) 'data points';
-  27  p(i,c) = uniform(0,100);
-  28   
-  29  *---------------------------------------------------------------------
-  30  * find smallest triangle to contain all points
-  31  * original formulation
-  32  *---------------------------------------------------------------------
-  33   
-  34  sets
-  35     k  'corner points of triangle' /corner1*corner3/
-  36     pm 'plusmin -- used in linearizing abs()' /'+','-'/
-  37  ;
-  38   
-  39  * shorthands to make our area calculation easier
-  40  singleton sets
-  41     x1(k,c) /'corner1'.'x'/
-  42     x2(k,c) /'corner2'.'x'/
-  43     x3(k,c) /'corner3'.'x'/
-  44     y1(k,c) /'corner1'.'y'/
-  45     y2(k,c) /'corner2'.'y'/
-  46     y3(k,c) /'corner3'.'y'/
-  47  ;
-  48   
-  49   
-  50  variable
-  51     t(k,c)  'triangle'
-  52     z       'objective'
-  53  ;
-  54   
-  55  positive variable
-  56     area(pm)     'area (using variable splitting)'
-  57     lambda(i,k)  'barycentric coordinates'
-  58  ;
-  59   
-  60  equations
-  61     calcArea         'calculate area given its three corner points'
-  62     calcLambda(i,c)  'solve for barycentric coordinates'
-  63     sumLambda(i)     'lambdas need to add up to one'
-  64     obj              'objective'
-  65     order            'order corner points by their x coordinate'
-  66  ;
-  67   
-  68  calcArea..         area('+')-area('-') =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
-  69  calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c));
-  70  sumLambda(i)..     sum(k, lambda(i,k)) =e= 1;
-  71  obj..              z =e= sum(pm,area(pm));
-  72  order(k-1)..       t(k,'x') =g= t(k-1,'x');
-  73   
-  74   
-  75  * some reasonable bounds
-  76  t.lo(k,c) = -1000;
-  77  t.up(k,c) = +1000;
-  78   
-  79  model m1 /all/;
-  80  solve m1 minimizing z using nlp;
-  81   
-  82  *---------------------------------------------------------------------
-  83  * reporting
+  20  * data: points
+  21  *---------------------------------------------------------------------
+  22   
+  23  set
+  24     i 'points'   /point1*point3/
+  25     c 'coordinates' /x,y/
+  26  ;
+  27   
+  28  parameter p(i,c) 'data points';
+  29  p(i,c) = uniform(0,100);
+  30   
+  31  *---------------------------------------------------------------------
+  32  * find smallest triangle to contain all points
+  33  * original formulation
+  34  *---------------------------------------------------------------------
+  35   
+  36  sets
+  37     k  'corner points of triangle' /corner1*corner3/
+  38     pm 'plusmin -- used in linearizing abs()' /'+','-'/
+  39  ;
+  40   
+  41  * shorthands to make our area calculation easier
+  42  singleton sets
+  43     x1(k,c) /'corner1'.'x'/
+  44     x2(k,c) /'corner2'.'x'/
+  45     x3(k,c) /'corner3'.'x'/
+  46     y1(k,c) /'corner1'.'y'/
+  47     y2(k,c) /'corner2'.'y'/
+  48     y3(k,c) /'corner3'.'y'/
+  49  ;
+  50   
+  51   
+  52  variable
+  53     t(k,c)  'triangle'
+  54     z       'objective'
+  55  ;
+  56   
+  57  positive variable
+  58     area(pm)     'area (using variable splitting)'
+  59     lambda(i,k)  'barycentric coordinates'
+  60  ;
+  61   
+  62  equations
+  63     calcArea         'calculate area given its three corner points'
+  64     calcLambda(i,c)  'solve for barycentric coordinates'
+  65     sumLambda(i)     'lambdas need to add up to one'
+  66     obj              'objective'
+  67     order            'order corner points by their x coordinate'
+  68  ;
+  69   
+  70  calcArea..         area('+')-area('-') =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
+  71  calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c));
+  72  sumLambda(i)..     sum(k, lambda(i,k)) =e= 1;
+  73  obj..              z =e= sum(pm,area(pm));
+  74  order(k-1)..       t(k,'x') =g= t(k-1,'x');
+  75   
+  76   
+  77  * some reasonable bounds
+  78  t.lo(k,c) = -1000;
+  79  t.up(k,c) = +1000;
+  80   
+  81  model m1 /all/;
+  82  solve m1 minimizing z using nlp;
+  83   
   84  *---------------------------------------------------------------------
-  85   
-  86  display p,t.l,area.l,lambda.l;
+  85  * reporting
+  86  *---------------------------------------------------------------------
+  87   
+  88  display p,t.l,area.l,lambda.l;
 
 
-COMPILATION TIME     =        0.015 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 2
+COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m1 Using NLP From line 80
+Equation Listing    SOLVE m1 Using NLP From line 82
 
 
 ---- calcArea  =E=  calculate area given its three corner points
@@ -116,7 +118,7 @@ calcLambda(point2,x)..  (0)*t(corner1,x) + (0)*t(corner2,x) + (0)*t(corner3,x) +
      
       + (0)*lambda(point2,corner2) + (0)*lambda(point2,corner3) =E= -55.0375356 ; (LHS = 0, INFES = 55.0375356 ****)
      
-REMAINING 47 ENTRIES SKIPPED
+REMAINING 3 ENTRIES SKIPPED
 
 
 ---- sumLambda  =E=  lambdas need to add up to one
@@ -127,8 +129,6 @@ sumLambda(point2)..  lambda(point2,corner1) + lambda(point2,corner2) + lambda(po
      
 sumLambda(point3)..  lambda(point3,corner1) + lambda(point3,corner2) + lambda(point3,corner3) =E= 1 ; (LHS = 0, INFES = 1 ****)
      
-REMAINING 22 ENTRIES SKIPPED
-
 
 ---- obj  =E=  objective
 
@@ -141,9 +141,9 @@ order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 0)
      
 order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 0)
      
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 3
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m1 Using NLP From line 80
+Column Listing      SOLVE m1 Using NLP From line 82
 
 
 ---- t  triangle
@@ -154,28 +154,6 @@ t(corner1,x)
        (0)      calcLambda(point1,x)
        (0)      calcLambda(point2,x)
        (0)      calcLambda(point3,x)
-       (0)      calcLambda(point4,x)
-       (0)      calcLambda(point5,x)
-       (0)      calcLambda(point6,x)
-       (0)      calcLambda(point7,x)
-       (0)      calcLambda(point8,x)
-       (0)      calcLambda(point9,x)
-       (0)      calcLambda(point10,x)
-       (0)      calcLambda(point11,x)
-       (0)      calcLambda(point12,x)
-       (0)      calcLambda(point13,x)
-       (0)      calcLambda(point14,x)
-       (0)      calcLambda(point15,x)
-       (0)      calcLambda(point16,x)
-       (0)      calcLambda(point17,x)
-       (0)      calcLambda(point18,x)
-       (0)      calcLambda(point19,x)
-       (0)      calcLambda(point20,x)
-       (0)      calcLambda(point21,x)
-       (0)      calcLambda(point22,x)
-       (0)      calcLambda(point23,x)
-       (0)      calcLambda(point24,x)
-       (0)      calcLambda(point25,x)
        -1       order(corner1)
 
 t(corner1,y)
@@ -184,28 +162,6 @@ t(corner1,y)
        (0)      calcLambda(point1,y)
        (0)      calcLambda(point2,y)
        (0)      calcLambda(point3,y)
-       (0)      calcLambda(point4,y)
-       (0)      calcLambda(point5,y)
-       (0)      calcLambda(point6,y)
-       (0)      calcLambda(point7,y)
-       (0)      calcLambda(point8,y)
-       (0)      calcLambda(point9,y)
-       (0)      calcLambda(point10,y)
-       (0)      calcLambda(point11,y)
-       (0)      calcLambda(point12,y)
-       (0)      calcLambda(point13,y)
-       (0)      calcLambda(point14,y)
-       (0)      calcLambda(point15,y)
-       (0)      calcLambda(point16,y)
-       (0)      calcLambda(point17,y)
-       (0)      calcLambda(point18,y)
-       (0)      calcLambda(point19,y)
-       (0)      calcLambda(point20,y)
-       (0)      calcLambda(point21,y)
-       (0)      calcLambda(point22,y)
-       (0)      calcLambda(point23,y)
-       (0)      calcLambda(point24,y)
-       (0)      calcLambda(point25,y)
 
 t(corner2,x)
                 (.LO, .L, .UP, .M = -1000, 0, 1000, 0)
@@ -213,28 +169,6 @@ t(corner2,x)
        (0)      calcLambda(point1,x)
        (0)      calcLambda(point2,x)
        (0)      calcLambda(point3,x)
-       (0)      calcLambda(point4,x)
-       (0)      calcLambda(point5,x)
-       (0)      calcLambda(point6,x)
-       (0)      calcLambda(point7,x)
-       (0)      calcLambda(point8,x)
-       (0)      calcLambda(point9,x)
-       (0)      calcLambda(point10,x)
-       (0)      calcLambda(point11,x)
-       (0)      calcLambda(point12,x)
-       (0)      calcLambda(point13,x)
-       (0)      calcLambda(point14,x)
-       (0)      calcLambda(point15,x)
-       (0)      calcLambda(point16,x)
-       (0)      calcLambda(point17,x)
-       (0)      calcLambda(point18,x)
-       (0)      calcLambda(point19,x)
-       (0)      calcLambda(point20,x)
-       (0)      calcLambda(point21,x)
-       (0)      calcLambda(point22,x)
-       (0)      calcLambda(point23,x)
-       (0)      calcLambda(point24,x)
-       (0)      calcLambda(point25,x)
         1       order(corner1)
        -1       order(corner2)
 
@@ -280,143 +214,77 @@ lambda(point1,corner3)
        (0)      calcLambda(point1,y)
         1       sumLambda(point1)
 
-REMAINING 72 ENTRIES SKIPPED
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 4
+REMAINING 6 ENTRIES SKIPPED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m1 Using NLP From line 80
+Range Statistics    SOLVE m1 Using NLP From line 82
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
 
-RHS       [min, max] : [ 1.000E+00, 9.981E+01] - Zero values observed as well
+RHS       [min, max] : [ 1.000E+00, 8.433E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 5
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m1 Using NLP From line 80
+Model Statistics    SOLVE m1 Using NLP From line 82
 
 
 MODEL STATISTICS
 
-BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           79
-BLOCKS OF VARIABLES           4     SINGLE VARIABLES           84
-NON ZERO ELEMENTS           390     NON LINEAR N-Z            306
-CODE LENGTH                 568     CONSTANT POOL              16
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS           13
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           18
+NON ZERO ELEMENTS            60     NON LINEAR N-Z             42
+CODE LENGTH                  84     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.063 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 6
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m1 Using NLP From line 80
+Solution Report     SOLVE m1 Using NLP From line 82
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m1                  OBJECTIVE  z
      TYPE    NLP                 DIRECTION  MINIMIZE
-     SOLVER  SCIP                FROM LINE  80
+     SOLVER  SCIP                FROM LINE  82
 
 **** SOLVER STATUS     3 Resource Interrupt
 **** MODEL STATUS      7 Feasible Solution
-**** OBJECTIVE VALUE             6902.4065
+**** OBJECTIVE VALUE              845.7215
 
  RESOURCE USAGE, LIMIT       1000.000      1000.000
- ITERATION COUNT, LIMIT  25185100    2147483647
+ ITERATION COUNT, LIMIT  28670615    2147483647
  EVALUATION ERRORS              0             0
 
 SCIP             53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
                            LOWER          LEVEL          UPPER
 
----- EQU calcArea            .       -3.336645E-7          .          
+---- EQU calcArea            .       4.547474E-13          .          
 
   calcArea  calculate area given its three corner points
 
 ---- EQU calcLambda  solve for barycentric coordinates
 
-                 LOWER          LEVEL          UPPER
+                LOWER          LEVEL          UPPER
 
-point1 .x       -17.1747       -17.1747       -17.1747      
-point1 .y       -84.3267       -84.3267       -84.3267      
-point2 .x       -55.0375       -55.0375       -55.0375      
-point2 .y       -30.1138       -30.1138       -30.1138      
-point3 .x       -29.2212       -29.2212       -29.2212      
-point3 .y       -22.4053       -22.4053       -22.4053      
-point4 .x       -34.9831       -34.9831       -34.9831      
-point4 .y       -85.6270       -85.6270       -85.6270      
-point5 .x        -6.7114        -6.7114        -6.7114      
-point5 .y       -50.0211       -50.0211       -50.0211      
-point6 .x       -99.8118       -99.8118       -99.8118      
-point6 .y       -57.8733       -57.8733       -57.8733      
-point7 .x       -99.1133       -99.1133       -99.1133      
-point7 .y       -76.2250       -76.2250       -76.2250      
-point8 .x       -13.0692       -13.0692       -13.0692      
-point8 .y       -63.9719       -63.9719       -63.9719      
-point9 .x       -15.9518       -15.9518       -15.9518      
-point9 .y       -25.0081       -25.0081       -25.0081      
-point10.x       -66.8929       -66.8929       -66.8929      
-point10.y       -43.5356       -43.5356       -43.5356      
-point11.x       -35.9700       -35.9700       -35.9700      
-point11.y       -35.1441       -35.1441       -35.1441      
-point12.x       -13.1492       -13.1492       -13.1492      
-point12.y       -15.0102       -15.0102       -15.0102      
-point13.x       -58.9114       -58.9114       -58.9114      
-point13.y       -83.0893       -83.0893       -83.0893      
-point14.x       -23.0816       -23.0816       -23.0816      
-point14.y       -66.5734       -66.5734       -66.5734      
-point15.x       -77.5858       -77.5858       -77.5858      
-point15.y       -30.3658       -30.3658       -30.3658      
-point16.x       -11.0492       -11.0492       -11.0492      
-point16.y       -50.2385       -50.2385       -50.2385      
-point17.x       -16.0173       -16.0173       -16.0173      
-point17.y       -87.2462       -87.2462       -87.2462      
-point18.x       -26.5115       -26.5115       -26.5115      
-point18.y       -28.5814       -28.5814       -28.5814      
-point19.x       -59.3956       -59.3956       -59.3956      
-point19.y       -72.2719       -72.2719       -72.2719      
-point20.x       -62.8249       -62.8249       -62.8249      
-point20.y       -46.3798       -46.3798       -46.3798      
-point21.x       -41.3307       -41.3307       -41.3307      
-point21.y       -11.7695       -11.7695       -11.7695      
-point22.x       -31.4212       -31.4212       -31.4212      
-point22.y        -4.6552        -4.6552        -4.6552      
-point23.x       -33.8550       -33.8550       -33.8550      
-point23.y       -18.2100       -18.2100       -18.2100      
-point24.x       -64.5727       -64.5727       -64.5727      
-point24.y       -56.0746       -56.0746       -56.0746      
-point25.x       -76.9962       -76.9962       -76.9962      
-point25.y       -29.7806       -29.7806       -29.7806      
+point1.x       -17.1747       -17.1747       -17.1747      
+point1.y       -84.3267       -84.3267       -84.3267      
+point2.x       -55.0375       -55.0375       -55.0375      
+point2.y       -30.1138       -30.1138       -30.1138      
+point3.x       -29.2212       -29.2212       -29.2212      
+point3.y       -22.4053       -22.4053       -22.4053      
 
 ---- EQU sumLambda  lambdas need to add up to one
 
-               LOWER          LEVEL          UPPER
+              LOWER          LEVEL          UPPER
 
-point1          1.0000         1.0000         1.0000      
-point2          1.0000         1.0000         1.0000      
-point3          1.0000         1.0000         1.0000      
-point4          1.0000         1.0000         1.0000      
-point5          1.0000         1.0000         1.0000      
-point6          1.0000         1.0000         1.0000      
-point7          1.0000         1.0000         1.0000      
-point8          1.0000         1.0000         1.0000      
-point9          1.0000         1.0000         1.0000      
-point10         1.0000         1.0000         1.0000      
-point11         1.0000         1.0000         1.0000      
-point12         1.0000         1.0000         1.0000      
-point13         1.0000         1.0000         1.0000      
-point14         1.0000         1.0000         1.0000      
-point15         1.0000         1.0000         1.0000      
-point16         1.0000         1.0000         1.0000      
-point17         1.0000         1.0000         1.0000      
-point18         1.0000         1.0000         1.0000      
-point19         1.0000         1.0000         1.0000      
-point20         1.0000         1.0000         1.0000      
-point21         1.0000         1.0000         1.0000      
-point22         1.0000         1.0000         1.0000      
-point23         1.0000         1.0000         1.0000      
-point24         1.0000         1.0000         1.0000      
-point25         1.0000         1.0000         1.0000      
+point1         1.0000         1.0000         1.0000      
+point2         1.0000         1.0000         1.0000      
+point3         1.0000         1.0000         1.0000      
 
                            LOWER          LEVEL          UPPER
 
@@ -428,23 +296,23 @@ point25         1.0000         1.0000         1.0000
 
                LOWER          LEVEL          UPPER
 
-corner1          .            19.0678        +INF         
-corner2          .           118.3733        +INF         
+corner1          .            12.0465        +INF         
+corner2          .            25.8163        +INF         
 
 ---- VAR t  triangle
 
                  LOWER          LEVEL          UPPER
 
-corner1.x     -1000.0000        -1.2583      1000.0000      
-corner1.y     -1000.0000        93.3629      1000.0000      
-corner2.x     -1000.0000        17.8095      1000.0000      
-corner2.y     -1000.0000       -10.3345      1000.0000      
-corner3.x     -1000.0000       136.1828      1000.0000      
-corner3.y     -1000.0000        69.8957      1000.0000      
+corner1.x     -1000.0000        17.1747      1000.0000      
+corner1.y     -1000.0000        84.3267      1000.0000      
+corner2.x     -1000.0000        29.2212      1000.0000      
+corner2.y     -1000.0000        22.4053      1000.0000      
+corner3.x     -1000.0000        55.0375      1000.0000      
+corner3.y     -1000.0000        30.1138      1000.0000      
 
                            LOWER          LEVEL          UPPER
 
----- VAR z                 -INF         6902.4065        +INF         
+---- VAR z                 -INF          845.7215        +INF         
 
   z  objective
 
@@ -452,177 +320,67 @@ corner3.y     -1000.0000        69.8957      1000.0000
 
          LOWER          LEVEL          UPPER
 
-+          .          6902.4065        +INF         
++          .           845.7215        +INF         
 -          .              .            +INF         
 
 ---- VAR lambda  barycentric coordinates
 
-                       LOWER          LEVEL          UPPER
+                      LOWER          LEVEL          UPPER
 
-point1 .corner1          .             0.8154        +INF         
-point1 .corner2          .             0.0586        +INF         
-point1 .corner3          .             0.1260        +INF         
-point2 .corner1          .             0.1305        +INF         
-point2 .corner2          .             0.5340        +INF         
-point2 .corner3          .             0.3355        +INF         
-point3 .corner1          .             0.2144        +INF         
-point3 .corner2          .             0.6546        +INF         
-point3 .corner3          .             0.1309        +INF         
-point4 .corner1          .             0.7230        +INF         
-point4 .corner2          .             0.0154        +INF         
-point4 .corner3          .             0.2615        +INF         
-point5 .corner1          .             0.5820        +INF         
-point5 .corner2          .             0.4180        +INF         
-point5 .corner3          .              .            +INF         
-point6 .corner1          .             0.1083        +INF         
-point6 .corner2          .             0.1815        +INF         
-point6 .corner3          .             0.7102        +INF         
-point7 .corner1          .             0.2697        +INF         
-point7 .corner2          .              .            +INF         
-point7 .corner3          .             0.7303        +INF         
-point8 .corner1          .             0.6647        +INF         
-point8 .corner2          .             0.2683        +INF         
-point8 .corner3          .             0.0670        +INF         
-point9 .corner1          .             0.3139        +INF         
-point9 .corner2          .             0.6513        +INF         
-point9 .corner3          .             0.0349        +INF         
-point10.corner1          .             0.1767        +INF         
-point10.corner2          .             0.3802        +INF         
-point10.corner3          .             0.4431        +INF         
-point11.corner1          .             0.2844        +INF         
-point11.corner2          .             0.5163        +INF         
-point11.corner3          .             0.1992        +INF         
-point12.corner1          .             0.2444        +INF         
-point12.corner2          .             0.7556        +INF         
-point12.corner3          .              .            +INF         
-point13.corner1          .             0.5622        +INF         
-point13.corner2          .              .            +INF         
-point13.corner3          .             0.4378        +INF         
-point14.corner1          .             0.6288        +INF         
-point14.corner2          .             0.2253        +INF         
-point14.corner3          .             0.1458        +INF         
-point15.corner1          .             0.0016        +INF         
-point15.corner2          .             0.4932        +INF         
-point15.corner3          .             0.5052        +INF         
-point16.corner1          .             0.5587        +INF         
-point16.corner2          .             0.4084        +INF         
-point16.corner3          .             0.0329        +INF         
-point17.corner1          .             0.8471        +INF         
-point17.corner2          .             0.0315        +INF         
-point17.corner3          .             0.1213        +INF         
-point18.corner1          .             0.2831        +INF         
-point18.corner2          .             0.5978        +INF         
-point18.corner3          .             0.1191        +INF         
-point19.corner1          .             0.4666        +INF         
-point19.corner2          .             0.1069        +INF         
-point19.corner3          .             0.4265        +INF         
-point20.corner1          .             0.2247        +INF         
-point20.corner2          .             0.3588        +INF         
-point20.corner3          .             0.4165        +INF         
-point21.corner1          .             0.0528        +INF         
-point21.corner2          .             0.7399        +INF         
-point21.corner3          .             0.2072        +INF         
-point22.corner1          .             0.0494        +INF         
-point22.corner2          .             0.8276        +INF         
-point22.corner3          .             0.1230        +INF         
-point23.corner1          .             0.1515        +INF         
-point23.corner2          .             0.6885        +INF         
-point23.corner3          .             0.1600        +INF         
-point24.corner1          .             0.2977        +INF         
-point24.corner2          .             0.2593        +INF         
-point24.corner3          .             0.4430        +INF         
-point25.corner1          .              .            +INF         
-point25.corner2          .             0.5000        +INF         
-point25.corner3          .             0.5000        +INF         
+point1.corner1          .             1.0000        +INF         
+point1.corner2          .              .            +INF         
+point1.corner3          .              .            +INF         
+point2.corner1          .              .            +INF         
+point2.corner2          .              .            +INF         
+point2.corner3          .             1.0000        +INF         
+point3.corner1          .              .            +INF         
+point3.corner2          .             1.0000        +INF         
+point3.corner3          .              .            +INF         
 
 
 **** REPORT SUMMARY :        0     NONOPT
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:14:38 Page 7
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/18/26 10:51:33 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     86 PARAMETER p  data points
+----     88 PARAMETER p  data points
+
+                 x           y
+
+point1      17.175      84.327
+point2      55.038      30.114
+point3      29.221      22.405
+
+
+----     88 VARIABLE t.L  triangle
 
                   x           y
 
-point1       17.175      84.327
-point2       55.038      30.114
-point3       29.221      22.405
-point4       34.983      85.627
-point5        6.711      50.021
-point6       99.812      57.873
-point7       99.113      76.225
-point8       13.069      63.972
-point9       15.952      25.008
-point10      66.893      43.536
-point11      35.970      35.144
-point12      13.149      15.010
-point13      58.911      83.089
-point14      23.082      66.573
-point15      77.586      30.366
-point16      11.049      50.238
-point17      16.017      87.246
-point18      26.511      28.581
-point19      59.396      72.272
-point20      62.825      46.380
-point21      41.331      11.770
-point22      31.421       4.655
-point23      33.855      18.210
-point24      64.573      56.075
-point25      76.996      29.781
+corner1      17.175      84.327
+corner2      29.221      22.405
+corner3      55.038      30.114
 
 
-----     86 VARIABLE t.L  triangle
+----     88 VARIABLE area.L  area (using variable splitting)
 
-                  x           y
-
-corner1      -1.258      93.363
-corner2      17.810     -10.334
-corner3     136.183      69.896
++ 845.721
 
 
-----     86 VARIABLE area.L  area (using variable splitting)
+----     88 VARIABLE lambda.L  barycentric coordinates
 
-+ 6902.407
+           corner1     corner2     corner3
 
-
-----     86 VARIABLE lambda.L  barycentric coordinates
-
-            corner1     corner2     corner3
-
-point1        0.815       0.059       0.126
-point2        0.130       0.534       0.336
-point3        0.214       0.655       0.131
-point4        0.723       0.015       0.262
-point5        0.582       0.418
-point6        0.108       0.182       0.710
-point7        0.270                   0.730
-point8        0.665       0.268       0.067
-point9        0.314       0.651       0.035
-point10       0.177       0.380       0.443
-point11       0.284       0.516       0.199
-point12       0.244       0.756
-point13       0.562                   0.438
-point14       0.629       0.225       0.146
-point15       0.002       0.493       0.505
-point16       0.559       0.408       0.033
-point17       0.847       0.032       0.121
-point18       0.283       0.598       0.119
-point19       0.467       0.107       0.426
-point20       0.225       0.359       0.416
-point21       0.053       0.740       0.207
-point22       0.049       0.828       0.123
-point23       0.152       0.689       0.160
-point24       0.298       0.259       0.443
-point25                   0.500       0.500
+point1       1.000
+point2                               1.000
+point3                   1.000
 
 
 
-EXECUTION TIME       =     1000.485 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+EXECUTION TIME       =     1000.235 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
@@ -631,5 +389,5 @@ USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
 
 **** FILE SUMMARY
 
-Input      C:\projects\OptimizationModels\SmallestEnclosingTriangle\triangle.gms
-Output     C:\projects\OptimizationModels\SmallestEnclosingTriangle\triangle.lst
+Input      C:\projects\OptimizationModels\Smallest Enclosing Triangle\triangle.gms
+Output     C:\projects\OptimizationModels\Smallest Enclosing Triangle\triangle.lst

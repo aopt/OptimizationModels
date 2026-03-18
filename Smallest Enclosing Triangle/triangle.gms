@@ -4,8 +4,10 @@ $onText
   Find the smallest triangle that contains all points.
 
   Global NLP solvers have problems with this model.
-  The lower bound does not move from 0.
-  
+  The lower bound does not move from 0, even if we reduce
+  the size of the problem to 3 points.
+
+
   https://yetanothermathprogrammingconsultant.blogspot.com/2023/01/tiny-non-convex-quadratic-model-brings.html
   https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/revisiting-crazy-global-nlp-problem.html
   
@@ -19,7 +21,7 @@ option nlp=scip, reslim=1000;
 *---------------------------------------------------------------------
  
 set
-   i 'points'   /point1*point25/
+   i 'points'   /point1*point3/
    c 'coordinates' /x,y/
 ;
  
