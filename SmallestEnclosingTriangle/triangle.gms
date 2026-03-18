@@ -1,32 +1,41 @@
 $onText
+
+  Given are n data points (2d).
+  Find the smallest triangle that contains all points.
+
+  Global NLP solvers have problems with this model.
+  The lower bound does not move from 0.
   
-  Given are n points (2d).
-  Find smallest triangle that contains all points.
+  https://yetanothermathprogrammingconsultant.blogspot.com/2023/01/tiny-non-convex-quadratic-model-brings.html
+  https://yetanothermathprogrammingconsultant.blogspot.com/2026/03/revisiting-crazy-global-nlp-problem.html
+  
   
 $offText
 
+option nlp=scip, reslim=1000;
+ 
 *---------------------------------------------------------------------
 * data: points
 *---------------------------------------------------------------------
-
+ 
 set
    i 'points'   /point1*point25/
    c 'coordinates' /x,y/
 ;
-
+ 
 parameter p(i,c) 'data points';
 p(i,c) = uniform(0,100);
-
+ 
 *---------------------------------------------------------------------
 * find smallest triangle to contain all points
+* original formulation
 *---------------------------------------------------------------------
-
-
+ 
 sets
    k  'corner points of triangle' /corner1*corner3/
    pm 'plusmin -- used in linearizing abs()' /'+','-'/
 ;
-
+ 
 * shorthands to make our area calculation easier
 singleton sets
    x1(k,c) /'corner1'.'x'/
@@ -36,42 +45,42 @@ singleton sets
    y2(k,c) /'corner2'.'y'/
    y3(k,c) /'corner3'.'y'/
 ;
-   
-
+  
+ 
 variable
    t(k,c)  'triangle'
    z       'objective'
 ;
-
+ 
 positive variable
    area(pm)     'area (using variable splitting)'
-   lambda(i,k)  'barycentric coordinates' 
+   lambda(i,k)  'barycentric coordinates'
 ;
-lambda.up(i,k) = 1;
-
+ 
 equations
    calcArea         'calculate area given its three corner points'
-   calcLambda(i,c)  'solve for barycentric coordinates' 
+   calcLambda(i,c)  'solve for barycentric coordinates'
    sumLambda(i)     'lambdas need to add up to one'
    obj              'objective'
-   order            'order corner points by their x coordinate' 
+   order            'order corner points by their x coordinate'
 ;
-
+ 
 calcArea..         area('+')-area('-') =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
-calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c)); 
+calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c));
 sumLambda(i)..     sum(k, lambda(i,k)) =e= 1;
 obj..              z =e= sum(pm,area(pm));
 order(k-1)..       t(k,'x') =g= t(k-1,'x');
-
-
+ 
+ 
 * some reasonable bounds
 t.lo(k,c) = -1000;
 t.up(k,c) = +1000;
+ 
+model m1 /all/;
+solve m1 minimizing z using nlp;
 
-
-model m /all/;
-option nlp=baron, threads=0, reslim=1000;
-solve m minimizing z using nlp;
-
-* data + results
+*---------------------------------------------------------------------
+* reporting
+*---------------------------------------------------------------------
+ 
 display p,t.l,area.l,lambda.l;
