@@ -1,4 +1,4 @@
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 1
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -8,216 +8,319 @@ C o m p i l a t i o n
         Find the smallest triangle that contains all points.
        
         Three different definitions of size.
+        
+        Model m1: area, absolute value using variable splitting
+              m2: area, absolute value using bounding
+              m3: circumference 
+              m4: sum of squares
+              m5: as m4, use convex hull instead of all points 
        
-   9   
-  10  option nlp=scip, reslim=1000;
-  11   
-  12  *---------------------------------------------------------------------
-  13  * data: points
-  14  *---------------------------------------------------------------------
   15   
-  16  sets
-  17     i 'points'   /point1*point50/
-  18     c 'coordinates' /x,y/
-  19  ;
-  20   
-  21  parameter p(i,c) 'data points';
-  22  p(i,c) = uniform(0,100);
-  23   
-  24  *---------------------------------------------------------------------
-  25  * constraints:
-  26  *  points inside triangle using barymetric coordinates
-  27  *  order corner points by x coordinate
-  28  *---------------------------------------------------------------------
-  29   
-  30  set
-  31     k  'corner points of triangle' /corner1*corner3/
-  32  ;
+  16  option nlp=scip, reslim=1000;
+  17   
+  18  *---------------------------------------------------------------------
+  19  * data: points
+  20  *---------------------------------------------------------------------
+  21   
+  22  sets
+  23     i 'points'   /point1*point50/
+  24     s(i) 'subset (e.g. convex hull)'
+  25     c 'coordinates' /x,y/
+  26     k  'corner points of triangle' /corner1*corner3/
+  27  ;
+  28   
+  29  parameter p(i,c) 'data points';
+  30  p(i,c) = uniform(0,100);
+  31  display p;
+  32   
   33   
-  34  positive variable
-  35     lambda(i,k)  'barycentric coordinates'
-  36  ;
+  34  *---------------------------------------------------------------------
+  35  * reporting
+  36  *---------------------------------------------------------------------
   37   
-  38  free variable
-  39     t(k,c)  'triangle'
-  40  ;
-  41  * some reasonable bounds
-  42  t.lo(k,c) = -1000;
-  43  t.up(k,c) = +1000;
+  38  parameter
+  39     results(*,*) 'combined results'
+  40     triangle(*,k,c) 'solution'
+  41  ;
+  42   
+  43  acronym timelimit;
   44   
-  45   
-  46  equations
-  47     calcLambda(i,c)  'solve for barycentric coordinates'
-  48     sumLambda(i)     'lambdas need to add up to one'
-  49     order            'order corner points by their x coordinate'
-  50  ;
-  51   
-  52  calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c));
-  53  sumLambda(i)..     sum(k, lambda(i,k)) =e= 1;
-  54  order(k-1)..       t(k,'x') =g= t(k-1,'x');
+  45  $macro report(m,id) \
+  46  results(id,'area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]); \
+  47  results(id,'time') = m.resusd; \
+  48  results(id,'obj') = m.objval;  \
+  49  results(id,'best bound') = m.objest; \
+  50  results(id,'gap%') = 100*abs(m.objest-m.objval)/m.objval; \
+  51  results(id,'status')$(m.solvestat=3) = timelimit;\
+  52  triangle(id,k,c) = t.l(k,c); \
+  53  display results,triangle;
+  54   
   55   
   56   
-  57  model cons 'constraints' /calcLambda,sumLambda,order/;
-  58   
-  59  *---------------------------------------------------------------------
-  60  * objective 1: area (variable splitting)
+  57  *---------------------------------------------------------------------
+  58  * constraints:
+  59  *  points inside triangle using barymetric coordinates
+  60  *  order corner points by x coordinate
   61  *---------------------------------------------------------------------
   62   
-  63  parameter
-  64     results(*,*) 'combined results'
-  65     triangle(*,k,c) 'solution'
+  63   
+  64  positive variable
+  65     lambda(i,k)  'barycentric coordinates'
   66  ;
   67   
-  68   
-  69  set
-  70     pm 'plusmin -- used in linearizing abs()' /'+','-'/
-  71  ;
-  72   
-  73  * shorthands to make our area calculation easier
-  74  singleton sets
-  75     x1(k,c) /'corner1'.'x'/
-  76     x2(k,c) /'corner2'.'x'/
-  77     x3(k,c) /'corner3'.'x'/
-  78     y1(k,c) /'corner1'.'y'/
-  79     y2(k,c) /'corner2'.'y'/
-  80     y3(k,c) /'corner3'.'y'/
-  81  ;
-  82   
-  83  variable
-  84     z       'objective'
-  85  ;
-  86   
-  87  positive variable
-  88     area(pm)     'area (using variable splitting)'
-  89  ;
-  90   
-  91  equations
-  92     calcArea         'calculate area given its three corner points'
-  93     obj              'objective'
-  94  ;
+  68  free variable
+  69     t(k,c)  'triangle'
+  70  ;
+  71  * some reasonable bounds
+  72  t.lo(k,c) = -1000;
+  73  t.up(k,c) = +1000;
+  74   
+  75   
+  76  equations
+  77     calcLambda(i,c)  'solve for barycentric coordinates'
+  78     sumLambda(i)     'lambdas need to add up to one'
+  79     order            'order corner points by their x coordinate'
+  80  ;
+  81   
+  82  calcLambda(s,c)..  p(s,c) =e= sum(k, lambda(s,k)*t(k,c));
+  83  sumLambda(s)..     sum(k, lambda(s,k)) =e= 1;
+  84  order(k-1)..       t(k,'x') =g= t(k-1,'x');
+  85   
+  86  model cons 'constraints' /calcLambda,sumLambda,order/;
+  87   
+  88   
+  89  *---------------------------------------------------------------------
+  90  * objective 1: area (variable splitting)
+  91  *---------------------------------------------------------------------
+  92   
+  93  * use all points
+  94  s(i) = yes;
   95   
-  96  calcArea..         area('+')-area('-') =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
-  97  obj..              z =e= sum(pm,area(pm));
-  98   
-  99  model m1 'area -- var splitting' /calcArea,obj,cons/;
- 100  solve m1 minimizing z using nlp;
- 101   
- 102  results('m1 area var split','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(
-      y2))]);
- 103  results('m1 area var split','time') = m1.resusd;
- 104  triangle('m1',k,c) = t.l(k,c);
- 105  display results,triangle;
- 106   
- 107  *---------------------------------------------------------------------
- 108  * objective 2: area (bounding)
- 109  *---------------------------------------------------------------------
- 110   
- 111  variable
- 112     a 'area'
- 113     absa 'abs area'
- 114  ;
- 115  absa.lo = 0;
- 116   
- 117  equations
- 118     calcArea2       'calculate area given its three corner points'
- 119     bnd1            'objective bound'
- 120     bnd2            'objective bound'
+  96  set
+  97     pm 'plusmin -- used in linearizing abs()' /'+','-'/
+  98  ;
+  99   
+ 100  * shorthands to make our area calculation easier
+ 101  singleton sets
+ 102     x1(k,c) /'corner1'.'x'/
+ 103     x2(k,c) /'corner2'.'x'/
+ 104     x3(k,c) /'corner3'.'x'/
+ 105     y1(k,c) /'corner1'.'y'/
+ 106     y2(k,c) /'corner2'.'y'/
+ 107     y3(k,c) /'corner3'.'y'/
+ 108  ;
+ 109   
+ 110  variable
+ 111     z       'objective'
+ 112  ;
+ 113   
+ 114  positive variable
+ 115     area(pm)     'area (using variable splitting)'
+ 116  ;
+ 117   
+ 118  equations
+ 119     calcArea         'calculate area given its three corner points'
+ 120     obj              'objective'
  121  ;
  122   
- 123  calcArea2..         a =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
- 124  bnd1..              a =l= absa;
- 125  bnd2..              a =g= -absa;
- 126   
- 127  model m2 'area -- bounding' /calcArea2,bnd1,bnd2,cons/;
- 128  solve m2 minimizing absa using nlp;
- 129   
- 130  results('m2 area bnd','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))])
-      ;
- 131  results('m2 area bnd','time') = m2.resusd;
- 132  triangle('m2',k,c) = t.l(k,c);
- 133  display results,triangle;
+ 123  calcArea..         area('+')-area('-') =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
+ 124  obj..              z =e= sum(pm,area(pm));
+ 125   
+ 126  model m1 'area -- var splitting' /calcArea,obj,cons/;
+ 127  solve m1 minimizing z using nlp;
+ 128   
+ 129   results('m1 area var split','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l
+      (y2))]); results('m1 area var split','time') = m1.resusd; results('m1 area var split','obj') = m1.objval;  results('m1 area 
+      var split','best bound') = m1.objest; results('m1 area var split','gap%') = 100*abs(m1.objest-m1.objval)/m1.objval; results(
+      'm1 area var split','status')$(m1.solvestat=3) = timelimit;triangle('m1 area var split',k,c) = t.l(k,c); display results,tri
+      angle;
+ 130   
+ 131  *---------------------------------------------------------------------
+ 132  * objective 2: area (bounding)
+ 133  *---------------------------------------------------------------------
  134   
- 135  *---------------------------------------------------------------------
- 136  * objective 3: circumference
- 137  *---------------------------------------------------------------------
- 138   
- 139  alias(k,kk);
+ 135  variable
+ 136     a 'area'
+ 137     absa 'abs area'
+ 138  ;
+ 139  absa.lo = 0;
  140   
  141  equations
- 142     circumference    'calculate perimeter of triangle'
- 143  ;
- 144   
- 145  circumference..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sqrt(sum(c,sqr(t(k,c)-t(kk,c)))));
+ 142     calcArea2       'calculate area given its three corner points'
+ 143     bnd1            'objective bound'
+ 144     bnd2            'objective bound'
+ 145  ;
  146   
- 147  model m3 'area -- bounding' /circumference,cons/;
- 148  solve m3 minimizing z using nlp;
- 149   
- 150  results('m3 circumference','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y
-      2))]);
- 151  results('m3 circumference','time') = m3.resusd;
- 152  triangle('m3',k,c) = t.l(k,c);
- 153  display results,triangle;
- 154   
- 155  *---------------------------------------------------------------------
- 156  * objective 4: sum of squares
- 157  *---------------------------------------------------------------------
- 158   
- 159  alias(k,kk);
- 160   
- 161  equations
- 162     sos    'drop square root'
- 163  ;
- 164   
- 165  sos..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sum(c,sqr(t(k,c)-t(kk,c))));
- 166   
- 167  model m4 'area -- bounding' /sos,cons/;
- 168  solve m4 minimizing z using nlp;
- 169   
- 170  results('m4 sos','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]);
- 171  results('m4 sos','time') = m4.resusd;
- 172  triangle('m4',k,c) = t.l(k,c);
- 173  display results,triangle;
- 174   
+ 147  calcArea2..         a =e= 0.5*[t(x1)*(t(y2)-t(y3)) + t(x2)*(t(y3)-t(y1)) + t(x3)*(t(y1)-t(y2))];
+ 148  bnd1..              a =l= absa;
+ 149  bnd2..              a =g= -absa;
+ 150   
+ 151  model m2 'area -- bounding' /calcArea2,bnd1,bnd2,cons/;
+ 152  solve m2 minimizing absa using nlp;
+ 153   
+ 154   results('m2 area bnd','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]
+      ); results('m2 area bnd','time') = m2.resusd; results('m2 area bnd','obj') = m2.objval;  results('m2 area bnd','best bound')
+       = m2.objest; results('m2 area bnd','gap%') = 100*abs(m2.objest-m2.objval)/m2.objval; results('m2 area bnd','status')$(m2.so
+      lvestat=3) = timelimit;triangle('m2 area bnd',k,c) = t.l(k,c); display results,triangle;
+ 155   
+ 156  *---------------------------------------------------------------------
+ 157  * objective 3: circumference
+ 158  *---------------------------------------------------------------------
+ 159   
+ 160  alias(k,kk);
+ 161   
+ 162  equations
+ 163     circumference    'calculate perimeter of triangle'
+ 164  ;
+ 165   
+ 166  circumference..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sqrt(sum(c,sqr(t(k,c)-t(kk,c)))));
+ 167   
+ 168  model m3 'area -- bounding' /circumference,cons/;
+ 169  solve m3 minimizing z using nlp;
+ 170   
+ 171   results('m3 circumference','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(
+      y2))]); results('m3 circumference','time') = m3.resusd; results('m3 circumference','obj') = m3.objval;  results('m3 circumfe
+      rence','best bound') = m3.objest; results('m3 circumference','gap%') = 100*abs(m3.objest-m3.objval)/m3.objval; results('m3 c
+      ircumference','status')$(m3.solvestat=3) = timelimit;triangle('m3 circumference',k,c) = t.l(k,c); display results,triangle;
+ 172   
+ 173  *---------------------------------------------------------------------
+ 174  * objective 4: sum of squares
  175  *---------------------------------------------------------------------
- 176  * visualization
- 177  *---------------------------------------------------------------------
+ 176   
+ 177  alias(k,kk);
  178   
- 181   
- 182  file fdata /data.js/; put fdata;
- 183   
- 184  * points
- 185  put "px=["; loop(i,put p(i,'x'):0:3,","); put "];"/;
- 186  put "py=["; loop(i,put p(i,'y'):0:3,","); put "];"/;
- 187  * triangles
- 188  put "txm1=["; loop(k,put triangle('m1',k,'x'):0:3,","); put "];"/;
- 189  put "tym1=["; loop(k,put triangle('m1',k,'y'):0:3,","); put "];"/;
- 190  put "txm3=["; loop(k,put triangle('m3',k,'x'):0:3,","); put "];"/;
- 191  put "tym3=["; loop(k,put triangle('m3',k,'y'):0:3,","); put "];"/;
- 192  put "txm4=["; loop(k,put triangle('m4',k,'x'):0:3,","); put "];"/;
- 193  put "tym4=["; loop(k,put triangle('m4',k,'y'):0:3,","); put "];"/;
- 194   
- 195  set mall /m1,m3,m4/;
- 196   
- 197  parameter box;
- 198  box(c,'lo') = smin((mall,k),triangle(mall,k,c));
- 199  box(c,'up') = smax((mall,k),triangle(mall,k,c));
- 200  box(c,'range') = box(c,'up')-box(c,'lo');
- 201  box(c,'lo2') =  box(c,'lo') - 0.1*box(c,'range');
- 202  box(c,'up2') =  box(c,'up') + 0.1*box(c,'range');
- 203  display box;
- 204   
- 205  put "cmin=["; loop(c, put box(c,'lo2'):0:3,","); put "];"/;
- 206  put "cmax=["; loop(c, put box(c,'up2'):0:3,","); put "];"/;
- 207   
- 208   
- 266   
- 267  executetool 'win32.ShellExecute "plot.html"';
+ 179  equations
+ 180     sos    'drop square root'
+ 181  ;
+ 182   
+ 183  sos..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sum(c,sqr(t(k,c)-t(kk,c))));
+ 184   
+ 185  model m4 'area -- bounding' /sos,cons/;
+ 186  solve m4 minimizing z using nlp;
+ 187   
+ 188   results('m4 sos','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]); re
+      sults('m4 sos','time') = m4.resusd; results('m4 sos','obj') = m4.objval;  results('m4 sos','best bound') = m4.objest; result
+      s('m4 sos','gap%') = 100*abs(m4.objest-m4.objval)/m4.objval; results('m4 sos','status')$(m4.solvestat=3) = timelimit;triangl
+      e('m4 sos',k,c) = t.l(k,c); display results,triangle;
+ 189   
+ 190   
+ 191  *---------------------------------------------------------------------
+ 192  * model 4 hull: as previous but now use only the points
+ 193  * that are part of the convex hull
+ 194  *---------------------------------------------------------------------
+ 195   
+ 196  set hull(i) 'convex hull';
+ 197   
+ 198  embeddedCode Python:
+ 199  import scipy as sp
+ 200  import numpy as np
+ 201  import gams.transfer as gt
+ 202   
+ 203  i = list(gams.get("i"))
+ 204  p = gt.Container(gams.db)["p"].toDense()
+ 205  hull = sp.spatial.ConvexHull(p).vertices
+ 206  h = [i[pt] for pt in hull]
+ 207  gams.set("hull",h)
+ 208  endEmbeddedCode hull
+ 209   
+ 210  display hull;
+ 211   
+ 212  s(i) = no;
+ 213  s(hull) = yes;
+ 214  solve m4 minimizing z using nlp;
+ 215   
+ 216   results('m4 sos hull','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]
+      ); results('m4 sos hull','time') = m4.resusd; results('m4 sos hull','obj') = m4.objval;  results('m4 sos hull','best bound')
+       = m4.objest; results('m4 sos hull','gap%') = 100*abs(m4.objest-m4.objval)/m4.objval; results('m4 sos hull','status')$(m4.so
+      lvestat=3) = timelimit;triangle('m4 sos hull',k,c) = t.l(k,c); display results,triangle;
+ 217   
+ 218  *---------------------------------------------------------------------
+ 219  * visualization
+ 220  *---------------------------------------------------------------------
+ 221   
+ 224   
+ 225  file fdata /data.js/; put fdata;
+ 226   
+ 227  * points
+ 228  put "px=["; loop(i,put p(i,'x'):0:3,","); put "];"/;
+ 229  put "py=["; loop(i,put p(i,'y'):0:3,","); put "];"/;
+ 230  * triangles
+ 231  put "txm1=["; loop(k,put triangle('m1 area var split',k,'x'):0:3,","); put "];"/;
+ 232  put "tym1=["; loop(k,put triangle('m1 area var split',k,'y'):0:3,","); put "];"/;
+ 233  put "txm3=["; loop(k,put triangle('m3 circumference',k,'x'):0:3,","); put "];"/;
+ 234  put "tym3=["; loop(k,put triangle('m3 circumference',k,'y'):0:3,","); put "];"/;
+ 235  put "txm4=["; loop(k,put triangle('m4 sos',k,'x'):0:3,","); put "];"/;
+ 236  put "tym4=["; loop(k,put triangle('m4 sos',k,'y'):0:3,","); put "];"/;
+ 237   
+ 238   
+ 296   
+ 297  executetool 'win32.ShellExecute "plot.html"';
 
 
-COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 2
+COMPILATION TIME     =        0.016 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m1 Using NLP From line 100
+E x e c u t i o n
+
+
+----     31 PARAMETER p  data points
+
+                  x           y
+
+point1       17.175      84.327
+point2       55.038      30.114
+point3       29.221      22.405
+point4       34.983      85.627
+point5        6.711      50.021
+point6       99.812      57.873
+point7       99.113      76.225
+point8       13.069      63.972
+point9       15.952      25.008
+point10      66.893      43.536
+point11      35.970      35.144
+point12      13.149      15.010
+point13      58.911      83.089
+point14      23.082      66.573
+point15      77.586      30.366
+point16      11.049      50.238
+point17      16.017      87.246
+point18      26.511      28.581
+point19      59.396      72.272
+point20      62.825      46.380
+point21      41.331      11.770
+point22      31.421       4.655
+point23      33.855      18.210
+point24      64.573      56.075
+point25      76.996      29.781
+point26      66.111      75.582
+point27      62.745      28.386
+point28       8.642      10.251
+point29      64.125      54.531
+point30       3.152      79.236
+point31       7.277      17.566
+point32      52.563      75.021
+point33      17.812       3.414
+point34      58.513      62.123
+point35      38.936      35.871
+point36      24.303      24.642
+point37      13.050      93.345
+point38      37.994      78.340
+point39      30.003      12.548
+point40      74.887       6.923
+point41      20.202       0.507
+point42      26.961      49.985
+point43      15.129      17.417
+point44      33.064      31.691
+point45      32.209      96.398
+point46      99.360      36.990
+point47      37.289      77.198
+point48      39.668      91.310
+point49      11.958      73.548
+point50       5.542      57.630
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using NLP From line 127
 
 
 ---- calcArea  =E=  calculate area given its three corner points
@@ -266,9 +369,9 @@ order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 0)
      
 order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 0)
      
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 3
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m1 Using NLP From line 100
+Column Listing      SOLVE m1 Using NLP From line 127
 
 
 ---- lambda  barycentric coordinates
@@ -481,9 +584,9 @@ area(-)
        -1       calcArea
        -1       obj
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 4
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m1 Using NLP From line 100
+Range Statistics    SOLVE m1 Using NLP From line 127
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -492,9 +595,9 @@ RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
 Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 5
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m1 Using NLP From line 100
+Model Statistics    SOLVE m1 Using NLP From line 127
 
 
 MODEL STATISTICS
@@ -505,24 +608,24 @@ NON ZERO ELEMENTS           765     NON LINEAR N-Z            606
 CODE LENGTH               1,118     CONSTANT POOL              16
 
 
-GENERATION TIME      =        0.015 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 6
+GENERATION TIME      =        0.047 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m1 Using NLP From line 100
+Solution Report     SOLVE m1 Using NLP From line 127
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m1                  OBJECTIVE  z
      TYPE    NLP                 DIRECTION  MINIMIZE
-     SOLVER  SCIP                FROM LINE  100
+     SOLVER  SCIP                FROM LINE  127
 
 **** SOLVER STATUS     3 Resource Interrupt
 **** MODEL STATUS      7 Feasible Solution
 **** OBJECTIVE VALUE            10460.6819
 
  RESOURCE USAGE, LIMIT       1000.000      1000.000
- ITERATION COUNT, LIMIT  22368405    2147483647
+ ITERATION COUNT, LIMIT  21185974    2147483647
  EVALUATION ERRORS              0             0
 
 SCIP             53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
@@ -886,29 +989,29 @@ corner3.y     -1000.0000        64.5199      1000.0000
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 7
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    105 PARAMETER results  combined results
+----    129 PARAMETER results  combined results
 
-                         area        time
+                         area        time         obj        gap%      status
 
-m1 area var split   10460.682    1000.000
+m1 area var split   10460.682    1000.000   10460.682     100.000   timelimit
 
 
-----    105 PARAMETER triangle  solution
+----    129 PARAMETER triangle  solution
 
-                     x           y
+                                    x           y
 
-m1.corner1       1.383     105.692
-m1.corner2      11.840     -50.673
-m1.corner3     137.935      64.520
+m1 area var split.corner1       1.383     105.692
+m1 area var split.corner2      11.840     -50.673
+m1 area var split.corner3     137.935      64.520
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 8
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m2 Using NLP From line 128
+Equation Listing    SOLVE m2 Using NLP From line 152
 
 
 ---- calcArea2  =E=  calculate area given its three corner points
@@ -970,9 +1073,9 @@ order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 10.4570263142748)
      
 order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 126.094303057856)
      
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 9
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 10
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m2 Using NLP From line 128
+Column Listing      SOLVE m2 Using NLP From line 152
 
 
 ---- lambda  barycentric coordinates
@@ -1182,9 +1285,9 @@ absa
        -1       bnd1
         1       bnd2
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 10
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 11
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m2 Using NLP From line 128
+Range Statistics    SOLVE m2 Using NLP From line 152
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -1193,9 +1296,9 @@ RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
 Matrix    [min, max] : [ 6.552E-03, 1.379E+02] - Zero values observed as well
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 11
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 12
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m2 Using NLP From line 128
+Model Statistics    SOLVE m2 Using NLP From line 152
 
 
 MODEL STATISTICS
@@ -1207,23 +1310,23 @@ CODE LENGTH               1,118     CONSTANT POOL              16
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 12
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 13
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m2 Using NLP From line 128
+Solution Report     SOLVE m2 Using NLP From line 152
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m2                  OBJECTIVE  absa
      TYPE    NLP                 DIRECTION  MINIMIZE
-     SOLVER  SCIP                FROM LINE  128
+     SOLVER  SCIP                FROM LINE  152
 
 **** SOLVER STATUS     3 Resource Interrupt
 **** MODEL STATUS      7 Feasible Solution
 **** OBJECTIVE VALUE            10460.6819
 
  RESOURCE USAGE, LIMIT       1000.000      1000.000
- ITERATION COUNT, LIMIT  21048398    2147483647
+ ITERATION COUNT, LIMIT  20749419    2147483647
  EVALUATION ERRORS              0             0
 
 SCIP             53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
@@ -1584,33 +1687,33 @@ corner3.y     -1000.0000        64.5199      1000.0000
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 13
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 14
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    133 PARAMETER results  combined results
+----    154 PARAMETER results  combined results
 
-                         area        time
+                         area        time         obj        gap%      status
 
-m1 area var split   10460.682    1000.000
-m2 area bnd         10460.682    1000.000
+m1 area var split   10460.682    1000.000   10460.682     100.000   timelimit
+m2 area bnd         10460.682    1000.000   10460.682     100.000   timelimit
 
 
-----    133 PARAMETER triangle  solution
+----    154 PARAMETER triangle  solution
 
-                     x           y
+                                    x           y
 
-m1.corner1       1.383     105.692
-m1.corner2      11.840     -50.673
-m1.corner3     137.935      64.520
-m2.corner1       1.383     105.692
-m2.corner2      11.840     -50.673
-m2.corner3     137.935      64.520
+m1 area var split.corner1       1.383     105.692
+m1 area var split.corner2      11.840     -50.673
+m1 area var split.corner3     137.935      64.520
+m2 area bnd      .corner1       1.383     105.692
+m2 area bnd      .corner2      11.840     -50.673
+m2 area bnd      .corner3     137.935      64.520
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 14
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 15
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m3 Using NLP From line 148
+Equation Listing    SOLVE m3 Using NLP From line 169
 
 
 ---- circumference  =E=  calculate perimeter of triangle
@@ -1662,9 +1765,9 @@ order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 10.4570263144871)
      
 order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 126.094303051136)
      
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 15
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 16
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m3 Using NLP From line 148
+Column Listing      SOLVE m3 Using NLP From line 169
 
 
 ---- lambda  barycentric coordinates
@@ -1864,9 +1967,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 10460.6818847656, +INF, NA)
         1       circumference
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 16
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 17
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m3 Using NLP From line 148
+Range Statistics    SOLVE m3 Using NLP From line 169
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -1875,9 +1978,9 @@ RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
 Matrix    [min, max] : [ 6.552E-03, 1.379E+02] - Zero values observed as well
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 17
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 18
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m3 Using NLP From line 148
+Model Statistics    SOLVE m3 Using NLP From line 169
 
 
 MODEL STATISTICS
@@ -1889,22 +1992,22 @@ CODE LENGTH               1,129     CONSTANT POOL              16
 
 
 GENERATION TIME      =        0.016 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 18
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 19
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m3 Using NLP From line 148
+Solution Report     SOLVE m3 Using NLP From line 169
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m3                  OBJECTIVE  z
      TYPE    NLP                 DIRECTION  MINIMIZE
-     SOLVER  SCIP                FROM LINE  148
+     SOLVER  SCIP                FROM LINE  169
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE              469.5458
 
- RESOURCE USAGE, LIMIT        137.000      1000.000
+ RESOURCE USAGE, LIMIT        138.000      1000.000
  ITERATION COUNT, LIMIT   1112412    2147483647
  EVALUATION ERRORS              0             0
 
@@ -2260,37 +2363,37 @@ corner3.y     -1000.0000        63.2443      1000.0000
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 19
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 20
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    153 PARAMETER results  combined results
+----    171 PARAMETER results  combined results
 
-                         area        time
+                         area        time         obj  best bound        gap%      status
 
-m1 area var split   10460.682    1000.000
-m2 area bnd         10460.682    1000.000
-m3 circumference    10470.137     137.000
+m1 area var split   10460.682    1000.000   10460.682                 100.000   timelimit
+m2 area bnd         10460.682    1000.000   10460.682                 100.000   timelimit
+m3 circumference    10470.137     138.000     469.546     469.546 1.450225E-7
 
 
-----    153 PARAMETER triangle  solution
+----    171 PARAMETER triangle  solution
 
-                     x           y
+                                    x           y
 
-m1.corner1       1.383     105.692
-m1.corner2      11.840     -50.673
-m1.corner3     137.935      64.520
-m2.corner1       1.383     105.692
-m2.corner2      11.840     -50.673
-m2.corner3     137.935      64.520
-m3.corner1       1.383     105.692
-m3.corner2      11.535     -46.112
-m3.corner3     142.165      63.244
+m1 area var split.corner1       1.383     105.692
+m1 area var split.corner2      11.840     -50.673
+m1 area var split.corner3     137.935      64.520
+m2 area bnd      .corner1       1.383     105.692
+m2 area bnd      .corner2      11.840     -50.673
+m2 area bnd      .corner3     137.935      64.520
+m3 circumference .corner1       1.383     105.692
+m3 circumference .corner2      11.535     -46.112
+m3 circumference .corner3     142.165      63.244
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 20
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 21
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m4 Using NLP From line 168
+Equation Listing    SOLVE m4 Using NLP From line 186
 
 
 ---- sos  =E=  drop square root
@@ -2342,9 +2445,9 @@ order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 10.1519455675485)
      
 order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 130.630082236418)
      
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 21
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 22
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m4 Using NLP From line 168
+Column Listing      SOLVE m4 Using NLP From line 186
 
 
 ---- lambda  barycentric coordinates
@@ -2544,9 +2647,9 @@ z
                 (.LO, .L, .UP, .M = -INF, 469.545793997013, +INF, NA)
         1       sos
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 22
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 23
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m4 Using NLP From line 168
+Range Statistics    SOLVE m4 Using NLP From line 186
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -2555,9 +2658,9 @@ RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
 Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
 Matrix    [min, max] : [ 6.355E-03, 5.428E+02] - Zero values observed as well
 
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 23
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 24
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m4 Using NLP From line 168
+Model Statistics    SOLVE m4 Using NLP From line 186
 
 
 MODEL STATISTICS
@@ -2569,22 +2672,22 @@ CODE LENGTH               1,126     CONSTANT POOL              16
 
 
 GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 24
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 25
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m4 Using NLP From line 168
+Solution Report     SOLVE m4 Using NLP From line 186
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m4                  OBJECTIVE  z
      TYPE    NLP                 DIRECTION  MINIMIZE
-     SOLVER  SCIP                FROM LINE  168
+     SOLVER  SCIP                FROM LINE  186
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      7 Feasible Solution
 **** OBJECTIVE VALUE            73751.4917
 
- RESOURCE USAGE, LIMIT        119.000      1000.000
+ RESOURCE USAGE, LIMIT        120.000      1000.000
  ITERATION COUNT, LIMIT    990801    2147483647
  EVALUATION ERRORS              0             0
 
@@ -2940,53 +3043,376 @@ corner3.y     -1000.0000        63.5912      1000.0000
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/17/26 22:41:58 Page 25
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 26
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    173 PARAMETER results  combined results
+----    188 PARAMETER results  combined results
 
-                         area        time
+                         area        time         obj  best bound        gap%      status
 
-m1 area var split   10460.682    1000.000
-m2 area bnd         10460.682    1000.000
-m3 circumference    10470.137     137.000
-m4 sos              10519.844     119.000
-
-
-----    173 PARAMETER triangle  solution
-
-                     x           y
-
-m1.corner1       1.383     105.692
-m1.corner2      11.840     -50.673
-m1.corner3     137.935      64.520
-m2.corner1       1.383     105.692
-m2.corner2      11.840     -50.673
-m2.corner3     137.935      64.520
-m3.corner1       1.383     105.692
-m3.corner2      11.535     -46.112
-m3.corner3     142.165      63.244
-m4.corner1      -1.251     106.486
-m4.corner2      13.354     -45.807
-m4.corner3     141.015      63.591
+m1 area var split   10460.682    1000.000   10460.682                 100.000   timelimit
+m2 area bnd         10460.682    1000.000   10460.682                 100.000   timelimit
+m3 circumference    10470.137     138.000     469.546     469.546 1.450225E-7
+m4 sos              10519.844     120.000   73751.492   73744.201       0.010
 
 
-----    203 PARAMETER box  
+----    188 PARAMETER triangle  solution
 
-           lo          up       range         lo2         up2
+                                    x           y
 
-x      -1.251     142.165     143.416     -15.593     156.507
-y     -50.673     106.486     157.160     -66.389     122.202
+m1 area var split.corner1       1.383     105.692
+m1 area var split.corner2      11.840     -50.673
+m1 area var split.corner3     137.935      64.520
+m2 area bnd      .corner1       1.383     105.692
+m2 area bnd      .corner2      11.840     -50.673
+m2 area bnd      .corner3     137.935      64.520
+m3 circumference .corner1       1.383     105.692
+m3 circumference .corner2      11.535     -46.112
+m3 circumference .corner3     142.165      63.244
+m4 sos           .corner1      -1.251     106.486
+m4 sos           .corner2      13.354     -45.807
+m4 sos           .corner3     141.015      63.591
+
+
+----    210 SET hull  convex hull
+
+point6 ,    point7 ,    point28,    point30,    point31,    point37,    point40,    point41,    point45,    point46
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 27
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m4 Using NLP From line 214
+
+
+---- sos  =E=  drop square root
+
+sos..  (313.742347779115)*t(corner1,x) - (390.377388645117)*t(corner1,y) + (226.11022614682)*t(corner2,x)
+     
+      + (523.384706947832)*t(corner2,y) - (539.852573925935)*t(corner3,x) - (133.007318302714)*t(corner3,y) + z =E= 0 ; (LHS = 0)
+     
+
+---- calcLambda  =E=  solve for barycentric coordinates
+
+calcLambda(point6,x)..  (1.2509637905404)*lambda(point6,corner1) - (13.3543898148422)*lambda(point6,corner2)
+     
+      - (141.014856493635)*lambda(point6,corner3) - (0.179547401074693)*t(corner1,x) - (0.12266628743581)*t(corner2,x)
+     
+      - (0.697786311489497)*t(corner3,x) =E= -99.8117627 ; (LHS = -99.8117627000413, INFES = 4.13109546570922E-11 ****)
+     
+calcLambda(point6,y)..  - (106.486190456316)*lambda(point6,corner1) + (45.8074921425085)*lambda(point6,corner2)
+     
+      - (63.5911787325826)*lambda(point6,corner3) - (0.179547401074693)*t(corner1,y) - (0.12266628743581)*t(corner2,y)
+     
+      - (0.697786311489497)*t(corner3,y) =E= -57.8733378 ; (LHS = -57.873337799988, INFES = 1.20508047984913E-11 ****)
+     
+calcLambda(point7,x)..  (1.2509637905404)*lambda(point7,corner1) - (13.3543898148422)*lambda(point7,corner2)
+     
+      - (141.014856493635)*lambda(point7,corner3) - (0.294530003832867)*t(corner1,x) + (0)*t(corner2,x)
+     
+      - (0.705469996167133)*t(corner3,x) =E= -99.1133039 ; (LHS = -99.1133039000505, INFES = 5.05195885125431E-11 ****)
+     
+REMAINING 17 ENTRIES SKIPPED
+
+
+---- sumLambda  =E=  lambdas need to add up to one
+
+sumLambda(point6)..  lambda(point6,corner1) + lambda(point6,corner2) + lambda(point6,corner3) =E= 1 ; (LHS = 1)
+     
+sumLambda(point7)..  lambda(point7,corner1) + lambda(point7,corner2) + lambda(point7,corner3) =E= 1 ; (LHS = 1)
+     
+sumLambda(point28)..  lambda(point28,corner1) + lambda(point28,corner2) + lambda(point28,corner3) =E= 1 ; (LHS = 1)
+     
+REMAINING 7 ENTRIES SKIPPED
+
+
+---- order  =G=  order corner points by their x coordinate
+
+order(corner1)..  - t(corner1,x) + t(corner2,x) =G= 0 ; (LHS = 14.6053536053826)
+     
+order(corner2)..  - t(corner2,x) + t(corner3,x) =G= 0 ; (LHS = 127.660466678792)
+     
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 28
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m4 Using NLP From line 214
+
+
+---- lambda  barycentric coordinates
+
+lambda(point6,corner1)
+                (.LO, .L, .UP, .M = 0, 0.179547401074693, +INF, NA)
+       (1.251)  calcLambda(point6,x)
+    (-106.4862) calcLambda(point6,y)
+        1       sumLambda(point6)
+
+lambda(point6,corner2)
+                (.LO, .L, .UP, .M = 0, 0.12266628743581, +INF, NA)
+     (-13.3544) calcLambda(point6,x)
+      (45.8075) calcLambda(point6,y)
+        1       sumLambda(point6)
+
+lambda(point6,corner3)
+                (.LO, .L, .UP, .M = 0, 0.697786311489497, +INF, NA)
+    (-141.0149) calcLambda(point6,x)
+     (-63.5912) calcLambda(point6,y)
+        1       sumLambda(point6)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- t  triangle
+
+t(corner1,x)
+                (.LO, .L, .UP, .M = -1000, -1.2509637905404, 1000, NA)
+     (313.7423) sos
+      (-0.1795) calcLambda(point6,x)
+      (-0.2945) calcLambda(point7,x)
+      (-0.3646) calcLambda(point28,x)
+      (-0.8118) calcLambda(point30,x)
+      (-0.4161) calcLambda(point31,x)
+      (-0.8459) calcLambda(point37,x)
+       (0)      calcLambda(point40,x)
+      (-0.2454) calcLambda(point41,x)
+      (-0.7648) calcLambda(point45,x)
+      (-0.0552) calcLambda(point46,x)
+       -1       order(corner1)
+
+t(corner1,y)
+                (.LO, .L, .UP, .M = -1000, 106.486190456316, 1000, NA)
+    (-390.3774) sos
+      (-0.1795) calcLambda(point6,y)
+      (-0.2945) calcLambda(point7,y)
+      (-0.3646) calcLambda(point28,y)
+      (-0.8118) calcLambda(point30,y)
+      (-0.4161) calcLambda(point31,y)
+      (-0.8459) calcLambda(point37,y)
+       (0)      calcLambda(point40,y)
+      (-0.2454) calcLambda(point41,y)
+      (-0.7648) calcLambda(point45,y)
+      (-0.0552) calcLambda(point46,y)
+
+t(corner2,x)
+                (.LO, .L, .UP, .M = -1000, 13.3543898148422, 1000, NA)
+     (226.1102) sos
+      (-0.1227) calcLambda(point6,x)
+       (0)      calcLambda(point7,x)
+      (-0.6305) calcLambda(point28,x)
+      (-0.1753) calcLambda(point30,x)
+      (-0.5839) calcLambda(point31,x)
+      (-0.0597) calcLambda(point37,x)
+      (-0.518)  calcLambda(point40,x)
+      (-0.6729) calcLambda(point41,x)
+       (0)      calcLambda(point45,x)
+      (-0.2648) calcLambda(point46,x)
+        1       order(corner1)
+       -1       order(corner2)
+
+REMAINING 3 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 73751.4917072419, +INF, NA)
+        1       sos
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 29
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m4 Using NLP From line 214
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+03, 1.000E+03] - Zero values observed as well
+Matrix    [min, max] : [ 4.808E-03, 5.399E+02] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 30
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m4 Using NLP From line 214
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           33
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES           37
+NON ZERO ELEMENTS           161     NON LINEAR N-Z            126
+CODE LENGTH                 246     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 31
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m4 Using NLP From line 214
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m4                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  SCIP                FROM LINE  214
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      7 Feasible Solution
+**** OBJECTIVE VALUE            73751.4917
+
+ RESOURCE USAGE, LIMIT         50.000      1000.000
+ ITERATION COUNT, LIMIT    420717    2147483647
+ EVALUATION ERRORS              0             0
+
+SCIP             53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU sos                 .              .              .          
+
+  sos  drop square root
+
+---- EQU calcLambda  solve for barycentric coordinates
+
+                 LOWER          LEVEL          UPPER
+
+point6 .x       -99.8118       -99.8118       -99.8118      
+point6 .y       -57.8733       -57.8733       -57.8733      
+point7 .x       -99.1133       -99.1133       -99.1133      
+point7 .y       -76.2250       -76.2250       -76.2250      
+point28.x        -8.6425        -8.6425        -8.6425      
+point28.y       -10.2515       -10.2515       -10.2515      
+point30.x        -3.1525        -3.1525        -3.1525      
+point30.y       -79.2361       -79.2361       -79.2361      
+point31.x        -7.2767        -7.2767        -7.2767      
+point31.y       -17.5661       -17.5661       -17.5661      
+point37.x       -13.0503       -13.0503       -13.0503      
+point37.y       -93.3450       -93.3450       -93.3450      
+point40.x       -74.8874       -74.8874       -74.8874      
+point40.y        -6.9232        -6.9232        -6.9232      
+point41.x       -20.2016       -20.2016       -20.2016      
+point41.y        -0.5066        -0.5066        -0.5066      
+point45.x       -32.2087       -32.2087       -32.2087      
+point45.y       -96.3977       -96.3977       -96.3977      
+point46.x       -99.3602       -99.3602       -99.3602      
+point46.y       -36.9903       -36.9903       -36.9903      
+
+---- EQU sumLambda  lambdas need to add up to one
+
+               LOWER          LEVEL          UPPER
+
+point6          1.0000         1.0000         1.0000      
+point7          1.0000         1.0000         1.0000      
+point28         1.0000         1.0000         1.0000      
+point30         1.0000         1.0000         1.0000      
+point31         1.0000         1.0000         1.0000      
+point37         1.0000         1.0000         1.0000      
+point40         1.0000         1.0000         1.0000      
+point41         1.0000         1.0000         1.0000      
+point45         1.0000         1.0000         1.0000      
+point46         1.0000         1.0000         1.0000      
+
+---- EQU order  order corner points by their x coordinate
+
+               LOWER          LEVEL          UPPER
+
+corner1          .            14.6054        +INF         
+corner2          .           127.6605        +INF         
+
+---- VAR lambda  barycentric coordinates
+
+                       LOWER          LEVEL          UPPER
+
+point6 .corner1          .             0.1795        +INF         
+point6 .corner2          .             0.1227        +INF         
+point6 .corner3          .             0.6978        +INF         
+point7 .corner1          .             0.2945        +INF         
+point7 .corner2          .              .            +INF         
+point7 .corner3          .             0.7055        +INF         
+point28.corner1          .             0.3646        +INF         
+point28.corner2          .             0.6305        +INF         
+point28.corner3          .             0.0048        +INF         
+point30.corner1          .             0.8118        +INF         
+point30.corner2          .             0.1753        +INF         
+point30.corner3          .             0.0130        +INF         
+point31.corner1          .             0.4161        +INF         
+point31.corner2          .             0.5839        +INF         
+point31.corner3          .              .            +INF         
+point37.corner1          .             0.8459        +INF         
+point37.corner2          .             0.0597        +INF         
+point37.corner3          .             0.0944        +INF         
+point40.corner1          .              .            +INF         
+point40.corner2          .             0.5180        +INF         
+point40.corner3          .             0.4820        +INF         
+point41.corner1          .             0.2454        +INF         
+point41.corner2          .             0.6729        +INF         
+point41.corner3          .             0.0817        +INF         
+point45.corner1          .             0.7648        +INF         
+point45.corner2          .              .            +INF         
+point45.corner3          .             0.2352        +INF         
+point46.corner1          .             0.0552        +INF         
+point46.corner2          .             0.2648        +INF         
+point46.corner3          .             0.6800        +INF         
+
+---- VAR t  triangle
+
+                 LOWER          LEVEL          UPPER
+
+corner1.x     -1000.0000        -1.2510      1000.0000      
+corner1.y     -1000.0000       106.4862      1000.0000      
+corner2.x     -1000.0000        13.3544      1000.0000      
+corner2.y     -1000.0000       -45.8075      1000.0000      
+corner3.x     -1000.0000       141.0149      1000.0000      
+corner3.y     -1000.0000        63.5912      1000.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF        73751.4917        +INF         
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 03/19/26 23:41:40 Page 32
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    216 PARAMETER results  combined results
+
+                         area        time         obj  best bound        gap%      status
+
+m1 area var split   10460.682    1000.000   10460.682                 100.000   timelimit
+m2 area bnd         10460.682    1000.000   10460.682                 100.000   timelimit
+m3 circumference    10470.137     138.000     469.546     469.546 1.450225E-7
+m4 sos              10519.844     120.000   73751.492   73744.201       0.010
+m4 sos hull         10519.844      50.000   73751.492   73744.264       0.010
+
+
+----    216 PARAMETER triangle  solution
+
+                                    x           y
+
+m1 area var split.corner1       1.383     105.692
+m1 area var split.corner2      11.840     -50.673
+m1 area var split.corner3     137.935      64.520
+m2 area bnd      .corner1       1.383     105.692
+m2 area bnd      .corner2      11.840     -50.673
+m2 area bnd      .corner3     137.935      64.520
+m3 circumference .corner1       1.383     105.692
+m3 circumference .corner2      11.535     -46.112
+m3 circumference .corner3     142.165      63.244
+m4 sos           .corner1      -1.251     106.486
+m4 sos           .corner2      13.354     -45.807
+m4 sos           .corner3     141.015      63.591
+m4 sos hull      .corner1      -1.251     106.486
+m4 sos hull      .corner2      13.354     -45.807
+m4 sos hull      .corner3     141.015      63.591
 
 
 **** REPORT FILE SUMMARY
 
-fdata C:\projects\OptimizationModels\SmallestEnclosingTriangle\data.js
+fdata C:\projects\OptimizationModels\Smallest Enclosing Triangle\data.js
 
 
-EXECUTION TIME       =     2258.359 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+EXECUTION TIME       =     2318.922 SECONDS      5 MB  53.1.0 6a03d3b9 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
@@ -2995,5 +3421,5 @@ USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
 
 **** FILE SUMMARY
 
-Input      C:\projects\OptimizationModels\SmallestEnclosingTriangle\triangle_all.gms
-Output     C:\projects\OptimizationModels\SmallestEnclosingTriangle\triangle_all.lst
+Input      C:\projects\OptimizationModels\Smallest Enclosing Triangle\triangle_all.gms
+Output     C:\projects\OptimizationModels\Smallest Enclosing Triangle\triangle_all.lst

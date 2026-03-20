@@ -1,0 +1,55 @@
+<html>
+<script src="https://cdn.plot.ly/plotly-3.4.0.min.js" charset="utf-8"></script>
+<script src="data.js" charset="utf-8"></script>
+<h1>Smallest Encompassing Triangle</h1>
+<div id="plotDiv"></div>
+<script>
+var data = {
+  x: px,
+  y: py,
+  mode: 'markers',
+  type: 'scatter',
+  name: 'data points'
+};
+
+txm1[3]=txm1[0];
+tym1[3]=tym1[0];
+var minarea = {
+  x: txm1,
+  y: tym1,
+  mode: 'lines',
+  type: 'scatter',
+  name: 'min area'
+};
+
+txm3[3]=txm3[0];
+tym3[3]=tym3[0];
+var mincircumf = {
+  x: txm3,
+  y: tym3,
+  mode: 'lines',
+  type: 'scatter',
+  name: 'min circumference'
+};
+
+txm4[3]=txm4[0];
+tym4[3]=tym4[0];
+var minsos = {
+  x: txm4,
+  y: tym4,
+  mode: 'lines',
+  type: 'scatter',
+  name: 'min sum of squares'
+};
+
+var layout = {
+  autosize: false,
+  width: 700,
+  height: 500,
+  showlegend: true
+}
+var trc = [data,minarea,mincircumf,minsos];
+var options = {staticPlot: true, displayModeBar: false};
+Plotly.newPlot('plotDiv', trc, layout, options);
+</script>
+</html>

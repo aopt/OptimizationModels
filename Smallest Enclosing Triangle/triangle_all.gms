@@ -4,6 +4,12 @@ $onText
   Find the smallest triangle that contains all points.
  
   Three different definitions of size.
+  
+  Model m1: area, absolute value using variable splitting
+        m2: area, absolute value using bounding
+        m3: circumference 
+        m4: sum of squares
+        m5: as m4, use convex hull instead of all points 
  
 $offText
 
@@ -15,11 +21,38 @@ option nlp=scip, reslim=1000;
  
 sets
    i 'points'   /point1*point50/
+   s(i) 'subset (e.g. convex hull)'
    c 'coordinates' /x,y/
+   k  'corner points of triangle' /corner1*corner3/
 ;
  
 parameter p(i,c) 'data points';
 p(i,c) = uniform(0,100);
+display p;
+
+
+*---------------------------------------------------------------------
+* reporting
+*---------------------------------------------------------------------
+
+parameter
+   results(*,*) 'combined results'
+   triangle(*,k,c) 'solution' 
+;
+
+acronym timelimit;
+
+$macro report(m,id) \
+results(id,'area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]); \
+results(id,'time') = m.resusd; \
+results(id,'obj') = m.objval;  \
+results(id,'best bound') = m.objest; \
+results(id,'gap%') = 100*abs(m.objest-m.objval)/m.objval; \
+results(id,'status')$(m.solvestat=3) = timelimit;\
+triangle(id,k,c) = t.l(k,c); \
+display results,triangle;
+
+
 
 *---------------------------------------------------------------------
 * constraints:
@@ -27,9 +60,6 @@ p(i,c) = uniform(0,100);
 *  order corner points by x coordinate
 *---------------------------------------------------------------------
 
-set
-   k  'corner points of triangle' /corner1*corner3/
-;
 
 positive variable
    lambda(i,k)  'barycentric coordinates'
@@ -49,23 +79,20 @@ equations
    order            'order corner points by their x coordinate'
 ;
 
-calcLambda(i,c)..  p(i,c) =e= sum(k, lambda(i,k)*t(k,c));
-sumLambda(i)..     sum(k, lambda(i,k)) =e= 1;
+calcLambda(s,c)..  p(s,c) =e= sum(k, lambda(s,k)*t(k,c));
+sumLambda(s)..     sum(k, lambda(s,k)) =e= 1;
 order(k-1)..       t(k,'x') =g= t(k-1,'x');
 
-
 model cons 'constraints' /calcLambda,sumLambda,order/;
+
 
 *---------------------------------------------------------------------
 * objective 1: area (variable splitting)
 *---------------------------------------------------------------------
 
-parameter
-   results(*,*) 'combined results'
-   triangle(*,k,c) 'solution' 
-;
+* use all points
+s(i) = yes;
 
- 
 set
    pm 'plusmin -- used in linearizing abs()' /'+','-'/
 ;
@@ -99,10 +126,7 @@ obj..              z =e= sum(pm,area(pm));
 model m1 'area -- var splitting' /calcArea,obj,cons/;
 solve m1 minimizing z using nlp;
 
-results('m1 area var split','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]);
-results('m1 area var split','time') = m1.resusd;
-triangle('m1',k,c) = t.l(k,c);  
-display results,triangle;
+report(m1,'m1 area var split')
 
 *---------------------------------------------------------------------
 * objective 2: area (bounding)
@@ -127,10 +151,7 @@ bnd2..              a =g= -absa;
 model m2 'area -- bounding' /calcArea2,bnd1,bnd2,cons/;
 solve m2 minimizing absa using nlp;
 
-results('m2 area bnd','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]);
-results('m2 area bnd','time') = m2.resusd;
-triangle('m2',k,c) = t.l(k,c);  
-display results,triangle;
+report(m2,'m2 area bnd')
 
 *---------------------------------------------------------------------
 * objective 3: circumference
@@ -147,10 +168,7 @@ circumference..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sqrt(sum(c,sqr(t(k,c)-t(kk
 model m3 'area -- bounding' /circumference,cons/;
 solve m3 minimizing z using nlp;
 
-results('m3 circumference','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]);
-results('m3 circumference','time') = m3.resusd;
-triangle('m3',k,c) = t.l(k,c);  
-display results,triangle;
+report(m3,'m3 circumference')
 
 *---------------------------------------------------------------------
 * objective 4: sum of squares
@@ -167,10 +185,35 @@ sos..    z =e= sum((k,kk)$(ord(k)<ord(kk)), sum(c,sqr(t(k,c)-t(kk,c))));
 model m4 'area -- bounding' /sos,cons/;
 solve m4 minimizing z using nlp;
 
-results('m4 sos','area') = abs(0.5*[t.l(x1)*(t.l(y2)-t.l(y3)) + t.l(x2)*(t.l(y3)-t.l(y1)) + t.l(x3)*(t.l(y1)-t.l(y2))]);
-results('m4 sos','time') = m4.resusd;
-triangle('m4',k,c) = t.l(k,c);  
-display results,triangle;
+report(m4,'m4 sos')
+
+
+*---------------------------------------------------------------------
+* model 4 hull: as previous but now use only the points
+* that are part of the convex hull
+*---------------------------------------------------------------------
+
+set hull(i) 'convex hull';
+
+embeddedCode Python:
+import scipy as sp
+import numpy as np
+import gams.transfer as gt
+
+i = list(gams.get("i"))
+p = gt.Container(gams.db)["p"].toDense()
+hull = sp.spatial.ConvexHull(p).vertices
+h = [i[pt] for pt in hull]
+gams.set("hull",h)
+endEmbeddedCode hull
+
+display hull;
+
+s(i) = no;
+s(hull) = yes;
+solve m4 minimizing z using nlp;
+
+report(m4,'m4 sos hull')
 
 *---------------------------------------------------------------------
 * visualization
@@ -185,25 +228,12 @@ file fdata /%data%/; put fdata;
 put "px=["; loop(i,put p(i,'x'):0:3,","); put "];"/;
 put "py=["; loop(i,put p(i,'y'):0:3,","); put "];"/;
 * triangles
-put "txm1=["; loop(k,put triangle('m1',k,'x'):0:3,","); put "];"/;
-put "tym1=["; loop(k,put triangle('m1',k,'y'):0:3,","); put "];"/;
-put "txm3=["; loop(k,put triangle('m3',k,'x'):0:3,","); put "];"/;
-put "tym3=["; loop(k,put triangle('m3',k,'y'):0:3,","); put "];"/;
-put "txm4=["; loop(k,put triangle('m4',k,'x'):0:3,","); put "];"/;
-put "tym4=["; loop(k,put triangle('m4',k,'y'):0:3,","); put "];"/;
-
-set mall /m1,m3,m4/;
-
-parameter box;
-box(c,'lo') = smin((mall,k),triangle(mall,k,c));
-box(c,'up') = smax((mall,k),triangle(mall,k,c));
-box(c,'range') = box(c,'up')-box(c,'lo');
-box(c,'lo2') =  box(c,'lo') - 0.1*box(c,'range');
-box(c,'up2') =  box(c,'up') + 0.1*box(c,'range');
-display box;
-
-put "cmin=["; loop(c, put box(c,'lo2'):0:3,","); put "];"/;
-put "cmax=["; loop(c, put box(c,'up2'):0:3,","); put "];"/;
+put "txm1=["; loop(k,put triangle('m1 area var split',k,'x'):0:3,","); put "];"/;
+put "tym1=["; loop(k,put triangle('m1 area var split',k,'y'):0:3,","); put "];"/;
+put "txm3=["; loop(k,put triangle('m3 circumference',k,'x'):0:3,","); put "];"/;
+put "tym3=["; loop(k,put triangle('m3 circumference',k,'y'):0:3,","); put "];"/;
+put "txm4=["; loop(k,put triangle('m4 sos',k,'x'):0:3,","); put "];"/;
+put "tym4=["; loop(k,put triangle('m4 sos',k,'y'):0:3,","); put "];"/;
 
 
 $onecho > %html%
