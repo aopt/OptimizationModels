@@ -11,3 +11,4 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2025/12/sorting-mi
 |`ShortestPath.gms`|GAMS code with shortest path LP model|
 |`MIPSort.gms`|GAMS code with MIP model|
 |`minswaps.ipynb`|Implementation using OR-Tools|
+|`BFS search.py`|Breadth-First search|
