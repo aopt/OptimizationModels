@@ -1,0 +1,163 @@
+
+--- Job SmallestCircle.gms Start 03/24/26 20:41:01 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestCircle.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\225a\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:57519 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- SmallestCircle.gms(162) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Smallest Enclosing Ellipse\plot.html
+--- SmallestCircle.gms(214) 3 Mb
+--- Starting execution: elapsed 0:00:00.016
+--- SmallestCircle.gms(33) 4 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+scipy version 1.17.0
+--- SmallestCircle.gms(84) 4 Mb
+--- Generating NLP model m1
+--- SmallestCircle.gms(86) 7 Mb
+---   100 rows  3 columns  300 non-zeroes
+---   901 nl-code  200 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [        NA,        NA]
+--- Matrix    [min, max] : [ 4.250E-01, 1.162E+02]
+--- SmallestCircle.gms(86) 5 Mb
+--- Executing CONOPT (Solvelink=2): elapsed 0:00:00.706
+
+CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+ 
+ 
+    C O N O P T   version 4.39.0
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 100 constraints and 3 variables
+    with 300 Jacobian elements, 200 of which are nonlinear.
+    The Hessian of the Lagrangian has 2 elements on the diagonal,
+    0 elements below the diagonal, and 2 nonlinear variables.
+ 
+    Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
+       0   0          0.0000000000E+00 (Input point)
+ 
+    There are 100 penalty and minimax constraints with 1 variables.
+ 
+    Preprocessed model has 100 constraints and 3 variables
+    with 300 Jacobian elements, 200 of which are nonlinear.
+ 
+    Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
+                      0.0000000000E+00 (Full preprocessed model)
+                      0.0000000000E+00 (After scaling)
+                      0.0000000000E+00 (After adjusting penalty variables)
+ 
+ ** Feasible solution. Value of objective =    4809.27124686
+ 
+    Iter Phase   Ninf     Objective     RGmax      NSB   Step  InItr MX OK
+       1   3          3.8865468687E+03 1.9E+03       3 1.0E+00     2 T  T
+       2   4          3.8865468687E+03 0.0E+00       0
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:00.753
+--- SmallestCircle.gms(102) 5 Mb
+--- Generating QCP model m2
+--- SmallestCircle.gms(124) 7 Mb
+---   400 rows  303 columns  900 non-zeroes
+---   1,001 nl-code  300 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 5.066E-01, 9.981E+01] - Zero values observed as well
+--- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- SmallestCircle.gms(124) 5 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.756
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.01 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.63 Mb (peak 0.63 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+QCP Presolve eliminated 0 rows and 1 columns.
+Aggregator did 1 substitutions.
+Reduced QCP has 299 rows, 304 columns, and 598 nonzeros.
+Reduced QCP has 102 quadratic constraints.
+Presolve time = 0.00 sec. (0.22 ticks)
+Parallel mode: using up to 16 threads for barrier.
+
+***NOTE: Found 5 dense columns.
+
+Number of nonzeros in lower triangle of A*A' = 297
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.02 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 16
+  Rows in Factor            = 299
+  Integer space required    = 299
+  Total non-zeros in factor = 596
+  Total FP ops to factor    = 1388
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   1.4142136e+00   0.0000000e+00  8.55e+03  0.00e+00  1.43e+02  1.00e+00
+   1   5.0656117e+02   8.6236202e+02  8.55e+03  0.00e+00  1.43e+02  2.79e-03
+   2   3.4667256e+02   3.4676615e+02  8.45e+03  0.00e+00  1.42e+02  1.37e+00
+   3   7.8788718e+01   8.1965622e+01  2.26e+03  0.00e+00  3.79e+01  3.11e-01
+   4   6.5453566e+01   6.7265751e+01  1.51e+02  0.00e+00  2.53e+00  5.46e-01
+   5   6.2476982e+01   6.3351478e+01  6.92e+01  0.00e+00  1.16e+00  1.13e+00
+   6   6.2992541e+01   6.3368038e+01  3.45e+01  0.00e+00  5.78e-01  2.63e+00
+   7   6.2449373e+01   6.2502743e+01  1.79e+01  0.00e+00  3.00e-01  1.85e+01
+   8   6.2343106e+01   6.2343919e+01  2.57e+00  0.00e+00  4.31e-02  1.21e+03
+   9   6.2342215e+01   6.2342259e+01  3.98e-02  0.00e+00  6.68e-04  2.25e+04
+  10   6.2342176e+01   6.2342177e+01  2.28e-03  0.00e+00  3.83e-05  1.25e+06
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 4.63 ticks)
+
+--- Computing dual multipliers for quadratic constraints...
+--- Dual multiplier computation can be disabled using 'calcqcpduals = 0'.
+
+Optimal solution found
+Objective:           62.342176
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:00.818
+--- SmallestCircle.gms(212) 5 Mb
+--- Putfile fdata C:\projects\OptimizationModels\Smallest Enclosing Ellipse\data.js
+*** Status: Normal completion
+--- Job SmallestCircle.gms Stop 03/24/26 20:41:02 elapsed 0:00:01.008
