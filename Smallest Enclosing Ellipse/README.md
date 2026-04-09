@@ -1,12 +1,14 @@
 # Smallest Enclosing Circle and Ellipse
 
-See: `https://yetanothermathprogrammingconsultant.blogspot.com/2026/04/minimum-enclosing-ellipse.html`
+See: https://yetanothermathprogrammingconsultant.blogspot.com/2026/04/minimum-enclosing-ellipse.html
 
 ## Files
 
 
 | File | Description |
 |------|------|
-| `SmallestCircle.gms` | Find smallest circle containing $n$ given points. The NLP formulation uses a good starting point. A convex QCP model is also presented. |
+| `SmallestCircle.gms` | Find smallest circle containing $n$ given points. The NLP formulation uses a good starting point. A convex conic model is also presented. |
+| `sdp example.ipynb`  | Find smallest enclosing ellipse. SDP formulation solved with CVXPY/SCS. |
+| `SmallestEllipse.gms` | SOCP Formulation. |
 
 
