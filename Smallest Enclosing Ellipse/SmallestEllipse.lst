@@ -1,0 +1,978 @@
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+       
+         min area = π/det(A)
+         ||Ap + b || <= 1
+         A pos def
+       
+      1. A is symmetric, so we just use a11,a12,a22
+       
+      2. Objective
+         replace obj by max sqrt(det(A))
+         then we can form max t, t^2 + a12^2 <= a11*a22, a11,a22>=0
+         this is a rotated second order cone
+       
+      3. ||Ap + b|| <= 1 is ok: it is convex.
+         Use intermediate variables to convey this to the solver.
+         
+      4. A is pos.def.
+         Constraints: a11,a22 >= 0
+                      a11*a22 - a12^2 >= 0
+         This is already taken care of by 2.             
+       
+  24   
+  25  option qcp = cplex;
+  26   
+  27  *----------------------------------------------------------------------
+  28  * data
+  29  *----------------------------------------------------------------------
+  30   
+  31  set
+  32    i 'points' /point1*point50/
+  33    c  'coordinates' /x,y/
+  34    h(i) 'subset: convex hull'
+  35  ;
+  36   
+  37  parameter p(i,c) 'points';
+  38   
+  39   
+  68   
+  69  display p,h;
+  70   
+  71  set j(i) 'used points';
+  72  *j(i) = yes;
+  73  j(h) = yes;
+  74   
+  75  *----------------------------------------------------------------------
+  76  * socp model
+  77  *----------------------------------------------------------------------
+  78   
+  79  variable
+  80     t 'objective'
+  81  * matrix A is 2x2 and symmetric
+  82     a11,a12,a22
+  83     ap1(i),ap2(i)
+  84     b(c)
+  85  ;
+  86  * diagonal elements of A should be >= 0
+  87  positive variable a11,a22;
+  88   
+  89  equations
+  90     rcone       'rotated cone for objective'
+  91     q(i)        '||Ap+b||<=1'
+  92     defap1(i)   'first element of Ap+b'
+  93     defap2(i)   'second element of Ap+b'
+  94  ;
+  95   
+  96  rcone..        sqr(t) + sqr(a12) =l= a11*a22;
+  97   
+  98  defap1(i)..    ap1(i) =e= a11*p(i,'x')+a12*p(i,'y') + b('x');
+  99  defap2(i)..    ap2(i) =e= a12*p(i,'x')+a22*p(i,'y') + b('y');
+ 100  q(i)..         sqr(ap1(i)) + sqr(ap2(i)) =l= 1;
+ 101   
+ 102  model m /all/;
+ 103   
+ 104  solve m maximizing t using qcp;
+ 105   
+ 106  *----------------------------------------------------------------------
+ 107  * reporting
+ 108  *----------------------------------------------------------------------
+ 109   
+ 110  scalar
+ 111    detA 'determinant of A'
+ 112    area
+ 113  ;
+ 114   
+ 115  detA = a11.l*a22.l-sqr(a12.l);
+ 116  area = pi / detA;
+ 117   
+ 118  display a11.l,a12.l,a22.l,b.l,t.l,detA,area;
+ 119   
+
+
+COMPILATION TIME     =        5.578 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     69 PARAMETER p  points
+
+                  x           y
+
+point1        3.340       3.827
+point2       -1.677      -1.648
+point3       -3.965      -0.122
+point4        2.428       4.111
+point5        3.266       4.157
+point6        0.110       2.080
+point7        1.435       2.372
+point8        4.258       1.565
+point9       -2.192       0.114
+point10      -0.362      -1.886
+point11      -1.130      -0.129
+point12      -1.665      -3.572
+point13      -1.729      -1.412
+point14       0.059       0.085
+point15       1.890       1.195
+point16      -3.002      -2.971
+point17       2.848      -0.503
+point18       2.223       1.736
+point19       3.687       2.153
+point20      -1.563      -2.112
+point21       4.571       3.133
+point22      -0.186       1.440
+point23       2.013       4.600
+point24       2.286       0.025
+point25      -2.139      -0.266
+point26      -0.008       0.950
+point27       0.679       0.743
+point28      -4.175      -3.341
+point29       0.483       4.679
+point30       1.534       2.967
+point31      -0.990      -1.231
+point32      -0.307      -0.586
+point33      -1.244      -2.444
+point34       2.131       3.083
+point35      -3.569      -4.189
+point36      -3.532      -4.077
+point37      -3.997      -3.041
+point38      -1.793      -0.617
+point39       1.695       2.039
+point40       4.625       2.535
+point41      -1.831      -2.266
+point42      -2.220      -2.287
+point43      -0.494       3.727
+point44      -3.034      -3.137
+point45      -1.261       1.034
+point46      -0.440       1.762
+point47      -0.411      -2.414
+point48      -2.391      -1.019
+point49      -1.862      -0.655
+point50      -2.542      -3.567
+
+
+----     69 SET h  subset: convex hull
+
+point3 ,    point5 ,    point8 ,    point12,    point17,    point21,    point23,    point28,    point29,    point35,    point40
+point43
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using QCP From line 104
+
+
+---- rcone  =L=  rotated cone for objective
+
+rcone..  (0)*t + (0)*a11 + (0)*a12 + (0)*a22 =L= 0 ; (LHS = 0)
+     
+
+---- q  =L=  ||Ap+b||<=1
+
+q(point1)..  (0)*ap1(point1) + (0)*ap2(point1) =L= 1 ; (LHS = 0)
+     
+q(point2)..  (0)*ap1(point2) + (0)*ap2(point2) =L= 1 ; (LHS = 0)
+     
+q(point3)..  (0)*ap1(point3) + (0)*ap2(point3) =L= 1 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- defap1  =E=  first element of Ap+b
+
+defap1(point1)..  - 3.34006070629902*a11 - 3.82650596041958*a12 + ap1(point1) - b(x) =E= 0 ; (LHS = 0)
+     
+defap1(point2)..  1.67683016065067*a11 + 1.64781319444317*a12 + ap1(point2) - b(x) =E= 0 ; (LHS = 0)
+     
+defap1(point3)..  3.96451414541853*a11 + 0.122338436797356*a12 + ap1(point3) - b(x) =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- defap2  =E=  second element of Ap+b
+
+defap2(point1)..  - 3.34006070629902*a12 - 3.82650596041958*a22 + ap2(point1) - b(y) =E= 0 ; (LHS = 0)
+     
+defap2(point2)..  1.67683016065067*a12 + 1.64781319444317*a22 + ap2(point2) - b(y) =E= 0 ; (LHS = 0)
+     
+defap2(point3)..  3.96451414541853*a12 + 0.122338436797356*a22 + ap2(point3) - b(y) =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using QCP From line 104
+
+
+---- t  objective
+
+t
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      rcone
+
+
+---- a11  
+
+a11
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      rcone
+       -3.3401  defap1(point1)
+        1.6768  defap1(point2)
+        3.9645  defap1(point3)
+       -2.4285  defap1(point4)
+       -3.2662  defap1(point5)
+       -0.1096  defap1(point6)
+       -1.4351  defap1(point7)
+       -4.2583  defap1(point8)
+        2.1916  defap1(point9)
+        0.3621  defap1(point10)
+        1.1304  defap1(point11)
+        1.6655  defap1(point12)
+        1.7287  defap1(point13)
+       -0.0588  defap1(point14)
+       -1.8904  defap1(point15)
+        3.0016  defap1(point16)
+       -2.8477  defap1(point17)
+       -2.2226  defap1(point18)
+       -3.6873  defap1(point19)
+        1.5628  defap1(point20)
+       -4.5706  defap1(point21)
+        0.1863  defap1(point22)
+       -2.0131  defap1(point23)
+       -2.2864  defap1(point24)
+        2.1395  defap1(point25)
+        0.0083  defap1(point26)
+       -0.6794  defap1(point27)
+        4.1754  defap1(point28)
+       -0.4828  defap1(point29)
+       -1.5335  defap1(point30)
+        0.9899  defap1(point31)
+        0.3073  defap1(point32)
+        1.2443  defap1(point33)
+       -2.1305  defap1(point34)
+        3.5688  defap1(point35)
+        3.5324  defap1(point36)
+        3.9966  defap1(point37)
+        1.7925  defap1(point38)
+       -1.6954  defap1(point39)
+       -4.6246  defap1(point40)
+        1.831   defap1(point41)
+        2.2201  defap1(point42)
+        0.494   defap1(point43)
+        3.0342  defap1(point44)
+        1.2613  defap1(point45)
+        0.4404  defap1(point46)
+        0.4113  defap1(point47)
+        2.3906  defap1(point48)
+        1.8624  defap1(point49)
+        2.5424  defap1(point50)
+
+
+---- a12  
+
+a12
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      rcone
+       -3.8265  defap1(point1)
+        1.6478  defap1(point2)
+        0.1223  defap1(point3)
+       -4.1111  defap1(point4)
+       -4.1574  defap1(point5)
+       -2.0797  defap1(point6)
+       -2.3715  defap1(point7)
+       -1.5653  defap1(point8)
+       -0.1141  defap1(point9)
+        1.8863  defap1(point10)
+        0.1287  defap1(point11)
+        3.572   defap1(point12)
+        1.4118  defap1(point13)
+       -0.0852  defap1(point14)
+       -1.1947  defap1(point15)
+        2.9709  defap1(point16)
+        0.5026  defap1(point17)
+       -1.7359  defap1(point18)
+       -2.1528  defap1(point19)
+        2.1116  defap1(point20)
+       -3.1325  defap1(point21)
+       -1.4401  defap1(point22)
+       -4.6002  defap1(point23)
+       -0.0246  defap1(point24)
+        0.2656  defap1(point25)
+       -0.95    defap1(point26)
+       -0.7429  defap1(point27)
+        3.3406  defap1(point28)
+       -4.6787  defap1(point29)
+       -2.9673  defap1(point30)
+        1.2308  defap1(point31)
+        0.5855  defap1(point32)
+        2.4436  defap1(point33)
+       -3.083   defap1(point34)
+        4.1894  defap1(point35)
+        4.0771  defap1(point36)
+        3.0408  defap1(point37)
+        0.6171  defap1(point38)
+       -2.0392  defap1(point39)
+       -2.5353  defap1(point40)
+        2.2661  defap1(point41)
+        2.2867  defap1(point42)
+       -3.7274  defap1(point43)
+        3.1365  defap1(point44)
+       -1.0344  defap1(point45)
+       -1.7621  defap1(point46)
+        2.4138  defap1(point47)
+        1.0189  defap1(point48)
+        0.6554  defap1(point49)
+        3.567   defap1(point50)
+       -3.3401  defap2(point1)
+        1.6768  defap2(point2)
+        3.9645  defap2(point3)
+       -2.4285  defap2(point4)
+       -3.2662  defap2(point5)
+       -0.1096  defap2(point6)
+       -1.4351  defap2(point7)
+       -4.2583  defap2(point8)
+        2.1916  defap2(point9)
+        0.3621  defap2(point10)
+        1.1304  defap2(point11)
+        1.6655  defap2(point12)
+        1.7287  defap2(point13)
+       -0.0588  defap2(point14)
+       -1.8904  defap2(point15)
+        3.0016  defap2(point16)
+       -2.8477  defap2(point17)
+       -2.2226  defap2(point18)
+       -3.6873  defap2(point19)
+        1.5628  defap2(point20)
+       -4.5706  defap2(point21)
+        0.1863  defap2(point22)
+       -2.0131  defap2(point23)
+       -2.2864  defap2(point24)
+        2.1395  defap2(point25)
+        0.0083  defap2(point26)
+       -0.6794  defap2(point27)
+        4.1754  defap2(point28)
+       -0.4828  defap2(point29)
+       -1.5335  defap2(point30)
+        0.9899  defap2(point31)
+        0.3073  defap2(point32)
+        1.2443  defap2(point33)
+       -2.1305  defap2(point34)
+        3.5688  defap2(point35)
+        3.5324  defap2(point36)
+        3.9966  defap2(point37)
+        1.7925  defap2(point38)
+       -1.6954  defap2(point39)
+       -4.6246  defap2(point40)
+        1.831   defap2(point41)
+        2.2201  defap2(point42)
+        0.494   defap2(point43)
+        3.0342  defap2(point44)
+        1.2613  defap2(point45)
+        0.4404  defap2(point46)
+        0.4113  defap2(point47)
+        2.3906  defap2(point48)
+        1.8624  defap2(point49)
+        2.5424  defap2(point50)
+
+
+---- a22  
+
+a22
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+       (0)      rcone
+       -3.8265  defap2(point1)
+        1.6478  defap2(point2)
+        0.1223  defap2(point3)
+       -4.1111  defap2(point4)
+       -4.1574  defap2(point5)
+       -2.0797  defap2(point6)
+       -2.3715  defap2(point7)
+       -1.5653  defap2(point8)
+       -0.1141  defap2(point9)
+        1.8863  defap2(point10)
+        0.1287  defap2(point11)
+        3.572   defap2(point12)
+        1.4118  defap2(point13)
+       -0.0852  defap2(point14)
+       -1.1947  defap2(point15)
+        2.9709  defap2(point16)
+        0.5026  defap2(point17)
+       -1.7359  defap2(point18)
+       -2.1528  defap2(point19)
+        2.1116  defap2(point20)
+       -3.1325  defap2(point21)
+       -1.4401  defap2(point22)
+       -4.6002  defap2(point23)
+       -0.0246  defap2(point24)
+        0.2656  defap2(point25)
+       -0.95    defap2(point26)
+       -0.7429  defap2(point27)
+        3.3406  defap2(point28)
+       -4.6787  defap2(point29)
+       -2.9673  defap2(point30)
+        1.2308  defap2(point31)
+        0.5855  defap2(point32)
+        2.4436  defap2(point33)
+       -3.083   defap2(point34)
+        4.1894  defap2(point35)
+        4.0771  defap2(point36)
+        3.0408  defap2(point37)
+        0.6171  defap2(point38)
+       -2.0392  defap2(point39)
+       -2.5353  defap2(point40)
+        2.2661  defap2(point41)
+        2.2867  defap2(point42)
+       -3.7274  defap2(point43)
+        3.1365  defap2(point44)
+       -1.0344  defap2(point45)
+       -1.7621  defap2(point46)
+        2.4138  defap2(point47)
+        1.0189  defap2(point48)
+        0.6554  defap2(point49)
+        3.567   defap2(point50)
+
+
+---- ap1  
+
+ap1(point1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point1)
+        1       defap1(point1)
+
+ap1(point2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point2)
+        1       defap1(point2)
+
+ap1(point3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point3)
+        1       defap1(point3)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- ap2  
+
+ap2(point1)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point1)
+        1       defap2(point1)
+
+ap2(point2)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point2)
+        1       defap2(point2)
+
+ap2(point3)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      q(point3)
+        1       defap2(point3)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- b  
+
+b(x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       defap1(point1)
+       -1       defap1(point2)
+       -1       defap1(point3)
+       -1       defap1(point4)
+       -1       defap1(point5)
+       -1       defap1(point6)
+       -1       defap1(point7)
+       -1       defap1(point8)
+       -1       defap1(point9)
+       -1       defap1(point10)
+       -1       defap1(point11)
+       -1       defap1(point12)
+       -1       defap1(point13)
+       -1       defap1(point14)
+       -1       defap1(point15)
+       -1       defap1(point16)
+       -1       defap1(point17)
+       -1       defap1(point18)
+       -1       defap1(point19)
+       -1       defap1(point20)
+       -1       defap1(point21)
+       -1       defap1(point22)
+       -1       defap1(point23)
+       -1       defap1(point24)
+       -1       defap1(point25)
+       -1       defap1(point26)
+       -1       defap1(point27)
+       -1       defap1(point28)
+       -1       defap1(point29)
+       -1       defap1(point30)
+       -1       defap1(point31)
+       -1       defap1(point32)
+       -1       defap1(point33)
+       -1       defap1(point34)
+       -1       defap1(point35)
+       -1       defap1(point36)
+       -1       defap1(point37)
+       -1       defap1(point38)
+       -1       defap1(point39)
+       -1       defap1(point40)
+       -1       defap1(point41)
+       -1       defap1(point42)
+       -1       defap1(point43)
+       -1       defap1(point44)
+       -1       defap1(point45)
+       -1       defap1(point46)
+       -1       defap1(point47)
+       -1       defap1(point48)
+       -1       defap1(point49)
+       -1       defap1(point50)
+
+b(y)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       -1       defap2(point1)
+       -1       defap2(point2)
+       -1       defap2(point3)
+       -1       defap2(point4)
+       -1       defap2(point5)
+       -1       defap2(point6)
+       -1       defap2(point7)
+       -1       defap2(point8)
+       -1       defap2(point9)
+       -1       defap2(point10)
+       -1       defap2(point11)
+       -1       defap2(point12)
+       -1       defap2(point13)
+       -1       defap2(point14)
+       -1       defap2(point15)
+       -1       defap2(point16)
+       -1       defap2(point17)
+       -1       defap2(point18)
+       -1       defap2(point19)
+       -1       defap2(point20)
+       -1       defap2(point21)
+       -1       defap2(point22)
+       -1       defap2(point23)
+       -1       defap2(point24)
+       -1       defap2(point25)
+       -1       defap2(point26)
+       -1       defap2(point27)
+       -1       defap2(point28)
+       -1       defap2(point29)
+       -1       defap2(point30)
+       -1       defap2(point31)
+       -1       defap2(point32)
+       -1       defap2(point33)
+       -1       defap2(point34)
+       -1       defap2(point35)
+       -1       defap2(point36)
+       -1       defap2(point37)
+       -1       defap2(point38)
+       -1       defap2(point39)
+       -1       defap2(point40)
+       -1       defap2(point41)
+       -1       defap2(point42)
+       -1       defap2(point43)
+       -1       defap2(point44)
+       -1       defap2(point45)
+       -1       defap2(point46)
+       -1       defap2(point47)
+       -1       defap2(point48)
+       -1       defap2(point49)
+       -1       defap2(point50)
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using QCP From line 104
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 8.280E-03, 4.679E+00] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using QCP From line 104
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS          151
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES          106
+NON ZERO ELEMENTS           504     NON LINEAR N-Z            104
+CODE LENGTH                 360     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.062 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using QCP From line 104
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  t
+     TYPE    QCP                 DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  104
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                0.2358
+
+ RESOURCE USAGE, LIMIT          0.031 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 2.98 ticks)
+
+--- Computing dual multipliers for quadratic constraints...
+--- Dual multiplier computation can be disabled using 'calcqcpduals = 0'.
+
+Optimal solution found
+Objective:            0.235788
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU rcone             -INF      -6.853099E-9          .             2.1205      
+
+  rcone  rotated cone for objective
+
+---- EQU q  ||Ap+b||<=1
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.5513         1.0000   4.3472480E-8      
+point2         -INF            0.2252         1.0000   2.6748237E-8      
+point3         -INF            1.0000         1.0000         0.0103      
+point4         -INF            0.5065         1.0000   4.1583398E-8      
+point5         -INF            0.5956         1.0000   4.8417847E-8      
+point6         -INF            0.1445         1.0000   3.0638932E-8      
+point7         -INF            0.1322         1.0000   2.9716094E-8      
+point8         -INF            1.0000         1.0000         0.0363      
+point9         -INF            0.3052         1.0000   3.2586871E-8      
+point10        -INF            0.3433         1.0000   3.1022886E-8      
+point11        -INF            0.0684         1.0000   2.7516577E-8      
+point12        -INF            0.7714         1.0000   6.3336059E-8      
+point13        -INF            0.1978         1.0000   2.5682367E-8      
+point14        -INF            0.0180         1.0000   2.1302841E-8      
+point15        -INF            0.1697         1.0000   2.8574462E-8      
+point16        -INF            0.5982         1.0000   4.2981137E-8      
+point17        -INF            0.9313         1.0000   2.8083081E-7      
+point18        -INF            0.2084         1.0000   2.9177470E-8      
+point19        -INF            0.6270         1.0000   5.1628434E-8      
+point20        -INF            0.3089         1.0000   2.9389330E-8      
+point21        -INF            0.9128         1.0000   2.1632115E-7      
+point22        -INF            0.0732         1.0000   3.1040178E-8      
+point23        -INF            0.6718         1.0000   5.6660698E-8      
+point24        -INF            0.5004         1.0000   4.0823403E-8      
+point25        -INF            0.2494         1.0000   3.0748671E-8      
+point26        -INF            0.0114         1.0000   3.5586639E-8      
+point27        -INF            0.0198         1.0000   2.6547511E-8      
+point28        -INF            0.9133         1.0000   1.5683720E-7      
+point29        -INF            1.0000         1.0000         0.0345      
+point30        -INF            0.2272         1.0000   3.1139999E-8      
+point31        -INF            0.1420         1.0000   2.5432257E-8      
+point32        -INF            0.0681         1.0000   2.4206914E-8      
+point33        -INF            0.4079         1.0000   3.3002269E-8      
+point34        -INF            0.2722         1.0000   3.2025536E-8      
+point35        -INF            1.0000         1.0000         0.0352      
+point36        -INF            0.9595         1.0000   3.4763495E-7      
+point37        -INF            0.8195         1.0000   8.7066336E-8      
+point38        -INF            0.1612         1.0000   2.8561212E-8      
+point39        -INF            0.1238         1.0000   2.7043147E-8      
+point40        -INF            1.0000         1.0000         0.0016      
+point41        -INF            0.3474         1.0000   3.0462033E-8      
+point42        -INF            0.3733         1.0000   3.1064733E-8      
+point43        -INF            0.8549         1.0000   1.0335678E-7      
+point44        -INF            0.6395         1.0000   4.6500415E-8      
+point45        -INF            0.2009         1.0000   3.0291676E-8      
+point46        -INF            0.1666         1.0000   3.1685049E-8      
+point47        -INF            0.5122         1.0000   3.8260405E-8      
+point48        -INF            0.2793         1.0000   3.1177709E-8      
+point49        -INF            0.1734         1.0000   2.8775355E-8      
+point50        -INF            0.7262         1.0000   5.5725500E-8      
+
+---- EQU defap1  first element of Ap+b
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .       -1.395519E-8          .       -4.783707E-8      
+point2           .       7.0060450E-9          .       1.4750037E-8      
+point3           .       1.6555342E-8          .             0.0203      
+point4           .       -1.014927E-8          .       -2.231122E-8      
+point5           .       -1.364735E-8          .       -4.715237E-8      
+point6           .       -4.61927E-10          .       8.1205512E-9      
+point7           .       -5.997572E-9          .       -9.854778E-9      
+point8           .       -1.778433E-8          .            -0.0718      
+point9           .       9.1517877E-9          .       3.5622889E-8      
+point10          .       1.5168450E-9          .       -7.741162E-9      
+point11          .       4.7209094E-9          .       1.3791457E-8      
+point12          .       6.9628645E-9          .       9.3211477E-9      
+point13          .       7.2219200E-9          .       1.6596619E-8      
+point14          .       -2.45175E-10          .       -2.062717E-9      
+point15          .       -7.896156E-9          .       -2.351270E-8      
+point16          .       1.2540760E-8          .       4.3939443E-8      
+point17          .       -1.188945E-8          .       -4.554267E-7      
+point18          .       -9.284517E-9          .       -2.618831E-8      
+point19          .       -1.540141E-8          .       -8.156240E-8      
+point20          .       6.5308487E-9          .       1.1066990E-8      
+point21          .       -1.909206E-8          .       -4.025147E-7      
+point22          .       7.750835E-10          .       8.6611698E-9      
+point23          .       -8.415838E-9          .       -1.374714E-8      
+point24          .       -9.546947E-9          .       -5.050548E-8      
+point25          .       8.9348852E-9          .       3.0692643E-8      
+point26          .       3.289428E-11          .       3.4623709E-9      
+point27          .       -2.838292E-9          .       -7.378873E-9      
+point28          .       1.7443003E-8          .       2.3514684E-7      
+point29          .       -2.025970E-9          .             0.0183      
+point30          .       -6.409766E-9          .       -8.612500E-9      
+point31          .       4.1365440E-9          .       6.1195753E-9      
+point32          .       1.2848998E-9          .       -4.17170E-10      
+point33          .       5.2018529E-9          .       4.2162229E-9      
+point34          .       -8.902765E-9          .       -1.799429E-8      
+point35          .       1.4912100E-8          .             0.0364      
+point36          .       1.4759896E-8          .       3.7568159E-7      
+point37          .       1.6695850E-8          .       1.2717131E-7      
+point38          .       7.4867983E-9          .       2.1588389E-8      
+point39          .       -7.083685E-9          .       -1.543396E-8      
+point40          .       -1.931621E-8          .            -0.0031      
+point41          .       7.6510750E-9          .       1.5154410E-8      
+point42          .       9.2759027E-9          .       2.2383874E-8      
+point43          .       2.0547423E-9          .       9.0841404E-8      
+point44          .       1.2677497E-8          .       4.6731156E-8      
+point45          .       5.2648012E-9          .       2.3544557E-8      
+point46          .       1.8354288E-9          .       1.4730010E-8      
+point47          .       1.7231474E-9          .       -1.228431E-8      
+point48          .       9.9853422E-9          .       3.0958980E-8      
+point49          .       7.7787189E-9          .       2.2592060E-8      
+point50          .       1.0624858E-8          .       3.5445203E-8      
+
+---- EQU defap2  second element of Ap+b
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .       -1.598536E-8          .       -4.454021E-8      
+point2           .       6.8849391E-9          .       2.1388923E-8      
+point3           .       5.200979E-10          .            -0.0037      
+point4           .       -1.717188E-8          .       -5.408354E-8      
+point5           .       -1.736693E-8          .       -5.680706E-8      
+point6           .       -8.683928E-9          .       -2.193078E-8      
+point7           .       -9.905509E-9          .       -1.848204E-8      
+point8           .       -6.545223E-9          .             0.0102      
+point9           .       -4.71010E-10          .       -8.000389E-9      
+point10          .       7.8780120E-9          .       3.5759891E-8      
+point11          .       5.402175E-10          .       2.0550210E-9      
+point12          .       1.4919829E-8          .       1.1078928E-7      
+point13          .       5.8996862E-9          .       1.7313705E-8      
+point14          .       -3.55280E-10          .       5.4809414E-9      
+point15          .       -4.992311E-9          .       3.454680E-10      
+point16          .       1.2412558E-8          .       5.2168719E-8      
+point17          .       2.0926557E-9          .       2.8978413E-7      
+point18          .       -7.253007E-9          .       -5.621842E-9      
+point19          .       -8.997103E-9          .       -6.069367E-9      
+point20          .       8.8211332E-9          .       3.0812974E-8      
+point21          .       -1.309028E-8          .       -9.645863E-8      
+point22          .       -6.012749E-9          .       -1.408836E-8      
+point23          .       -1.921295E-8          .       -9.155545E-8      
+point24          .       -1.07445E-10          .       2.6766641E-8      
+point25          .       1.1142743E-9          .       -1.572483E-9      
+point26          .       -3.966626E-9          .       -6.428057E-9      
+point27          .       -3.103066E-9          .       -3.21242E-11      
+point28          .       1.3958926E-8          .       1.7111939E-7      
+point29          .       -1.953755E-8          .            -0.0665      
+point30          .       -1.239359E-8          .       -2.795480E-8      
+point31          .       5.1420350E-9          .       1.8244768E-8      
+point32          .       2.4460612E-9          .       1.2634821E-8      
+point33          .       1.0206991E-8          .       4.1880701E-8      
+point34          .       -1.287812E-8          .       -2.714863E-8      
+point35          .       1.7501857E-8          .             0.0603      
+point36          .       1.7033033E-8          .       5.7824854E-7      
+point37          .       1.2707009E-8          .       8.4843129E-8      
+point38          .       2.5813010E-9          .       5.3789618E-9      
+point39          .       -8.518570E-9          .       -1.238782E-8      
+point40          .       -1.059665E-8          .            -0.0002      
+point41          .       9.4669879E-9          .       3.2791611E-8      
+point42          .       9.5539555E-9          .       3.1589711E-8      
+point43          .       -1.556305E-8          .       -1.690250E-7      
+point44          .       1.3104479E-8          .       5.9962072E-8      
+point45          .       -4.315951E-9          .       -1.547533E-8      
+point46          .       -7.356484E-9          .       -2.084699E-8      
+point47          .       1.0080842E-8          .       5.3704462E-8      
+point48          .       4.2604517E-9          .       8.5317780E-9      
+point49          .       2.7414209E-9          .       5.5786654E-9      
+point50          .       1.4900629E-8          .       8.8579916E-8      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR t                 -INF            0.2358        +INF            EPS         
+---- VAR a11                 .             0.2584        +INF      -4.802170E-8      
+---- VAR a12               -INF           -0.0896        +INF      4.452845E-10      
+---- VAR a22                 .             0.2462        +INF      -5.019976E-8      
+
+  t  objective
+
+---- VAR ap1  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.5502        +INF            EPS         
+point2         -INF           -0.2557        +INF            EPS         
+point3         -INF           -0.9835        +INF            EPS         
+point4         -INF            0.2891        +INF            EPS         
+point5         -INF            0.5015        +INF            EPS         
+point6         -INF           -0.1280        +INF            EPS         
+point7         -INF            0.1883        +INF            EPS         
+point8         -INF            0.9901        +INF            EPS         
+point9         -INF           -0.5466        +INF            EPS         
+point10        -INF            0.1054        +INF            EPS         
+point11        -INF           -0.2506        +INF            EPS         
+point12        -INF           -0.0803        +INF            EPS         
+point13        -INF           -0.2902        +INF            EPS         
+point14        -INF            0.0375        +INF            EPS         
+point15        -INF            0.4114        +INF            EPS         
+point16        -INF           -0.4795        +INF            EPS         
+point17        -INF            0.8109        +INF            EPS         
+point18        -INF            0.4488        +INF            EPS         
+point19        -INF            0.7899        +INF            EPS         
+point20        -INF           -0.1847        +INF            EPS         
+point21        -INF            0.9304        +INF            EPS         
+point22        -INF           -0.1472        +INF            EPS         
+point23        -INF            0.1380        +INF            EPS         
+point24        -INF            0.6186        +INF            EPS         
+point25        -INF           -0.4991        +INF            EPS         
+point26        -INF           -0.0573        +INF            EPS         
+point27        -INF            0.1390        +INF            EPS         
+point28        -INF           -0.7497        +INF            EPS         
+point29        -INF           -0.2645        +INF            EPS         
+point30        -INF            0.1604        +INF            EPS         
+point31        -INF           -0.1155        +INF            EPS         
+point32        -INF            0.0030        +INF            EPS         
+point33        -INF           -0.0726        +INF            EPS         
+point34        -INF            0.3043        +INF            EPS         
+point35        -INF           -0.5169        +INF            EPS         
+point36        -INF           -0.5175        +INF            EPS         
+point37        -INF           -0.7303        +INF            EPS         
+point38        -INF           -0.3779        +INF            EPS         
+point39        -INF            0.2854        +INF            EPS         
+point40        -INF            0.9978        +INF            EPS         
+point41        -INF           -0.2401        +INF            EPS         
+point42        -INF           -0.3388        +INF            EPS         
+point43        -INF           -0.4317        +INF            EPS         
+point44        -INF           -0.4731        +INF            EPS         
+point45        -INF           -0.3886        +INF            EPS         
+point46        -INF           -0.2417        +INF            EPS         
+point47        -INF            0.1400        +INF            EPS         
+point48        -INF           -0.4965        +INF            EPS         
+point49        -INF           -0.3926        +INF            EPS         
+point50        -INF           -0.3074        +INF            EPS         
+
+---- VAR ap2  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.4985        +INF            EPS         
+point2         -INF           -0.3998        +INF            EPS         
+point3         -INF            0.1808        +INF            EPS         
+point4         -INF            0.6503        +INF            EPS         
+point5         -INF            0.5866        +INF            EPS         
+point6         -INF            0.3579        +INF            EPS         
+point7         -INF            0.3110        +INF            EPS         
+point8         -INF           -0.1405        +INF            EPS         
+point9         -INF            0.0801        +INF            EPS         
+point10        -INF           -0.5763        +INF            EPS         
+point11        -INF           -0.0747        +INF            EPS         
+point12        -INF           -0.8746        +INF            EPS         
+point13        -INF           -0.3371        +INF            EPS         
+point14        -INF           -0.1286        +INF            EPS         
+point15        -INF           -0.0196        +INF            EPS         
+point16        -INF           -0.6069        +INF            EPS         
+point17        -INF           -0.5232        +INF            EPS         
+point18        -INF            0.0839        +INF            EPS         
+point19        -INF            0.0553        +INF            EPS         
+point20        -INF           -0.5242        +INF            EPS         
+point21        -INF            0.2174        +INF            EPS         
+point22        -INF            0.2269        +INF            EPS         
+point23        -INF            0.8079        +INF            EPS         
+point24        -INF           -0.3431        +INF            EPS         
+point25        -INF           -0.0180        +INF            EPS         
+point26        -INF            0.0903        +INF            EPS         
+point27        -INF           -0.0223        +INF            EPS         
+point28        -INF           -0.5927        +INF            EPS         
+point29        -INF            0.9644        +INF            EPS         
+point30        -INF            0.4489        +INF            EPS         
+point31        -INF           -0.3587        +INF            EPS         
+point32        -INF           -0.2610        +INF            EPS         
+point33        -INF           -0.6345        +INF            EPS         
+point34        -INF            0.4239        +INF            EPS         
+point35        -INF           -0.8561        +INF            EPS         
+point36        -INF           -0.8317        +INF            EPS         
+point37        -INF           -0.5350        +INF            EPS         
+point38        -INF           -0.1357        +INF            EPS         
+point39        -INF            0.2058        +INF            EPS         
+point40        -INF            0.0655        +INF            EPS         
+point41        -INF           -0.5382        +INF            EPS         
+point42        -INF           -0.5084        +INF            EPS         
+point43        -INF            0.8177        +INF            EPS         
+point44        -INF           -0.6447        +INF            EPS         
+point45        -INF            0.2233        +INF            EPS         
+point46        -INF            0.3290        +INF            EPS         
+point47        -INF           -0.7018        +INF            EPS         
+point48        -INF           -0.1810        +INF            EPS         
+point49        -INF           -0.1388        +INF            EPS         
+point50        -INF           -0.7948        +INF            EPS         
+
+---- VAR b  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+x        -INF            0.0300        +INF      -1.33033E-10      
+y        -INF           -0.1443        +INF      1.2696930E-9      
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:31:12 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    118 VARIABLE a11.L                 =        0.258  
+            VARIABLE a12.L                 =       -0.090  
+            VARIABLE a22.L                 =        0.246  
+
+----    118 VARIABLE b.L  
+
+x  0.030,    y -0.144
+
+
+----    118 VARIABLE t.L                   =        0.236  objective
+            PARAMETER detA                 =        0.056  determinant of A
+            PARAMETER area                 =       56.507  
+
+
+EXECUTION TIME       =        0.250 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+
+
+USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestEllipse.gms
+Output     C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestEllipse.lst

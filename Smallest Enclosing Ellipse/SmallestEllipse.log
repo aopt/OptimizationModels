@@ -1,0 +1,108 @@
+--- Job SmallestEllipse.gms Start 04/11/26 18:31:12 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestEllipse.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\225a\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:61637 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- SmallestEllipse.gms(67) 3 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+n=50 seed=1234
+--- SmallestEllipse.gms(119) 3 Mb
+--- Starting execution: elapsed 0:00:05.588
+--- SmallestEllipse.gms(73) 4 Mb
+--- Generating QCP model m
+--- SmallestEllipse.gms(104) 6 Mb
+---   151 rows  106 columns  504 non-zeroes
+---   360 nl-code  104 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+--- Matrix    [min, max] : [ 8.280E-03, 4.679E+00] - Zero values observed as well
+--- SmallestEllipse.gms(104) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:05.650
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- GMO memory 0.55 Mb (peak 0.55 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.02 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+QCP Presolve eliminated 1 rows and 2 columns.
+Reduced QCP has 153 rows, 162 columns, and 458 nonzeros.
+Reduced QCP has 54 quadratic constraints.
+Presolve time = 0.01 sec. (0.08 ticks)
+Parallel mode: using up to 16 threads for barrier.
+
+***NOTE: Found 8 dense columns.
+
+Number of nonzeros in lower triangle of A*A' = 153
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.01 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 16
+  Rows in Factor            = 155
+  Integer space required    = 245
+  Total non-zeros in factor = 750
+  Total FP ops to factor    = 5120
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   0.0000000e+00   0.0000000e+00  2.78e+02  0.00e+00  1.29e+02  1.00e+00
+   1  -3.1919245e-01  -1.3008380e+00  2.78e+02  0.00e+00  1.29e+02  8.16e-01
+   2  -4.2232498e-02  -2.0952145e-01  6.81e+01  0.00e+00  3.16e+01  5.19e+00
+   3   8.4907992e-02  -4.2056133e-03  7.02e+00  0.00e+00  3.26e+00  9.48e+00
+   4   1.4990686e-01   1.2229115e-01  4.57e+00  0.00e+00  2.12e+00  3.08e+01
+   5   2.1755009e-01   2.0607461e-01  1.36e+00  0.00e+00  6.34e-01  7.37e+01
+   6   2.3032466e-01   2.2664375e-01  5.81e-01  0.00e+00  2.70e-01  2.22e+02
+   7   2.3316170e-01   2.3242465e-01  2.29e-01  0.00e+00  1.06e-01  1.01e+03
+   8   2.3548442e-01   2.3539721e-01  7.09e-02  0.00e+00  3.29e-02  8.34e+03
+   9   2.3573783e-01   2.3572414e-01  9.09e-03  0.00e+00  4.22e-03  5.25e+04
+  10   2.3577963e-01   2.3577738e-01  1.49e-03  0.00e+00  6.91e-04  3.11e+05
+  11   2.3578695e-01   2.3578661e-01  2.68e-04  0.00e+00  1.24e-04  1.90e+06
+  12   2.3578835e-01   2.3578832e-01  5.16e-05  0.00e+00  2.40e-05  1.90e+07
+  13   2.3578832e-01   2.3578827e-01  6.31e-06  0.00e+00  2.93e-06  1.89e+07
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.03sec (det. 2.98 ticks)
+
+--- Computing dual multipliers for quadratic constraints...
+--- Dual multiplier computation can be disabled using 'calcqcpduals = 0'.
+
+Optimal solution found
+Objective:            0.235788
+
+--- Reading solution for model m
+--- Executing after solve: elapsed 0:00:05.851
+--- SmallestEllipse.gms(118) 4 Mb
+*** Status: Normal completion
+--- Job SmallestEllipse.gms Stop 04/11/26 18:31:18 elapsed 0:00:05.882
