@@ -1,0 +1,1746 @@
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Solve smallest ellipse problem using an NLP solver
+        Use same starting point as smallest circle problem
+        
+   7   
+   8  option nlp = conopt;
+   9   
+  10  *----------------------------------------------------------------------
+  11  * data
+  12  *----------------------------------------------------------------------
+  13   
+  14  set
+  15    i 'points' /point1*point50/
+  16    c  'coordinates' /x,y/
+  17    h(i) 'subset: convex hull'
+  18  ;
+  19   
+  20  parameter p(i,c) 'points';
+  21   
+  22   
+  51   
+  52  display p,h;
+  53   
+  54  set j(i) 'used points';
+  55  *j(i) = yes;
+  56  j(h) = yes;
+  57   
+  58   
+  59  *----------------------------------------------------------------------
+  60  * initial circle
+  61  *----------------------------------------------------------------------
+  62   
+  63  alias (c,cc);
+  64  parameter
+  65     ic(c) 'initial center'
+  66     ir2   'squared initial radius'
+  67  ;
+  68   
+  69  ic(c) = sum(j,p(j,c))/card(j);
+  70  ir2 = smax(j,sum(c, sqr(p(j,c)-ic(c))));
+  71  display ic,ir2;
+  72   
+  73  *----------------------------------------------------------------------
+  74  * formulation 1
+  75  * max det(A)
+  76  * s.t. (p-c)'A(p-c) <= 1
+  77  *----------------------------------------------------------------------
+  78   
+  79  variable z;
+  80  positive variable a11,a22;
+  81  variable a12, center(c), pc(i,c);
+  82   
+  83  * initial values A
+  84  a11.l = 1/ir2;
+  85  a22.l = 1/ir2;
+  86  a12.l = 0;
+  87  z.l = a11.l*a22.l-sqr(a12.l);
+  88   
+  89  * initial values center
+  90  center.l(c) = ic(c);
+  91  pc.l(i,c) = p(i,c) - center.l(c);
+  92   
+  93  Equations
+  94     determinant 'det(A)'
+  95     pminc(i,c)  'p(i)-c'
+  96     pinside(i)  'point p is inside ellipse'
+  97  ;
+  98   
+  99  determinant..  z =e= a11*a22-sqr(a12);
+ 100  pminc(i,c)..   pc(i,c) =e= p(i,c)-center(c);
+ 101  pinside(i)..   a11*sqr(pc(i,'x'))+a22*sqr(pc(i,'y'))+2*a12*pc(i,'x')*pc(i,'y') =l= 1;
+ 102   
+ 103  model m1 /all/;
+ 104  solve m1 maximizing z using nlp;
+ 105   
+ 106  display center.l,a11.l,a22.l,a12.l,z.l;
+ 107  scalar Area;
+ 108  Area = pi/sqrt(z.l);
+ 109  display Area;
+ 110   
+ 111  *----------------------------------------------------------------------
+ 112  * formulation 2
+ 113  * max det(A)
+ 114  * s.t. ||Ap+b|| <= 1
+ 115  *----------------------------------------------------------------------
+ 116   
+ 117  variable ap1(i),ap2(i);
+ 118  variable b(c);
+ 119   
+ 120  * initial values A
+ 121  a11.l = 1/sqrt(ir2);
+ 122  a22.l = 1/sqrt(ir2);
+ 123  a12.l = 0;
+ 124  z.l = a11.l*a22.l-sqr(a12.l);
+ 125   
+ 126  * initial values b = -A*center
+ 127  b.l('x') = -a11.l*ic('x')-a12.l*ic('y');
+ 128  b.l('y') = -a12.l*ic('x')-a22.l*ic('y');
+ 129   
+ 130  * initial values ap = Ap+b
+ 131  ap1.l(i) = a11.l*p(i,'x')+a12.l*p(i,'y') + b.l('x');
+ 132  ap2.l(i) = a12.l*p(i,'x')+a22.l*p(i,'y') + b.l('y');
+ 133   
+ 134  equations
+ 135     defap1(i)   'first element of Ap+b'
+ 136     defap2(i)   'second element of Ap+b'
+ 137     pinside2(i)
+ 138  ;
+ 139   
+ 140   
+ 141  defap1(i)..     ap1(i) =e= a11*p(i,'x')+a12*p(i,'y') + b('x');
+ 142  defap2(i)..     ap2(i) =e= a12*p(i,'x')+a22*p(i,'y') + b('y');
+ 143  pinside2(i)..   sqr(ap1(i)) + sqr(ap2(i)) =l= 1;
+ 144   
+ 145   
+ 146  model m2 /determinant,defap1,defap2,pinside2/;
+ 147  solve m2 maximizing z using nlp;
+ 148   
+ 149  display a11.l,a22.l,a12.l,b.l,z.l;
+ 150  scalar Area;
+ 151  Area = pi/z.l;
+ 152  display Area;
+
+
+COMPILATION TIME     =        0.438 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     52 PARAMETER p  points
+
+                  x           y
+
+point1        3.340       3.827
+point2       -1.677      -1.648
+point3       -3.965      -0.122
+point4        2.428       4.111
+point5        3.266       4.157
+point6        0.110       2.080
+point7        1.435       2.372
+point8        4.258       1.565
+point9       -2.192       0.114
+point10      -0.362      -1.886
+point11      -1.130      -0.129
+point12      -1.665      -3.572
+point13      -1.729      -1.412
+point14       0.059       0.085
+point15       1.890       1.195
+point16      -3.002      -2.971
+point17       2.848      -0.503
+point18       2.223       1.736
+point19       3.687       2.153
+point20      -1.563      -2.112
+point21       4.571       3.133
+point22      -0.186       1.440
+point23       2.013       4.600
+point24       2.286       0.025
+point25      -2.139      -0.266
+point26      -0.008       0.950
+point27       0.679       0.743
+point28      -4.175      -3.341
+point29       0.483       4.679
+point30       1.534       2.967
+point31      -0.990      -1.231
+point32      -0.307      -0.586
+point33      -1.244      -2.444
+point34       2.131       3.083
+point35      -3.569      -4.189
+point36      -3.532      -4.077
+point37      -3.997      -3.041
+point38      -1.793      -0.617
+point39       1.695       2.039
+point40       4.625       2.535
+point41      -1.831      -2.266
+point42      -2.220      -2.287
+point43      -0.494       3.727
+point44      -3.034      -3.137
+point45      -1.261       1.034
+point46      -0.440       1.762
+point47      -0.411      -2.414
+point48      -2.391      -1.019
+point49      -1.862      -0.655
+point50      -2.542      -3.567
+
+
+----     52 SET h  subset: convex hull
+
+point3 ,    point5 ,    point8 ,    point12,    point17,    point21,    point23,    point28,    point29,    point35,    point40
+point43
+
+
+----     71 PARAMETER ic  initial center
+
+x 0.683,    y 1.056
+
+
+----     71 PARAMETER ir2                  =       45.589  squared initial radius
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using NLP From line 104
+
+
+---- determinant  =E=  det(A)
+
+determinant..  z - (0.0219349781124021)*a11 - (0.0219349781124021)*a22 + (0)*a12 =E= 0 ; (LHS = 0)
+     
+
+---- pminc  =E=  p(i)-c
+
+pminc(point1,x)..  center(x) + pc(point1,x) =E= 3.34006070629902 ; (LHS = 3.34006070629902)
+     
+pminc(point1,y)..  center(y) + pc(point1,y) =E= 3.82650596041958 ; (LHS = 3.82650596041958)
+     
+pminc(point2,x)..  center(x) + pc(point2,x) =E= -1.67683016065067 ; (LHS = -1.67683016065067)
+     
+REMAINING 97 ENTRIES SKIPPED
+
+
+---- pinside  =L=  point p is inside ellipse
+
+pinside(point1)..  (7.06038632781268)*a11 + (7.67662646224041)*a22 + (14.724122862531)*a12 + (0.116568560571939)*pc(point1,x)
+     
+      + (0.121549284138206)*pc(point1,y) =L= 1 ; (LHS = 0.323256052992004)
+     
+pinside(point2)..  (5.56843006138697)*a11 + (7.30970488307486)*a22 + (12.7598715370933)*a12 - (0.103522222145763)*pc(point2,x)
+     
+      - (0.118608857546229)*pc(point2,y) =L= 1 ; (LHS = 0.28248160813533)
+     
+pinside(point3)..  (21.5986623351821)*a11 + (1.38808886631585)*a22 + (10.9509566184479)*a12 - (0.203882818413715)*pc(point3,x)
+     
+      - (0.0516863467062636)*pc(point3,y) =L= 1 ; (LHS = 0.504213884480088)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using NLP From line 104
+
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.000481143264791557, +INF, 0)
+        1       determinant
+
+
+---- a11  
+
+a11
+                (.LO, .L, .UP, .M = 0, 0.0219349781124021, +INF, 0)
+      (-0.0219) determinant
+       (7.0604) pinside(point1)
+       (5.5684) pinside(point2)
+      (21.5987) pinside(point3)
+       (3.0469) pinside(point4)
+       (6.6731) pinside(point5)
+       (0.3287) pinside(point6)
+       (0.5658) pinside(point7)
+      (12.7831) pinside(point8)
+       (8.2631) pinside(point9)
+       (1.0922) pinside(point10)
+       (3.2881) pinside(point11)
+       (5.5149) pinside(point12)
+       (5.8157) pinside(point13)
+       (0.3896) pinside(point14)
+       (1.4581) pinside(point15)
+      (13.5756) pinside(point16)
+       (4.6861) pinside(point17)
+       (2.3707) pinside(point18)
+       (9.0263) pinside(point19)
+       (5.0432) pinside(point20)
+      (15.1141) pinside(point21)
+       (0.7555) pinside(point22)
+       (1.7693) pinside(point23)
+       (2.5711) pinside(point24)
+       (7.966)  pinside(point25)
+       (0.4778) pinside(point26)
+ (1.2239789E-5) pinside(point27)
+      (23.6031) pinside(point28)
+       (0.0401) pinside(point29)
+       (0.7235) pinside(point30)
+       (2.7982) pinside(point31)
+       (0.9805) pinside(point32)
+       (3.7143) pinside(point33)
+       (2.0955) pinside(point34)
+      (18.0773) pinside(point35)
+      (17.7692) pinside(point36)
+      (21.898)  pinside(point37)
+       (6.1278) pinside(point38)
+       (1.0252) pinside(point39)
+      (15.5369) pinside(point40)
+       (6.3197) pinside(point41)
+       (8.4274) pinside(point42)
+       (1.385)  pinside(point43)
+      (13.8173) pinside(point44)
+       (3.7799) pinside(point45)
+       (1.2618) pinside(point46)
+       (1.1973) pinside(point47)
+       (9.4468) pinside(point48)
+       (6.4787) pinside(point49)
+      (10.403)  pinside(point50)
+
+
+---- a22  
+
+a22
+                (.LO, .L, .UP, .M = 0, 0.0219349781124021, +INF, 0)
+      (-0.0219) determinant
+       (7.6766) pinside(point1)
+       (7.3097) pinside(point2)
+       (1.3881) pinside(point3)
+       (9.3349) pinside(point4)
+       (9.6197) pinside(point5)
+       (1.0483) pinside(point6)
+       (1.731)  pinside(point7)
+       (0.2595) pinside(point8)
+       (0.8869) pinside(point9)
+       (8.6564) pinside(point10)
+       (1.403)  pinside(point11)
+      (21.417)  pinside(point12)
+       (6.0894) pinside(point13)
+       (0.9422) pinside(point14)
+       (0.0193) pinside(point15)
+      (16.2143) pinside(point16)
+       (2.4286) pinside(point17)
+       (0.4625) pinside(point18)
+       (1.2033) pinside(point19)
+      (10.0323) pinside(point20)
+       (4.3127) pinside(point21)
+       (0.1477) pinside(point22)
+      (12.5622) pinside(point23)
+       (1.0634) pinside(point24)
+       (1.7462) pinside(point25)
+       (0.0112) pinside(point26)
+       (0.0979) pinside(point27)
+      (19.3283) pinside(point28)
+      (13.1252) pinside(point29)
+       (3.6537) pinside(point30)
+       (5.2286) pinside(point31)
+       (2.694)  pinside(point32)
+      (12.2461) pinside(point33)
+       (4.1095) pinside(point34)
+      (27.512)  pinside(point35)
+      (26.347)  pinside(point36)
+      (16.7828) pinside(point37)
+       (2.7988) pinside(point38)
+       (0.9671) pinside(point39)
+       (2.1889) pinside(point40)
+      (11.0351) pinside(point41)
+      (11.1725) pinside(point42)
+       (7.1373) pinside(point43)
+      (17.5761) pinside(point44)
+       (0.0005) pinside(point45)
+       (0.4988) pinside(point46)
+      (12.0387) pinside(point47)
+       (4.3046) pinside(point48)
+       (2.9284) pinside(point49)
+      (21.3702) pinside(point50)
+
+
+---- a12  
+
+a12
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      determinant
+      (14.7241) pinside(point1)
+      (12.7599) pinside(point2)
+      (10.951)  pinside(point3)
+      (10.6663) pinside(point4)
+      (16.0242) pinside(point5)
+      (-1.1739) pinside(point6)
+       (1.9794) pinside(point7)
+       (3.643)  pinside(point8)
+       (5.4143) pinside(point9)
+       (6.1495) pinside(point10)
+       (4.2957) pinside(point11)
+      (21.736)  pinside(point12)
+      (11.9019) pinside(point13)
+       (1.2117) pinside(point14)
+       (0.3353) pinside(point15)
+      (29.6728) pinside(point16)
+      (-6.7471) pinside(point17)
+       (2.0941) pinside(point18)
+       (6.5912) pinside(point19)
+      (14.226)  pinside(point20)
+      (16.1472) pinside(point21)
+      (-0.6681) pinside(point22)
+       (9.429)  pinside(point23)
+      (-3.3071) pinside(point24)
+       (7.4593) pinside(point25)
+       (0.1463) pinside(point26)
+       (0.0022) pinside(point27)
+      (42.718)  pinside(point28)
+      (-1.4501) pinside(point29)
+       (3.2519) pinside(point30)
+       (7.65)   pinside(point31)
+       (3.2506) pinside(point32)
+      (13.4887) pinside(point33)
+       (5.869)  pinside(point34)
+      (44.6024) pinside(point35)
+      (43.2742) pinside(point36)
+      (38.3411) pinside(point37)
+       (8.2825) pinside(point38)
+       (1.9914) pinside(point39)
+      (11.6634) pinside(point40)
+      (16.7019) pinside(point41)
+      (19.4067) pinside(point42)
+      (-6.2882) pinside(point43)
+      (31.1675) pinside(point44)
+       (0.0835) pinside(point45)
+      (-1.5866) pinside(point46)
+       (7.593)  pinside(point47)
+      (12.7538) pinside(point48)
+       (8.7114) pinside(point49)
+      (29.8204) pinside(point50)
+
+
+---- center  
+
+center(x)
+                (.LO, .L, .UP, .M = -INF, 0.68292195798107, +INF, 0)
+        1       pminc(point1,x)
+        1       pminc(point2,x)
+        1       pminc(point3,x)
+        1       pminc(point4,x)
+        1       pminc(point5,x)
+        1       pminc(point6,x)
+        1       pminc(point7,x)
+        1       pminc(point8,x)
+        1       pminc(point9,x)
+        1       pminc(point10,x)
+        1       pminc(point11,x)
+        1       pminc(point12,x)
+        1       pminc(point13,x)
+        1       pminc(point14,x)
+        1       pminc(point15,x)
+        1       pminc(point16,x)
+        1       pminc(point17,x)
+        1       pminc(point18,x)
+        1       pminc(point19,x)
+        1       pminc(point20,x)
+        1       pminc(point21,x)
+        1       pminc(point22,x)
+        1       pminc(point23,x)
+        1       pminc(point24,x)
+        1       pminc(point25,x)
+        1       pminc(point26,x)
+        1       pminc(point27,x)
+        1       pminc(point28,x)
+        1       pminc(point29,x)
+        1       pminc(point30,x)
+        1       pminc(point31,x)
+        1       pminc(point32,x)
+        1       pminc(point33,x)
+        1       pminc(point34,x)
+        1       pminc(point35,x)
+        1       pminc(point36,x)
+        1       pminc(point37,x)
+        1       pminc(point38,x)
+        1       pminc(point39,x)
+        1       pminc(point40,x)
+        1       pminc(point41,x)
+        1       pminc(point42,x)
+        1       pminc(point43,x)
+        1       pminc(point44,x)
+        1       pminc(point45,x)
+        1       pminc(point46,x)
+        1       pminc(point47,x)
+        1       pminc(point48,x)
+        1       pminc(point49,x)
+        1       pminc(point50,x)
+
+center(y)
+                (.LO, .L, .UP, .M = -INF, 1.05583339545626, +INF, 0)
+        1       pminc(point1,y)
+        1       pminc(point2,y)
+        1       pminc(point3,y)
+        1       pminc(point4,y)
+        1       pminc(point5,y)
+        1       pminc(point6,y)
+        1       pminc(point7,y)
+        1       pminc(point8,y)
+        1       pminc(point9,y)
+        1       pminc(point10,y)
+        1       pminc(point11,y)
+        1       pminc(point12,y)
+        1       pminc(point13,y)
+        1       pminc(point14,y)
+        1       pminc(point15,y)
+        1       pminc(point16,y)
+        1       pminc(point17,y)
+        1       pminc(point18,y)
+        1       pminc(point19,y)
+        1       pminc(point20,y)
+        1       pminc(point21,y)
+        1       pminc(point22,y)
+        1       pminc(point23,y)
+        1       pminc(point24,y)
+        1       pminc(point25,y)
+        1       pminc(point26,y)
+        1       pminc(point27,y)
+        1       pminc(point28,y)
+        1       pminc(point29,y)
+        1       pminc(point30,y)
+        1       pminc(point31,y)
+        1       pminc(point32,y)
+        1       pminc(point33,y)
+        1       pminc(point34,y)
+        1       pminc(point35,y)
+        1       pminc(point36,y)
+        1       pminc(point37,y)
+        1       pminc(point38,y)
+        1       pminc(point39,y)
+        1       pminc(point40,y)
+        1       pminc(point41,y)
+        1       pminc(point42,y)
+        1       pminc(point43,y)
+        1       pminc(point44,y)
+        1       pminc(point45,y)
+        1       pminc(point46,y)
+        1       pminc(point47,y)
+        1       pminc(point48,y)
+        1       pminc(point49,y)
+        1       pminc(point50,y)
+
+
+---- pc  
+
+pc(point1,x)
+                (.LO, .L, .UP, .M = -INF, 2.65713874831795, +INF, 0)
+        1       pminc(point1,x)
+       (0.1166) pinside(point1)
+
+pc(point1,y)
+                (.LO, .L, .UP, .M = -INF, 2.77067256496332, +INF, 0)
+        1       pminc(point1,y)
+       (0.1215) pinside(point1)
+
+pc(point2,x)
+                (.LO, .L, .UP, .M = -INF, -2.35975211863174, +INF, 0)
+        1       pminc(point2,x)
+      (-0.1035) pinside(point2)
+
+REMAINING 97 ENTRIES SKIPPED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 104
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 8.280E-03, 4.679E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.224E-05, 4.460E+01] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 104
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS          151
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          106
+NON ZERO ELEMENTS           454     NON LINEAR N-Z            253
+CODE LENGTH                 709     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 104
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  104
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE                0.0031
+
+ RESOURCE USAGE, LIMIT          0.032 10000000000.000
+ ITERATION COUNT, LIMIT         3    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T   version 4.39.0
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 151 constraints and 106 variables
+    with 454 Jacobian elements, 253 of which are nonlinear.
+ 
+    The post-triangular part of the model has 1 constraints and variables.
+    There are 100 definitional constraints and defined variables.
+ 
+    Preprocessed model has 50 constraints and 5 variables
+    with 250 Jacobian elements, 250 of which are nonlinear.
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.004 seconds
+   of which: Function evaluations             0.001 = 25.0%
+             1st Derivative evaluations       0.001 = 25.0%
+             Interval derivative evals        0.000 =  0.0%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU determina~          .              .              .             1.0000      
+
+  determinant  det(A)
+
+---- EQU pminc  p(i)-c
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .x         3.3401         3.3401         3.3401   -4.33681E-19      
+point1 .y         3.8265         3.8265         3.8265   1.626303E-19      
+point2 .x        -1.6768        -1.6768        -1.6768         EPS         
+point2 .y        -1.6478        -1.6478        -1.6478         EPS         
+point3 .x        -3.9645        -3.9645        -3.9645         0.0003      
+point3 .y        -0.1223        -0.1223        -0.1223        -0.0001      
+point4 .x         2.4285         2.4285         2.4285         EPS         
+point4 .y         4.1111         4.1111         4.1111         EPS         
+point5 .x         3.2662         3.2662         3.2662         EPS         
+point5 .y         4.1574         4.1574         4.1574         EPS         
+point6 .x         0.1096         0.1096         0.1096         EPS         
+point6 .y         2.0797         2.0797         2.0797         EPS         
+point7 .x         1.4351         1.4351         1.4351         EPS         
+point7 .y         2.3715         2.3715         2.3715         EPS         
+point8 .x         4.2583         4.2583         4.2583        -0.0010      
+point8 .y         1.5653         1.5653         1.5653         0.0005      
+point9 .x        -2.1916        -2.1916        -2.1916         EPS         
+point9 .y         0.1141         0.1141         0.1141         EPS         
+point10.x        -0.3621        -0.3621        -0.3621         EPS         
+point10.y        -1.8863        -1.8863        -1.8863         EPS         
+point11.x        -1.1304        -1.1304        -1.1304         EPS         
+point11.y        -0.1287        -0.1287        -0.1287         EPS         
+point12.x        -1.6655        -1.6655        -1.6655         EPS         
+point12.y        -3.5720        -3.5720        -3.5720         EPS         
+point13.x        -1.7287        -1.7287        -1.7287         EPS         
+point13.y        -1.4118        -1.4118        -1.4118         EPS         
+point14.x         0.0588         0.0588         0.0588         EPS         
+point14.y         0.0852         0.0852         0.0852         EPS         
+point15.x         1.8904         1.8904         1.8904         EPS         
+point15.y         1.1947         1.1947         1.1947         EPS         
+point16.x        -3.0016        -3.0016        -3.0016         EPS         
+point16.y        -2.9709        -2.9709        -2.9709         EPS         
+point17.x         2.8477         2.8477         2.8477         EPS         
+point17.y        -0.5026        -0.5026        -0.5026         EPS         
+point18.x         2.2226         2.2226         2.2226         EPS         
+point18.y         1.7359         1.7359         1.7359         EPS         
+point19.x         3.6873         3.6873         3.6873         EPS         
+point19.y         2.1528         2.1528         2.1528         EPS         
+point20.x        -1.5628        -1.5628        -1.5628         EPS         
+point20.y        -2.1116        -2.1116        -2.1116         EPS         
+point21.x         4.5706         4.5706         4.5706         EPS         
+point21.y         3.1325         3.1325         3.1325         EPS         
+point22.x        -0.1863        -0.1863        -0.1863         EPS         
+point22.y         1.4401         1.4401         1.4401         EPS         
+point23.x         2.0131         2.0131         2.0131         EPS         
+point23.y         4.6002         4.6002         4.6002         EPS         
+point24.x         2.2864         2.2864         2.2864         EPS         
+point24.y         0.0246         0.0246         0.0246         EPS         
+point25.x        -2.1395        -2.1395        -2.1395         EPS         
+point25.y        -0.2656        -0.2656        -0.2656         EPS         
+point26.x        -0.0083        -0.0083        -0.0083         EPS         
+point26.y         0.9500         0.9500         0.9500         EPS         
+point27.x         0.6794         0.6794         0.6794         EPS         
+point27.y         0.7429         0.7429         0.7429         EPS         
+point28.x        -4.1754        -4.1754        -4.1754         EPS         
+point28.y        -3.3406        -3.3406        -3.3406         EPS         
+point29.x         0.4828         0.4828         0.4828         0.0006      
+point29.y         4.6787         4.6787         4.6787        -0.0009      
+point30.x         1.5335         1.5335         1.5335         EPS         
+point30.y         2.9673         2.9673         2.9673         EPS         
+point31.x        -0.9899        -0.9899        -0.9899         EPS         
+point31.y        -1.2308        -1.2308        -1.2308         EPS         
+point32.x        -0.3073        -0.3073        -0.3073         EPS         
+point32.y        -0.5855        -0.5855        -0.5855         EPS         
+point33.x        -1.2443        -1.2443        -1.2443         EPS         
+point33.y        -2.4436        -2.4436        -2.4436         EPS         
+point34.x         2.1305         2.1305         2.1305         EPS         
+point34.y         3.0830         3.0830         3.0830         EPS         
+point35.x        -3.5688        -3.5688        -3.5688         0.0002      
+point35.y        -4.1894        -4.1894        -4.1894         0.0006      
+point36.x        -3.5324        -3.5324        -3.5324         EPS         
+point36.y        -4.0771        -4.0771        -4.0771         EPS         
+point37.x        -3.9966        -3.9966        -3.9966         EPS         
+point37.y        -3.0408        -3.0408        -3.0408         EPS         
+point38.x        -1.7925        -1.7925        -1.7925         EPS         
+point38.y        -0.6171        -0.6171        -0.6171         EPS         
+point39.x         1.6954         1.6954         1.6954         EPS         
+point39.y         2.0392         2.0392         2.0392         EPS         
+point40.x         4.6246         4.6246         4.6246   -4.107308E-5      
+point40.y         2.5353         2.5353         2.5353   1.1940274E-5      
+point41.x        -1.8310        -1.8310        -1.8310         EPS         
+point41.y        -2.2661        -2.2661        -2.2661         EPS         
+point42.x        -2.2201        -2.2201        -2.2201         EPS         
+point42.y        -2.2867        -2.2867        -2.2867         EPS         
+point43.x        -0.4940        -0.4940        -0.4940         EPS         
+point43.y         3.7274         3.7274         3.7274         EPS         
+point44.x        -3.0342        -3.0342        -3.0342         EPS         
+point44.y        -3.1365        -3.1365        -3.1365         EPS         
+point45.x        -1.2613        -1.2613        -1.2613         EPS         
+point45.y         1.0344         1.0344         1.0344         EPS         
+point46.x        -0.4404        -0.4404        -0.4404         EPS         
+point46.y         1.7621         1.7621         1.7621         EPS         
+point47.x        -0.4113        -0.4113        -0.4113         EPS         
+point47.y        -2.4138        -2.4138        -2.4138         EPS         
+point48.x        -2.3906        -2.3906        -2.3906         EPS         
+point48.y        -1.0189        -1.0189        -1.0189         EPS         
+point49.x        -1.8624        -1.8624        -1.8624         EPS         
+point49.y        -0.6554        -0.6554        -0.6554         EPS         
+point50.x        -2.5424        -2.5424        -2.5424         EPS         
+point50.y        -3.5670        -3.5670        -3.5670         EPS         
+
+---- EQU pinside  point p is inside ellipse
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.5513         1.0000          .          
+point2         -INF            0.2252         1.0000          .          
+point3         -INF            1.0000         1.0000         0.0005      
+point4         -INF            0.5066         1.0000          .          
+point5         -INF            0.5957         1.0000          .          
+point6         -INF            0.1445         1.0000          .          
+point7         -INF            0.1322         1.0000          .          
+point8         -INF            1.0000         1.0000         0.0019      
+point9         -INF            0.3052         1.0000          .          
+point10        -INF            0.3432         1.0000          .          
+point11        -INF            0.0684         1.0000          .          
+point12        -INF            0.7713         1.0000          .          
+point13        -INF            0.1978         1.0000          .          
+point14        -INF            0.0179         1.0000          .          
+point15        -INF            0.1697         1.0000          .          
+point16        -INF            0.5982         1.0000          .          
+point17        -INF            0.9312         1.0000          .          
+point18        -INF            0.2085         1.0000          .          
+point19        -INF            0.6270         1.0000          .          
+point20        -INF            0.3089         1.0000          .          
+point21        -INF            0.9129         1.0000          .          
+point22        -INF            0.0732         1.0000          .          
+point23        -INF            0.6718         1.0000          .          
+point24        -INF            0.5004         1.0000          .          
+point25        -INF            0.2494         1.0000          .          
+point26        -INF            0.0114         1.0000          .          
+point27        -INF            0.0198         1.0000          .          
+point28        -INF            0.9133         1.0000          .          
+point29        -INF            1.0000         1.0000         0.0018      
+point30        -INF            0.2272         1.0000          .          
+point31        -INF            0.1420         1.0000          .          
+point32        -INF            0.0681         1.0000          .          
+point33        -INF            0.4078         1.0000          .          
+point34        -INF            0.2723         1.0000          .          
+point35        -INF            1.0000         1.0000         0.0018      
+point36        -INF            0.9595         1.0000          .          
+point37        -INF            0.8196         1.0000          .          
+point38        -INF            0.1612         1.0000          .          
+point39        -INF            0.1238         1.0000          .          
+point40        -INF            1.0000         1.0000         0.0001      
+point41        -INF            0.3473         1.0000          .          
+point42        -INF            0.3733         1.0000          .          
+point43        -INF            0.8549         1.0000          .          
+point44        -INF            0.6395         1.0000          .          
+point45        -INF            0.2009         1.0000          .          
+point46        -INF            0.1667         1.0000          .          
+point47        -INF            0.5121         1.0000          .          
+point48        -INF            0.2793         1.0000          .          
+point49        -INF            0.1734         1.0000          .          
+point50        -INF            0.7262         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0031        +INF             .          
+---- VAR a11                 .             0.0748        +INF             .          
+---- VAR a22                 .             0.0686        +INF             .          
+---- VAR a12               -INF           -0.0452        +INF             .          
+
+---- VAR center  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+x        -INF            0.0998        +INF             .          
+y        -INF            0.6224        +INF             .          
+
+---- VAR pc  
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .x        -INF            3.2402        +INF             .          
+point1 .y        -INF            3.2041        +INF             .          
+point2 .x        -INF           -1.7767        +INF             .          
+point2 .y        -INF           -2.2703        +INF             .          
+point3 .x        -INF           -4.0644        +INF             .          
+point3 .y        -INF           -0.7448        +INF             .          
+point4 .x        -INF            2.3286        +INF             .          
+point4 .y        -INF            3.4887        +INF             .          
+point5 .x        -INF            3.1663        +INF             .          
+point5 .y        -INF            3.5350        +INF             .          
+point6 .x        -INF            0.0098        +INF             .          
+point6 .y        -INF            1.4572        +INF             .          
+point7 .x        -INF            1.3353        +INF             .          
+point7 .y        -INF            1.7491        +INF             .          
+point8 .x        -INF            4.1584        +INF             .          
+point8 .y        -INF            0.9428        +INF             .          
+point9 .x        -INF           -2.2915        +INF             .          
+point9 .y        -INF           -0.5084        +INF             .          
+point10.x        -INF           -0.4620        +INF             .          
+point10.y        -INF           -2.5088        +INF             .          
+point11.x        -INF           -1.2302        +INF             .          
+point11.y        -INF           -0.7511        +INF             .          
+point12.x        -INF           -1.7653        +INF             .          
+point12.y        -INF           -4.1945        +INF             .          
+point13.x        -INF           -1.8285        +INF             .          
+point13.y        -INF           -2.0343        +INF             .          
+point14.x        -INF           -0.0411        +INF             .          
+point14.y        -INF           -0.5373        +INF             .          
+point15.x        -INF            1.7906        +INF             .          
+point15.y        -INF            0.5722        +INF             .          
+point16.x        -INF           -3.1014        +INF             .          
+point16.y        -INF           -3.5933        +INF             .          
+point17.x        -INF            2.7478        +INF             .          
+point17.y        -INF           -1.1250        +INF             .          
+point18.x        -INF            2.1228        +INF             .          
+point18.y        -INF            1.1134        +INF             .          
+point19.x        -INF            3.5875        +INF             .          
+point19.y        -INF            1.5303        +INF             .          
+point20.x        -INF           -1.6626        +INF             .          
+point20.y        -INF           -2.7340        +INF             .          
+point21.x        -INF            4.4708        +INF             .          
+point21.y        -INF            2.5101        +INF             .          
+point22.x        -INF           -0.2861        +INF             .          
+point22.y        -INF            0.8177        +INF             .          
+point23.x        -INF            1.9132        +INF             .          
+point23.y        -INF            3.9777        +INF             .          
+point24.x        -INF            2.1866        +INF             .          
+point24.y        -INF           -0.5978        +INF             .          
+point25.x        -INF           -2.2393        +INF             .          
+point25.y        -INF           -0.8881        +INF             .          
+point26.x        -INF           -0.1081        +INF             .          
+point26.y        -INF            0.3276        +INF             .          
+point27.x        -INF            0.5796        +INF             .          
+point27.y        -INF            0.1204        +INF             .          
+point28.x        -INF           -4.2752        +INF             .          
+point28.y        -INF           -3.9630        +INF             .          
+point29.x        -INF            0.3829        +INF             .          
+point29.y        -INF            4.0563        +INF             .          
+point30.x        -INF            1.4337        +INF             .          
+point30.y        -INF            2.3449        +INF             .          
+point31.x        -INF           -1.0897        +INF             .          
+point31.y        -INF           -1.8532        +INF             .          
+point32.x        -INF           -0.4071        +INF             .          
+point32.y        -INF           -1.2080        +INF             .          
+point33.x        -INF           -1.3442        +INF             .          
+point33.y        -INF           -3.0661        +INF             .          
+point34.x        -INF            2.0307        +INF             .          
+point34.y        -INF            2.4606        +INF             .          
+point35.x        -INF           -3.6687        +INF             .          
+point35.y        -INF           -4.8118        +INF             .          
+point36.x        -INF           -3.6323        +INF             .          
+point36.y        -INF           -4.6995        +INF             .          
+point37.x        -INF           -4.0965        +INF             .          
+point37.y        -INF           -3.6633        +INF             .          
+point38.x        -INF           -1.8924        +INF             .          
+point38.y        -INF           -1.2396        +INF             .          
+point39.x        -INF            1.5956        +INF             .          
+point39.y        -INF            1.4168        +INF             .          
+point40.x        -INF            4.5248        +INF             .          
+point40.y        -INF            1.9129        +INF             .          
+point41.x        -INF           -1.9308        +INF             .          
+point41.y        -INF           -2.8885        +INF             .          
+point42.x        -INF           -2.3199        +INF             .          
+point42.y        -INF           -2.9091        +INF             .          
+point43.x        -INF           -0.5938        +INF             .          
+point43.y        -INF            3.1050        +INF             .          
+point44.x        -INF           -3.1341        +INF             .          
+point44.y        -INF           -3.7590        +INF             .          
+point45.x        -INF           -1.3611        +INF             .          
+point45.y        -INF            0.4119        +INF             .          
+point46.x        -INF           -0.5402        +INF             .          
+point46.y        -INF            1.1396        +INF             .          
+point47.x        -INF           -0.5111        +INF             .          
+point47.y        -INF           -3.0363        +INF             .          
+point48.x        -INF           -2.4905        +INF             .          
+point48.y        -INF           -1.6414        +INF             .          
+point49.x        -INF           -1.9622        +INF             .          
+point49.y        -INF           -1.2779        +INF             .          
+point50.x        -INF           -2.6423        +INF             .          
+point50.y        -INF           -4.1894        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    106 VARIABLE center.L  
+
+x 0.100,    y 0.622
+
+
+----    106 VARIABLE a11.L                 =        0.075  
+            VARIABLE a22.L                 =        0.069  
+            VARIABLE a12.L                 =       -0.045  
+            VARIABLE z.L                   =        0.003  
+
+----    109 PARAMETER Area                 =       56.507  
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using NLP From line 147
+
+
+---- determinant  =E=  det(A)
+
+determinant..  z - (0.148104618808469)*a11 - (0.148104618808469)*a22 + (0)*a12 =E= 0 ; (LHS = 0)
+     
+
+---- defap1  =E=  first element of Ap+b
+
+defap1(point1)..  - 3.34006070629902*a11 - 3.82650596041958*a12 + ap1(point1) - b(x) =E= 0 ; (LHS = 0)
+     
+defap1(point2)..  1.67683016065067*a11 + 1.64781319444317*a12 + ap1(point2) - b(x) =E= 0 ; (LHS = 0)
+     
+defap1(point3)..  3.96451414541853*a11 + 0.122338436797356*a12 + ap1(point3) - b(x) =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- defap2  =E=  second element of Ap+b
+
+defap2(point1)..  - 3.82650596041958*a22 - 3.34006070629902*a12 + ap2(point1) - b(y) =E= 0 ; (LHS = 0)
+     
+defap2(point2)..  1.64781319444317*a22 + 1.67683016065067*a12 + ap2(point2) - b(y) =E= 0 ; (LHS = 0)
+     
+defap2(point3)..  0.122338436797356*a22 + 3.96451414541853*a12 + ap2(point3) - b(y) =E= 0 ; (LHS = 0)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+
+---- pinside2  =L=  
+
+pinside2(point1)..  (0.787069042881688)*ap1(point1) + (0.820698808153953)*ap2(point1) =L= 1 ; (LHS = 0.323256052992004)
+     
+pinside2(point2)..  - (0.698980376024863)*ap1(point2) - (0.80084509517975)*ap2(point2) =L= 1 ; (LHS = 0.28248160813533)
+     
+pinside2(point3)..  - (1.37661350506143)*ap1(point3) - (0.348985380213597)*ap2(point3) =L= 1 ; (LHS = 0.504213884480088)
+     
+REMAINING 47 ENTRIES SKIPPED
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using NLP From line 147
+
+
+---- z  
+
+z
+                (.LO, .L, .UP, .M = -INF, 0.0219349781124021, +INF, 0)
+        1       determinant
+
+
+---- a11  
+
+a11
+                (.LO, .L, .UP, .M = 0, 0.148104618808469, +INF, 0)
+      (-0.1481) determinant
+       -3.3401  defap1(point1)
+        1.6768  defap1(point2)
+        3.9645  defap1(point3)
+       -2.4285  defap1(point4)
+       -3.2662  defap1(point5)
+       -0.1096  defap1(point6)
+       -1.4351  defap1(point7)
+       -4.2583  defap1(point8)
+        2.1916  defap1(point9)
+        0.3621  defap1(point10)
+        1.1304  defap1(point11)
+        1.6655  defap1(point12)
+        1.7287  defap1(point13)
+       -0.0588  defap1(point14)
+       -1.8904  defap1(point15)
+        3.0016  defap1(point16)
+       -2.8477  defap1(point17)
+       -2.2226  defap1(point18)
+       -3.6873  defap1(point19)
+        1.5628  defap1(point20)
+       -4.5706  defap1(point21)
+        0.1863  defap1(point22)
+       -2.0131  defap1(point23)
+       -2.2864  defap1(point24)
+        2.1395  defap1(point25)
+        0.0083  defap1(point26)
+       -0.6794  defap1(point27)
+        4.1754  defap1(point28)
+       -0.4828  defap1(point29)
+       -1.5335  defap1(point30)
+        0.9899  defap1(point31)
+        0.3073  defap1(point32)
+        1.2443  defap1(point33)
+       -2.1305  defap1(point34)
+        3.5688  defap1(point35)
+        3.5324  defap1(point36)
+        3.9966  defap1(point37)
+        1.7925  defap1(point38)
+       -1.6954  defap1(point39)
+       -4.6246  defap1(point40)
+        1.831   defap1(point41)
+        2.2201  defap1(point42)
+        0.494   defap1(point43)
+        3.0342  defap1(point44)
+        1.2613  defap1(point45)
+        0.4404  defap1(point46)
+        0.4113  defap1(point47)
+        2.3906  defap1(point48)
+        1.8624  defap1(point49)
+        2.5424  defap1(point50)
+
+
+---- a22  
+
+a22
+                (.LO, .L, .UP, .M = 0, 0.148104618808469, +INF, 0)
+      (-0.1481) determinant
+       -3.8265  defap2(point1)
+        1.6478  defap2(point2)
+        0.1223  defap2(point3)
+       -4.1111  defap2(point4)
+       -4.1574  defap2(point5)
+       -2.0797  defap2(point6)
+       -2.3715  defap2(point7)
+       -1.5653  defap2(point8)
+       -0.1141  defap2(point9)
+        1.8863  defap2(point10)
+        0.1287  defap2(point11)
+        3.572   defap2(point12)
+        1.4118  defap2(point13)
+       -0.0852  defap2(point14)
+       -1.1947  defap2(point15)
+        2.9709  defap2(point16)
+        0.5026  defap2(point17)
+       -1.7359  defap2(point18)
+       -2.1528  defap2(point19)
+        2.1116  defap2(point20)
+       -3.1325  defap2(point21)
+       -1.4401  defap2(point22)
+       -4.6002  defap2(point23)
+       -0.0246  defap2(point24)
+        0.2656  defap2(point25)
+       -0.95    defap2(point26)
+       -0.7429  defap2(point27)
+        3.3406  defap2(point28)
+       -4.6787  defap2(point29)
+       -2.9673  defap2(point30)
+        1.2308  defap2(point31)
+        0.5855  defap2(point32)
+        2.4436  defap2(point33)
+       -3.083   defap2(point34)
+        4.1894  defap2(point35)
+        4.0771  defap2(point36)
+        3.0408  defap2(point37)
+        0.6171  defap2(point38)
+       -2.0392  defap2(point39)
+       -2.5353  defap2(point40)
+        2.2661  defap2(point41)
+        2.2867  defap2(point42)
+       -3.7274  defap2(point43)
+        3.1365  defap2(point44)
+       -1.0344  defap2(point45)
+       -1.7621  defap2(point46)
+        2.4138  defap2(point47)
+        1.0189  defap2(point48)
+        0.6554  defap2(point49)
+        3.567   defap2(point50)
+
+
+---- a12  
+
+a12
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+       (0)      determinant
+       -3.8265  defap1(point1)
+        1.6478  defap1(point2)
+        0.1223  defap1(point3)
+       -4.1111  defap1(point4)
+       -4.1574  defap1(point5)
+       -2.0797  defap1(point6)
+       -2.3715  defap1(point7)
+       -1.5653  defap1(point8)
+       -0.1141  defap1(point9)
+        1.8863  defap1(point10)
+        0.1287  defap1(point11)
+        3.572   defap1(point12)
+        1.4118  defap1(point13)
+       -0.0852  defap1(point14)
+       -1.1947  defap1(point15)
+        2.9709  defap1(point16)
+        0.5026  defap1(point17)
+       -1.7359  defap1(point18)
+       -2.1528  defap1(point19)
+        2.1116  defap1(point20)
+       -3.1325  defap1(point21)
+       -1.4401  defap1(point22)
+       -4.6002  defap1(point23)
+       -0.0246  defap1(point24)
+        0.2656  defap1(point25)
+       -0.95    defap1(point26)
+       -0.7429  defap1(point27)
+        3.3406  defap1(point28)
+       -4.6787  defap1(point29)
+       -2.9673  defap1(point30)
+        1.2308  defap1(point31)
+        0.5855  defap1(point32)
+        2.4436  defap1(point33)
+       -3.083   defap1(point34)
+        4.1894  defap1(point35)
+        4.0771  defap1(point36)
+        3.0408  defap1(point37)
+        0.6171  defap1(point38)
+       -2.0392  defap1(point39)
+       -2.5353  defap1(point40)
+        2.2661  defap1(point41)
+        2.2867  defap1(point42)
+       -3.7274  defap1(point43)
+        3.1365  defap1(point44)
+       -1.0344  defap1(point45)
+       -1.7621  defap1(point46)
+        2.4138  defap1(point47)
+        1.0189  defap1(point48)
+        0.6554  defap1(point49)
+        3.567   defap1(point50)
+       -3.3401  defap2(point1)
+        1.6768  defap2(point2)
+        3.9645  defap2(point3)
+       -2.4285  defap2(point4)
+       -3.2662  defap2(point5)
+       -0.1096  defap2(point6)
+       -1.4351  defap2(point7)
+       -4.2583  defap2(point8)
+        2.1916  defap2(point9)
+        0.3621  defap2(point10)
+        1.1304  defap2(point11)
+        1.6655  defap2(point12)
+        1.7287  defap2(point13)
+       -0.0588  defap2(point14)
+       -1.8904  defap2(point15)
+        3.0016  defap2(point16)
+       -2.8477  defap2(point17)
+       -2.2226  defap2(point18)
+       -3.6873  defap2(point19)
+        1.5628  defap2(point20)
+       -4.5706  defap2(point21)
+        0.1863  defap2(point22)
+       -2.0131  defap2(point23)
+       -2.2864  defap2(point24)
+        2.1395  defap2(point25)
+        0.0083  defap2(point26)
+       -0.6794  defap2(point27)
+        4.1754  defap2(point28)
+       -0.4828  defap2(point29)
+       -1.5335  defap2(point30)
+        0.9899  defap2(point31)
+        0.3073  defap2(point32)
+        1.2443  defap2(point33)
+       -2.1305  defap2(point34)
+        3.5688  defap2(point35)
+        3.5324  defap2(point36)
+        3.9966  defap2(point37)
+        1.7925  defap2(point38)
+       -1.6954  defap2(point39)
+       -4.6246  defap2(point40)
+        1.831   defap2(point41)
+        2.2201  defap2(point42)
+        0.494   defap2(point43)
+        3.0342  defap2(point44)
+        1.2613  defap2(point45)
+        0.4404  defap2(point46)
+        0.4113  defap2(point47)
+        2.3906  defap2(point48)
+        1.8624  defap2(point49)
+        2.5424  defap2(point50)
+
+
+---- ap1  
+
+ap1(point1)
+                (.LO, .L, .UP, .M = -INF, 0.393534521440844, +INF, 0)
+        1       defap1(point1)
+       (0.7871) pinside2(point1)
+
+ap1(point2)
+                (.LO, .L, .UP, .M = -INF, -0.349490188012432, +INF, 0)
+        1       defap1(point2)
+      (-0.699)  pinside2(point2)
+
+ap1(point3)
+                (.LO, .L, .UP, .M = -INF, -0.688306752530716, +INF, 0)
+        1       defap1(point3)
+      (-1.3766) pinside2(point3)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- ap2  
+
+ap2(point1)
+                (.LO, .L, .UP, .M = -INF, 0.410349404076977, +INF, 0)
+        1       defap2(point1)
+       (0.8207) pinside2(point1)
+
+ap2(point2)
+                (.LO, .L, .UP, .M = -INF, -0.400422547589875, +INF, 0)
+        1       defap2(point2)
+      (-0.8008) pinside2(point2)
+
+ap2(point3)
+                (.LO, .L, .UP, .M = -INF, -0.174492690106798, +INF, 0)
+        1       defap2(point3)
+      (-0.349)  pinside2(point3)
+
+REMAINING 47 ENTRIES SKIPPED
+
+---- b  
+
+b(x)
+                (.LO, .L, .UP, .M = -INF, -0.10114389626272, +INF, 0)
+       -1       defap1(point1)
+       -1       defap1(point2)
+       -1       defap1(point3)
+       -1       defap1(point4)
+       -1       defap1(point5)
+       -1       defap1(point6)
+       -1       defap1(point7)
+       -1       defap1(point8)
+       -1       defap1(point9)
+       -1       defap1(point10)
+       -1       defap1(point11)
+       -1       defap1(point12)
+       -1       defap1(point13)
+       -1       defap1(point14)
+       -1       defap1(point15)
+       -1       defap1(point16)
+       -1       defap1(point17)
+       -1       defap1(point18)
+       -1       defap1(point19)
+       -1       defap1(point20)
+       -1       defap1(point21)
+       -1       defap1(point22)
+       -1       defap1(point23)
+       -1       defap1(point24)
+       -1       defap1(point25)
+       -1       defap1(point26)
+       -1       defap1(point27)
+       -1       defap1(point28)
+       -1       defap1(point29)
+       -1       defap1(point30)
+       -1       defap1(point31)
+       -1       defap1(point32)
+       -1       defap1(point33)
+       -1       defap1(point34)
+       -1       defap1(point35)
+       -1       defap1(point36)
+       -1       defap1(point37)
+       -1       defap1(point38)
+       -1       defap1(point39)
+       -1       defap1(point40)
+       -1       defap1(point41)
+       -1       defap1(point42)
+       -1       defap1(point43)
+       -1       defap1(point44)
+       -1       defap1(point45)
+       -1       defap1(point46)
+       -1       defap1(point47)
+       -1       defap1(point48)
+       -1       defap1(point49)
+       -1       defap1(point50)
+
+b(y)
+                (.LO, .L, .UP, .M = -INF, -0.156373802559302, +INF, 0)
+       -1       defap2(point1)
+       -1       defap2(point2)
+       -1       defap2(point3)
+       -1       defap2(point4)
+       -1       defap2(point5)
+       -1       defap2(point6)
+       -1       defap2(point7)
+       -1       defap2(point8)
+       -1       defap2(point9)
+       -1       defap2(point10)
+       -1       defap2(point11)
+       -1       defap2(point12)
+       -1       defap2(point13)
+       -1       defap2(point14)
+       -1       defap2(point15)
+       -1       defap2(point16)
+       -1       defap2(point17)
+       -1       defap2(point18)
+       -1       defap2(point19)
+       -1       defap2(point20)
+       -1       defap2(point21)
+       -1       defap2(point22)
+       -1       defap2(point23)
+       -1       defap2(point24)
+       -1       defap2(point25)
+       -1       defap2(point26)
+       -1       defap2(point27)
+       -1       defap2(point28)
+       -1       defap2(point29)
+       -1       defap2(point30)
+       -1       defap2(point31)
+       -1       defap2(point32)
+       -1       defap2(point33)
+       -1       defap2(point34)
+       -1       defap2(point35)
+       -1       defap2(point36)
+       -1       defap2(point37)
+       -1       defap2(point38)
+       -1       defap2(point39)
+       -1       defap2(point40)
+       -1       defap2(point41)
+       -1       defap2(point42)
+       -1       defap2(point43)
+       -1       defap2(point44)
+       -1       defap2(point45)
+       -1       defap2(point46)
+       -1       defap2(point47)
+       -1       defap2(point48)
+       -1       defap2(point49)
+       -1       defap2(point50)
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using NLP From line 147
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.036E-03, 4.679E+00] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using NLP From line 147
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS          151
+BLOCKS OF VARIABLES           7     SINGLE VARIABLES          106
+NON ZERO ELEMENTS           504     NON LINEAR N-Z            103
+CODE LENGTH                 359     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.015 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using NLP From line 147
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    NLP                 DIRECTION  MAXIMIZE
+     SOLVER  CONOPT              FROM LINE  147
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE                0.0556
+
+ RESOURCE USAGE, LIMIT          0.031 10000000000.000
+ ITERATION COUNT, LIMIT         4    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T   version 4.39.0
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 151 constraints and 106 variables
+    with 504 Jacobian elements, 103 of which are nonlinear.
+ 
+    The post-triangular part of the model has 1 constraints and variables.
+ 
+    Preprocessed model has 150 constraints and 105 variables
+    with 500 Jacobian elements, 100 of which are nonlinear.
+ 
+ ** Optimal solution. There are no superbasic variables.
+ 
+ 
+ CONOPT time Total                            0.005 seconds
+   of which: Function evaluations             0.001 = 20.0%
+             1st Derivative evaluations       0.000 =  0.0%
+             Interval derivative evals        0.002 = 40.0%
+ 
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU determina~          .              .              .             1.0000      
+
+  determinant  det(A)
+
+---- EQU defap1  first element of Ap+b
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .              .             EPS         
+point2           .              .              .             EPS         
+point3           .              .              .             0.0096      
+point4           .              .              .             EPS         
+point5           .              .              .             EPS         
+point6           .              .              .             EPS         
+point7           .              .              .             EPS         
+point8           .              .              .            -0.0339      
+point9           .              .              .             EPS         
+point10          .              .              .             EPS         
+point11          .              .              .             EPS         
+point12          .              .              .             EPS         
+point13          .              .              .             EPS         
+point14          .              .              .             EPS         
+point15          .              .              .             EPS         
+point16          .              .              .             EPS         
+point17          .              .              .             EPS         
+point18          .              .              .             EPS         
+point19          .              .              .             EPS         
+point20          .              .              .             EPS         
+point21          .              .              .             EPS         
+point22          .              .              .             EPS         
+point23          .              .              .             EPS         
+point24          .              .              .             EPS         
+point25          .              .              .             EPS         
+point26          .              .              .             EPS         
+point27          .              .              .             EPS         
+point28          .              .              .             EPS         
+point29          .              .              .             0.0086      
+point30          .              .              .             EPS         
+point31          .              .              .             EPS         
+point32          .              .              .             EPS         
+point33          .              .              .             EPS         
+point34          .              .              .             EPS         
+point35          .              .              .             0.0172      
+point36          .              .              .             EPS         
+point37          .              .              .             EPS         
+point38          .              .              .             EPS         
+point39          .              .              .             EPS         
+point40          .              .              .            -0.0015      
+point41          .              .              .             EPS         
+point42          .              .              .             EPS         
+point43          .              .              .             EPS         
+point44          .              .              .             EPS         
+point45          .              .              .             EPS         
+point46          .              .              .             EPS         
+point47          .              .              .             EPS         
+point48          .              .              .             EPS         
+point49          .              .              .             EPS         
+point50          .              .              .             EPS         
+
+---- EQU defap2  second element of Ap+b
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .              .             EPS         
+point2           .              .              .             EPS         
+point3           .              .              .            -0.0018      
+point4           .              .              .             EPS         
+point5           .              .              .             EPS         
+point6           .              .              .             EPS         
+point7           .              .              .             EPS         
+point8           .              .              .             0.0048      
+point9           .              .              .             EPS         
+point10          .              .              .             EPS         
+point11          .              .              .             EPS         
+point12          .              .              .             EPS         
+point13          .              .              .             EPS         
+point14          .              .              .             EPS         
+point15          .              .              .             EPS         
+point16          .              .              .             EPS         
+point17          .              .              .             EPS         
+point18          .              .              .             EPS         
+point19          .              .              .             EPS         
+point20          .              .              .             EPS         
+point21          .              .              .             EPS         
+point22          .              .              .             EPS         
+point23          .              .              .             EPS         
+point24          .              .              .             EPS         
+point25          .              .              .             EPS         
+point26          .              .              .             EPS         
+point27          .              .              .             EPS         
+point28          .              .              .             EPS         
+point29          .              .              .            -0.0314      
+point30          .              .              .             EPS         
+point31          .              .              .             EPS         
+point32          .              .              .             EPS         
+point33          .              .              .             EPS         
+point34          .              .              .             EPS         
+point35          .              .              .             0.0284      
+point36          .              .              .             EPS         
+point37          .              .              .             EPS         
+point38          .              .              .             EPS         
+point39          .              .              .             EPS         
+point40          .              .              .            -0.0001      
+point41          .              .              .             EPS         
+point42          .              .              .             EPS         
+point43          .              .              .             EPS         
+point44          .              .              .             EPS         
+point45          .              .              .             EPS         
+point46          .              .              .             EPS         
+point47          .              .              .             EPS         
+point48          .              .              .             EPS         
+point49          .              .              .             EPS         
+point50          .              .              .             EPS         
+
+---- EQU pinside2  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.5513         1.0000          .          
+point2         -INF            0.2252         1.0000          .          
+point3         -INF            1.0000         1.0000         0.0049      
+point4         -INF            0.5066         1.0000          .          
+point5         -INF            0.5957         1.0000          .          
+point6         -INF            0.1445         1.0000          .          
+point7         -INF            0.1322         1.0000          .          
+point8         -INF            1.0000         1.0000         0.0171      
+point9         -INF            0.3052         1.0000          .          
+point10        -INF            0.3432         1.0000          .          
+point11        -INF            0.0684         1.0000          .          
+point12        -INF            0.7713         1.0000          .          
+point13        -INF            0.1978         1.0000          .          
+point14        -INF            0.0179         1.0000          .          
+point15        -INF            0.1697         1.0000          .          
+point16        -INF            0.5982         1.0000          .          
+point17        -INF            0.9312         1.0000          .          
+point18        -INF            0.2085         1.0000          .          
+point19        -INF            0.6270         1.0000          .          
+point20        -INF            0.3089         1.0000          .          
+point21        -INF            0.9129         1.0000          .          
+point22        -INF            0.0732         1.0000          .          
+point23        -INF            0.6718         1.0000          .          
+point24        -INF            0.5004         1.0000          .          
+point25        -INF            0.2494         1.0000          .          
+point26        -INF            0.0114         1.0000          .          
+point27        -INF            0.0198         1.0000          .          
+point28        -INF            0.9133         1.0000          .          
+point29        -INF            1.0000         1.0000         0.0163      
+point30        -INF            0.2272         1.0000          .          
+point31        -INF            0.1420         1.0000          .          
+point32        -INF            0.0681         1.0000          .          
+point33        -INF            0.4078         1.0000          .          
+point34        -INF            0.2723         1.0000          .          
+point35        -INF            1.0000         1.0000         0.0166      
+point36        -INF            0.9595         1.0000          .          
+point37        -INF            0.8196         1.0000          .          
+point38        -INF            0.1612         1.0000          .          
+point39        -INF            0.1238         1.0000          .          
+point40        -INF            1.0000         1.0000         0.0007      
+point41        -INF            0.3473         1.0000          .          
+point42        -INF            0.3733         1.0000          .          
+point43        -INF            0.8549         1.0000          .          
+point44        -INF            0.6395         1.0000          .          
+point45        -INF            0.2009         1.0000          .          
+point46        -INF            0.1667         1.0000          .          
+point47        -INF            0.5121         1.0000          .          
+point48        -INF            0.2793         1.0000          .          
+point49        -INF            0.1734         1.0000          .          
+point50        -INF            0.7262         1.0000          .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            0.0556        +INF             .          
+---- VAR a11                 .             0.2584        +INF             .          
+---- VAR a22                 .             0.2462        +INF             .          
+---- VAR a12               -INF           -0.0896        +INF             .          
+
+---- VAR ap1  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.5502        +INF             .          
+point2         -INF           -0.2557        +INF             .          
+point3         -INF           -0.9835        +INF             .          
+point4         -INF            0.2892        +INF             .          
+point5         -INF            0.5015        +INF             .          
+point6         -INF           -0.1280        +INF             .          
+point7         -INF            0.1883        +INF             .          
+point8         -INF            0.9901        +INF             .          
+point9         -INF           -0.5466        +INF             .          
+point10        -INF            0.1054        +INF             .          
+point11        -INF           -0.2506        +INF             .          
+point12        -INF           -0.0804        +INF             .          
+point13        -INF           -0.2902        +INF             .          
+point14        -INF            0.0375        +INF             .          
+point15        -INF            0.4114        +INF             .          
+point16        -INF           -0.4795        +INF             .          
+point17        -INF            0.8108        +INF             .          
+point18        -INF            0.4488        +INF             .          
+point19        -INF            0.7899        +INF             .          
+point20        -INF           -0.1847        +INF             .          
+point21        -INF            0.9304        +INF             .          
+point22        -INF           -0.1472        +INF             .          
+point23        -INF            0.1380        +INF             .          
+point24        -INF            0.6186        +INF             .          
+point25        -INF           -0.4991        +INF             .          
+point26        -INF           -0.0573        +INF             .          
+point27        -INF            0.1390        +INF             .          
+point28        -INF           -0.7497        +INF             .          
+point29        -INF           -0.2645        +INF             .          
+point30        -INF            0.1604        +INF             .          
+point31        -INF           -0.1155        +INF             .          
+point32        -INF            0.0030        +INF             .          
+point33        -INF           -0.0726        +INF             .          
+point34        -INF            0.3043        +INF             .          
+point35        -INF           -0.5169        +INF             .          
+point36        -INF           -0.5176        +INF             .          
+point37        -INF           -0.7303        +INF             .          
+point38        -INF           -0.3779        +INF             .          
+point39        -INF            0.2854        +INF             .          
+point40        -INF            0.9978        +INF             .          
+point41        -INF           -0.2401        +INF             .          
+point42        -INF           -0.3388        +INF             .          
+point43        -INF           -0.4316        +INF             .          
+point44        -INF           -0.4731        +INF             .          
+point45        -INF           -0.3886        +INF             .          
+point46        -INF           -0.2417        +INF             .          
+point47        -INF            0.1400        +INF             .          
+point48        -INF           -0.4965        +INF             .          
+point49        -INF           -0.3926        +INF             .          
+point50        -INF           -0.3074        +INF             .          
+
+---- VAR ap2  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1         -INF            0.4986        +INF             .          
+point2         -INF           -0.3998        +INF             .          
+point3         -INF            0.1808        +INF             .          
+point4         -INF            0.6503        +INF             .          
+point5         -INF            0.5867        +INF             .          
+point6         -INF            0.3579        +INF             .          
+point7         -INF            0.3110        +INF             .          
+point8         -INF           -0.1404        +INF             .          
+point9         -INF            0.0801        +INF             .          
+point10        -INF           -0.5763        +INF             .          
+point11        -INF           -0.0747        +INF             .          
+point12        -INF           -0.8746        +INF             .          
+point13        -INF           -0.3370        +INF             .          
+point14        -INF           -0.1286        +INF             .          
+point15        -INF           -0.0195        +INF             .          
+point16        -INF           -0.6069        +INF             .          
+point17        -INF           -0.5232        +INF             .          
+point18        -INF            0.0840        +INF             .          
+point19        -INF            0.0554        +INF             .          
+point20        -INF           -0.5242        +INF             .          
+point21        -INF            0.2175        +INF             .          
+point22        -INF            0.2270        +INF             .          
+point23        -INF            0.8080        +INF             .          
+point24        -INF           -0.3431        +INF             .          
+point25        -INF           -0.0180        +INF             .          
+point26        -INF            0.0903        +INF             .          
+point27        -INF           -0.0223        +INF             .          
+point28        -INF           -0.5927        +INF             .          
+point29        -INF            0.9644        +INF             .          
+point30        -INF            0.4489        +INF             .          
+point31        -INF           -0.3587        +INF             .          
+point32        -INF           -0.2609        +INF             .          
+point33        -INF           -0.6345        +INF             .          
+point34        -INF            0.4239        +INF             .          
+point35        -INF           -0.8560        +INF             .          
+point36        -INF           -0.8317        +INF             .          
+point37        -INF           -0.5349        +INF             .          
+point38        -INF           -0.1357        +INF             .          
+point39        -INF            0.2059        +INF             .          
+point40        -INF            0.0656        +INF             .          
+point41        -INF           -0.5382        +INF             .          
+point42        -INF           -0.5084        +INF             .          
+point43        -INF            0.8177        +INF             .          
+point44        -INF           -0.6447        +INF             .          
+point45        -INF            0.2234        +INF             .          
+point46        -INF            0.3290        +INF             .          
+point47        -INF           -0.7018        +INF             .          
+point48        -INF           -0.1810        +INF             .          
+point49        -INF           -0.1388        +INF             .          
+point50        -INF           -0.7948        +INF             .          
+
+---- VAR b  
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+x        -INF            0.0300        +INF             .          
+y        -INF           -0.1443        +INF             .          
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/11/26 18:36:10 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    149 VARIABLE a11.L                 =        0.258  
+            VARIABLE a22.L                 =        0.246  
+            VARIABLE a12.L                 =       -0.090  
+
+----    149 VARIABLE b.L  
+
+x  0.030,    y -0.144
+
+
+----    149 VARIABLE z.L                   =        0.056  
+
+----    152 PARAMETER Area                 =       56.507  
+
+
+EXECUTION TIME       =        0.109 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+
+
+USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestEllipseNLP.gms
+Output     C:\projects\OptimizationModels\Smallest Enclosing Ellipse\SmallestEllipseNLP.lst
