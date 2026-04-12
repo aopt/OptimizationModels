@@ -1,4 +1,5 @@
---- Job SmallestEllipseNLP.gms Start 04/11/26 18:36:10 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+
+--- Job SmallestEllipseNLP.gms Start 04/12/26 06:10:02 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\53\gmsprmNT.txt
     C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
@@ -19,7 +20,7 @@ Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
           Amsterdam Optimization Modeling Group                     DCE4744
           225a\gamslice.dat
           8ed7e271-7287-4ff2
-          node:23592203 mem:64 cores:8 ipport:63328 v:2                    
+          node:23592203 mem:64 cores:8 ipport:51228 v:2                    
           Evaluation license: Not for commercial or production use
           The time-limited license stops working on : Aug 30, 2026
 System information: 8 physical cores and 64 Gb physical memory detected
@@ -29,19 +30,19 @@ GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
 --- Initialize embedded library embpycclib64.dll
 --- Execute embedded library embpycclib64.dll
 n=50 seed=1234
---- SmallestEllipseNLP.gms(152) 3 Mb
---- Starting execution: elapsed 0:00:00.452
+--- SmallestEllipseNLP.gms(151) 3 Mb
+--- Starting execution: elapsed 0:00:00.441
 --- SmallestEllipseNLP.gms(91) 4 Mb
 --- Generating NLP model m1
 --- SmallestEllipseNLP.gms(104) 6 Mb
----   151 rows  106 columns  454 non-zeroes
----   709 nl-code  253 nl-non-zeroes
+---   37 rows  30 columns  112 non-zeroes
+---   177 nl-code  63 nl-non-zeroes
 --- Range statistics (absolute non-zero finite values)
---- RHS       [min, max] : [ 8.280E-03, 4.679E+00] - Zero values observed as well
+--- RHS       [min, max] : [ 1.223E-01, 4.679E+00] - Zero values observed as well
 --- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
---- Matrix    [min, max] : [ 1.224E-05, 4.460E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 8.780E-03, 4.460E+01] - Zero values observed as well
 --- SmallestEllipseNLP.gms(104) 4 Mb
---- Executing CONOPT (Solvelink=2): elapsed 0:00:00.455
+--- Executing CONOPT (Solvelink=2): elapsed 0:00:00.444
 
 CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
@@ -54,21 +55,23 @@ CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
     Will use up to 4 threads.
  
  
-    The user model has 151 constraints and 106 variables
-    with 454 Jacobian elements, 253 of which are nonlinear.
+    The user model has 37 constraints and 30 variables
+    with 112 Jacobian elements, 63 of which are nonlinear.
+    The Hessian of the Lagrangian has 25 elements on the diagonal,
+    61 elements below the diagonal, and 27 nonlinear variables.
  
     Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
-       0   0          7.4384942650E-15 (Input point)
+       0   0          2.7755575616E-15 (Input point)
  
     The post-triangular part of the model has 1 constraints and variables.
-    There are 100 definitional constraints and defined variables.
+    There are 24 definitional constraints and defined variables.
  
-    Preprocessed model has 50 constraints and 5 variables
-    with 250 Jacobian elements, 250 of which are nonlinear.
+    Preprocessed model has 12 constraints and 5 variables
+    with 60 Jacobian elements, 60 of which are nonlinear.
  
     Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
-                      2.2204460493E-16 (Full preprocessed model)
-                      2.2204460493E-16 (After scaling)
+                      0.0000000000E+00 (Full preprocessed model)
+                      0.0000000000E+00 (After scaling)
  
  ** Feasible solution. Value of objective =   4.811432647916E-04
  
@@ -79,18 +82,18 @@ CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
  ** Optimal solution. There are no superbasic variables.
  
 --- Reading solution for model m1
---- Executing after solve: elapsed 0:00:00.506
+--- Executing after solve: elapsed 0:00:00.492
 --- SmallestEllipseNLP.gms(132) 4 Mb
 --- Generating NLP model m2
---- SmallestEllipseNLP.gms(147) 6 Mb
----   151 rows  106 columns  504 non-zeroes
----   359 nl-code  103 nl-non-zeroes
+--- SmallestEllipseNLP.gms(146) 6 Mb
+---   37 rows  30 columns  124 non-zeroes
+---   93 nl-code  27 nl-non-zeroes
 --- Range statistics (absolute non-zero finite values)
 --- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
---- Matrix    [min, max] : [ 1.036E-03, 4.679E+00] - Zero values observed as well
---- SmallestEllipseNLP.gms(147) 4 Mb
---- Executing CONOPT (Solvelink=2): elapsed 0:00:00.508
+--- Matrix    [min, max] : [ 5.928E-02, 4.679E+00] - Zero values observed as well
+--- SmallestEllipseNLP.gms(146) 4 Mb
+--- Executing CONOPT (Solvelink=2): elapsed 0:00:00.494
 
 CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
@@ -103,31 +106,33 @@ CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
     Will use up to 4 threads.
  
  
-    The user model has 151 constraints and 106 variables
-    with 504 Jacobian elements, 103 of which are nonlinear.
+    The user model has 37 constraints and 30 variables
+    with 124 Jacobian elements, 27 of which are nonlinear.
+    The Hessian of the Lagrangian has 25 elements on the diagonal,
+    1 elements below the diagonal, and 27 nonlinear variables.
  
     Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
-       0   0          7.2511441296E-16 (Input point)
+       0   0          3.1225022568E-17 (Input point)
  
     The post-triangular part of the model has 1 constraints and variables.
  
-    Preprocessed model has 150 constraints and 105 variables
-    with 500 Jacobian elements, 100 of which are nonlinear.
+    Preprocessed model has 36 constraints and 29 variables
+    with 120 Jacobian elements, 24 of which are nonlinear.
  
     Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
-                      7.2511441296E-16 (Full preprocessed model)
-                      7.2511441296E-16 (After scaling)
+                      3.1225022568E-17 (Full preprocessed model)
+                      3.1225022568E-17 (After scaling)
  
  ** Feasible solution. Value of objective =   2.193497811240E-02
  
     Iter Phase   Ninf     Objective     RGmax      NSB   Step  InItr MX OK
-       1   3          3.0502318995E-02 2.2E-02       5 3.7E-01     6 F  T
-       4   4          5.5596227669E-02 0.0E+00       0
+       1   3          3.5332227156E-02 3.2E-02       4 7.2E-01     3 F  T
+       4   4          5.5596227668E-02 0.0E+00       0
  
  ** Optimal solution. There are no superbasic variables.
  
 --- Reading solution for model m2
---- Executing after solve: elapsed 0:00:00.557
---- SmallestEllipseNLP.gms(152) 4 Mb
+--- Executing after solve: elapsed 0:00:00.537
+--- SmallestEllipseNLP.gms(151) 4 Mb
 *** Status: Normal completion
---- Job SmallestEllipseNLP.gms Stop 04/11/26 18:36:11 elapsed 0:00:00.596
+--- Job SmallestEllipseNLP.gms Stop 04/12/26 06:10:03 elapsed 0:00:00.571

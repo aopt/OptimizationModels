@@ -88,7 +88,7 @@ z.l = a11.l*a22.l-sqr(a12.l);
 
 * initial values center
 center.l(c) = ic(c);
-pc.l(i,c) = p(i,c) - center.l(c);
+pc.l(j(i),c) = p(i,c) - center.l(c);
 
 Equations
    determinant 'det(A)'
@@ -97,8 +97,8 @@ Equations
 ;
 
 determinant..  z =e= a11*a22-sqr(a12);
-pminc(i,c)..   pc(i,c) =e= p(i,c)-center(c);
-pinside(i)..   a11*sqr(pc(i,'x'))+a22*sqr(pc(i,'y'))+2*a12*pc(i,'x')*pc(i,'y') =l= 1;
+pminc(j(i),c)..   pc(i,c) =e= p(i,c)-center(c);
+pinside(j(i))..   a11*sqr(pc(i,'x'))+a22*sqr(pc(i,'y'))+2*a12*pc(i,'x')*pc(i,'y') =l= 1;
 
 model m1 /all/;
 solve m1 maximizing z using nlp;
@@ -128,8 +128,8 @@ b.l('x') = -a11.l*ic('x')-a12.l*ic('y');
 b.l('y') = -a12.l*ic('x')-a22.l*ic('y');
 
 * initial values ap = Ap+b
-ap1.l(i) = a11.l*p(i,'x')+a12.l*p(i,'y') + b.l('x');
-ap2.l(i) = a12.l*p(i,'x')+a22.l*p(i,'y') + b.l('y');
+ap1.l(j(i)) = a11.l*p(i,'x')+a12.l*p(i,'y') + b.l('x');
+ap2.l(j(i)) = a12.l*p(i,'x')+a22.l*p(i,'y') + b.l('y');
 
 equations
    defap1(i)   'first element of Ap+b'
@@ -138,11 +138,10 @@ equations
 ;
 
 
-defap1(i)..     ap1(i) =e= a11*p(i,'x')+a12*p(i,'y') + b('x');
-defap2(i)..     ap2(i) =e= a12*p(i,'x')+a22*p(i,'y') + b('y');
-pinside2(i)..   sqr(ap1(i)) + sqr(ap2(i)) =l= 1;
+defap1(j(i))..     ap1(i) =e= a11*p(i,'x')+a12*p(i,'y') + b('x');
+defap2(j(i))..     ap2(i) =e= a12*p(i,'x')+a22*p(i,'y') + b('y');
+pinside2(j(i))..   sqr(ap1(i)) + sqr(ap2(i)) =l= 1;
  
-
 model m2 /determinant,defap1,defap2,pinside2/;
 solve m2 maximizing z using nlp;
 
