@@ -1,0 +1,901 @@
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+        Given n circles or disks (with different radii), find the smallest
+        enclosing circle.
+        
+        We use a NLP model and a SOCP model
+       
+   9   
+  10   
+  11  *---------------------------------------------------------------------
+  12  * options
+  13  *---------------------------------------------------------------------
+  14   
+  15  * 0: no plot
+  16  * 1: produce html plot
+  18   
+  19  * 0: don't remove circles contained in another circle
+  20  * 1: do remove them
+  22   
+  23  option nlp=conopt, qcp = cplex;
+  24   
+  25  *---------------------------------------------------------------------
+  26  * data
+  27  *---------------------------------------------------------------------
+  28   
+  29  sets
+  30    i 'inner circles' /circle1*circle15/
+  31    a 'attributes for storing results' /x,y,r/
+  32    k(a) 'coordinate' /x,y/
+  33  ;
+  34   
+  35  alias (i,j);
+  36   
+  37  Parameters
+  38   circles(*,*)   'coordinates of center and radius'
+  39  ;
+  40   
+  41  circles(i,k) = uniform(0,25);
+  42  circles(i,'r') = uniform(1,7);
+  43  display circles;
+  44   
+  45   
+  46  *---------------------------------------------------------------------
+  47  * preprocessing
+  48  * remove circles inside another one
+  49  *---------------------------------------------------------------------
+  50  scalar d 'distance between centers';
+  51   
+  52  set ne(i,j) ' not the same';
+  53  ne(i,j) = ord(i)<>ord(j);
+  54   
+  55  circles(i,'candrop')=0;
+  56  loop(ne(i,j)$(circles(i,'r')<=circles(j,'r') and circles(i,'candrop')=0),
+  57   
+  58     d = sqrt(sum(k, sqr(circles(i,k)-circles(j,k))));
+  59     circles(i,'candrop')$(d + circles(i,'r') <= circles(j,'r')) = 1;
+  60   
+  61  );
+  62  display circles;
+  63   
+  64  set keep(i) 'circle is not dropped from data set';
+  65  keep(i) = yes;
+  66  keep(i)$0 = circles(i,'candrop')=0;
+  67  display keep;
+  68   
+  69  *---------------------------------------------------------------------
+  70  * NLP Model
+  71  *---------------------------------------------------------------------
+  72   
+  73  variables
+  74     c(k)   'center'
+  75     r      'radius'
+  76  ;
+  77   
+  78  r.lo = smax(keep(i),circles(i,'r'));
+  79   
+  80  *
+  81  * initial point calculation
+  82  *
+  83  parameters
+  84     dist(i) 'distance'
+  85     init(a) 'initial values'
+  86  ;
+  87  init(k) = sum(keep(i),circles(i,k))/card(keep);
+  88  dist(keep(i)) = sqrt(sum(k, sqr(init(k)-circles(i,k))));
+  89  init('r') = smax(keep(i), dist(i) + circles(i,'r'));
+  90  c.l(k) = init(k);
+  91  r.l = init('r');
+  92   
+  93  Equations
+  94     inside(i)
+  95  ;
+  96   
+  97  inside(keep(i))..
+  98    sum(k,sqr(c(k)-circles(i,k))) =l= sqr(r-circles(i,'r'));
+  99   
+ 100  model m1 /all/;
+ 101  solve m1 minimizing r using nlp;
+ 102   
+ 103  parameter results(*,*);
+ 104  results('init',a) = init(a);
+ 105  results('NLP',k) = c.l(k);
+ 106  results('NLP','r') = r.l;
+ 107   
+ 108  display results;
+ 109   
+ 110  *---------------------------------------------------------------------
+ 111  * SOCP Model
+ 112  *---------------------------------------------------------------------
+ 113   
+ 114  variables
+ 115     diffc(i,k) 'difference between outer center and inner centers'
+ 116     diffr(i) 'difference between outer radius and inner radii'
+ 117  ;
+ 118  positive variable diffr;
+ 119   
+ 120  * no need for bound on r
+ 121  r.lo = -INF;
+ 122   
+ 123  Equations
+ 124     calcdiffc(i,k)
+ 125     calcdiffr(i)
+ 126     inside2(i)
+ 127  ;
+ 128   
+ 129  calcdiffc(keep(i),k).. diffc(i,k) =e= c(k)-circles(i,k);
+ 130  calcdiffr(keep(i))..   diffr(i) =e= r-circles(i,'r');
+ 131  inside2(keep(i))..     sum(k,sqr(diffc(i,k))) =l= sqr(diffr(i));
+ 132   
+ 133  model m2 /all-m1/;
+ 134  solve m2 minimizing r using qcp;
+ 135   
+ 136  results('SOCP',k) = c.l(k);
+ 137  results('SOCP','r') = r.l;
+ 138   
+ 139  display results;
+ 140   
+ 141   
+ 142  *---------------------------------------------------------------------
+ 143  * visualization
+ 144  *---------------------------------------------------------------------
+ 145   
+ 148   
+ 149   
+ 151   
+ 152  file fdata /data.js/; put fdata;
+ 153   
+ 154   
+ 155  * plot first not dropped (large) circles
+ 156  * then plot dropped circles.
+ 157  set
+ 158     sd /keep,drop,outer/
+ 159     sdi(sd,*)
+ 160  ;
+ 161  sdi('keep',i)$(not circles(i,'candrop')) = yes;
+ 162  sdi('drop',i)$circles(i,'candrop') = yes;
+ 163  sdi('outer','optimal') = yes;
+ 164  sdi('outer','initial') = yes;
+ 165   
+ 166  circles('initial','r') = init('r');
+ 167  circles('initial',k) = init(k);
+ 168  circles('optimal','r') = r.l;
+ 169  circles('optimal',k) = c.l(k);
+ 170  display sdi,circles;
+ 171   
+ 172  Scalars
+ 173     firstred /1/
+ 174     firstblue /1/
+ 175  ;
+ 176   
+ 177  alias (*,item);
+ 178   
+ 179  * circles
+ 180  put "circles = ["/;
+ 181  loop(sdi(sd,item),
+ 182    put " {"/;
+ 183    put "   type:'circle',"/;
+ 184    put "   xref:'x',"/;
+ 185    put "   yref:'y',"/;
+ 186    put "   x0:",(circles(item,'x')-circles(item,'r')):0:4,","/;
+ 187    put "   y0:",(circles(item,'y')-circles(item,'r')):0:4,","/;
+ 188    put "   x1:",(circles(item,'x')+circles(item,'r')):0:4,","/;
+ 189    put "   y1:",(circles(item,'y')+circles(item,'r')):0:4,","/;
+ 190    if (sameas(item,'optimal'),
+ 191       put "   line:{color:'Black'},"/;
+ 192       put "   name:'optimal solution',"/;
+ 193       put "   showlegend:true,"/;
+ 194    elseif sameas(item,'initial'),
+ 195       put "   line:{color:'Grey'},"/;
+ 196       put "   name:'initial solution',"/;
+ 197       put "   showlegend:true,"/;
+ 198    elseif circles(item,'candrop'),
+ 199       put "   line:{color:'Red'},"/;
+ 200       put "   fillcolor:'Pink',"/;
+ 201       put$firstred "   name:'dropped',"/;
+ 202       put$firstred "   showlegend:true,"/;
+ 203       firstred = 0;
+ 204    else
+ 205       put "   line:{color:'Blue'},"/;
+ 206       put "   fillcolor:'LightSkyBlue',"/;
+ 207       put$firstblue "   name:'data',"/;
+ 208       put$firstblue "   showlegend:true,"/;
+ 209       firstblue = 0;
+ 210    );
+ 211    put "   opacity:0.5,"/;
+ 212    put " },"/;
+ 213  );
+ 214  put "];"/;
+ 215   
+ 216  scalars xmin,xmax,ymin,ymax,range0,range1;
+ 217  xmin = min(init('x')-init('r'),c.l('x')-r.l);
+ 218  xmax = max(init('x')+init('r'),c.l('x')+r.l);
+ 219  ymin = min(init('y')-init('r'),c.l('y')-r.l);
+ 220  ymax = max(init('y')+init('r'),c.l('y')+r.l);
+ 221  range0 = floor(min(xmin,ymin));
+ 222  range1 = ceil(max(xmax,ymax));
+ 223   
+ 224  put "range0=",range0:0:4,";"/;
+ 225  put "range1=",range1:0:4,";"/;
+ 226   
+ 227  putclose;
+ 228   
+ 251   
+ 252  executetool 'win32.ShellExecute "plot.html"';
+ 253   
+ 255   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     43 PARAMETER circles  coordinates of center and radius
+
+                   x           y           r
+
+circle1        4.294      21.082       1.663
+circle2       13.759       7.528       4.014
+circle3        7.305       5.601       1.961
+circle4        8.746      21.407       6.235
+circle5        1.678      12.505       2.591
+circle6       24.953      14.468       2.715
+circle7       24.778      19.056       4.564
+circle8        3.267      15.993       5.336
+circle9        3.988       6.252       4.769
+circle10      16.723      10.884       3.783
+circle11       8.993       8.786       3.480
+circle12       3.287       3.753       1.706
+circle13      14.728      20.772       2.885
+circle14       5.770      16.643       1.279
+circle15      19.396       7.591       3.031
+
+
+----     62 PARAMETER circles  coordinates of center and radius
+
+                   x           y           r     candrop
+
+circle1        4.294      21.082       1.663       1.000
+circle2       13.759       7.528       4.014
+circle3        7.305       5.601       1.961
+circle4        8.746      21.407       6.235
+circle5        1.678      12.505       2.591
+circle6       24.953      14.468       2.715
+circle7       24.778      19.056       4.564
+circle8        3.267      15.993       5.336
+circle9        3.988       6.252       4.769
+circle10      16.723      10.884       3.783
+circle11       8.993       8.786       3.480
+circle12       3.287       3.753       1.706       1.000
+circle13      14.728      20.772       2.885
+circle14       5.770      16.643       1.279       1.000
+circle15      19.396       7.591       3.031
+
+
+----     67 SET keep  circle is not dropped from data set
+
+circle1 ,    circle2 ,    circle3 ,    circle4 ,    circle5 ,    circle6 ,    circle7 ,    circle8 ,    circle9 ,    circle10
+circle11,    circle12,    circle13,    circle14,    circle15
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m1 Using NLP From line 101
+
+
+---- inside  =L=  
+
+inside(circle1)..  (12.9681344133333)*c(x) - (16.52031234)*c(y) - (36.4536997338308)*r =L= 0 ; (LHS = -221.944748577715)
+     
+inside(circle2)..  - (5.96327678666666)*c(x) + (10.58612786)*c(y) - (31.7509888338308)*r =L= 0 ; (LHS = -215.124629705846)
+     
+inside(circle3)..  (6.94488516333334)*c(x) + (14.44037971)*c(y) - (35.8575340818308)*r =L= 0 ; (LHS = -257.251688582198)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m1 Using NLP From line 101
+
+
+---- c  center
+
+c(x)
+                (.LO, .L, .UP, .M = -INF, 10.7777455066667, +INF, 0)
+      (12.9681) inside(circle1)
+      (-5.9633) inside(circle2)
+       (6.9449) inside(circle3)
+       (4.064)  inside(circle4)
+      (18.1998) inside(circle5)
+     (-28.3504) inside(circle6)
+     (-28.0012) inside(circle7)
+      (15.0209) inside(circle8)
+      (13.5796) inside(circle9)
+     (-11.8909) inside(circle10)
+       (3.5705) inside(circle11)
+      (14.9809) inside(circle12)
+      (-7.9002) inside(circle13)
+      (10.0147) inside(circle14)
+     (-17.2374) inside(circle15)
+
+c(y)
+                (.LO, .L, .UP, .M = -INF, 12.82151153, +INF, 0)
+     (-16.5203) inside(circle1)
+      (10.5861) inside(circle2)
+      (14.4404) inside(circle3)
+     (-17.1705) inside(circle4)
+       (0.6325) inside(circle5)
+      (-3.2936) inside(circle6)
+     (-12.4695) inside(circle7)
+      (-6.3429) inside(circle8)
+      (13.139)  inside(circle9)
+       (3.8752) inside(circle10)
+       (8.071)  inside(circle11)
+      (18.1379) inside(circle12)
+     (-15.9016) inside(circle13)
+      (-7.6437) inside(circle14)
+      (10.4601) inside(circle15)
+
+
+---- r  radius
+
+r
+                (.LO, .L, .UP, .M = 6.234773866, 19.8898036129154, +INF, 0)
+     (-36.4537) inside(circle1)
+     (-31.751)  inside(circle2)
+     (-35.8575) inside(circle3)
+     (-27.3101) inside(circle4)
+     (-34.5982) inside(circle5)
+     (-34.3498) inside(circle6)
+     (-30.6521) inside(circle7)
+     (-29.107)  inside(circle8)
+     (-30.2406) inside(circle9)
+     (-32.214)  inside(circle10)
+     (-32.8199) inside(circle11)
+     (-36.3673) inside(circle12)
+     (-34.0091) inside(circle13)
+     (-37.221)  inside(circle14)
+     (-33.717)  inside(circle15)
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m1 Using NLP From line 101
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+Bound     [min, max] : [ 6.235E+00, 6.235E+00]
+Matrix    [min, max] : [ 6.325E-01, 3.722E+01]
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m1 Using NLP From line 101
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           1     SINGLE EQUATIONS           15
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES            3
+NON ZERO ELEMENTS            45     NON LINEAR N-Z             45
+CODE LENGTH                 196     CONSTANT POOL              61
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m1 Using NLP From line 101
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m1                  OBJECTIVE  r
+     TYPE    NLP                 DIRECTION  MINIMIZE
+     SOLVER  CONOPT              FROM LINE  101
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      2 Locally Optimal
+**** OBJECTIVE VALUE               16.8751
+
+ RESOURCE USAGE, LIMIT          0.078 10000000000.000
+ ITERATION COUNT, LIMIT         4    2147483647
+ EVALUATION ERRORS              0             0
+ 
+ 
+    C O N O P T   version 4.39.0
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 15 constraints and 3 variables
+    with 45 Jacobian elements, 45 of which are nonlinear.
+    The Hessian of the Lagrangian has 3 elements on the diagonal,
+    0 elements below the diagonal, and 3 nonlinear variables.
+ 
+    Preprocessed model has 15 constraints and 3 variables
+    with 45 Jacobian elements, 45 of which are nonlinear.
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+ 
+ CONOPT time Total                            0.004 seconds
+   of which: Function evaluations             0.000 =  0.0%
+             1st Derivative evaluations       0.000 =  0.0%
+             2nd Derivative evaluations       0.000 =  0.0%
+             Directional 2nd Deriv(Hess)      0.000 =  0.0%
+             Interval derivative evals        0.000 =  0.0%
+ 
+
+---- EQU inside  
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+circle1         -INF          -59.4367          .              .          
+circle2         -INF         -139.3900          .              .          
+circle3         -INF         -124.5818          .              .          
+circle4         -INF           -4.8609          .              .          
+circle5         -INF          -44.8292          .              .          
+circle6         -INF          -83.4415          .              .          
+circle7         -INF             .              .            -0.0203      
+circle8         -INF           -0.0109          .              .          
+circle9         -INF             .              .            -0.0207      
+circle10        -INF         -162.5695          .              .          
+circle11        -INF         -136.7631          .              .          
+circle12        -INF          -30.6341          .              .          
+circle13        -INF         -128.7446          .              .          
+circle14        -INF         -154.2034          .              .          
+circle15        -INF         -140.5442          .              .          
+
+---- VAR c  center
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+x        -INF           14.2955        +INF             .          
+y        -INF           12.6002        +INF            EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR r                  6.2348        16.8751        +INF             .          
+
+  r  radius
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    108 PARAMETER results  
+
+               x           y           r
+
+init      10.778      12.822      19.890
+NLP       14.296      12.600      16.875
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using QCP From line 134
+
+
+---- calcdiffc  =E=  
+
+calcdiffc(circle1,x)..  - c(x) + diffc(circle1,x) =E= -4.2936783 ; (LHS = -14.2955382869044, INFES = 10.0018599869044 ****)
+     
+calcdiffc(circle1,y)..  - c(y) + diffc(circle1,y) =E= -21.0816677 ; (LHS = -12.600188193268, INFES = 8.48147950673196 ****)
+     
+calcdiffc(circle2,x)..  - c(x) + diffc(circle2,x) =E= -13.7593839 ; (LHS = -14.2955382869044, INFES = 0.536154386904444 ****)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- calcdiffr  =E=  
+
+calcdiffr(circle1)..  - r + diffr(circle1) =E= -1.662953746 ; (LHS = -16.8751011124668, INFES = 15.2121473664668 ****)
+     
+calcdiffr(circle2)..  - r + diffr(circle2) =E= -4.014309196 ; (LHS = -16.8751011124668, INFES = 12.8607919164668 ****)
+     
+calcdiffr(circle3)..  - r + diffr(circle3) =E= -1.961036572 ; (LHS = -16.8751011124668, INFES = 14.9140645404668 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- inside2  =L=  
+
+inside2(circle1)..  (0)*diffc(circle1,x) + (0)*diffc(circle1,y) + (0)*diffr(circle1) =L= 0 ; (LHS = 0)
+     
+inside2(circle2)..  (0)*diffc(circle2,x) + (0)*diffc(circle2,y) + (0)*diffr(circle2) =L= 0 ; (LHS = 0)
+     
+inside2(circle3)..  (0)*diffc(circle3,x) + (0)*diffc(circle3,y) + (0)*diffr(circle3) =L= 0 ; (LHS = 0)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using QCP From line 134
+
+
+---- c  center
+
+c(x)
+                (.LO, .L, .UP, .M = -INF, 14.2955382869044, +INF, 0)
+       -1       calcdiffc(circle1,x)
+       -1       calcdiffc(circle2,x)
+       -1       calcdiffc(circle3,x)
+       -1       calcdiffc(circle4,x)
+       -1       calcdiffc(circle5,x)
+       -1       calcdiffc(circle6,x)
+       -1       calcdiffc(circle7,x)
+       -1       calcdiffc(circle8,x)
+       -1       calcdiffc(circle9,x)
+       -1       calcdiffc(circle10,x)
+       -1       calcdiffc(circle11,x)
+       -1       calcdiffc(circle12,x)
+       -1       calcdiffc(circle13,x)
+       -1       calcdiffc(circle14,x)
+       -1       calcdiffc(circle15,x)
+
+c(y)
+                (.LO, .L, .UP, .M = -INF, 12.600188193268, +INF, EPS)
+       -1       calcdiffc(circle1,y)
+       -1       calcdiffc(circle2,y)
+       -1       calcdiffc(circle3,y)
+       -1       calcdiffc(circle4,y)
+       -1       calcdiffc(circle5,y)
+       -1       calcdiffc(circle6,y)
+       -1       calcdiffc(circle7,y)
+       -1       calcdiffc(circle8,y)
+       -1       calcdiffc(circle9,y)
+       -1       calcdiffc(circle10,y)
+       -1       calcdiffc(circle11,y)
+       -1       calcdiffc(circle12,y)
+       -1       calcdiffc(circle13,y)
+       -1       calcdiffc(circle14,y)
+       -1       calcdiffc(circle15,y)
+
+
+---- r  radius
+
+r
+                (.LO, .L, .UP, .M = -INF, 16.8751011124668, +INF, 0)
+       -1       calcdiffr(circle1)
+       -1       calcdiffr(circle2)
+       -1       calcdiffr(circle3)
+       -1       calcdiffr(circle4)
+       -1       calcdiffr(circle5)
+       -1       calcdiffr(circle6)
+       -1       calcdiffr(circle7)
+       -1       calcdiffr(circle8)
+       -1       calcdiffr(circle9)
+       -1       calcdiffr(circle10)
+       -1       calcdiffr(circle11)
+       -1       calcdiffr(circle12)
+       -1       calcdiffr(circle13)
+       -1       calcdiffr(circle14)
+       -1       calcdiffr(circle15)
+
+
+---- diffc  difference between outer center and inner centers
+
+diffc(circle1,x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       calcdiffc(circle1,x)
+       (0)      inside2(circle1)
+
+diffc(circle1,y)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       calcdiffc(circle1,y)
+       (0)      inside2(circle1)
+
+diffc(circle2,x)
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       calcdiffc(circle2,x)
+       (0)      inside2(circle2)
+
+REMAINING 27 ENTRIES SKIPPED
+
+---- diffr  difference between outer radius and inner radii
+
+diffr(circle1)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       calcdiffr(circle1)
+       (0)      inside2(circle1)
+
+diffr(circle2)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       calcdiffr(circle2)
+       (0)      inside2(circle2)
+
+diffr(circle3)
+                (.LO, .L, .UP, .M = 0, 0, +INF, 0)
+        1       calcdiffr(circle3)
+       (0)      inside2(circle3)
+
+REMAINING 12 ENTRIES SKIPPED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using QCP From line 134
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.279E+00, 2.495E+01] - Zero values observed as well
+Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using QCP From line 134
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           3     SINGLE EQUATIONS           60
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES           48
+NON ZERO ELEMENTS           135     NON LINEAR N-Z             45
+CODE LENGTH                 151     CONSTANT POOL              16
+
+
+GENERATION TIME      =        0.063 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using QCP From line 134
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  r
+     TYPE    QCP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  134
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE               16.8751
+
+ RESOURCE USAGE, LIMIT          0.016 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- GMO memory 0.52 Mb (peak 0.52 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.76 ticks)
+
+--- Computing dual multipliers for quadratic constraints...
+--- Dual multiplier computation can be disabled using 'calcqcpduals = 0'.
+
+Optimal solution found
+Objective:           16.875102
+
+
+---- EQU calcdiffc  
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+circle1 .x        -4.2937        -4.2937        -4.2937   8.9477991E-8      
+circle1 .y       -21.0817       -21.0817       -21.0817   -7.920079E-8      
+circle2 .x       -13.7594       -13.7594       -13.7594   1.2137745E-9      
+circle2 .y        -7.5284        -7.5284        -7.5284   1.7512193E-8      
+circle3 .x        -7.3053        -7.3053        -7.3053   2.7561297E-8      
+circle3 .y        -5.6013        -5.6013        -5.6013   2.6990478E-8      
+circle4 .x        -8.7458        -8.7458        -8.7458   7.0678084E-7      
+circle4 .y       -21.4068       -21.4068       -21.4068   -1.136929E-6      
+circle5 .x        -1.6778        -1.6778        -1.6778   1.4518099E-7      
+circle5 .y       -12.5053       -12.5053       -12.5053   -1.444692E-9      
+circle6 .x       -24.9529       -24.9529       -24.9529   -6.707737E-8      
+circle6 .y       -14.4683       -14.4683       -14.4683   -1.362959E-8      
+circle7 .x       -24.7783       -24.7783       -24.7783        -0.4257      
+circle7 .y       -19.0563       -19.0563       -19.0563        -0.2622      
+circle8 .x        -3.2673        -3.2673        -3.2673   3.5541913E-5      
+circle8 .y       -15.9930       -15.9930       -15.9930   -1.092545E-5      
+circle9 .x        -3.9879        -3.9879        -3.9879         0.4257      
+circle9 .y        -6.2520        -6.2520        -6.2520         0.2622      
+circle10.x       -16.7232       -16.7232       -16.7232   -8.677574E-9      
+circle10.y       -10.8839       -10.8839       -10.8839   4.6791434E-9      
+circle11.x        -8.9925        -8.9925        -8.9925   1.9170653E-8      
+circle11.y        -8.7860        -8.7860        -8.7860   1.3178386E-8      
+circle12.x        -3.2873        -3.2873        -3.2873   1.6445279E-7      
+circle12.y        -3.7525        -3.7525        -3.7525   1.2875681E-7      
+circle13.x       -14.7278       -14.7278       -14.7278   -3.208285E-9      
+circle13.y       -20.7723       -20.7723       -20.7723   -3.570885E-8      
+circle14.x        -5.7704        -5.7704        -5.7704   2.8056393E-8      
+circle14.y       -16.6434       -16.6434       -16.6434   -1.448033E-8      
+circle15.x       -19.3964       -19.3964       -19.3964   -1.994455E-8      
+circle15.y        -7.5915        -7.5915        -7.5915   1.6976892E-8      
+
+---- EQU calcdiffr  
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+circle1         -1.6630        -1.6630        -1.6630   -1.265967E-7      
+circle2         -4.0143        -4.0143        -4.0143   -1.009376E-8      
+circle3         -1.9610        -1.9610        -1.9610   -2.325915E-8      
+circle4         -6.2348        -6.2348        -6.2348   -1.326658E-6      
+circle5         -2.5907        -2.5907        -2.5907   -1.279632E-7      
+circle6         -2.7149        -2.7149        -2.7149   -5.066955E-8      
+circle7         -4.5637        -4.5637        -4.5637        -0.5000      
+circle8         -5.3363        -5.3363        -5.3363   -3.716895E-5      
+circle9         -4.7695        -4.7695        -4.7695        -0.5000      
+circle10        -3.7828        -3.7828        -3.7828   -4.983515E-9      
+circle11        -3.4798        -3.4798        -3.4798   -1.286986E-8      
+circle12        -1.7062        -1.7062        -1.7062   -1.899342E-7      
+circle13        -2.8853        -2.8853        -2.8853   -2.180737E-8      
+circle14        -1.2793        -1.2793        -1.2793   -1.552646E-8      
+circle15        -3.0313        -3.0313        -3.0313   -1.386202E-8      
+
+---- EQU inside2  
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+circle1         -INF          -59.5224          .       -4.513519E-9      
+circle2         -INF         -139.3622          .       -1.815893E-9      
+circle3         -INF         -124.5660          .       -2.007268E-9      
+circle4         -INF           -4.9324          .       -6.406154E-8      
+circle5         -INF          -44.8742          .       -5.760722E-9      
+circle6         -INF          -83.4140          .       -3.081995E-9      
+circle7         -INF      -3.688815E-6          .            -0.0203      
+circle8         -INF           -0.0705          .       -1.612195E-6      
+circle9         -INF      -1.133749E-5          .            -0.0207      
+circle10        -INF         -162.5507          .       -1.588619E-9      
+circle11        -INF         -136.7598          .       -1.847062E-9      
+circle12        -INF          -30.6220          .       -7.467503E-9      
+circle13        -INF         -128.7909          .       -2.087990E-9      
+circle14        -INF         -154.2578          .       -1.671616E-9      
+circle15        -INF         -140.4965          .       -1.823051E-9      
+
+---- VAR c  center
+
+         LOWER          LEVEL          UPPER         MARGINAL
+
+x        -INF           14.2937        +INF      -2.060983E-8      
+y        -INF           12.6031        +INF      -1.899472E-8      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR r                 -INF           16.8751        +INF            EPS         
+
+  r  radius
+
+---- VAR diffc  difference between outer center and inner centers
+
+                  LOWER          LEVEL          UPPER         MARGINAL
+
+circle1 .x        -INF           10.0001        +INF            EPS         
+circle1 .y        -INF           -8.4786        +INF            EPS         
+circle2 .x        -INF            0.5344        +INF            EPS         
+circle2 .y        -INF            5.0747        +INF            EPS         
+circle3 .x        -INF            6.9884        +INF            EPS         
+circle3 .y        -INF            7.0018        +INF            EPS         
+circle4 .x        -INF            5.5480        +INF            EPS         
+circle4 .y        -INF           -8.8036        +INF            EPS         
+circle5 .x        -INF           12.6159        +INF            EPS         
+circle5 .y        -INF            0.0978        +INF            EPS         
+circle6 .x        -INF          -10.6592        +INF            EPS         
+circle6 .y        -INF           -1.8652        +INF            EPS         
+circle7 .x        -INF          -10.4846        +INF            EPS         
+circle7 .y        -INF           -6.4531        +INF            EPS         
+circle8 .x        -INF           11.0264        +INF            EPS         
+circle8 .y        -INF           -3.3899        +INF            EPS         
+circle9 .x        -INF           10.3058        +INF            EPS         
+circle9 .y        -INF            6.3511        +INF            EPS         
+circle10.x        -INF           -2.4295        +INF            EPS         
+circle10.y        -INF            1.7192        +INF            EPS         
+circle11.x        -INF            5.3012        +INF            EPS         
+circle11.y        -INF            3.8171        +INF            EPS         
+circle12.x        -INF           11.0064        +INF            EPS         
+circle12.y        -INF            8.8506        +INF            EPS         
+circle13.x        -INF           -0.4341        +INF            EPS         
+circle13.y        -INF           -8.1692        +INF            EPS         
+circle14.x        -INF            8.5233        +INF            EPS         
+circle14.y        -INF           -4.0402        +INF            EPS         
+circle15.x        -INF           -5.1027        +INF            EPS         
+circle15.y        -INF            5.0117        +INF            EPS         
+
+---- VAR diffr  difference between outer radius and inner radii
+
+                LOWER          LEVEL          UPPER         MARGINAL
+
+circle1           .            15.2121        +INF            EPS         
+circle2           .            12.8608        +INF            EPS         
+circle3           .            14.9141        +INF            EPS         
+circle4           .            10.6403        +INF            EPS         
+circle5           .            14.2844        +INF            EPS         
+circle6           .            14.1602        +INF            EPS         
+circle7           .            12.3114        +INF            EPS         
+circle8           .            11.5388        +INF            EPS         
+circle9           .            12.1056        +INF            EPS         
+circle10          .            13.0923        +INF            EPS         
+circle11          .            13.3953        +INF            EPS         
+circle12          .            15.1689        +INF            EPS         
+circle13          .            13.9898        +INF            EPS         
+circle14          .            15.5958        +INF            EPS         
+circle15          .            13.8438        +INF            EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/24/26 22:39:14 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    139 PARAMETER results  
+
+               x           y           r
+
+init      10.778      12.822      19.890
+NLP       14.296      12.600      16.875
+SOCP      14.294      12.603      16.875
+
+
+----    170 SET sdi  
+
+          circle1     circle2     circle3     circle4     circle5     circle6     circle7     circle8     circle9    circle10
+
+keep                      YES         YES         YES         YES         YES         YES         YES         YES         YES
+drop          YES
+
+    +    circle11    circle12    circle13    circle14    circle15     optimal     initial
+
+keep          YES                     YES                     YES
+drop                      YES                     YES
+outer                                                                     YES         YES
+
+
+----    170 PARAMETER circles  coordinates of center and radius
+
+                   x           y           r     candrop
+
+circle1        4.294      21.082       1.663       1.000
+circle2       13.759       7.528       4.014
+circle3        7.305       5.601       1.961
+circle4        8.746      21.407       6.235
+circle5        1.678      12.505       2.591
+circle6       24.953      14.468       2.715
+circle7       24.778      19.056       4.564
+circle8        3.267      15.993       5.336
+circle9        3.988       6.252       4.769
+circle10      16.723      10.884       3.783
+circle11       8.993       8.786       3.480
+circle12       3.287       3.753       1.706       1.000
+circle13      14.728      20.772       2.885
+circle14       5.770      16.643       1.279       1.000
+circle15      19.396       7.591       3.031
+optimal       14.294      12.603      16.875
+initial       10.778      12.822      19.890
+
+
+**** REPORT FILE SUMMARY
+
+fdata C:\projects\OptimizationModels\Smallest Enclosing Ellipse\data.js
+
+
+EXECUTION TIME       =        2.797 SECONDS      6 MB  53.1.0 6a03d3b9 WEX-WEI
+
+
+USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Smallest Enclosing Ellipse\Circles.gms
+Output     C:\projects\OptimizationModels\Smallest Enclosing Ellipse\Circles.lst

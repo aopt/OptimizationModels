@@ -1,0 +1,153 @@
+--- Job Circles.gms Start 04/24/26 22:39:14 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\Circles.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Ellipse\225a\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:62067 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- Circles.gms(229) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Smallest Enclosing Ellipse\plot.html
+--- Circles.gms(255) 3 Mb
+--- Starting execution: elapsed 0:00:00.017
+--- Circles.gms(91) 4 Mb
+--- Generating NLP model m1
+--- Circles.gms(101) 6 Mb
+---   15 rows  3 columns  45 non-zeroes
+---   196 nl-code  45 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [        NA,        NA] - Zero values observed as well
+--- Bound     [min, max] : [ 6.235E+00, 6.235E+00]
+--- Matrix    [min, max] : [ 6.325E-01, 3.722E+01]
+--- Circles.gms(101) 4 Mb
+--- Executing CONOPT (Solvelink=2): elapsed 0:00:00.020
+
+CONOPT 4         53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+ 
+ 
+    C O N O P T   version 4.39.0
+    Copyright (C) GAMS Software GmbH
+                  GAMS Development Corporation
+ 
+    Will use up to 4 threads.
+ 
+ 
+    The user model has 15 constraints and 3 variables
+    with 45 Jacobian elements, 45 of which are nonlinear.
+    The Hessian of the Lagrangian has 3 elements on the diagonal,
+    0 elements below the diagonal, and 3 nonlinear variables.
+ 
+    Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
+       0   0          0.0000000000E+00 (Input point)
+ 
+    Preprocessed model has 15 constraints and 3 variables
+    with 45 Jacobian elements, 45 of which are nonlinear.
+ 
+    Iter Phase   Ninf   Infeasibility   RGmax      NSB   Step  InItr MX OK
+                      0.0000000000E+00 (Full preprocessed model)
+                      0.0000000000E+00 (After scaling)
+ 
+ ** Feasible solution. Value of objective =    19.8898036129
+ 
+    Iter Phase   Ninf     Objective     RGmax      NSB   Step  InItr MX OK
+       1   3          1.6875101130E+01 7.3E+00       3 1.0E+00     2 T  T
+       4   4          1.6875101115E+01 1.9E-11       1
+ 
+ ** Optimal solution. Reduced gradient less than tolerance.
+ 
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:00.174
+--- Circles.gms(121) 4 Mb
+--- Generating QCP model m2
+--- Circles.gms(134) 6 Mb
+---   60 rows  48 columns  135 non-zeroes
+---   151 nl-code  45 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.279E+00, 2.495E+01] - Zero values observed as well
+--- Bound     [min, max] : [        NA,        NA] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Circles.gms(134) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.234
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- GMO memory 0.52 Mb (peak 0.52 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.00 Mb (peak 0.01 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+QCP Presolve eliminated 0 rows and 1 columns.
+Aggregator did 1 substitutions.
+Reduced QCP has 44 rows, 49 columns, and 88 nonzeros.
+Reduced QCP has 17 quadratic constraints.
+Presolve time = 0.00 sec. (0.03 ticks)
+Parallel mode: using up to 16 threads for barrier.
+Number of nonzeros in lower triangle of A*A' = 372
+Using Approximate Minimum Degree ordering
+Total time for automatic ordering = 0.00 sec. (0.02 ticks)
+Summary statistics for Cholesky factor:
+  Threads                   = 16
+  Rows in Factor            = 44
+  Integer space required    = 98
+  Total non-zeros in factor = 836
+  Total FP ops to factor    = 19870
+ Itn      Primal Obj        Dual Obj  Prim Inf Upper Inf  Dual Inf Inf Ratio
+   0   3.0771673e+00   1.6629537e+00  3.80e+02  0.00e+00  2.30e+01  1.00e+00
+   1   6.8680040e+01   1.1362489e+02  3.80e+02  0.00e+00  2.30e+01  2.13e-02
+   2   3.6074399e+01   3.5719296e+01  3.29e+02  0.00e+00  2.00e+01  1.41e+01
+   3   1.7305081e+01   1.7491949e+01  6.70e+01  0.00e+00  4.07e+00  3.88e+00
+   4   1.6877161e+01   1.6946120e+01  1.12e+01  0.00e+00  6.77e-01  1.10e+01
+   5   1.6932308e+01   1.6959923e+01  3.39e+00  0.00e+00  2.06e-01  2.89e+01
+   6   1.6888164e+01   1.6893936e+01  1.10e+00  0.00e+00  6.68e-02  1.39e+02
+   7   1.6877431e+01   1.6880210e+01  2.27e-01  0.00e+00  1.37e-02  2.94e+02
+   8   1.6878549e+01   1.6880381e+01  9.79e-02  0.00e+00  5.94e-03  4.58e+02
+   9   1.6875200e+01   1.6875394e+01  5.53e-02  0.00e+00  3.36e-03  4.33e+03
+  10   1.6875281e+01   1.6875425e+01  5.75e-03  0.00e+00  3.49e-04  5.88e+03
+  11   1.6875121e+01   1.6875137e+01  4.06e-03  0.00e+00  2.46e-04  5.48e+04
+  12   1.6875102e+01   1.6875104e+01  4.25e-04  0.00e+00  2.58e-05  4.72e+05
+  13   1.6875102e+01   1.6875102e+01  4.93e-05  0.00e+00  2.99e-06  2.21e+06
+
+--- QCP status (1): optimal.
+--- Cplex Time: 0.02sec (det. 0.76 ticks)
+
+--- Computing dual multipliers for quadratic constraints...
+--- Dual multiplier computation can be disabled using 'calcqcpduals = 0'.
+
+Optimal solution found
+Objective:           16.875102
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:00.373
+--- Circles.gms(252) 6 Mb
+--- Putfile fdata C:\projects\OptimizationModels\Smallest Enclosing Ellipse\data.js
+*** Status: Normal completion
+--- Job Circles.gms Stop 04/24/26 22:39:17 elapsed 0:00:02.849
