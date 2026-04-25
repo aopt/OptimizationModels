@@ -11,5 +11,5 @@ See: https://yetanothermathprogrammingconsultant.blogspot.com/2026/04/minimum-en
 | `sdp example.ipynb`  | Find smallest enclosing ellipse. SDP formulation solved with CVXPY/SCS. |
 | `SmallestEllipse.gms` | SOCP Formulation using GAMS/Cplex. |
 | `SmallestEllipseNLP.gms` | NLP Formulation using GAMS/Conopt. Use same starting point as `SmallestCircle.gms`. |
-
+| `Circles.gms` | Given $n$ circles, find the smallest enclosing circle. Both NLP and SOCP formulation. |
 
