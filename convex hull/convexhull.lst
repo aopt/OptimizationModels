@@ -1,0 +1,1941 @@
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+         Calculate convex hull of a set of points using an MINLP or MIP model
+       
+   6   
+   7  option seed = 12345;
+   8   
+   9  option minlp=baron, mip=cplex;
+  10   
+  11  *-----------------------------------------------------
+  12  * data
+  13  *-----------------------------------------------------
+  14   
+  15  set
+  16     i 'data points' /point1*point15/
+  17     k 'coordinates' /x,y/
+  18  ;
+  19   
+  20  parameter p(*,*) 'data points';
+  21  p(i,k) = uniform(0,10);
+  22  display p;
+  23   
+  24  *-----------------------------------------------------
+  25  * convex hull python code
+  26  *-----------------------------------------------------
+  27   
+  28  set hull(i) 'convex hull computed by scipy';
+  29   
+  30  embeddedCode Python:
+  31  import scipy as sp
+  32  import numpy as np
+  33  import gams.transfer as gt
+  34   
+  35  print("Computing convex hull...")
+  36  i = list(gams.get("i"))
+  37  p = gt.Container(gams.db)["p"].toDense()
+  38  hull = sp.spatial.ConvexHull(p)
+  39  h = [i[pt] for pt in hull.vertices]
+  40  gams.set("hull",h)
+  41  endEmbeddedCode hull
+  42   
+  43  display hull;
+  44   
+  45  p(i,'hull/scipy') = hull(i);
+  46  p('count','hull/scipy') = card(hull);
+  47  display p;
+  48   
+  49   
+  50  *-----------------------------------------------------
+  51  * minlp convex hull model
+  52  *-----------------------------------------------------
+  53   
+  54  alias(i,j);
+  55   
+  56  variable
+  57    lambda(i,j) 'weights'
+  58  ;
+  59  lambda.lo(i,j) = 0;
+  60  lambda.up(i,j) = 1;
+  61  lambda.fx(i,i) = 0;
+  62   
+  63  variable z 'objective';
+  64   
+  65  binary variable
+  66     h(i)    'hull'
+  67     nh(i)   'interior'
+  68  ;
+  69   
+  70  Equation
+  71     choose(i)     'point is either hull or interior'
+  72     inside(i,k)   'convex combination, only for nh(i)=1'
+  73     sum_lambda(i) 'normalize weights, only fot n(i)=1'
+  74     count         'number of hull points'
+  75  ;
+  76   
+  77  choose(i).. h(i)+nh(i) =e= 1;
+  78   
+  79  inside(i,k)..
+  80      p(i,k)*nh(i) =e= sum(j, lambda(i,j)*p(j,k)*h(j));
+  81   
+  82  sum_lambda(i).. sum(j, lambda(i,j)*h(j)) =e= nh(i);
+  83   
+  84  count.. z =e= sum(i, h(i));
+  85   
+  86  model m /all/;
+  87   
+  88   
+  89  solve m minimizing z using minlp;
+  90   
+  91  display h.l,nh.l,lambda.l;
+  92   
+  93  p(i,'hull/minlp') = h.l(i)>0.5;
+  94  p('count','hull/minlp') = sum(i$(h.l(i)>0.5),1);
+  95  display p;
+  96   
+  97   
+  98  *-----------------------------------------------------
+  99  * mip convex hull model
+ 100  *-----------------------------------------------------
+ 101   
+ 102  Equations
+ 103     lambda_bnd(i,j) 'h(j)=0 => lambda(i,j)=0'
+ 104     inside2(i,k)    'linearization uses lambda_bnd'
+ 105     sum_lambda2     'linear version'
+ 106  ;
+ 107   
+ 108  lambda_bnd(i,j)..  lambda(i,j) =l= h(j);
+ 109  inside2(i,k)..     p(i,k)*nh(i) =e= sum(j, lambda(i,j)*p(j,k));
+ 110  sum_lambda2(i)..   sum(j, lambda(i,j)) =e= nh(i);
+ 111   
+ 112  model m2 /choose,lambda_bnd,inside2,sum_lambda2,count/;
+ 113  solve m2 minimizing z using mip;
+ 114   
+ 115  display h.l,lambda.l;
+ 116   
+ 117  p(i,'hull/mip') = h.l(i)>0.5;
+ 118  p('count','hull/mip') = sum(i$(h.l(i)>0.5),1);
+ 119  display p;
+ 120   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     22 PARAMETER p  data points
+
+                  x           y
+
+point1        4.973       9.639
+point2        8.739       8.443
+point3        1.912       4.945
+point4        2.346       3.810
+point5        6.009       1.515
+point6        5.077       4.633
+point7        3.591       1.526
+point8        3.664       8.260
+point9        0.239       0.593
+point10       2.848       1.140
+point11       8.905       3.743
+point12       2.341       1.477
+point13       0.191       0.784
+point14       9.280       5.550
+point15       6.164       3.605
+
+
+----     43 SET hull  convex hull computed by scipy
+
+point1 ,    point2 ,    point3 ,    point5 ,    point8 ,    point9 ,    point11,    point13,    point14
+
+
+----     47 PARAMETER p  data points
+
+                  x           y  hull/scipy
+
+point1        4.973       9.639       1.000
+point2        8.739       8.443       1.000
+point3        1.912       4.945       1.000
+point4        2.346       3.810
+point5        6.009       1.515       1.000
+point6        5.077       4.633
+point7        3.591       1.526
+point8        3.664       8.260       1.000
+point9        0.239       0.593       1.000
+point10       2.848       1.140
+point11       8.905       3.743       1.000
+point12       2.341       1.477
+point13       0.191       0.784       1.000
+point14       9.280       5.550       1.000
+point15       6.164       3.605
+count                                 9.000
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m Using MINLP From line 89
+
+
+---- choose  =E=  point is either hull or interior
+
+choose(point1)..  h(point1) + nh(point1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+choose(point2)..  h(point2) + nh(point2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+choose(point3)..  h(point3) + nh(point3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- inside  =E=  convex combination, only for nh(i)=1
+
+inside(point1,x)..  (0)*lambda(point1,point1) + (0)*lambda(point1,point2) + (0)*lambda(point1,point3) + (0)*lambda(point1,point4)
+     
+      + (0)*lambda(point1,point5) + (0)*lambda(point1,point6) + (0)*lambda(point1,point7) + (0)*lambda(point1,point8)
+     
+      + (0)*lambda(point1,point9) + (0)*lambda(point1,point10) + (0)*lambda(point1,point11) + (0)*lambda(point1,point12)
+     
+      + (0)*lambda(point1,point13) + (0)*lambda(point1,point14) + (0)*lambda(point1,point15) + (0)*h(point1) + (0)*h(point2)
+     
+      + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7) + (0)*h(point8) + (0)*h(point9)
+     
+      + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14) + (0)*h(point15)
+     
+      + 4.97311132*nh(point1) =E= 0 ; (LHS = 0)
+     
+inside(point1,y)..  (0)*lambda(point1,point1) + (0)*lambda(point1,point2) + (0)*lambda(point1,point3) + (0)*lambda(point1,point4)
+     
+      + (0)*lambda(point1,point5) + (0)*lambda(point1,point6) + (0)*lambda(point1,point7) + (0)*lambda(point1,point8)
+     
+      + (0)*lambda(point1,point9) + (0)*lambda(point1,point10) + (0)*lambda(point1,point11) + (0)*lambda(point1,point12)
+     
+      + (0)*lambda(point1,point13) + (0)*lambda(point1,point14) + (0)*lambda(point1,point15) + (0)*h(point1) + (0)*h(point2)
+     
+      + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7) + (0)*h(point8) + (0)*h(point9)
+     
+      + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14) + (0)*h(point15)
+     
+      + 9.63862756*nh(point1) =E= 0 ; (LHS = 0)
+     
+inside(point2,x)..  (0)*lambda(point2,point1) + (0)*lambda(point2,point2) + (0)*lambda(point2,point3) + (0)*lambda(point2,point4)
+     
+      + (0)*lambda(point2,point5) + (0)*lambda(point2,point6) + (0)*lambda(point2,point7) + (0)*lambda(point2,point8)
+     
+      + (0)*lambda(point2,point9) + (0)*lambda(point2,point10) + (0)*lambda(point2,point11) + (0)*lambda(point2,point12)
+     
+      + (0)*lambda(point2,point13) + (0)*lambda(point2,point14) + (0)*lambda(point2,point15) + (0)*h(point1) + (0)*h(point2)
+     
+      + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7) + (0)*h(point8) + (0)*h(point9)
+     
+      + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14) + (0)*h(point15)
+     
+      + 8.73922492*nh(point2) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- sum_lambda  =E=  normalize weights, only fot n(i)=1
+
+sum_lambda(point1)..  (0)*lambda(point1,point1) + (0)*lambda(point1,point2) + (0)*lambda(point1,point3)
+     
+      + (0)*lambda(point1,point4) + (0)*lambda(point1,point5) + (0)*lambda(point1,point6) + (0)*lambda(point1,point7)
+     
+      + (0)*lambda(point1,point8) + (0)*lambda(point1,point9) + (0)*lambda(point1,point10) + (0)*lambda(point1,point11)
+     
+      + (0)*lambda(point1,point12) + (0)*lambda(point1,point13) + (0)*lambda(point1,point14) + (0)*lambda(point1,point15)
+     
+      + (0)*h(point1) + (0)*h(point2) + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7)
+     
+      + (0)*h(point8) + (0)*h(point9) + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14)
+     
+      + (0)*h(point15) - nh(point1) =E= 0 ; (LHS = 0)
+     
+sum_lambda(point2)..  (0)*lambda(point2,point1) + (0)*lambda(point2,point2) + (0)*lambda(point2,point3)
+     
+      + (0)*lambda(point2,point4) + (0)*lambda(point2,point5) + (0)*lambda(point2,point6) + (0)*lambda(point2,point7)
+     
+      + (0)*lambda(point2,point8) + (0)*lambda(point2,point9) + (0)*lambda(point2,point10) + (0)*lambda(point2,point11)
+     
+      + (0)*lambda(point2,point12) + (0)*lambda(point2,point13) + (0)*lambda(point2,point14) + (0)*lambda(point2,point15)
+     
+      + (0)*h(point1) + (0)*h(point2) + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7)
+     
+      + (0)*h(point8) + (0)*h(point9) + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14)
+     
+      + (0)*h(point15) - nh(point2) =E= 0 ; (LHS = 0)
+     
+sum_lambda(point3)..  (0)*lambda(point3,point1) + (0)*lambda(point3,point2) + (0)*lambda(point3,point3)
+     
+      + (0)*lambda(point3,point4) + (0)*lambda(point3,point5) + (0)*lambda(point3,point6) + (0)*lambda(point3,point7)
+     
+      + (0)*lambda(point3,point8) + (0)*lambda(point3,point9) + (0)*lambda(point3,point10) + (0)*lambda(point3,point11)
+     
+      + (0)*lambda(point3,point12) + (0)*lambda(point3,point13) + (0)*lambda(point3,point14) + (0)*lambda(point3,point15)
+     
+      + (0)*h(point1) + (0)*h(point2) + (0)*h(point3) + (0)*h(point4) + (0)*h(point5) + (0)*h(point6) + (0)*h(point7)
+     
+      + (0)*h(point8) + (0)*h(point9) + (0)*h(point10) + (0)*h(point11) + (0)*h(point12) + (0)*h(point13) + (0)*h(point14)
+     
+      + (0)*h(point15) - nh(point3) =E= 0 ; (LHS = 0)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- count  =E=  number of hull points
+
+count..  z - h(point1) - h(point2) - h(point3) - h(point4) - h(point5) - h(point6) - h(point7) - h(point8) - h(point9)
+     
+      - h(point10) - h(point11) - h(point12) - h(point13) - h(point14) - h(point15) =E= 0 ; (LHS = 0)
+     
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m Using MINLP From line 89
+
+
+---- lambda  weights
+
+lambda(point1,point1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      sum_lambda(point1)
+
+lambda(point1,point2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      sum_lambda(point1)
+
+lambda(point1,point3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      sum_lambda(point1)
+
+REMAINING 222 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       count
+
+
+---- h  hull
+
+h(point1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point1)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      inside(point2,x)
+       (0)      inside(point2,y)
+       (0)      inside(point3,x)
+       (0)      inside(point3,y)
+       (0)      inside(point4,x)
+       (0)      inside(point4,y)
+       (0)      inside(point5,x)
+       (0)      inside(point5,y)
+       (0)      inside(point6,x)
+       (0)      inside(point6,y)
+       (0)      inside(point7,x)
+       (0)      inside(point7,y)
+       (0)      inside(point8,x)
+       (0)      inside(point8,y)
+       (0)      inside(point9,x)
+       (0)      inside(point9,y)
+       (0)      inside(point10,x)
+       (0)      inside(point10,y)
+       (0)      inside(point11,x)
+       (0)      inside(point11,y)
+       (0)      inside(point12,x)
+       (0)      inside(point12,y)
+       (0)      inside(point13,x)
+       (0)      inside(point13,y)
+       (0)      inside(point14,x)
+       (0)      inside(point14,y)
+       (0)      inside(point15,x)
+       (0)      inside(point15,y)
+       (0)      sum_lambda(point1)
+       (0)      sum_lambda(point2)
+       (0)      sum_lambda(point3)
+       (0)      sum_lambda(point4)
+       (0)      sum_lambda(point5)
+       (0)      sum_lambda(point6)
+       (0)      sum_lambda(point7)
+       (0)      sum_lambda(point8)
+       (0)      sum_lambda(point9)
+       (0)      sum_lambda(point10)
+       (0)      sum_lambda(point11)
+       (0)      sum_lambda(point12)
+       (0)      sum_lambda(point13)
+       (0)      sum_lambda(point14)
+       (0)      sum_lambda(point15)
+       -1       count
+
+h(point2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point2)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      inside(point2,x)
+       (0)      inside(point2,y)
+       (0)      inside(point3,x)
+       (0)      inside(point3,y)
+       (0)      inside(point4,x)
+       (0)      inside(point4,y)
+       (0)      inside(point5,x)
+       (0)      inside(point5,y)
+       (0)      inside(point6,x)
+       (0)      inside(point6,y)
+       (0)      inside(point7,x)
+       (0)      inside(point7,y)
+       (0)      inside(point8,x)
+       (0)      inside(point8,y)
+       (0)      inside(point9,x)
+       (0)      inside(point9,y)
+       (0)      inside(point10,x)
+       (0)      inside(point10,y)
+       (0)      inside(point11,x)
+       (0)      inside(point11,y)
+       (0)      inside(point12,x)
+       (0)      inside(point12,y)
+       (0)      inside(point13,x)
+       (0)      inside(point13,y)
+       (0)      inside(point14,x)
+       (0)      inside(point14,y)
+       (0)      inside(point15,x)
+       (0)      inside(point15,y)
+       (0)      sum_lambda(point1)
+       (0)      sum_lambda(point2)
+       (0)      sum_lambda(point3)
+       (0)      sum_lambda(point4)
+       (0)      sum_lambda(point5)
+       (0)      sum_lambda(point6)
+       (0)      sum_lambda(point7)
+       (0)      sum_lambda(point8)
+       (0)      sum_lambda(point9)
+       (0)      sum_lambda(point10)
+       (0)      sum_lambda(point11)
+       (0)      sum_lambda(point12)
+       (0)      sum_lambda(point13)
+       (0)      sum_lambda(point14)
+       (0)      sum_lambda(point15)
+       -1       count
+
+h(point3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point3)
+       (0)      inside(point1,x)
+       (0)      inside(point1,y)
+       (0)      inside(point2,x)
+       (0)      inside(point2,y)
+       (0)      inside(point3,x)
+       (0)      inside(point3,y)
+       (0)      inside(point4,x)
+       (0)      inside(point4,y)
+       (0)      inside(point5,x)
+       (0)      inside(point5,y)
+       (0)      inside(point6,x)
+       (0)      inside(point6,y)
+       (0)      inside(point7,x)
+       (0)      inside(point7,y)
+       (0)      inside(point8,x)
+       (0)      inside(point8,y)
+       (0)      inside(point9,x)
+       (0)      inside(point9,y)
+       (0)      inside(point10,x)
+       (0)      inside(point10,y)
+       (0)      inside(point11,x)
+       (0)      inside(point11,y)
+       (0)      inside(point12,x)
+       (0)      inside(point12,y)
+       (0)      inside(point13,x)
+       (0)      inside(point13,y)
+       (0)      inside(point14,x)
+       (0)      inside(point14,y)
+       (0)      inside(point15,x)
+       (0)      inside(point15,y)
+       (0)      sum_lambda(point1)
+       (0)      sum_lambda(point2)
+       (0)      sum_lambda(point3)
+       (0)      sum_lambda(point4)
+       (0)      sum_lambda(point5)
+       (0)      sum_lambda(point6)
+       (0)      sum_lambda(point7)
+       (0)      sum_lambda(point8)
+       (0)      sum_lambda(point9)
+       (0)      sum_lambda(point10)
+       (0)      sum_lambda(point11)
+       (0)      sum_lambda(point12)
+       (0)      sum_lambda(point13)
+       (0)      sum_lambda(point14)
+       (0)      sum_lambda(point15)
+       -1       count
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- nh  interior
+
+nh(point1)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point1)
+        4.9731  inside(point1,x)
+        9.6386  inside(point1,y)
+       -1       sum_lambda(point1)
+
+nh(point2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point2)
+        8.7392  inside(point2,x)
+        8.4427  inside(point2,y)
+       -1       sum_lambda(point2)
+
+nh(point3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       choose(point3)
+        1.9123  inside(point3,x)
+        4.9453  inside(point3,y)
+       -1       sum_lambda(point3)
+
+REMAINING 12 ENTRIES SKIPPED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m Using MINLP From line 89
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.912E-01, 9.639E+00] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m Using MINLP From line 89
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           4     SINGLE EQUATIONS           61
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          256
+NON ZERO ELEMENTS         1,441     NON LINEAR N-Z          1,350
+CODE LENGTH               2,550     CONSTANT POOL              46     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m Using MINLP From line 89
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m                   OBJECTIVE  z
+     TYPE    MINLP               DIRECTION  MINIMIZE
+     SOLVER  BARON               FROM LINE  89
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                9.0000
+
+ RESOURCE USAGE, LIMIT          0.090 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS              0             0
+
+GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+BARON is a product of The Optimization Firm, LLC. http://www.minlp.com/
+Parts of the BARON software were created at the
+University of Illinois at Urbana-Champaign.
+
+
+===========================================================================
+ BARON version 25.12.10. Built: WIN-64 2025-12-10 23:23:38           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm. For more information and 
+ related optimization and data analytics products visit https://minlp.com.
+
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl, 92, 1123-1161, 2025. 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+
+Solution      = 9  best solution found during preprocessing
+Best possible = 9
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+
+---- EQU choose  point is either hull or interior
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1          1.0000         1.0000         1.0000          .          
+point2          1.0000         1.0000         1.0000          .          
+point3          1.0000         1.0000         1.0000          .          
+point4          1.0000         1.0000         1.0000          .          
+point5          1.0000         1.0000         1.0000          .          
+point6          1.0000         1.0000         1.0000          .          
+point7          1.0000         1.0000         1.0000          .          
+point8          1.0000         1.0000         1.0000          .          
+point9          1.0000         1.0000         1.0000          .          
+point10         1.0000         1.0000         1.0000          .          
+point11         1.0000         1.0000         1.0000          .          
+point12         1.0000         1.0000         1.0000          .          
+point13         1.0000         1.0000         1.0000          .          
+point14         1.0000         1.0000         1.0000          .          
+point15         1.0000         1.0000         1.0000          .          
+
+---- EQU inside  convex combination, only for nh(i)=1
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .x          .              .              .              .          
+point1 .y          .              .              .              .          
+point2 .x          .              .              .              .          
+point2 .y          .              .              .              .          
+point3 .x          .              .              .              .          
+point3 .y          .              .              .              .          
+point4 .x          .              .              .              .          
+point4 .y          .              .              .              .          
+point5 .x          .              .              .              .          
+point5 .y          .              .              .              .          
+point6 .x          .              .              .              .          
+point6 .y          .              .              .              .          
+point7 .x          .              .              .              .          
+point7 .y          .              .              .              .          
+point8 .x          .              .              .              .          
+point8 .y          .              .              .              .          
+point9 .x          .              .              .              .          
+point9 .y          .              .              .              .          
+point10.x          .              .              .              .          
+point10.y          .              .              .              .          
+point11.x          .              .              .              .          
+point11.y          .              .              .              .          
+point12.x          .              .              .              .          
+point12.y          .              .              .              .          
+point13.x          .              .              .              .          
+point13.y          .              .              .              .          
+point14.x          .              .              .              .          
+point14.y          .              .              .              .          
+point15.x          .              .              .              .          
+point15.y          .              .              .              .          
+
+---- EQU sum_lambda  normalize weights, only fot n(i)=1
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .              .              .          
+point2           .              .              .              .          
+point3           .              .              .              .          
+point4           .              .              .              .          
+point5           .              .              .              .          
+point6           .              .              .              .          
+point7           .              .              .              .          
+point8           .              .              .              .          
+point9           .              .              .              .          
+point10          .              .              .              .          
+point11          .              .              .              .          
+point12          .              .              .              .          
+point13          .              .              .              .          
+point14          .              .              .              .          
+point15          .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU count               .              .              .             1.0000      
+
+  count  number of hull points
+
+---- VAR lambda  weights
+
+                       LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .point1           .              .              .              .          
+point1 .point2           .              .             1.0000          .          
+point1 .point3           .              .             1.0000          .          
+point1 .point4           .              .             1.0000          .          
+point1 .point5           .              .             1.0000          .          
+point1 .point6           .              .             1.0000          .          
+point1 .point7           .              .             1.0000          .          
+point1 .point8           .              .             1.0000          .          
+point1 .point9           .              .             1.0000          .          
+point1 .point10          .              .             1.0000          .          
+point1 .point11          .              .             1.0000          .          
+point1 .point12          .              .             1.0000          .          
+point1 .point13          .              .             1.0000          .          
+point1 .point14          .              .             1.0000          .          
+point1 .point15          .              .             1.0000          .          
+point2 .point1           .              .             1.0000          .          
+point2 .point2           .              .              .              .          
+point2 .point3           .              .             1.0000          .          
+point2 .point4           .              .             1.0000          .          
+point2 .point5           .              .             1.0000          .          
+point2 .point6           .              .             1.0000          .          
+point2 .point7           .              .             1.0000          .          
+point2 .point8           .              .             1.0000          .          
+point2 .point9           .              .             1.0000          .          
+point2 .point10          .              .             1.0000          .          
+point2 .point11          .              .             1.0000          .          
+point2 .point12          .              .             1.0000          .          
+point2 .point13          .              .             1.0000          .          
+point2 .point14          .              .             1.0000          .          
+point2 .point15          .              .             1.0000          .          
+point3 .point1           .              .             1.0000          .          
+point3 .point2           .              .             1.0000          .          
+point3 .point3           .              .              .              .          
+point3 .point4           .              .             1.0000          .          
+point3 .point5           .              .             1.0000          .          
+point3 .point6           .              .             1.0000          .          
+point3 .point7           .              .             1.0000          .          
+point3 .point8           .              .             1.0000          .          
+point3 .point9           .              .             1.0000          .          
+point3 .point10          .              .             1.0000          .          
+point3 .point11          .              .             1.0000          .          
+point3 .point12          .              .             1.0000          .          
+point3 .point13          .              .             1.0000          .          
+point3 .point14          .              .             1.0000          .          
+point3 .point15          .              .             1.0000          .          
+point4 .point1           .             0.2397         1.0000          .          
+point4 .point2           .             0.1179         1.0000          .          
+point4 .point3           .              .             1.0000          .          
+point4 .point4           .              .              .              .          
+point4 .point5           .              .             1.0000          .          
+point4 .point6           .              .             1.0000          .          
+point4 .point7           .              .             1.0000          .          
+point4 .point8           .              .             1.0000          .          
+point4 .point9           .              .             1.0000          .          
+point4 .point10          .              .             1.0000          .          
+point4 .point11          .              .             1.0000          .          
+point4 .point12          .              .             1.0000          .          
+point4 .point13          .             0.6424         1.0000          .          
+point4 .point14          .              .             1.0000          .          
+point4 .point15          .              .             1.0000          .          
+point5 .point1           .              .             1.0000          .          
+point5 .point2           .              .             1.0000          .          
+point5 .point3           .              .             1.0000          .          
+point5 .point4           .              .             1.0000          .          
+point5 .point5           .              .              .              .          
+point5 .point6           .              .             1.0000          .          
+point5 .point7           .              .             1.0000          .          
+point5 .point8           .              .             1.0000          .          
+point5 .point9           .              .             1.0000          .          
+point5 .point10          .              .             1.0000          .          
+point5 .point11          .              .             1.0000          .          
+point5 .point12          .              .             1.0000          .          
+point5 .point13          .              .             1.0000          .          
+point5 .point14          .              .             1.0000          .          
+point5 .point15          .              .             1.0000          .          
+point6 .point1           .              .             1.0000          .          
+point6 .point2           .             0.4605         1.0000          .          
+point6 .point3           .              .             1.0000          .          
+point6 .point4           .              .             1.0000          .          
+point6 .point5           .              .             1.0000          .          
+point6 .point6           .              .              .              .          
+point6 .point7           .              .             1.0000          .          
+point6 .point8           .              .             1.0000          .          
+point6 .point9           .              .             1.0000          .          
+point6 .point10          .              .             1.0000          .          
+point6 .point11          .             0.1090         1.0000          .          
+point6 .point12          .              .             1.0000          .          
+point6 .point13          .             0.4305         1.0000          .          
+point6 .point14          .              .             1.0000          .          
+point6 .point15          .              .             1.0000          .          
+point7 .point1           .              .             1.0000          .          
+point7 .point2           .              .             1.0000          .          
+point7 .point3           .              .             1.0000          .          
+point7 .point4           .              .             1.0000          .          
+point7 .point5           .             0.3312         1.0000          .          
+point7 .point6           .              .             1.0000          .          
+point7 .point7           .              .              .              .          
+point7 .point8           .              .             1.0000          .          
+point7 .point9           .              .             1.0000          .          
+point7 .point10          .              .             1.0000          .          
+point7 .point11          .             0.1690         1.0000          .          
+point7 .point12          .              .             1.0000          .          
+point7 .point13          .             0.4998         1.0000          .          
+point7 .point14          .              .             1.0000          .          
+point7 .point15          .              .             1.0000          .          
+point8 .point1           .              .             1.0000          .          
+point8 .point2           .              .             1.0000          .          
+point8 .point3           .              .             1.0000          .          
+point8 .point4           .              .             1.0000          .          
+point8 .point5           .              .             1.0000          .          
+point8 .point6           .              .             1.0000          .          
+point8 .point7           .              .             1.0000          .          
+point8 .point8           .              .              .              .          
+point8 .point9           .              .             1.0000          .          
+point8 .point10          .              .             1.0000          .          
+point8 .point11          .              .             1.0000          .          
+point8 .point12          .              .             1.0000          .          
+point8 .point13          .              .             1.0000          .          
+point8 .point14          .              .             1.0000          .          
+point8 .point15          .              .             1.0000          .          
+point9 .point1           .              .             1.0000          .          
+point9 .point2           .              .             1.0000          .          
+point9 .point3           .              .             1.0000          .          
+point9 .point4           .              .             1.0000          .          
+point9 .point5           .              .             1.0000          .          
+point9 .point6           .              .             1.0000          .          
+point9 .point7           .              .             1.0000          .          
+point9 .point8           .              .             1.0000          .          
+point9 .point9           .              .              .              .          
+point9 .point10          .              .             1.0000          .          
+point9 .point11          .              .             1.0000          .          
+point9 .point12          .              .             1.0000          .          
+point9 .point13          .              .             1.0000          .          
+point9 .point14          .              .             1.0000          .          
+point9 .point15          .              .             1.0000          .          
+point10.point1           .              .             1.0000          .          
+point10.point2           .              .             1.0000          .          
+point10.point3           .              .             1.0000          .          
+point10.point4           .              .             1.0000          .          
+point10.point5           .             0.4386         1.0000          .          
+point10.point6           .              .             1.0000          .          
+point10.point7           .              .             1.0000          .          
+point10.point8           .              .             1.0000          .          
+point10.point9           .              .             1.0000          .          
+point10.point10          .              .              .              .          
+point10.point11          .             0.0120         1.0000          .          
+point10.point12          .              .             1.0000          .          
+point10.point13          .             0.5494         1.0000          .          
+point10.point14          .              .             1.0000          .          
+point10.point15          .              .             1.0000          .          
+point11.point1           .              .             1.0000          .          
+point11.point2           .              .             1.0000          .          
+point11.point3           .              .             1.0000          .          
+point11.point4           .              .             1.0000          .          
+point11.point5           .              .             1.0000          .          
+point11.point6           .              .             1.0000          .          
+point11.point7           .              .             1.0000          .          
+point11.point8           .              .             1.0000          .          
+point11.point9           .              .             1.0000          .          
+point11.point10          .              .             1.0000          .          
+point11.point11          .              .              .              .          
+point11.point12          .              .             1.0000          .          
+point11.point13          .              .             1.0000          .          
+point11.point14          .              .             1.0000          .          
+point11.point15          .              .             1.0000          .          
+point12.point1           .              .             1.0000          .          
+point12.point2           .              .             1.0000          .          
+point12.point3           .              .             1.0000          .          
+point12.point4           .              .             1.0000          .          
+point12.point5           .             0.0298         1.0000          .          
+point12.point6           .              .             1.0000          .          
+point12.point7           .              .             1.0000          .          
+point12.point8           .              .             1.0000          .          
+point12.point9           .              .             1.0000          .          
+point12.point10          .              .             1.0000          .          
+point12.point11          .             0.2268         1.0000          .          
+point12.point12          .              .              .              .          
+point12.point13          .             0.7434         1.0000          .          
+point12.point14          .              .             1.0000          .          
+point12.point15          .              .             1.0000          .          
+point13.point1           .              .             1.0000          .          
+point13.point2           .              .             1.0000          .          
+point13.point3           .              .             1.0000          .          
+point13.point4           .              .             1.0000          .          
+point13.point5           .              .             1.0000          .          
+point13.point6           .              .             1.0000          .          
+point13.point7           .              .             1.0000          .          
+point13.point8           .              .             1.0000          .          
+point13.point9           .              .             1.0000          .          
+point13.point10          .              .             1.0000          .          
+point13.point11          .              .             1.0000          .          
+point13.point12          .              .             1.0000          .          
+point13.point13          .              .              .              .          
+point13.point14          .              .             1.0000          .          
+point13.point15          .              .             1.0000          .          
+point14.point1           .              .             1.0000          .          
+point14.point2           .              .             1.0000          .          
+point14.point3           .              .             1.0000          .          
+point14.point4           .              .             1.0000          .          
+point14.point5           .              .             1.0000          .          
+point14.point6           .              .             1.0000          .          
+point14.point7           .              .             1.0000          .          
+point14.point8           .              .             1.0000          .          
+point14.point9           .              .             1.0000          .          
+point14.point10          .              .             1.0000          .          
+point14.point11          .              .             1.0000          .          
+point14.point12          .              .             1.0000          .          
+point14.point13          .              .             1.0000          .          
+point14.point14          .              .              .              .          
+point14.point15          .              .             1.0000          .          
+point15.point1           .              .             1.0000          .          
+point15.point2           .             0.1666         1.0000          .          
+point15.point3           .              .             1.0000          .          
+point15.point4           .              .             1.0000          .          
+point15.point5           .              .             1.0000          .          
+point15.point6           .              .             1.0000          .          
+point15.point7           .              .             1.0000          .          
+point15.point8           .              .             1.0000          .          
+point15.point9           .              .             1.0000          .          
+point15.point10          .              .             1.0000          .          
+point15.point11          .             0.5220         1.0000          .          
+point15.point12          .              .             1.0000          .          
+point15.point13          .             0.3114         1.0000          .          
+point15.point14          .              .             1.0000          .          
+point15.point15          .              .              .              .          
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            9.0000        +INF             .          
+
+  z  objective
+
+---- VAR h  hull
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .             1.0000         1.0000         1.0000      
+point2           .             1.0000         1.0000         1.0000      
+point3           .             1.0000         1.0000         1.0000      
+point4           .              .             1.0000         1.0000      
+point5           .             1.0000         1.0000         1.0000      
+point6           .              .             1.0000         1.0000      
+point7           .              .             1.0000         1.0000      
+point8           .             1.0000         1.0000         1.0000      
+point9           .             1.0000         1.0000         1.0000      
+point10          .              .             1.0000         1.0000      
+point11          .             1.0000         1.0000         1.0000      
+point12          .              .             1.0000         1.0000      
+point13          .             1.0000         1.0000         1.0000      
+point14          .             1.0000         1.0000         1.0000      
+point15          .              .             1.0000         1.0000      
+
+---- VAR nh  interior
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .             1.0000         EPS         
+point2           .              .             1.0000         EPS         
+point3           .              .             1.0000         EPS         
+point4           .             1.0000         1.0000         EPS         
+point5           .              .             1.0000         EPS         
+point6           .             1.0000         1.0000         EPS         
+point7           .             1.0000         1.0000         EPS         
+point8           .              .             1.0000         EPS         
+point9           .              .             1.0000         EPS         
+point10          .             1.0000         1.0000         EPS         
+point11          .              .             1.0000         EPS         
+point12          .             1.0000         1.0000         EPS         
+point13          .              .             1.0000         EPS         
+point14          .              .             1.0000         EPS         
+point15          .             1.0000         1.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     91 VARIABLE h.L  hull
+
+point1  1.000,    point2  1.000,    point3  1.000,    point5  1.000,    point8  1.000,    point9  1.000,    point11 1.000
+point13 1.000,    point14 1.000
+
+
+----     91 VARIABLE nh.L  interior
+
+point4  1.000,    point6  1.000,    point7  1.000,    point10 1.000,    point12 1.000,    point15 1.000
+
+
+----     91 VARIABLE lambda.L  weights
+
+             point1      point2      point5     point11     point13
+
+point4        0.240       0.118                               0.642
+point6                    0.460                   0.109       0.431
+point7                                0.331       0.169       0.500
+point10                               0.439       0.012       0.549
+point12                               0.030       0.227       0.743
+point15                   0.167                   0.522       0.311
+
+
+----     95 PARAMETER p  data points
+
+                  x           y  hull/scipy  hull/minlp
+
+point1        4.973       9.639       1.000       1.000
+point2        8.739       8.443       1.000       1.000
+point3        1.912       4.945       1.000       1.000
+point4        2.346       3.810
+point5        6.009       1.515       1.000       1.000
+point6        5.077       4.633
+point7        3.591       1.526
+point8        3.664       8.260       1.000       1.000
+point9        0.239       0.593       1.000       1.000
+point10       2.848       1.140
+point11       8.905       3.743       1.000       1.000
+point12       2.341       1.477
+point13       0.191       0.784       1.000       1.000
+point14       9.280       5.550       1.000       1.000
+point15       6.164       3.605
+count                                 9.000       9.000
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE m2 Using MIP From line 113
+
+
+---- choose  =E=  point is either hull or interior
+
+choose(point1)..  h(point1) + nh(point1) =E= 1 ; (LHS = 1)
+     
+choose(point2)..  h(point2) + nh(point2) =E= 1 ; (LHS = 1)
+     
+choose(point3)..  h(point3) + nh(point3) =E= 1 ; (LHS = 1)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- lambda_bnd  =L=  h(j)=0 => lambda(i,j)=0
+
+lambda_bnd(point1,point1)..  lambda(point1,point1) - h(point1) =L= 0 ; (LHS = -1)
+     
+lambda_bnd(point1,point2)..  lambda(point1,point2) - h(point2) =L= 0 ; (LHS = -1)
+     
+lambda_bnd(point1,point3)..  lambda(point1,point3) - h(point3) =L= 0 ; (LHS = -1)
+     
+REMAINING 222 ENTRIES SKIPPED
+
+
+---- inside2  =E=  linearization uses lambda_bnd
+
+inside2(point1,x)..  - 4.97311132*lambda(point1,point1) - 8.73922492*lambda(point1,point2) - 1.91226253*lambda(point1,point3)
+     
+      - 2.34553216*lambda(point1,point4) - 6.00887463*lambda(point1,point5) - 5.07716895*lambda(point1,point6)
+     
+      - 3.59064347*lambda(point1,point7) - 3.66418827*lambda(point1,point8) - 0.23893508*lambda(point1,point9)
+     
+      - 2.84759145*lambda(point1,point10) - 8.90454986*lambda(point1,point11) - 2.34069434*lambda(point1,point12)
+     
+      - 0.19119162*lambda(point1,point13) - 9.27971966*lambda(point1,point14) - 6.16361826*lambda(point1,point15)
+     
+      + 4.97311132*nh(point1) =E= 0 ; (LHS = 0)
+     
+inside2(point1,y)..  - 9.63862756*lambda(point1,point1) - 8.442735*lambda(point1,point2) - 4.94526579*lambda(point1,point3)
+     
+      - 3.80983451*lambda(point1,point4) - 1.51476321*lambda(point1,point5) - 4.63323882*lambda(point1,point6)
+     
+      - 1.52625715*lambda(point1,point7) - 8.26045475*lambda(point1,point8) - 0.59261597*lambda(point1,point9)
+     
+      - 1.14012489*lambda(point1,point10) - 3.743403*lambda(point1,point11) - 1.47696552*lambda(point1,point12)
+     
+      - 0.78401936*lambda(point1,point13) - 5.55039788*lambda(point1,point14) - 3.60477909*lambda(point1,point15)
+     
+      + 9.63862756*nh(point1) =E= 0 ; (LHS = 0)
+     
+inside2(point2,x)..  - 4.97311132*lambda(point2,point1) - 8.73922492*lambda(point2,point2) - 1.91226253*lambda(point2,point3)
+     
+      - 2.34553216*lambda(point2,point4) - 6.00887463*lambda(point2,point5) - 5.07716895*lambda(point2,point6)
+     
+      - 3.59064347*lambda(point2,point7) - 3.66418827*lambda(point2,point8) - 0.23893508*lambda(point2,point9)
+     
+      - 2.84759145*lambda(point2,point10) - 8.90454986*lambda(point2,point11) - 2.34069434*lambda(point2,point12)
+     
+      - 0.19119162*lambda(point2,point13) - 9.27971966*lambda(point2,point14) - 6.16361826*lambda(point2,point15)
+     
+      + 8.73922492*nh(point2) =E= 0 ; (LHS = 0)
+     
+REMAINING 27 ENTRIES SKIPPED
+
+
+---- sum_lambda2  =E=  linear version
+
+sum_lambda2(point1)..  lambda(point1,point1) + lambda(point1,point2) + lambda(point1,point3) + lambda(point1,point4)
+     
+      + lambda(point1,point5) + lambda(point1,point6) + lambda(point1,point7) + lambda(point1,point8) + lambda(point1,point9)
+     
+      + lambda(point1,point10) + lambda(point1,point11) + lambda(point1,point12) + lambda(point1,point13) + lambda(point1,point14)
+     
+      + lambda(point1,point15) - nh(point1) =E= 0 ; (LHS = 0)
+     
+sum_lambda2(point2)..  lambda(point2,point1) + lambda(point2,point2) + lambda(point2,point3) + lambda(point2,point4)
+     
+      + lambda(point2,point5) + lambda(point2,point6) + lambda(point2,point7) + lambda(point2,point8) + lambda(point2,point9)
+     
+      + lambda(point2,point10) + lambda(point2,point11) + lambda(point2,point12) + lambda(point2,point13) + lambda(point2,point14)
+     
+      + lambda(point2,point15) - nh(point2) =E= 0 ; (LHS = 0)
+     
+sum_lambda2(point3)..  lambda(point3,point1) + lambda(point3,point2) + lambda(point3,point3) + lambda(point3,point4)
+     
+      + lambda(point3,point5) + lambda(point3,point6) + lambda(point3,point7) + lambda(point3,point8) + lambda(point3,point9)
+     
+      + lambda(point3,point10) + lambda(point3,point11) + lambda(point3,point12) + lambda(point3,point13) + lambda(point3,point14)
+     
+      + lambda(point3,point15) - nh(point3) =E= 0 ; (LHS = 0)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+
+---- count  =E=  number of hull points
+
+count..  z - h(point1) - h(point2) - h(point3) - h(point4) - h(point5) - h(point6) - h(point7) - h(point8) - h(point9)
+     
+      - h(point10) - h(point11) - h(point12) - h(point13) - h(point14) - h(point15) =E= 0 ; (LHS = 0)
+     
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE m2 Using MIP From line 113
+
+
+---- lambda  weights
+
+lambda(point1,point1)
+                (.LO, .L, .UP, .M = 0, 0, 0, 0)
+        1       lambda_bnd(point1,point1)
+       -4.9731  inside2(point1,x)
+       -9.6386  inside2(point1,y)
+        1       sum_lambda2(point1)
+
+lambda(point1,point2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       lambda_bnd(point1,point2)
+       -8.7392  inside2(point1,x)
+       -8.4427  inside2(point1,y)
+        1       sum_lambda2(point1)
+
+lambda(point1,point3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       lambda_bnd(point1,point3)
+       -1.9123  inside2(point1,x)
+       -4.9453  inside2(point1,y)
+        1       sum_lambda2(point1)
+
+REMAINING 222 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 9, +INF, 0)
+        1       count
+
+
+---- h  hull
+
+h(point1)
+                (.LO, .L, .UP, .M = 0, 1, 1, 1)
+        1       choose(point1)
+       -1       lambda_bnd(point1,point1)
+       -1       lambda_bnd(point2,point1)
+       -1       lambda_bnd(point3,point1)
+       -1       lambda_bnd(point4,point1)
+       -1       lambda_bnd(point5,point1)
+       -1       lambda_bnd(point6,point1)
+       -1       lambda_bnd(point7,point1)
+       -1       lambda_bnd(point8,point1)
+       -1       lambda_bnd(point9,point1)
+       -1       lambda_bnd(point10,point1)
+       -1       lambda_bnd(point11,point1)
+       -1       lambda_bnd(point12,point1)
+       -1       lambda_bnd(point13,point1)
+       -1       lambda_bnd(point14,point1)
+       -1       lambda_bnd(point15,point1)
+       -1       count
+
+h(point2)
+                (.LO, .L, .UP, .M = 0, 1, 1, 1)
+        1       choose(point2)
+       -1       lambda_bnd(point1,point2)
+       -1       lambda_bnd(point2,point2)
+       -1       lambda_bnd(point3,point2)
+       -1       lambda_bnd(point4,point2)
+       -1       lambda_bnd(point5,point2)
+       -1       lambda_bnd(point6,point2)
+       -1       lambda_bnd(point7,point2)
+       -1       lambda_bnd(point8,point2)
+       -1       lambda_bnd(point9,point2)
+       -1       lambda_bnd(point10,point2)
+       -1       lambda_bnd(point11,point2)
+       -1       lambda_bnd(point12,point2)
+       -1       lambda_bnd(point13,point2)
+       -1       lambda_bnd(point14,point2)
+       -1       lambda_bnd(point15,point2)
+       -1       count
+
+h(point3)
+                (.LO, .L, .UP, .M = 0, 1, 1, 1)
+        1       choose(point3)
+       -1       lambda_bnd(point1,point3)
+       -1       lambda_bnd(point2,point3)
+       -1       lambda_bnd(point3,point3)
+       -1       lambda_bnd(point4,point3)
+       -1       lambda_bnd(point5,point3)
+       -1       lambda_bnd(point6,point3)
+       -1       lambda_bnd(point7,point3)
+       -1       lambda_bnd(point8,point3)
+       -1       lambda_bnd(point9,point3)
+       -1       lambda_bnd(point10,point3)
+       -1       lambda_bnd(point11,point3)
+       -1       lambda_bnd(point12,point3)
+       -1       lambda_bnd(point13,point3)
+       -1       lambda_bnd(point14,point3)
+       -1       lambda_bnd(point15,point3)
+       -1       count
+
+REMAINING 12 ENTRIES SKIPPED
+
+---- nh  interior
+
+nh(point1)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       choose(point1)
+        4.9731  inside2(point1,x)
+        9.6386  inside2(point1,y)
+       -1       sum_lambda2(point1)
+
+nh(point2)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       choose(point2)
+        8.7392  inside2(point2,x)
+        8.4427  inside2(point2,y)
+       -1       sum_lambda2(point2)
+
+nh(point3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       choose(point3)
+        1.9123  inside2(point3,x)
+        4.9453  inside2(point3,y)
+       -1       sum_lambda2(point3)
+
+REMAINING 12 ENTRIES SKIPPED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE m2 Using MIP From line 113
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+Matrix    [min, max] : [ 1.912E-01, 9.639E+00]
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE m2 Using MIP From line 113
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          286
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          256
+NON ZERO ELEMENTS         1,216     DISCRETE VARIABLES         30
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE m2 Using MIP From line 113
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   m2                  OBJECTIVE  z
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  113
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                9.0000
+
+ RESOURCE USAGE, LIMIT          0.015 10000000000.000
+ ITERATION COUNT, LIMIT        53    2147483647
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.01sec (det. 1.75 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.40 ticks)
+
+
+Proven optimal solution
+MIP Solution:            9.000000    (53 iterations, 0 nodes)
+Final Solve:             9.000000    (13 iterations)
+
+Best possible:           9.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+---- EQU choose  point is either hull or interior
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1          1.0000         1.0000         1.0000          .          
+point2          1.0000         1.0000         1.0000          .          
+point3          1.0000         1.0000         1.0000          .          
+point4          1.0000         1.0000         1.0000          .          
+point5          1.0000         1.0000         1.0000          .          
+point6          1.0000         1.0000         1.0000          .          
+point7          1.0000         1.0000         1.0000          .          
+point8          1.0000         1.0000         1.0000          .          
+point9          1.0000         1.0000         1.0000          .          
+point10         1.0000         1.0000         1.0000          .          
+point11         1.0000         1.0000         1.0000          .          
+point12         1.0000         1.0000         1.0000          .          
+point13         1.0000         1.0000         1.0000          .          
+point14         1.0000         1.0000         1.0000          .          
+point15         1.0000         1.0000         1.0000          .          
+
+---- EQU lambda_bnd  h(j)=0 => lambda(i,j)=0
+
+                       LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .point1         -INF           -1.0000          .              .          
+point1 .point2         -INF           -1.0000          .              .          
+point1 .point3         -INF           -1.0000          .              .          
+point1 .point4         -INF             .              .              .          
+point1 .point5         -INF           -1.0000          .              .          
+point1 .point6         -INF             .              .              .          
+point1 .point7         -INF             .              .              .          
+point1 .point8         -INF           -1.0000          .              .          
+point1 .point9         -INF           -1.0000          .              .          
+point1 .point10        -INF             .              .              .          
+point1 .point11        -INF           -1.0000          .              .          
+point1 .point12        -INF             .              .              .          
+point1 .point13        -INF           -1.0000          .              .          
+point1 .point14        -INF           -1.0000          .              .          
+point1 .point15        -INF             .              .              .          
+point2 .point1         -INF           -1.0000          .              .          
+point2 .point2         -INF           -1.0000          .              .          
+point2 .point3         -INF           -1.0000          .              .          
+point2 .point4         -INF             .              .              .          
+point2 .point5         -INF           -1.0000          .              .          
+point2 .point6         -INF             .              .              .          
+point2 .point7         -INF             .              .              .          
+point2 .point8         -INF           -1.0000          .              .          
+point2 .point9         -INF           -1.0000          .              .          
+point2 .point10        -INF             .              .              .          
+point2 .point11        -INF           -1.0000          .              .          
+point2 .point12        -INF             .              .              .          
+point2 .point13        -INF           -1.0000          .              .          
+point2 .point14        -INF           -1.0000          .              .          
+point2 .point15        -INF             .              .              .          
+point3 .point1         -INF           -1.0000          .              .          
+point3 .point2         -INF           -1.0000          .              .          
+point3 .point3         -INF           -1.0000          .              .          
+point3 .point4         -INF             .              .              .          
+point3 .point5         -INF           -1.0000          .              .          
+point3 .point6         -INF             .              .              .          
+point3 .point7         -INF             .              .              .          
+point3 .point8         -INF           -1.0000          .              .          
+point3 .point9         -INF           -1.0000          .              .          
+point3 .point10        -INF             .              .              .          
+point3 .point11        -INF           -1.0000          .              .          
+point3 .point12        -INF             .              .              .          
+point3 .point13        -INF           -1.0000          .              .          
+point3 .point14        -INF           -1.0000          .              .          
+point3 .point15        -INF             .              .              .          
+point4 .point1         -INF           -0.7279          .              .          
+point4 .point2         -INF           -0.9037          .              .          
+point4 .point3         -INF           -1.0000          .              .          
+point4 .point4         -INF             .              .              .          
+point4 .point5         -INF           -1.0000          .              .          
+point4 .point6         -INF             .              .              .          
+point4 .point7         -INF             .              .              .          
+point4 .point8         -INF           -1.0000          .              .          
+point4 .point9         -INF           -0.3684          .              .          
+point4 .point10        -INF             .              .              .          
+point4 .point11        -INF           -1.0000          .              .          
+point4 .point12        -INF             .              .              .          
+point4 .point13        -INF           -1.0000          .              .          
+point4 .point14        -INF           -1.0000          .              .          
+point4 .point15        -INF             .              .              .          
+point5 .point1         -INF           -1.0000          .              .          
+point5 .point2         -INF           -1.0000          .              .          
+point5 .point3         -INF           -1.0000          .              .          
+point5 .point4         -INF             .              .              .          
+point5 .point5         -INF           -1.0000          .              .          
+point5 .point6         -INF             .              .              .          
+point5 .point7         -INF             .              .              .          
+point5 .point8         -INF           -1.0000          .              .          
+point5 .point9         -INF           -1.0000          .              .          
+point5 .point10        -INF             .              .              .          
+point5 .point11        -INF           -1.0000          .              .          
+point5 .point12        -INF             .              .              .          
+point5 .point13        -INF           -1.0000          .              .          
+point5 .point14        -INF           -1.0000          .              .          
+point5 .point15        -INF             .              .              .          
+point6 .point1         -INF           -1.0000          .              .          
+point6 .point2         -INF           -0.5206          .              .          
+point6 .point3         -INF           -1.0000          .              .          
+point6 .point4         -INF             .              .              .          
+point6 .point5         -INF           -1.0000          .              .          
+point6 .point6         -INF             .              .              .          
+point6 .point7         -INF             .              .              .          
+point6 .point8         -INF           -1.0000          .              .          
+point6 .point9         -INF           -0.5675          .              .          
+point6 .point10        -INF             .              .              .          
+point6 .point11        -INF           -0.9119          .              .          
+point6 .point12        -INF             .              .              .          
+point6 .point13        -INF           -1.0000          .              .          
+point6 .point14        -INF           -1.0000          .              .          
+point6 .point15        -INF             .              .              .          
+point7 .point1         -INF           -1.0000          .              .          
+point7 .point2         -INF           -1.0000          .              .          
+point7 .point3         -INF           -1.0000          .              .          
+point7 .point4         -INF             .              .              .          
+point7 .point5         -INF           -0.7576          .              .          
+point7 .point6         -INF             .              .              .          
+point7 .point7         -INF             .              .              .          
+point7 .point8         -INF           -1.0000          .              .          
+point7 .point9         -INF           -0.4678          .              .          
+point7 .point10        -INF             .              .              .          
+point7 .point11        -INF           -0.7746          .              .          
+point7 .point12        -INF             .              .              .          
+point7 .point13        -INF           -1.0000          .              .          
+point7 .point14        -INF           -1.0000          .              .          
+point7 .point15        -INF             .              .              .          
+point8 .point1         -INF           -1.0000          .              .          
+point8 .point2         -INF           -1.0000          .              .          
+point8 .point3         -INF           -1.0000          .              .          
+point8 .point4         -INF             .              .              .          
+point8 .point5         -INF           -1.0000          .              .          
+point8 .point6         -INF             .              .              .          
+point8 .point7         -INF             .              .              .          
+point8 .point8         -INF           -1.0000          .              .          
+point8 .point9         -INF           -1.0000          .              .          
+point8 .point10        -INF             .              .              .          
+point8 .point11        -INF           -1.0000          .              .          
+point8 .point12        -INF             .              .              .          
+point8 .point13        -INF           -1.0000          .              .          
+point8 .point14        -INF           -1.0000          .              .          
+point8 .point15        -INF             .              .              .          
+point9 .point1         -INF           -1.0000          .              .          
+point9 .point2         -INF           -1.0000          .              .          
+point9 .point3         -INF           -1.0000          .              .          
+point9 .point4         -INF             .              .              .          
+point9 .point5         -INF           -1.0000          .              .          
+point9 .point6         -INF             .              .              .          
+point9 .point7         -INF             .              .              .          
+point9 .point8         -INF           -1.0000          .              .          
+point9 .point9         -INF           -1.0000          .              .          
+point9 .point10        -INF             .              .              .          
+point9 .point11        -INF           -1.0000          .              .          
+point9 .point12        -INF             .              .              .          
+point9 .point13        -INF           -1.0000          .              .          
+point9 .point14        -INF           -1.0000          .              .          
+point9 .point15        -INF             .              .              .          
+point10.point1         -INF           -1.0000          .              .          
+point10.point2         -INF           -1.0000          .              .          
+point10.point3         -INF           -1.0000          .              .          
+point10.point4         -INF             .              .              .          
+point10.point5         -INF           -0.6590          .              .          
+point10.point6         -INF             .              .              .          
+point10.point7         -INF             .              .              .          
+point10.point8         -INF           -1.0000          .              .          
+point10.point9         -INF           -0.4150          .              .          
+point10.point10        -INF             .              .              .          
+point10.point11        -INF           -0.9260          .              .          
+point10.point12        -INF             .              .              .          
+point10.point13        -INF           -1.0000          .              .          
+point10.point14        -INF           -1.0000          .              .          
+point10.point15        -INF             .              .              .          
+point11.point1         -INF           -1.0000          .              .          
+point11.point2         -INF           -1.0000          .              .          
+point11.point3         -INF           -1.0000          .              .          
+point11.point4         -INF             .              .              .          
+point11.point5         -INF           -1.0000          .              .          
+point11.point6         -INF             .              .              .          
+point11.point7         -INF             .              .              .          
+point11.point8         -INF           -1.0000          .              .          
+point11.point9         -INF           -1.0000          .              .          
+point11.point10        -INF             .              .              .          
+point11.point11        -INF           -1.0000          .              .          
+point11.point12        -INF             .              .              .          
+point11.point13        -INF           -1.0000          .              .          
+point11.point14        -INF           -1.0000          .              .          
+point11.point15        -INF             .              .              .          
+point12.point1         -INF           -1.0000          .              .          
+point12.point2         -INF           -0.9748          .              .          
+point12.point3         -INF           -1.0000          .              .          
+point12.point4         -INF             .              .              .          
+point12.point5         -INF           -1.0000          .              .          
+point12.point6         -INF             .              .              .          
+point12.point7         -INF             .              .              .          
+point12.point8         -INF           -1.0000          .              .          
+point12.point9         -INF           -0.2430          .              .          
+point12.point10        -INF             .              .              .          
+point12.point11        -INF           -0.7822          .              .          
+point12.point12        -INF             .              .              .          
+point12.point13        -INF           -1.0000          .              .          
+point12.point14        -INF           -1.0000          .              .          
+point12.point15        -INF             .              .              .          
+point13.point1         -INF           -1.0000          .              .          
+point13.point2         -INF           -1.0000          .              .          
+point13.point3         -INF           -1.0000          .              .          
+point13.point4         -INF             .              .              .          
+point13.point5         -INF           -1.0000          .              .          
+point13.point6         -INF             .              .              .          
+point13.point7         -INF             .              .              .          
+point13.point8         -INF           -1.0000          .              .          
+point13.point9         -INF           -1.0000          .              .          
+point13.point10        -INF             .              .              .          
+point13.point11        -INF           -1.0000          .              .          
+point13.point12        -INF             .              .              .          
+point13.point13        -INF           -1.0000          .              .          
+point13.point14        -INF           -1.0000          .              .          
+point13.point15        -INF             .              .              .          
+point14.point1         -INF           -1.0000          .              .          
+point14.point2         -INF           -1.0000          .              .          
+point14.point3         -INF           -1.0000          .              .          
+point14.point4         -INF             .              .              .          
+point14.point5         -INF           -1.0000          .              .          
+point14.point6         -INF             .              .              .          
+point14.point7         -INF             .              .              .          
+point14.point8         -INF           -1.0000          .              .          
+point14.point9         -INF           -1.0000          .              .          
+point14.point10        -INF             .              .              .          
+point14.point11        -INF           -1.0000          .              .          
+point14.point12        -INF             .              .              .          
+point14.point13        -INF           -1.0000          .              .          
+point14.point14        -INF           -1.0000          .              .          
+point14.point15        -INF             .              .              .          
+point15.point1         -INF           -1.0000          .              .          
+point15.point2         -INF           -0.8197          .              .          
+point15.point3         -INF           -1.0000          .              .          
+point15.point4         -INF             .              .              .          
+point15.point5         -INF           -1.0000          .              .          
+point15.point6         -INF             .              .              .          
+point15.point7         -INF             .              .              .          
+point15.point8         -INF           -1.0000          .              .          
+point15.point9         -INF           -0.6871          .              .          
+point15.point10        -INF             .              .              .          
+point15.point11        -INF           -0.4931          .              .          
+point15.point12        -INF             .              .              .          
+point15.point13        -INF           -1.0000          .              .          
+point15.point14        -INF           -1.0000          .              .          
+point15.point15        -INF             .              .              .          
+
+---- EQU inside2  linearization uses lambda_bnd
+
+                 LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .x          .              .              .              .          
+point1 .y          .              .              .              .          
+point2 .x          .              .              .              .          
+point2 .y          .              .              .              .          
+point3 .x          .              .              .              .          
+point3 .y          .              .              .              .          
+point4 .x          .              .              .             EPS         
+point4 .y          .              .              .             EPS         
+point5 .x          .              .              .              .          
+point5 .y          .              .              .              .          
+point6 .x          .              .              .             EPS         
+point6 .y          .              .              .             EPS         
+point7 .x          .              .              .             EPS         
+point7 .y          .              .              .             EPS         
+point8 .x          .              .              .              .          
+point8 .y          .              .              .              .          
+point9 .x          .              .              .              .          
+point9 .y          .              .              .              .          
+point10.x          .              .              .             EPS         
+point10.y          .              .              .             EPS         
+point11.x          .              .              .              .          
+point11.y          .              .              .              .          
+point12.x          .              .              .             EPS         
+point12.y          .              .              .             EPS         
+point13.x          .              .              .              .          
+point13.y          .              .              .              .          
+point14.x          .              .              .              .          
+point14.y          .              .              .              .          
+point15.x          .              .              .             EPS         
+point15.y          .              .              .             EPS         
+
+---- EQU sum_lambda2  linear version
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .              .              .          
+point2           .              .              .              .          
+point3           .              .              .              .          
+point4           .              .              .             EPS         
+point5           .              .              .              .          
+point6           .              .              .             EPS         
+point7           .              .              .             EPS         
+point8           .              .              .              .          
+point9           .              .              .              .          
+point10          .              .              .             EPS         
+point11          .              .              .              .          
+point12          .              .              .             EPS         
+point13          .              .              .              .          
+point14          .              .              .              .          
+point15          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU count               .              .              .             1.0000      
+
+  count  number of hull points
+
+---- VAR lambda  weights
+
+                       LOWER          LEVEL          UPPER         MARGINAL
+
+point1 .point1           .              .              .             EPS         
+point1 .point2           .              .             1.0000         EPS         
+point1 .point3           .              .             1.0000         EPS         
+point1 .point4           .              .             1.0000         EPS         
+point1 .point5           .              .             1.0000         EPS         
+point1 .point6           .              .             1.0000         EPS         
+point1 .point7           .              .             1.0000         EPS         
+point1 .point8           .              .             1.0000         EPS         
+point1 .point9           .              .             1.0000         EPS         
+point1 .point10          .              .             1.0000         EPS         
+point1 .point11          .              .             1.0000         EPS         
+point1 .point12          .              .             1.0000         EPS         
+point1 .point13          .              .             1.0000         EPS         
+point1 .point14          .              .             1.0000         EPS         
+point1 .point15          .              .             1.0000         EPS         
+point2 .point1           .              .             1.0000         EPS         
+point2 .point2           .              .              .             EPS         
+point2 .point3           .              .             1.0000         EPS         
+point2 .point4           .              .             1.0000         EPS         
+point2 .point5           .              .             1.0000         EPS         
+point2 .point6           .              .             1.0000         EPS         
+point2 .point7           .              .             1.0000         EPS         
+point2 .point8           .              .             1.0000         EPS         
+point2 .point9           .              .             1.0000         EPS         
+point2 .point10          .              .             1.0000         EPS         
+point2 .point11          .              .             1.0000         EPS         
+point2 .point12          .              .             1.0000         EPS         
+point2 .point13          .              .             1.0000         EPS         
+point2 .point14          .              .             1.0000         EPS         
+point2 .point15          .              .             1.0000         EPS         
+point3 .point1           .              .             1.0000         EPS         
+point3 .point2           .              .             1.0000         EPS         
+point3 .point3           .              .              .             EPS         
+point3 .point4           .              .             1.0000         EPS         
+point3 .point5           .              .             1.0000         EPS         
+point3 .point6           .              .             1.0000         EPS         
+point3 .point7           .              .             1.0000         EPS         
+point3 .point8           .              .             1.0000         EPS         
+point3 .point9           .              .             1.0000         EPS         
+point3 .point10          .              .             1.0000         EPS         
+point3 .point11          .              .             1.0000         EPS         
+point3 .point12          .              .             1.0000         EPS         
+point3 .point13          .              .             1.0000         EPS         
+point3 .point14          .              .             1.0000         EPS         
+point3 .point15          .              .             1.0000         EPS         
+point4 .point1           .             0.2721         1.0000          .          
+point4 .point2           .             0.0963         1.0000          .          
+point4 .point3           .              .             1.0000         EPS         
+point4 .point4           .              .              .             EPS         
+point4 .point5           .              .             1.0000         EPS         
+point4 .point6           .              .             1.0000         EPS         
+point4 .point7           .              .             1.0000         EPS         
+point4 .point8           .              .             1.0000         EPS         
+point4 .point9           .             0.6316         1.0000          .          
+point4 .point10          .              .             1.0000         EPS         
+point4 .point11          .              .             1.0000         EPS         
+point4 .point12          .              .             1.0000         EPS         
+point4 .point13          .              .             1.0000         EPS         
+point4 .point14          .              .             1.0000         EPS         
+point4 .point15          .              .             1.0000         EPS         
+point5 .point1           .              .             1.0000         EPS         
+point5 .point2           .              .             1.0000         EPS         
+point5 .point3           .              .             1.0000         EPS         
+point5 .point4           .              .             1.0000         EPS         
+point5 .point5           .              .              .             EPS         
+point5 .point6           .              .             1.0000         EPS         
+point5 .point7           .              .             1.0000         EPS         
+point5 .point8           .              .             1.0000         EPS         
+point5 .point9           .              .             1.0000         EPS         
+point5 .point10          .              .             1.0000         EPS         
+point5 .point11          .              .             1.0000         EPS         
+point5 .point12          .              .             1.0000         EPS         
+point5 .point13          .              .             1.0000         EPS         
+point5 .point14          .              .             1.0000         EPS         
+point5 .point15          .              .             1.0000         EPS         
+point6 .point1           .              .             1.0000         EPS         
+point6 .point2           .             0.4794         1.0000          .          
+point6 .point3           .              .             1.0000         EPS         
+point6 .point4           .              .             1.0000         EPS         
+point6 .point5           .              .             1.0000         EPS         
+point6 .point6           .              .              .             EPS         
+point6 .point7           .              .             1.0000         EPS         
+point6 .point8           .              .             1.0000         EPS         
+point6 .point9           .             0.4325         1.0000          .          
+point6 .point10          .              .             1.0000         EPS         
+point6 .point11          .             0.0881         1.0000          .          
+point6 .point12          .              .             1.0000         EPS         
+point6 .point13          .              .             1.0000         EPS         
+point6 .point14          .              .             1.0000         EPS         
+point6 .point15          .              .             1.0000         EPS         
+point7 .point1           .              .             1.0000         EPS         
+point7 .point2           .              .             1.0000         EPS         
+point7 .point3           .              .             1.0000         EPS         
+point7 .point4           .              .             1.0000         EPS         
+point7 .point5           .             0.2424         1.0000          .          
+point7 .point6           .              .             1.0000         EPS         
+point7 .point7           .              .              .             EPS         
+point7 .point8           .              .             1.0000         EPS         
+point7 .point9           .             0.5322         1.0000          .          
+point7 .point10          .              .             1.0000         EPS         
+point7 .point11          .             0.2254         1.0000          .          
+point7 .point12          .              .             1.0000         EPS         
+point7 .point13          .              .             1.0000         EPS         
+point7 .point14          .              .             1.0000         EPS         
+point7 .point15          .              .             1.0000         EPS         
+point8 .point1           .              .             1.0000         EPS         
+point8 .point2           .              .             1.0000         EPS         
+point8 .point3           .              .             1.0000         EPS         
+point8 .point4           .              .             1.0000         EPS         
+point8 .point5           .              .             1.0000         EPS         
+point8 .point6           .              .             1.0000         EPS         
+point8 .point7           .              .             1.0000         EPS         
+point8 .point8           .              .              .             EPS         
+point8 .point9           .              .             1.0000         EPS         
+point8 .point10          .              .             1.0000         EPS         
+point8 .point11          .              .             1.0000         EPS         
+point8 .point12          .              .             1.0000         EPS         
+point8 .point13          .              .             1.0000         EPS         
+point8 .point14          .              .             1.0000         EPS         
+point8 .point15          .              .             1.0000         EPS         
+point9 .point1           .              .             1.0000         EPS         
+point9 .point2           .              .             1.0000         EPS         
+point9 .point3           .              .             1.0000         EPS         
+point9 .point4           .              .             1.0000         EPS         
+point9 .point5           .              .             1.0000         EPS         
+point9 .point6           .              .             1.0000         EPS         
+point9 .point7           .              .             1.0000         EPS         
+point9 .point8           .              .             1.0000         EPS         
+point9 .point9           .              .              .             EPS         
+point9 .point10          .              .             1.0000         EPS         
+point9 .point11          .              .             1.0000         EPS         
+point9 .point12          .              .             1.0000         EPS         
+point9 .point13          .              .             1.0000         EPS         
+point9 .point14          .              .             1.0000         EPS         
+point9 .point15          .              .             1.0000         EPS         
+point10.point1           .              .             1.0000         EPS         
+point10.point2           .              .             1.0000         EPS         
+point10.point3           .              .             1.0000         EPS         
+point10.point4           .              .             1.0000         EPS         
+point10.point5           .             0.3410         1.0000          .          
+point10.point6           .              .             1.0000         EPS         
+point10.point7           .              .             1.0000         EPS         
+point10.point8           .              .             1.0000         EPS         
+point10.point9           .             0.5850         1.0000          .          
+point10.point10          .              .              .             EPS         
+point10.point11          .             0.0740         1.0000          .          
+point10.point12          .              .             1.0000         EPS         
+point10.point13          .              .             1.0000         EPS         
+point10.point14          .              .             1.0000         EPS         
+point10.point15          .              .             1.0000         EPS         
+point11.point1           .              .             1.0000         EPS         
+point11.point2           .              .             1.0000         EPS         
+point11.point3           .              .             1.0000         EPS         
+point11.point4           .              .             1.0000         EPS         
+point11.point5           .              .             1.0000         EPS         
+point11.point6           .              .             1.0000         EPS         
+point11.point7           .              .             1.0000         EPS         
+point11.point8           .              .             1.0000         EPS         
+point11.point9           .              .             1.0000         EPS         
+point11.point10          .              .             1.0000         EPS         
+point11.point11          .              .              .             EPS         
+point11.point12          .              .             1.0000         EPS         
+point11.point13          .              .             1.0000         EPS         
+point11.point14          .              .             1.0000         EPS         
+point11.point15          .              .             1.0000         EPS         
+point12.point1           .              .             1.0000         EPS         
+point12.point2           .             0.0252         1.0000          .          
+point12.point3           .              .             1.0000         EPS         
+point12.point4           .              .             1.0000         EPS         
+point12.point5           .              .             1.0000         EPS         
+point12.point6           .              .             1.0000         EPS         
+point12.point7           .              .             1.0000         EPS         
+point12.point8           .              .             1.0000         EPS         
+point12.point9           .             0.7570         1.0000          .          
+point12.point10          .              .             1.0000         EPS         
+point12.point11          .             0.2178         1.0000          .          
+point12.point12          .              .              .             EPS         
+point12.point13          .              .             1.0000         EPS         
+point12.point14          .              .             1.0000         EPS         
+point12.point15          .              .             1.0000         EPS         
+point13.point1           .              .             1.0000         EPS         
+point13.point2           .              .             1.0000         EPS         
+point13.point3           .              .             1.0000         EPS         
+point13.point4           .              .             1.0000         EPS         
+point13.point5           .              .             1.0000         EPS         
+point13.point6           .              .             1.0000         EPS         
+point13.point7           .              .             1.0000         EPS         
+point13.point8           .              .             1.0000         EPS         
+point13.point9           .              .             1.0000         EPS         
+point13.point10          .              .             1.0000         EPS         
+point13.point11          .              .             1.0000         EPS         
+point13.point12          .              .             1.0000         EPS         
+point13.point13          .              .              .             EPS         
+point13.point14          .              .             1.0000         EPS         
+point13.point15          .              .             1.0000         EPS         
+point14.point1           .              .             1.0000         EPS         
+point14.point2           .              .             1.0000         EPS         
+point14.point3           .              .             1.0000         EPS         
+point14.point4           .              .             1.0000         EPS         
+point14.point5           .              .             1.0000         EPS         
+point14.point6           .              .             1.0000         EPS         
+point14.point7           .              .             1.0000         EPS         
+point14.point8           .              .             1.0000         EPS         
+point14.point9           .              .             1.0000         EPS         
+point14.point10          .              .             1.0000         EPS         
+point14.point11          .              .             1.0000         EPS         
+point14.point12          .              .             1.0000         EPS         
+point14.point13          .              .             1.0000         EPS         
+point14.point14          .              .              .             EPS         
+point14.point15          .              .             1.0000         EPS         
+point15.point1           .              .             1.0000         EPS         
+point15.point2           .             0.1803         1.0000          .          
+point15.point3           .              .             1.0000         EPS         
+point15.point4           .              .             1.0000         EPS         
+point15.point5           .              .             1.0000         EPS         
+point15.point6           .              .             1.0000         EPS         
+point15.point7           .              .             1.0000         EPS         
+point15.point8           .              .             1.0000         EPS         
+point15.point9           .             0.3129         1.0000          .          
+point15.point10          .              .             1.0000         EPS         
+point15.point11          .             0.5069         1.0000          .          
+point15.point12          .              .             1.0000         EPS         
+point15.point13          .              .             1.0000         EPS         
+point15.point14          .              .             1.0000         EPS         
+point15.point15          .              .              .             EPS         
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR z                 -INF            9.0000        +INF             .          
+
+  z  objective
+
+---- VAR h  hull
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .             1.0000         1.0000         1.0000      
+point2           .             1.0000         1.0000         1.0000      
+point3           .             1.0000         1.0000         1.0000      
+point4           .              .             1.0000         1.0000      
+point5           .             1.0000         1.0000         1.0000      
+point6           .              .             1.0000         1.0000      
+point7           .              .             1.0000         1.0000      
+point8           .             1.0000         1.0000         1.0000      
+point9           .             1.0000         1.0000         1.0000      
+point10          .              .             1.0000         1.0000      
+point11          .             1.0000         1.0000         1.0000      
+point12          .              .             1.0000         1.0000      
+point13          .             1.0000         1.0000         1.0000      
+point14          .             1.0000         1.0000         1.0000      
+point15          .              .             1.0000         1.0000      
+
+---- VAR nh  interior
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+point1           .              .             1.0000         EPS         
+point2           .              .             1.0000         EPS         
+point3           .              .             1.0000         EPS         
+point4           .             1.0000         1.0000         EPS         
+point5           .              .             1.0000         EPS         
+point6           .             1.0000         1.0000         EPS         
+point7           .             1.0000         1.0000         EPS         
+point8           .              .             1.0000         EPS         
+point9           .              .             1.0000         EPS         
+point10          .             1.0000         1.0000         EPS         
+point11          .              .             1.0000         EPS         
+point12          .             1.0000         1.0000         EPS         
+point13          .              .             1.0000         EPS         
+point14          .              .             1.0000         EPS         
+point15          .             1.0000         1.0000         EPS         
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 04/30/26 04:06:19 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    115 VARIABLE h.L  hull
+
+point1  1.000,    point2  1.000,    point3  1.000,    point5  1.000,    point8  1.000,    point9  1.000,    point11 1.000
+point13 1.000,    point14 1.000
+
+
+----    115 VARIABLE lambda.L  weights
+
+             point1      point2      point5      point9     point11
+
+point4        0.272       0.096                   0.632
+point6                    0.479                   0.433       0.088
+point7                                0.242       0.532       0.225
+point10                               0.341       0.585       0.074
+point12                   0.025                   0.757       0.218
+point15                   0.180                   0.313       0.507
+
+
+----    119 PARAMETER p  data points
+
+                  x           y  hull/scipy  hull/minlp    hull/mip
+
+point1        4.973       9.639       1.000       1.000       1.000
+point2        8.739       8.443       1.000       1.000       1.000
+point3        1.912       4.945       1.000       1.000       1.000
+point4        2.346       3.810
+point5        6.009       1.515       1.000       1.000       1.000
+point6        5.077       4.633
+point7        3.591       1.526
+point8        3.664       8.260       1.000       1.000       1.000
+point9        0.239       0.593       1.000       1.000       1.000
+point10       2.848       1.140
+point11       8.905       3.743       1.000       1.000       1.000
+point12       2.341       1.477
+point13       0.191       0.784       1.000       1.000       1.000
+point14       9.280       5.550       1.000       1.000       1.000
+point15       6.164       3.605
+count                                 9.000       9.000       9.000
+
+
+**** REPORT FILE SUMMARY
+
+
+
+EXECUTION TIME       =        0.953 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+
+
+USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\convex hull\convexhull.gms
+Output     C:\projects\OptimizationModels\convex hull\convexhull.lst
