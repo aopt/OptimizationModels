@@ -15,7 +15,8 @@ https://yetanothermathprogrammingconsultant.blogspot.com/2026/04/convex-hull-mod
 
 # Files
 
-|-------|----------------------|
-| `convexhull.gms` | Scipy, MINLP and MIP model |
-| `convexhullplot.gms` | Plot convex hull |
+| File    | Description |
+|-------  | ----------------------|
+| `convexhull.gms`      | Scipy, MINLP and MIP model | 
+| `convexhullplot.gms`  | Plot convex hull |
 | `convexhull_loop.gms` | Calculate convex hull in batches |
