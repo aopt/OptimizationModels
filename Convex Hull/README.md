@@ -8,5 +8,14 @@ Three methods are used:
   3. A linear MIP model
 
 
-References:
+# References
+
 https://yetanothermathprogrammingconsultant.blogspot.com/2026/04/convex-hull-models.html
+
+
+# Files
+
+|-------|----------------------|
+| `convexhull.gms` | Scipy, MINLP and MIP model |
+| `convexhullplot.gms` | Plot convex hull |
+| `convexhull_loop.gms` | Calculate convex hull in batches |
