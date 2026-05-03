@@ -1,4 +1,5 @@
---- Job convexhull.gms Start 04/30/26 04:06:19 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+
+--- Job convexhull.gms Start 05/03/26 16:04:54 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\53\gmsprmNT.txt
     C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
@@ -19,14 +20,14 @@ Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
           Amsterdam Optimization Modeling Group                     DCE4744
           225a\gamslice.dat
           8ed7e271-7287-4ff2
-          node:23592203 mem:64 cores:8 ipport:55779 v:2                    
+          node:23592203 mem:64 cores:8 ipport:52690 v:2                    
           Evaluation license: Not for commercial or production use
           The time-limited license stops working on : Aug 30, 2026
 System information: 8 physical cores and 64 Gb physical memory detected
 GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
 --- Starting compilation
---- convexhull.gms(120) 3 Mb
---- Starting execution: elapsed 0:00:00.016
+--- convexhull.gms(159) 3 Mb
+--- Starting execution: elapsed 0:00:00.017
 --- convexhull.gms(30) 4 Mb
 --- Initialize embedded library embpycclib64.dll
 --- Execute embedded library embpycclib64.dll
@@ -42,7 +43,7 @@ Computing convex hull...
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.912E-01, 9.639E+00] - Zero values observed as well
 --- convexhull.gms(89) 4 Mb
---- Executing BARON (Solvelink=2): elapsed 0:00:00.683
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.686
 
 GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
@@ -73,7 +74,7 @@ GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
                          *** Normal completion ***            
 
- Wall clock time:                     0.11
+ Wall clock time:                     0.10
  Total CPU time used:                 0.09
 
  Total no. of BaR iterations:      -1
@@ -89,7 +90,7 @@ Absolute gap  = 0  optca = 1E-9
 Relative gap  = 0  optcr = 0.0001
 
 --- Reading solution for model m
---- Executing after solve: elapsed 0:00:00.904
+--- Executing after solve: elapsed 0:00:00.902
 --- convexhull.gms(95) 4 Mb
 --- Generating MIP model m2
 --- convexhull.gms(113) 4 Mb
@@ -99,7 +100,7 @@ Relative gap  = 0  optcr = 0.0001
 --- RHS       [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 1.912E-01, 9.639E+00]
---- Executing CPLEX (Solvelink=2): elapsed 0:00:00.906
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.904
 
 IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
 
@@ -149,22 +150,22 @@ Root relaxation solution time = 0.00 sec. (0.23 ticks)
    Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
 
 *     0+    0                           15.0000        6.0000            60.00%
-Found incumbent of value 15.000000 after 0.01 sec. (1.72 ticks)
+Found incumbent of value 15.000000 after 0.00 sec. (1.72 ticks)
 *     0     0      integral     0        9.0000        9.0000       53    0.00%
-Elapsed time = 0.01 sec. (1.74 ticks, tree = 0.00 MB)
-Found incumbent of value 9.000000 after 0.01 sec. (1.74 ticks)
+Elapsed time = 0.00 sec. (1.74 ticks, tree = 0.00 MB)
+Found incumbent of value 9.000000 after 0.00 sec. (1.74 ticks)
 
 Root node processing (before b&c):
-  Real time             =    0.01 sec. (1.75 ticks)
+  Real time             =    0.00 sec. (1.75 ticks)
 Parallel b&c, 16 threads:
   Real time             =    0.00 sec. (0.00 ticks)
   Sync time (average)   =    0.00 sec.
   Wait time (average)   =    0.00 sec.
                           ------------
-Total (root+branch&cut) =    0.01 sec. (1.75 ticks)
+Total (root+branch&cut) =    0.00 sec. (1.75 ticks)
 
 --- MIP status (101): integer optimal solution.
---- Cplex Time: 0.01sec (det. 1.75 ticks)
+--- Cplex Time: 0.02sec (det. 1.75 ticks)
 
 --- Returning a primal only solution to GAMS (marginals all set to NA).
 --- Fixing integer variables and solving final LP...
@@ -196,7 +197,165 @@ Absolute gap:            0.000000
 Relative gap:            0.000000
 
 --- Reading solution for model m2
---- Executing after solve: elapsed 0:00:00.962
---- convexhull.gms(119) 4 Mb
+--- Executing after solve: elapsed 0:00:00.964
+--- convexhull.gms(128) 4 Mb
+--- Generating MIP model m3
+--- convexhull.gms(140) 4 Mb
+---   271 rows  241 columns  1,141 non-zeroes
+---   15 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.912E-01, 9.639E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.912E-01, 9.639E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.966
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 15.000000 after 0.00 sec. (0.03 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 102 rows and 50 columns.
+MIP Presolve modified 1034 coefficients.
+Reduced MIP has 168 rows, 191 columns, and 768 nonzeros.
+Reduced MIP has 11 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.77 ticks)
+Probing fixed 2 vars, tightened 0 bounds.
+Probing time = 0.02 sec. (25.30 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve eliminated 24 rows and 2 columns.
+MIP Presolve modified 10 coefficients.
+Reduced MIP has 144 rows, 189 columns, and 720 nonzeros.
+Reduced MIP has 9 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.39 ticks)
+Probing time = 0.00 sec. (0.07 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             6.000000
+Iteration:    62   Dual objective     =             9.000000
+Root relaxation solution time = 0.00 sec. (0.33 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                           15.0000        6.0000            60.00%
+Found incumbent of value 15.000000 after 0.02 sec. (27.15 ticks)
+*     0     0      integral     0        9.0000        9.0000       65    0.00%
+Elapsed time = 0.02 sec. (27.18 ticks, tree = 0.00 MB)
+Found incumbent of value 9.000000 after 0.02 sec. (27.18 ticks)
+
+Root node processing (before b&c):
+  Real time             =    0.02 sec. (27.18 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.02 sec. (27.18 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.02sec (det. 27.18 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 225 rows and 106 columns.
+Reduced LP has 45 rows, 135 columns, and 405 nonzeros.
+Presolve time = 0.00 sec. (0.34 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             9.000000
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.57 ticks)
+
+
+Proven optimal solution
+MIP Solution:            9.000000    (65 iterations, 0 nodes)
+Final Solve:             9.000000    (29 iterations)
+
+Best possible:           9.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m3
+--- Executing after solve: elapsed 0:00:01.035
+--- convexhull.gms(148) 4 Mb
+--- Generating RMIP model m3
+--- convexhull.gms(154) 4 Mb
+---   271 rows  241 columns  1,141 non-zeroes
+---   15 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.912E-01, 9.639E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.912E-01, 9.639E+00]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:01.037
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.56 Mb (peak 0.56 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.04 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 0 rows and 1 columns.
+Reduced LP has 270 rows, 240 columns, and 1125 nonzeros.
+Presolve time = 0.00 sec. (0.47 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             0.000000
+Perturbation started.
+Iteration:    51   Dual objective     =             0.000000
+Iteration:   113   Dual objective     =             4.081688
+Iteration:   175   Dual objective     =             7.060744
+Removing perturbation.
+
+--- LP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 2.19 ticks)
+
+
+Optimal solution found
+Objective:            9.000000
+
+--- Reading solution for model m3
+--- Executing after solve: elapsed 0:00:01.087
+--- convexhull.gms(158) 4 Mb
 *** Status: Normal completion
---- Job convexhull.gms Stop 04/30/26 04:06:20 elapsed 0:00:01.016
+--- Job convexhull.gms Stop 05/03/26 16:04:56 elapsed 0:00:01.145

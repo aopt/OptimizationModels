@@ -1,6 +1,8 @@
 $ontext
 
-   Calculate convex hull of a set of points using an MINLP or MIP model
+   Calculate convex hull of a set of points using an MINLP, MIP or LP model
+
+   Note that I did not prove that the LP will always deliver integer solutions.
 
 $offtext
 
@@ -96,7 +98,7 @@ display p;
 
 
 *-----------------------------------------------------
-* mip convex hull model
+* mip v1 convex hull model
 *-----------------------------------------------------
 
 Equations
@@ -112,9 +114,48 @@ sum_lambda2(i)..   sum(j, lambda(i,j)) =e= nh(i);
 model m2 /choose,lambda_bnd,inside2,sum_lambda2,count/;
 solve m2 minimizing z using mip;
 
+display h.l,nh.l,lambda.l;
 display h.l,lambda.l;
 
-p(i,'hull/mip') = h.l(i)>0.5;
-p('count','hull/mip') = sum(i$(h.l(i)>0.5),1);
+p(i,'hull/mip1') = h.l(i)>0.5;
+p('count','hull/mip1') = sum(i$(h.l(i)>0.5),1);
+display p;
+
+
+*-----------------------------------------------------
+* mip v2 convex hull model
+*-----------------------------------------------------
+
+* unfix
+lambda.up(i,i) = 1;
+
+Equations
+   lambda_bnd(i,j) 'h(j)=0 => lambda(i,j)=0'
+   inside3(i,k)    'linearization uses lambda_bnd'
+   sum_lambda3     'linear version' 
+;
+
+inside3(i,k)..     p(i,k) =e= sum(j, lambda(i,j)*p(j,k)); 
+sum_lambda3(i)..   sum(j, lambda(i,j)) =e= 1;
+
+model m3 /lambda_bnd,inside3,sum_lambda3,count/;
+solve m3 minimizing z using mip;
+
+display h.l,lambda.l;
+
+p(i,'hull/mip2') = h.l(i)>0.5;
+p('count','hull/mip2') = sum(i$(h.l(i)>0.5),1);
+display p;
+
+display h.l,lambda.l;
+
+*-----------------------------------------------------
+* solve mip v2 as LP
+*-----------------------------------------------------
+
+solve m3 minimizing z using rmip;
+
+p(i,'hull/lp') = h.l(i)>0.5;
+p('count','hull/lp') = sum(i$(h.l(i)>0.5),1);
 display p;
 
