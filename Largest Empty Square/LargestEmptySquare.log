@@ -1,0 +1,1520 @@
+--- Job LargestEmptySquare.gms Start 05/12/26 04:23:08 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Largest Empty Square\LargestEmptySquare.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Largest Empty Square\225b\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225b\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:53402 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- LargestEmptySquare.gms(282) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Largest Empty Square\plot.html
+--- LargestEmptySquare.gms(625) 3 Mb
+--- Starting execution: elapsed 0:00:00.042
+--- LargestEmptySquare.gms(41) 4 Mb
+--- Generating MIP model emptysquare
+--- LargestEmptySquare.gms(68) 4 Mb
+---   503 rows  405 columns  1,406 non-zeroes
+---   400 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.154
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.60 Mb (peak 0.61 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.06 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 2 rows and 2 columns.
+MIP Presolve modified 200 coefficients.
+Reduced MIP has 500 rows, 403 columns, and 1400 nonzeros.
+Reduced MIP has 400 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.93 ticks)
+Found incumbent of value 0.000000 after 0.00 sec. (1.20 ticks)
+Probing time = 0.00 sec. (2.67 ticks)
+Cover probing fixed 0 vars, tightened 2 bounds.
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve modified 90 coefficients.
+Reduced MIP has 500 rows, 403 columns, and 1400 nonzeros.
+Reduced MIP has 400 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.03 ticks)
+Probing time = 0.00 sec. (2.70 ticks)
+Clique table members: 1057.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.22 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             5.367396
+Perturbation started.
+Iteration:    51   Dual objective     =             5.367396
+Iteration:   113   Dual objective     =             5.367393
+Removing perturbation.
+Root relaxation solution time = 0.00 sec. (1.70 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000        5.3674              --- 
+Found incumbent of value 0.000000 after 0.00 sec. (11.13 ticks)
+*     0+    0                            0.3500        5.3674              --- 
+Found incumbent of value 0.349967 after 0.00 sec. (11.13 ticks)
+      0     0        5.3674   179        0.3500        5.3674      137     --- 
+*     0+    0                            0.3746        5.3674              --- 
+Found incumbent of value 0.374638 after 0.02 sec. (13.19 ticks)
+      0     0        5.3674    96        0.3746     Cuts: 125      281     --- 
+*     0+    0                            0.4933        5.3674           988.07%
+Found incumbent of value 0.493297 after 0.02 sec. (27.29 ticks)
+      0     0        5.3674   111        0.4933     Cuts: 196      371  988.07%
+*     0+    0                            0.4943        5.3674           985.88%
+Found incumbent of value 0.494288 after 0.03 sec. (34.35 ticks)
+      0     0        5.3674   131        0.4943     Cuts: 104      484  985.88%
+*     0+    0                            0.5199        5.3674           932.33%
+Found incumbent of value 0.519931 after 0.03 sec. (49.28 ticks)
+*     0+    0                            0.9919        5.3674           441.13%
+Found incumbent of value 0.991879 after 0.05 sec. (53.25 ticks)
+*     0+    0                            2.9001        5.3674            85.07%
+Found incumbent of value 2.900147 after 0.06 sec. (56.33 ticks)
+      0     0        cutoff              2.9001        2.9001      484    0.00%
+Elapsed time = 0.06 sec. (56.36 ticks, tree = 0.01 MB)
+
+Clique cuts applied:  3
+Implied bound cuts applied:  19
+Flow cuts applied:  44
+Mixed integer rounding cuts applied:  42
+
+Root node processing (before b&c):
+  Real time             =    0.06 sec. (56.38 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.06 sec. (56.38 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.06sec (det. 56.38 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 502 rows and 405 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.24 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.41 ticks)
+
+
+Proven optimal solution
+MIP Solution:            2.900147    (484 iterations, 0 nodes)
+Final Solve:             2.900147    (0 iterations)
+
+Best possible:           2.900147
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model emptysquare
+--- Executing after solve: elapsed 0:00:00.396
+--- LargestEmptySquare.gms(74) 4 Mb
+--- Generating MIP model emptydiamond
+--- LargestEmptySquare.gms(107) 4 Mb
+---   704 rows  603 columns  1,908 non-zeroes
+---   200 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.399
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.04 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.65 Mb (peak 0.65 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.02 Mb (peak 0.09 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Found incumbent of value 0.000000 after 0.00 sec. (0.05 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 0 rows and 1 columns.
+Reduced MIP has 704 rows, 603 columns, and 1908 nonzeros.
+Reduced MIP has 200 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (0.88 ticks)
+Probing fixed 0 vars, tightened 408 bounds.
+Probing time = 0.00 sec. (10.83 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+MIP Presolve modified 596 coefficients.
+Reduced MIP has 704 rows, 603 columns, and 1908 nonzeros.
+Reduced MIP has 200 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.11 ticks)
+Probing time = 0.00 sec. (3.84 ticks)
+Clique table members: 1655.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Tried aggregator 1 time.
+Aggregator did 200 substitutions.
+Reduced LP has 504 rows, 403 columns, and 1508 nonzeros.
+Presolve time = 0.00 sec. (0.48 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             5.019294
+Perturbation started.
+Iteration:    51   Dual objective     =             5.019294
+Removing perturbation.
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =             5.000000
+Root relaxation solution time = 0.00 sec. (2.86 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            0.0000        5.0193              --- 
+Found incumbent of value 0.000000 after 0.02 sec. (21.25 ticks)
+*     0+    0                            0.1131        5.0193              --- 
+Found incumbent of value 0.113111 after 0.02 sec. (21.25 ticks)
+      0     0        5.0000    52        0.1131        5.0000       79     --- 
+*     0+    0                            0.1642        5.0000              --- 
+Found incumbent of value 0.164219 after 0.02 sec. (23.95 ticks)
+      0     0        5.0000    64        0.1642     Cuts: 276      209     --- 
+*     0+    0                            0.5651        5.0000           784.74%
+Found incumbent of value 0.565136 after 0.03 sec. (45.45 ticks)
+      0     0        4.2307    53        0.5651     Cuts: 276      287  648.62%
+*     0+    0                            1.7490        4.2307           141.89%
+Found incumbent of value 1.748997 after 0.06 sec. (66.16 ticks)
+      0     0        4.1840    67        1.7490     Cuts: 235      353  139.22%
+      0     0        4.1788    60        1.7490     Cuts: 115      398  138.93%
+      0     0        4.1702    62        1.7490      Cuts: 33      421  138.43%
+Detecting symmetries...
+      0     0        4.1702    60        1.7490      Cuts: 43      438  138.43%
+*     0+    0                            1.9720        4.1702           111.46%
+Found incumbent of value 1.972049 after 0.09 sec. (119.49 ticks)
+      0     0        cutoff              1.9720        1.9720      438    0.00%
+Elapsed time = 0.09 sec. (119.53 ticks, tree = 0.01 MB)
+
+Clique cuts applied:  35
+Implied bound cuts applied:  148
+Flow cuts applied:  11
+Mixed integer rounding cuts applied:  32
+Gomory fractional cuts applied:  4
+
+Root node processing (before b&c):
+  Real time             =    0.09 sec. (119.55 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.00 sec. (0.00 ticks)
+  Sync time (average)   =    0.00 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.09 sec. (119.55 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.09sec (det. 119.55 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 501 rows and 401 columns.
+Aggregator did 200 substitutions.
+Reduced LP has 3 rows, 3 columns, and 9 nonzeros.
+Presolve time = 0.00 sec. (0.46 ticks)
+
+Iteration log . . .
+Iteration:     1   Dual infeasibility =             1.000000
+Iteration:     3   Dual objective     =             1.972049
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.70 ticks)
+
+
+Proven optimal solution
+MIP Solution:            1.972049    (438 iterations, 0 nodes)
+Final Solve:             1.972049    (3 iterations)
+
+Best possible:           1.972049
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model emptydiamond
+--- Executing after solve: elapsed 0:00:00.558
+--- LargestEmptySquare.gms(115) 4 Mb
+--- Generating MIQCP model maxrectangle
+--- LargestEmptySquare.gms(139) 6 Mb
+---   503 rows  405 columns  1,407 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   400 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01] - Zero values observed as well
+--- LargestEmptySquare.gms(139) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:00.561
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.66 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.06 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQCP Presolve eliminated 3 rows and 2 columns.
+MIQCP Presolve modified 400 coefficients.
+Reduced MIQCP has 502 rows, 407 columns, and 1406 nonzeros.
+Reduced MIQCP has 400 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (1.89 ticks)
+Probing time = 0.00 sec. (2.63 ticks)
+Clique table members: 1070.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 500 rows, 405 columns, and 1400 nonzeros.
+Presolve time = 0.00 sec. (0.25 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+Using devex.
+Root relaxation solution time = 0.00 sec. (0.88 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    0         
+      0     0        7.5287     0                     Cone: 1      413         
+      0     0        7.5236   344                     Cone: 2      426         
+      0     0        7.5212   340                     Cone: 3      432         
+      0     0        7.5199   336                     Cone: 4      434         
+      0     0        7.5193   335                     Cone: 5      437         
+      0     0        7.5190   335                     Cone: 6      440         
+      0     0        7.5189   333                     Cone: 8      442         
+      0     0        7.5189   333                      7.5189      442         
+*     0+    0                            1.7955        7.5189           318.77%
+Found incumbent of value 1.795456 after 0.03 sec. (28.48 ticks)
+      0     0        7.4738   233        1.7955      Cuts: 59      643  316.26%
+      0     0        7.3868   256        1.7955     Cuts: 225      818  311.41%
+*     0+    0                            2.0325        7.3868           263.43%
+Found incumbent of value 2.032527 after 0.25 sec. (407.46 ticks)
+      0     0        7.3526   267        2.0325     Cuts: 225      966  261.75%
+*     0+    0                            2.1714        7.3526           238.60%
+Found incumbent of value 2.171447 after 0.34 sec. (584.31 ticks)
+      0     0        7.2455   290        2.1714     Cuts: 225     1262  233.67%
+      0     0        7.1820   310        2.1714     Cuts: 225     1473  230.75%
+*     0+    0                            2.2188        7.1820           223.68%
+Found incumbent of value 2.218826 after 0.45 sec. (793.41 ticks)
+      0     0        7.1757   315        2.2188     Cuts: 225     1565  223.40%
+*     0+    0                            2.2375        7.1757           220.70%
+Found incumbent of value 2.237510 after 0.47 sec. (806.12 ticks)
+      0     0        7.0815   312        2.2375     Cuts: 225     1744  216.49%
+*     0+    0                            2.4811        7.0815           185.42%
+Found incumbent of value 2.481126 after 0.47 sec. (822.76 ticks)
+      0     0        7.0058   315        2.4811     Cuts: 225     1894  182.36%
+      0     0        6.9680   303        2.4811     Cuts: 225     1967  180.84%
+      0     0        6.8787   309        2.4811     Cuts: 225     2167  177.24%
+      0     0        6.8504   288        2.4811     Cuts: 225     2288  176.10%
+      0     0        6.8195   303        2.4811     Cuts: 225     2384  174.86%
+      0     0        6.7762   297        2.4811     Cuts: 225     2469  173.11%
+      0     0        6.7550   305        2.4811     Cuts: 225     2546  172.26%
+      0     0        6.7362   306        2.4811     Cuts: 225     2635  171.50%
+*     0+    0                            2.5223        6.7362           167.06%
+Found incumbent of value 2.522294 after 0.53 sec. (895.49 ticks)
+      0     0        6.7233   305        2.5223     Cuts: 225     2727  166.55%
+      0     0        6.7163   313        2.5223     Cuts: 225     2788  166.28%
+      0     0        6.6951   312        2.5223     Cuts: 225     2886  165.44%
+      0     0        6.6828   312        2.5223     Cuts: 225     2969  164.95%
+      0     0        6.6611   309        2.5223     Cuts: 225     3060  164.09%
+*     0+    0                            2.6467        6.6611           151.68%
+Found incumbent of value 2.646698 after 0.56 sec. (939.18 ticks)
+      0     0        6.6022   320        2.6467     Cuts: 225     3193  149.45%
+*     0+    0                            2.8011        6.6022           135.70%
+Found incumbent of value 2.801089 after 0.58 sec. (956.33 ticks)
+      0     0        6.5888   315        2.8011     Cuts: 225     3273  135.22%
+*     0+    0                            2.9408        6.5888           124.05%
+Found incumbent of value 2.940807 after 0.58 sec. (971.42 ticks)
+      0     0        6.5751   314        2.9408     Cuts: 225     3353  123.58%
+      0     0        6.5592   310        2.9408     Cuts: 225     3439  123.04%
+      0     0        6.5412   315        2.9408     Cuts: 225     3531  122.43%
+*     0+    0                            3.0729        6.5412           112.87%
+Found incumbent of value 3.072894 after 0.61 sec. (1001.75 ticks)
+      0     0        6.5361   317        3.0729     Cuts: 225     3573  112.70%
+      0     0        6.5299   310        3.0729     Cuts: 225     3619  112.50%
+      0     0        6.5189   306        3.0729     Cuts: 225     3722  112.14%
+*     0+    0                            3.2804        6.5189            98.73%
+Found incumbent of value 3.280355 after 0.62 sec. (1028.98 ticks)
+      0     0        6.5004   304        3.2804     Cuts: 225     3841   98.16%
+      0     0        6.4944   306        3.2804     Cuts: 225     3921   97.98%
+      0     0        6.4913   302        3.2804     Cuts: 225     4018   97.88%
+      0     0        6.4903   303        3.2804     Cuts: 225     4059   97.85%
+      0     0        6.4875   255        3.2804     Cuts: 225     4146   97.77%
+      0     0        6.4871   275        3.2804     Cuts: 225     4210   97.76%
+*     0+    0                            3.4110        6.4871            90.19%
+Found incumbent of value 3.410958 after 0.73 sec. (1159.04 ticks)
+      0     2        6.4871   250        3.4110        6.4871     4210   90.19%
+Elapsed time = 0.77 sec. (1181.69 ticks, tree = 0.02 MB)
+   3236   550    infeasible              3.4110        5.7554    39231   68.73%
+                                                    Cuts: 435                  
+
+Implied bound cuts applied:  625
+Flow cuts applied:  70
+Mixed integer rounding cuts applied:  103
+Lift and project cuts applied:  9
+Cone linearizations applied:  5
+
+Root node processing (before b&c):
+  Real time             =    0.75 sec. (1181.28 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.30 sec. (262.48 ticks)
+  Sync time (average)   =    0.17 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.05 sec. (1443.76 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 1.05sec (det. 1443.76 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            3.410958    (47931 iterations, 4556 nodes)
+
+Best possible:           3.410958
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxrectangle
+***
+*** Solver did not provide marginals for model maxrectangle
+***
+--- Executing after solve: elapsed 0:00:01.664
+--- LargestEmptySquare.gms(169) 4 Mb
+--- Generating NLP model maxcircle
+--- LargestEmptySquare.gms(172) 6 Mb
+---   305 rows  204 columns  710 non-zeroes
+---   1,000 nl-code  300 nl-non-zeroes
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+01, 1.000E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- LargestEmptySquare.gms(172) 4 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:01.666
+
+GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 25.12.10. Built: WIN-64 2025-12-10 23:23:38           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm. For more information and 
+ related optimization and data analytics products visit https://minlp.com.
+
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl, 92, 1123-1161, 2025. 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+===========================================================================
+ Doing local search
+ Preprocessing found feasible solution with value 0.761294
+ Solving bounding LP
+ Starting multi-start local search
+ Preprocessing found feasible solution with value 1.37491
+ Done with local search
+===========================================================================
+  Iteration       Time (s)     Mem   Lower bound     Upper bound   Progress
+*         1           0.25    12MB     1.66149         5.00000        0.79%
+          1           0.33    12MB     1.66149         4.74835        1.74%
+         33           0.56    13MB     1.66149         1.66149      100.00%
+
+                         *** Normal completion ***            
+
+ Wall clock time:                     0.78
+ Total CPU time used:                 0.56
+
+ Total no. of BaR iterations:      33
+ Best solution found at node:       1
+ Max. no. of nodes in memory:       5
+ 
+ All done
+===========================================================================
+
+Solution      = 1.66149061744091  found at node 1
+Best possible = 1.66149061744091
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+--- Reading solution for model maxcircle
+--- Executing after solve: elapsed 0:00:02.734
+--- LargestEmptySquare.gms(212) 4 Mb
+--- Generating MIQCP model maxrectangle2
+--- LargestEmptySquare.gms(213) 6 Mb
+--- LOOPS run = run1
+---   503 rows  405 columns  1,407 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   400 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- LargestEmptySquare.gms(213) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.737
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.66 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.06 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQCP Presolve eliminated 3 rows and 2 columns.
+MIQCP Presolve modified 400 coefficients.
+Reduced MIQCP has 502 rows, 407 columns, and 1406 nonzeros.
+Reduced MIQCP has 400 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (1.89 ticks)
+Probing time = 0.01 sec. (2.63 ticks)
+Clique table members: 1070.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 500 rows, 405 columns, and 1400 nonzeros.
+Presolve time = 0.00 sec. (0.25 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+Using devex.
+Root relaxation solution time = 0.00 sec. (0.88 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    0         
+      0     0        7.5287     0                     Cone: 1      413         
+      0     0        7.5236   344                     Cone: 2      426         
+      0     0        7.5212   340                     Cone: 3      432         
+      0     0        7.5199   336                     Cone: 4      434         
+      0     0        7.5193   335                     Cone: 5      437         
+      0     0        7.5190   335                     Cone: 6      440         
+      0     0        7.5189   333                     Cone: 8      442         
+      0     0        7.5189   333                      7.5189      442         
+*     0+    0                            1.7955        7.5189           318.77%
+Found incumbent of value 1.795456 after 0.03 sec. (28.48 ticks)
+      0     0        7.4738   233        1.7955      Cuts: 59      643  316.26%
+      0     0        7.3868   256        1.7955     Cuts: 225      818  311.41%
+*     0+    0                            2.0325        7.3868           263.43%
+Found incumbent of value 2.032527 after 0.26 sec. (407.46 ticks)
+      0     0        7.3526   267        2.0325     Cuts: 225      966  261.75%
+*     0+    0                            2.1714        7.3526           238.60%
+Found incumbent of value 2.171447 after 0.36 sec. (584.31 ticks)
+      0     0        7.2455   290        2.1714     Cuts: 225     1262  233.67%
+      0     0        7.1820   310        2.1714     Cuts: 225     1473  230.75%
+*     0+    0                            2.2188        7.1820           223.68%
+Found incumbent of value 2.218826 after 0.47 sec. (793.41 ticks)
+      0     0        7.1757   315        2.2188     Cuts: 225     1565  223.40%
+*     0+    0                            2.2375        7.1757           220.70%
+Found incumbent of value 2.237510 after 0.47 sec. (806.12 ticks)
+      0     0        7.0815   312        2.2375     Cuts: 225     1744  216.49%
+*     0+    0                            2.4811        7.0815           185.42%
+Found incumbent of value 2.481126 after 0.48 sec. (822.76 ticks)
+      0     0        7.0058   315        2.4811     Cuts: 225     1894  182.36%
+      0     0        6.9680   303        2.4811     Cuts: 225     1967  180.84%
+      0     0        6.8787   309        2.4811     Cuts: 225     2167  177.24%
+      0     0        6.8504   288        2.4811     Cuts: 225     2288  176.10%
+      0     0        6.8195   303        2.4811     Cuts: 225     2384  174.86%
+      0     0        6.7762   297        2.4811     Cuts: 225     2469  173.11%
+      0     0        6.7550   305        2.4811     Cuts: 225     2546  172.26%
+      0     0        6.7362   306        2.4811     Cuts: 225     2635  171.50%
+*     0+    0                            2.5223        6.7362           167.06%
+Found incumbent of value 2.522294 after 0.53 sec. (895.49 ticks)
+      0     0        6.7233   305        2.5223     Cuts: 225     2727  166.55%
+      0     0        6.7163   313        2.5223     Cuts: 225     2788  166.28%
+      0     0        6.6951   312        2.5223     Cuts: 225     2886  165.44%
+      0     0        6.6828   312        2.5223     Cuts: 225     2969  164.95%
+      0     0        6.6611   309        2.5223     Cuts: 225     3060  164.09%
+*     0+    0                            2.6467        6.6611           151.68%
+Found incumbent of value 2.646698 after 0.56 sec. (939.18 ticks)
+      0     0        6.6022   320        2.6467     Cuts: 225     3193  149.45%
+*     0+    0                            2.8011        6.6022           135.70%
+Found incumbent of value 2.801089 after 0.58 sec. (956.33 ticks)
+      0     0        6.5888   315        2.8011     Cuts: 225     3273  135.22%
+*     0+    0                            2.9408        6.5888           124.05%
+Found incumbent of value 2.940807 after 0.59 sec. (971.42 ticks)
+      0     0        6.5751   314        2.9408     Cuts: 225     3353  123.58%
+      0     0        6.5592   310        2.9408     Cuts: 225     3439  123.04%
+      0     0        6.5412   315        2.9408     Cuts: 225     3531  122.43%
+*     0+    0                            3.0729        6.5412           112.87%
+Found incumbent of value 3.072894 after 0.61 sec. (1001.75 ticks)
+      0     0        6.5361   317        3.0729     Cuts: 225     3573  112.70%
+      0     0        6.5299   310        3.0729     Cuts: 225     3619  112.50%
+      0     0        6.5189   306        3.0729     Cuts: 225     3722  112.14%
+*     0+    0                            3.2804        6.5189            98.73%
+Found incumbent of value 3.280355 after 0.62 sec. (1028.98 ticks)
+      0     0        6.5004   304        3.2804     Cuts: 225     3841   98.16%
+      0     0        6.4944   306        3.2804     Cuts: 225     3921   97.98%
+      0     0        6.4913   302        3.2804     Cuts: 225     4018   97.88%
+      0     0        6.4903   303        3.2804     Cuts: 225     4059   97.85%
+      0     0        6.4875   255        3.2804     Cuts: 225     4146   97.77%
+      0     0        6.4871   275        3.2804     Cuts: 225     4210   97.76%
+*     0+    0                            3.4110        6.4871            90.19%
+Found incumbent of value 3.410958 after 0.73 sec. (1159.04 ticks)
+      0     2        6.4871   250        3.4110        6.4871     4210   90.19%
+Elapsed time = 0.78 sec. (1181.69 ticks, tree = 0.02 MB)
+   3236   550    infeasible              3.4110        5.7554    39231   68.73%
+                                                    Cuts: 435                  
+
+Implied bound cuts applied:  625
+Flow cuts applied:  70
+Mixed integer rounding cuts applied:  103
+Lift and project cuts applied:  9
+Cone linearizations applied:  5
+
+Root node processing (before b&c):
+  Real time             =    0.76 sec. (1181.28 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.30 sec. (262.48 ticks)
+  Sync time (average)   =    0.13 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.06 sec. (1443.76 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 1.06sec (det. 1443.76 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            3.410958    (47931 iterations, 4556 nodes)
+
+Best possible:           3.410958
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxrectangle2
+***
+*** Solver did not provide marginals for model maxrectangle2
+***
+--- Executing after solve: elapsed 0:00:03.843
+--- LargestEmptySquare.gms(212) 4 Mb
+--- Generating MIQCP model maxrectangle2
+--- LargestEmptySquare.gms(213) 6 Mb
+--- LOOPS run = run2
+---   510 rows  411 columns  1,425 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   402 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- LargestEmptySquare.gms(213) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:03.846
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.66 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.07 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIQCP Presolve eliminated 3 rows and 2 columns.
+MIQCP Presolve modified 400 coefficients.
+Reduced MIQCP has 509 rows, 413 columns, and 1424 nonzeros.
+Reduced MIQCP has 402 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (1.91 ticks)
+Probing time = 0.00 sec. (2.64 ticks)
+Clique table members: 1163.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 507 rows, 411 columns, and 1418 nonzeros.
+Presolve time = 0.00 sec. (0.25 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1    Scaled infeas =             1.002988
+Switched to devex.
+Root relaxation solution time = 0.02 sec. (1.01 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    3         
+      0     0        7.5287     0                     Cone: 1      416         
+      0     0        7.5236   344                     Cone: 2      429         
+      0     0        7.5212   340                     Cone: 3      435         
+      0     0        7.5199   336                     Cone: 4      437         
+      0     0        7.5193   335                     Cone: 5      440         
+      0     0        7.5190   335                     Cone: 6      443         
+      0     0        7.5189   333                     Cone: 8      445         
+      0     0        7.5189   333                      7.5189      445         
+*     0+    0                            0.5506        7.5189              --- 
+Found incumbent of value 0.550591 after 0.03 sec. (29.39 ticks)
+      0     0        7.5044   242        0.5506     Cuts: 108      549     --- 
+*     0+    0                            0.9363        7.5044           701.48%
+Found incumbent of value 0.936322 after 0.17 sec. (229.67 ticks)
+      0     0        7.3257   275        0.9363     Cuts: 227      831  682.39%
+      0     0        7.2183   328        0.9363     Cuts: 227     1046  670.92%
+      0     0        7.1444   332        0.9363     Cuts: 227     1228  663.03%
+*     0+    0                            1.6549        7.1444           331.71%
+Found incumbent of value 1.654902 after 0.28 sec. (439.77 ticks)
+      0     0        7.1067   323        1.6549     Cuts: 227     1350  329.43%
+      0     0        6.9945   310        1.6549     Cuts: 227     1482  322.65%
+      0     0        6.9265   319        1.6549     Cuts: 227     1636  318.55%
+      0     0        6.8318   314        1.6549     Cuts: 227     1726  312.82%
+      0     0        6.8079   317        1.6549     Cuts: 227     1810  311.38%
+      0     0        6.7892   312        1.6549     Cuts: 227     1897  310.25%
+      0     0        6.7819   313        1.6549     Cuts: 227     1993  309.81%
+      0     0        6.7729   321        1.6549     Cuts: 227     2124  309.26%
+      0     0        6.7605   313        1.6549     Cuts: 227     2207  308.51%
+      0     0        6.7323   303        1.6549     Cuts: 227     2331  306.81%
+      0     0        6.7236   297        1.6549     Cuts: 227     2457  306.29%
+      0     0        6.7030   309        1.6549     Cuts: 227     2581  305.04%
+      0     0        6.6722   287        1.6549     Cuts: 227     2735  303.18%
+      0     0        6.6458   288        1.6549     Cuts: 227     2831  301.58%
+      0     0        6.6281   299        1.6549     Cuts: 227     2930  300.51%
+      0     0        6.6206   302        1.6549     Cuts: 227     2999  300.06%
+      0     0        6.6108   310        1.6549     Cuts: 227     3077  299.47%
+      0     0        6.6089   308        1.6549     Cuts: 227     3133  299.35%
+      0     0        6.6045   297        1.6549     Cuts: 227     3207  299.09%
+      0     0        6.5917   302        1.6549     Cuts: 227     3285  298.32%
+      0     0        6.5760   302        1.6549     Cuts: 227     3387  297.37%
+      0     0        6.5704   305        1.6549     Cuts: 227     3448  297.03%
+      0     0        6.5668   302        1.6549     Cuts: 227     3498  296.81%
+*     0+    0                            1.9681        6.5668           233.66%
+Found incumbent of value 1.968135 after 0.44 sec. (633.24 ticks)
+      0     0        6.5626   300        1.9681     Cuts: 227     3559  233.44%
+      0     0        6.5552   297        1.9681     Cuts: 227     3618  233.07%
+      0     0        6.5496   295        1.9681     Cuts: 227     3696  232.78%
+      0     0        6.5362   296        1.9681     Cuts: 227     3772  232.10%
+      0     0        6.5331   294        1.9681     Cuts: 227     3831  231.94%
+      0     0        6.5265   302        1.9681     Cuts: 227     3907  231.61%
+      0     0        6.5198   296        1.9681     Cuts: 227     4009  231.27%
+      0     0        6.5153   304        1.9681     Cuts: 227     4068  231.04%
+      0     0        6.5019   300        1.9681     Cuts: 227     4156  230.36%
+      0     0        6.4958   291        1.9681     Cuts: 227     4237  230.05%
+      0     0        6.4929   279        1.9681     Cuts: 227     4321  229.90%
+      0     0        6.4875   301        1.9681     Cuts: 227     4418  229.63%
+      0     0        6.4813   296        1.9681     Cuts: 227     4491  229.31%
+      0     0        6.4758   291        1.9681     Cuts: 227     4569  229.03%
+      0     0        6.4716   292        1.9681     Cuts: 227     4695  228.82%
+      0     0        6.4673   288        1.9681     Cuts: 227     4817  228.60%
+      0     0        6.4612   292        1.9681     Cuts: 227     4936  228.29%
+      0     0        6.4538   295        1.9681     Cuts: 227     5042  227.92%
+*     0+    0                            1.9935        6.4538           223.75%
+Found incumbent of value 1.993487 after 0.58 sec. (805.05 ticks)
+      0     0        6.4443   297        1.9935     Cuts: 227     5140  223.27%
+      0     0        6.4333   301        1.9935     Cuts: 227     5249  222.72%
+*     0+    0                            2.1039        6.4333           205.78%
+Found incumbent of value 2.103938 after 0.59 sec. (828.62 ticks)
+*     0+    0                            2.3212        6.4333           177.16%
+Found incumbent of value 2.321168 after 0.61 sec. (834.53 ticks)
+*     0+    0                            2.4292        6.4333           164.83%
+Found incumbent of value 2.429247 after 0.61 sec. (836.11 ticks)
+      0     0        6.4277   306        2.4292     Cuts: 227     5314  164.60%
+      0     0        6.4228   302        2.4292     Cuts: 227     5396  164.40%
+      0     0        6.4182   304        2.4292     Cuts: 227     5482  164.20%
+      0     0        6.4168   292        2.4292     Cuts: 227     5569  164.15%
+      0     0        6.4153   247        2.4292     Cuts: 227     5641  164.09%
+*     0+    0                            2.5902        6.4153           147.67%
+Found incumbent of value 2.590233 after 0.70 sec. (969.23 ticks)
+      0     2        6.4153   227        2.5902        6.4153     5641  147.67%
+Elapsed time = 0.75 sec. (994.82 ticks, tree = 0.02 MB)
+*     4+    4                            2.5902        6.4047           147.27%
+Found incumbent of value 2.590233 after 0.77 sec. (1028.20 ticks)
+*     6+    1                            2.6296        6.3961           143.24%
+Found incumbent of value 2.629590 after 0.77 sec. (1029.66 ticks)
+*    10+    8                            2.6296        6.3961           143.24%
+                                                      Cone: 3                  
+Found incumbent of value 2.629590 after 0.77 sec. (1035.23 ticks)
+*   188    15      integral     0        2.8122        6.3630     8820  126.27%
+                                                     Cuts: 29                  
+Found incumbent of value 2.812176 after 0.81 sec. (1070.08 ticks)
+*   686    59      integral     0        2.8137        6.3630    11557  126.15%
+                                                     Cuts: 45                  
+Found incumbent of value 2.813682 after 0.84 sec. (1090.31 ticks)
+*   867+   56                            2.8198        6.3630           125.66%
+                                                     Cuts: 16                  
+Found incumbent of value 2.819789 after 0.84 sec. (1094.47 ticks)
+*   893+   56                            2.8199        6.3630           125.65%
+                                                  Impl Bds: 6                  
+Found incumbent of value 2.819889 after 0.84 sec. (1095.26 ticks)
+*   999    66      integral     0        2.8396        6.3630    13612  124.08%
+                                                  Impl Bds: 7                  
+Found incumbent of value 2.839610 after 0.84 sec. (1098.23 ticks)
+*  1200+   80                            2.8774        6.3630           121.13%
+                                                     Cuts: 27                  
+Found incumbent of value 2.877446 after 0.86 sec. (1103.65 ticks)
+
+Implied bound cuts applied:  635
+Flow cuts applied:  103
+Mixed integer rounding cuts applied:  133
+Cone linearizations applied:  20
+
+Root node processing (before b&c):
+  Real time             =    0.72 sec. (988.67 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.41 sec. (300.26 ticks)
+  Sync time (average)   =    0.15 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.12 sec. (1288.93 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 1.12sec (det. 1288.93 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            2.877446    (70094 iterations, 6802 nodes)
+
+Best possible:           2.877446
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxrectangle2
+***
+*** Solver did not provide marginals for model maxrectangle2
+***
+--- Executing after solve: elapsed 0:00:05.017
+--- LargestEmptySquare.gms(212) 4 Mb
+--- Generating MIQCP model maxrectangle2
+--- LargestEmptySquare.gms(213) 6 Mb
+--- LOOPS run = run3
+---   517 rows  417 columns  1,443 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   404 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- LargestEmptySquare.gms(213) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:05.020
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.02 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.66 Mb (peak 0.66 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.07 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIQCP Presolve eliminated 5 rows and 4 columns.
+MIQCP Presolve modified 401 coefficients.
+Aggregator did 1 substitutions.
+Reduced MIQCP has 513 rows, 416 columns, and 1434 nonzeros.
+Reduced MIQCP has 403 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (2.21 ticks)
+Probing time = 0.01 sec. (2.65 ticks)
+Clique table members: 1156.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 511 rows, 414 columns, and 1428 nonzeros.
+Presolve time = 0.00 sec. (0.25 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1    Scaled infeas =             0.633090
+Switched to devex.
+Root relaxation solution time = 0.00 sec. (1.02 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    2         
+      0     0        7.5287     0                     Cone: 1      342         
+      0     0        7.5236   338                     Cone: 2      360         
+      0     0        7.5212   328                     Cone: 3      366         
+      0     0        7.5199   324                     Cone: 4      370         
+      0     0        7.5193   321                     Cone: 5      373         
+      0     0        7.5190   319                     Cone: 6      376         
+      0     0        7.5189   317                     Cone: 8      378         
+      0     0        7.5189   317                     Cone: 9      379         
+      0     0        7.5189   317                      7.5189      379         
+*     0+    0                            1.0219        7.5189           635.77%
+Found incumbent of value 1.021896 after 0.03 sec. (29.66 ticks)
+      0     0        7.4497   247        1.0219      Cuts: 68      580  629.00%
+      0     0        7.3214   305        1.0219     Cuts: 228      820  616.45%
+*     0+    0                            1.0594        7.3214           591.09%
+Found incumbent of value 1.059404 after 0.25 sec. (415.88 ticks)
+      0     0        7.3020   295        1.0594     Cuts: 228      937  589.25%
+      0     0        7.2086   312        1.0594     Cuts: 228     1094  580.44%
+      0     0        7.1416   303        1.0594     Cuts: 228     1216  574.12%
+      0     0        7.0244   296        1.0594     Cuts: 228     1376  563.06%
+*     0+    0                            1.1175        7.0244           528.57%
+Found incumbent of value 1.117522 after 0.28 sec. (451.30 ticks)
+      0     0        6.9482   300        1.1175     Cuts: 228     1513  521.75%
+      0     0        6.8766   303        1.1175     Cuts: 228     1670  515.34%
+*     0+    0                            1.2366        6.8766           456.10%
+Found incumbent of value 1.236570 after 0.30 sec. (477.98 ticks)
+      0     0        6.8346   285        1.2366     Cuts: 228     1862  452.71%
+      0     0        6.8230   291        1.2366     Cuts: 228     1983  451.77%
+*     0+    0                            1.4678        6.8230           364.85%
+Found incumbent of value 1.467797 after 0.31 sec. (500.79 ticks)
+      0     0        6.7911   297        1.4678     Cuts: 228     2163  362.67%
+*     0+    0                            1.4916        6.7911           355.29%
+Found incumbent of value 1.491614 after 0.33 sec. (516.83 ticks)
+      0     0        6.7763   313        1.4916     Cuts: 228     2286  354.30%
+*     0+    0                            1.8167        6.7763           273.01%
+Found incumbent of value 1.816669 after 0.33 sec. (531.44 ticks)
+      0     0        6.7528   305        1.8167     Cuts: 228     2377  271.71%
+      0     0        6.7307   310        1.8167     Cuts: 228     2462  270.50%
+      0     0        6.7206   301        1.8167     Cuts: 228     2522  269.94%
+      0     0        6.6882   298        1.8167     Cuts: 228     2637  268.16%
+*     0+    0                            1.8180        6.6882           267.89%
+Found incumbent of value 1.818012 after 0.36 sec. (565.96 ticks)
+      0     0        6.6698   314        1.8180     Cuts: 228     2729  266.87%
+*     0+    0                            1.8542        6.6698           259.71%
+Found incumbent of value 1.854210 after 0.38 sec. (581.01 ticks)
+      0     0        6.6500   312        1.8542     Cuts: 228     2815  258.65%
+      0     0        6.6138   314        1.8542     Cuts: 228     2890  256.69%
+      0     0        6.5926   314        1.8542     Cuts: 228     2975  255.55%
+      0     0        6.5752   318        1.8542     Cuts: 228     3059  254.61%
+      0     0        6.5665   310        1.8542     Cuts: 228     3136  254.14%
+      0     0        6.5571   311        1.8542     Cuts: 228     3228  253.63%
+      0     0        6.5448   311        1.8542     Cuts: 228     3322  252.97%
+      0     0        6.5407   312        1.8542     Cuts: 228     3410  252.75%
+*     0+    0                            1.8796        6.5407           247.98%
+Found incumbent of value 1.879593 after 0.44 sec. (656.98 ticks)
+      0     0        6.5354   314        1.8796     Cuts: 228     3464  247.70%
+      0     0        6.5315   312        1.8796     Cuts: 228     3540  247.49%
+      0     0        6.5204   307        1.8796     Cuts: 228     3625  246.91%
+      0     0        6.5154   303        1.8796     Cuts: 228     3689  246.64%
+      0     0        6.5107   308        1.8796     Cuts: 228     3745  246.39%
+      0     0        6.5065   307        1.8796     Cuts: 228     3795  246.16%
+*     0+    0                            1.9138        6.5065           239.97%
+Found incumbent of value 1.913820 after 0.47 sec. (706.06 ticks)
+      0     0        6.5055   308        1.9138     Cuts: 228     3840  239.92%
+      0     0        6.5047   271        1.9138     Cuts: 228     3978  239.88%
+      0     0        6.5045   286        1.9138     Cuts: 228     4055  239.87%
+*     0+    0                            1.9176        6.5045           239.20%
+Found incumbent of value 1.917593 after 0.53 sec. (784.08 ticks)
+*     0+    0                            1.9176        6.5045           239.20%
+Found incumbent of value 1.917593 after 0.55 sec. (805.40 ticks)
+*     0+    0                            1.9176        6.5045           239.20%
+Found incumbent of value 1.917593 after 0.55 sec. (806.59 ticks)
+*     0+    0                            1.9176        6.5045           239.20%
+Found incumbent of value 1.917593 after 0.56 sec. (807.56 ticks)
+      0     2        6.5045   210        1.9176        6.5045     4055  239.20%
+Elapsed time = 0.59 sec. (823.00 ticks, tree = 0.02 MB)
+*     5+    1                            1.9176        6.4992           238.93%
+                                                      Cuts: 9                  
+Found incumbent of value 1.917593 after 0.61 sec. (844.79 ticks)
+*     5+    1                            1.9176        6.4992           238.93%
+Found incumbent of value 1.917593 after 0.61 sec. (845.69 ticks)
+*     5+    1                            1.9176        6.4992           238.93%
+Found incumbent of value 1.917593 after 0.61 sec. (846.56 ticks)
+*     6+    2                            2.2101        6.4992           194.07%
+Found incumbent of value 2.210056 after 0.62 sec. (848.74 ticks)
+*    24+    7                            2.2605        6.4990           187.50%
+                                                      Cone: 4                  
+Found incumbent of value 2.260501 after 0.62 sec. (866.61 ticks)
+*   160    11      integral     0        2.2917        6.4903     7128  183.22%
+                                                     Cuts: 37                  
+Found incumbent of value 2.291651 after 0.67 sec. (895.67 ticks)
+*  1795   248      integral     0        2.3248        6.4895    17275  179.14%
+                                                    Cuts: 155                  
+Found incumbent of value 2.324807 after 0.75 sec. (965.36 ticks)
+*  1850+  401                            2.4324        6.4895           166.80%
+                                                      Cuts: 7                  
+Found incumbent of value 2.432400 after 0.75 sec. (968.63 ticks)
+*  2203   454      integral     0        2.6791        6.4895    21524  142.23%
+                                                     Cuts: 20                  
+Found incumbent of value 2.679129 after 0.76 sec. (983.57 ticks)
+*  2672   719      integral     0        2.7242        6.4895    28551  138.22%
+                                                     Cuts: 21                  
+Found incumbent of value 2.724235 after 0.80 sec. (1009.41 ticks)
+*  2686   805      integral     0        2.7645        6.4895    31701  134.75%
+                                                      Cone: 1                  
+Found incumbent of value 2.764494 after 0.80 sec. (1010.66 ticks)
+*  2712   864      integral     0        2.7916        6.4895    34402  132.46%
+                                                      Cone: 3                  
+Found incumbent of value 2.791648 after 0.81 sec. (1017.63 ticks)
+*  5196  1262      integral     0        2.8137        5.6611    72343  101.20%
+                                                    Cuts: 268                  
+Found incumbent of value 2.813682 after 0.94 sec. (1124.43 ticks)
+*  5265  1298      integral     0        2.8198        5.2860    74649   87.46%
+                                                     Cuts: 18                  
+Found incumbent of value 2.819789 after 0.94 sec. (1126.52 ticks)
+*  5300  1313      integral     0        2.8199        5.2860    75774   87.45%
+                                                      Cuts: 4                  
+Found incumbent of value 2.819889 after 0.94 sec. (1127.54 ticks)
+*  6511  1335      integral     0        2.8396        4.2561    84327   49.88%
+                                                    Cuts: 101                  
+Found incumbent of value 2.839610 after 1.00 sec. (1171.82 ticks)
+
+Implied bound cuts applied:  853
+Flow cuts applied:  72
+Mixed integer rounding cuts applied:  115
+Cone linearizations applied:  34
+
+Root node processing (before b&c):
+  Real time             =    0.58 sec. (822.59 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.55 sec. (408.09 ticks)
+  Sync time (average)   =    0.21 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.12 sec. (1230.68 ticks)
+
+--- MIQCP status (102): integer optimal, tolerance.
+--- Cplex Time: 1.12sec (det. 1230.68 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Solution satisfies tolerances
+MIP Solution:            2.839610    (103873 iterations, 8787 nodes)
+
+Best possible:           2.839832
+Absolute gap:            0.000222
+Relative gap:            0.000078
+
+--- Reading solution for model maxrectangle2
+***
+*** Solver did not provide marginals for model maxrectangle2
+***
+--- Executing after solve: elapsed 0:00:06.197
+--- LargestEmptySquare.gms(212) 4 Mb
+--- Generating MIQCP model maxrectangle2
+--- LargestEmptySquare.gms(213) 6 Mb
+--- LOOPS run = run4
+---   524 rows  423 columns  1,461 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   406 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+01]
+--- LargestEmptySquare.gms(213) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:06.200
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.03 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.66 Mb (peak 0.67 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.07 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIQCP Presolve eliminated 5 rows and 4 columns.
+MIQCP Presolve modified 401 coefficients.
+Aggregator did 1 substitutions.
+Reduced MIQCP has 520 rows, 422 columns, and 1452 nonzeros.
+Reduced MIQCP has 405 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (2.23 ticks)
+Probing time = 0.00 sec. (2.66 ticks)
+Clique table members: 1109.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 518 rows, 420 columns, and 1446 nonzeros.
+Presolve time = 0.00 sec. (0.26 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1    Scaled infeas =             2.181610
+Switched to devex.
+Root relaxation solution time = 0.00 sec. (1.07 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    6         
+      0     0        7.5287     1                     Cone: 1      423         
+      0     0        7.5236   345                     Cone: 2      436         
+      0     0        7.5212   341                     Cone: 3      442         
+      0     0        7.5199   337                     Cone: 4      444         
+      0     0        7.5193   336                     Cone: 5      447         
+      0     0        7.5190   336                     Cone: 6      451         
+      0     0        7.5189   333                     Cone: 8      454         
+      0     0        7.5189   334                     Cone: 9      456         
+      0     0        7.5189   333                      7.5189      456         
+*     0+    0                            0.2792        7.5189              --- 
+Found incumbent of value 0.279176 after 0.03 sec. (29.99 ticks)
+      0     0        7.4716   236        0.2792      Cuts: 77      644     --- 
+*     0+    0                            0.3951        7.4716              --- 
+Found incumbent of value 0.395066 after 0.16 sec. (219.13 ticks)
+      0     0        7.3799   267        0.3951     Cuts: 230      793     --- 
+*     0+    0                            0.8139        7.3799           806.75%
+Found incumbent of value 0.813890 after 0.23 sec. (387.45 ticks)
+      0     0        7.3345   281        0.8139     Cuts: 230      930  801.17%
+*     0+    0                            0.8454        7.3345           767.54%
+Found incumbent of value 0.845439 after 0.34 sec. (584.02 ticks)
+      0     0        7.2990   281        0.8454     Cuts: 230     1056  763.34%
+      0     0        7.1507   307        0.8454     Cuts: 230     1301  745.79%
+      0     0        7.0733   309        0.8454     Cuts: 230     1458  736.64%
+      0     0        7.0485   311        0.8454     Cuts: 230     1537  733.70%
+*     0+    0                            0.8840        7.0485           697.32%
+Found incumbent of value 0.884022 after 0.47 sec. (826.35 ticks)
+      0     0        7.0259   297        0.8840     Cuts: 230     1702  694.76%
+      0     0        6.9776   290        0.8840     Cuts: 230     1849  689.30%
+      0     0        6.9404   300        0.8840     Cuts: 230     1945  685.10%
+      0     0        6.8899   302        0.8840     Cuts: 230     2046  679.38%
+      0     0        6.8316   297        0.8840     Cuts: 230     2161  672.78%
+*     0+    0                            1.3225        6.8316           416.58%
+Found incumbent of value 1.322472 after 0.50 sec. (876.94 ticks)
+      0     0        6.8004   298        1.3225     Cuts: 230     2275  414.22%
+      0     0        6.7755   307        1.3225     Cuts: 230     2372  412.33%
+      0     0        6.7665   297        1.3225     Cuts: 230     2447  411.66%
+      0     0        6.7339   303        1.3225     Cuts: 230     2564  409.19%
+*     0+    0                            1.4107        6.7339           377.36%
+Found incumbent of value 1.410672 after 0.56 sec. (937.09 ticks)
+      0     0        6.6995   307        1.4107     Cuts: 230     2685  374.92%
+      0     0        6.6875   303        1.4107     Cuts: 230     2759  374.06%
+      0     0        6.6793   300        1.4107     Cuts: 230     2824  373.49%
+      0     0        6.6619   308        1.4107     Cuts: 230     2910  372.25%
+      0     0        6.6341   300        1.4107     Cuts: 230     2987  370.28%
+*     0+    0                            1.4509        6.6341           357.23%
+Found incumbent of value 1.450936 after 0.59 sec. (983.52 ticks)
+      0     0        6.6174   298        1.4509     Cuts: 230     3059  356.08%
+      0     0        6.6078   298        1.4509     Cuts: 230     3160  355.42%
+      0     0        6.5776   304        1.4509     Cuts: 230     3293  353.33%
+      0     0        6.5685   310        1.4509     Cuts: 230     3380  352.71%
+      0     0        6.5635   311        1.4509     Cuts: 230     3465  352.36%
+      0     0        6.5614   306        1.4509     Cuts: 230     3526  352.22%
+      0     0        6.5434   311        1.4509     Cuts: 230     3614  350.97%
+      0     0        6.5305   314        1.4509     Cuts: 230     3685  350.09%
+      0     0        6.5201   319        1.4509     Cuts: 230     3772  349.37%
+      0     0        6.5023   312        1.4509     Cuts: 230     3842  348.14%
+      0     0        6.4927   314        1.4509     Cuts: 230     3890  347.48%
+      0     0        6.4832   311        1.4509     Cuts: 230     3965  346.83%
+      0     0        6.4799   307        1.4509     Cuts: 230     4027  346.60%
+      0     0        6.4739   308        1.4509     Cuts: 230     4107  346.19%
+      0     0        6.4704   307        1.4509     Cuts: 230     4163  345.95%
+      0     0        6.4678   301        1.4509     Cuts: 230     4221  345.77%
+*     0+    0                            1.9775        6.4678           227.06%
+Found incumbent of value 1.977549 after 0.72 sec. (1142.34 ticks)
+      0     0        6.4656   305        1.9775     Cuts: 230     4275  226.95%
+      0     0        6.4645   244        1.9775     Cuts: 102     4344  226.89%
+      0     0        6.4631   269        1.9775     Cuts: 230     4432  226.82%
+*     0+    0                            2.0661        6.4631           212.81%
+Found incumbent of value 2.066104 after 0.80 sec. (1244.72 ticks)
+*     0+    0                            2.1188        6.4631           205.04%
+Found incumbent of value 2.118766 after 0.80 sec. (1249.90 ticks)
+*     0+    0                            2.1188        6.4631           205.04%
+Found incumbent of value 2.118766 after 0.81 sec. (1250.96 ticks)
+      0     0        cutoff              2.1188        6.4631     4432  205.04%
+      0     2        6.4631   250        2.1188        6.4631     4432  205.04%
+Elapsed time = 0.84 sec. (1276.23 ticks, tree = 0.02 MB)
+*     9+    2                            2.4109        6.4304           166.72%
+                                                      Cone: 1                  
+Found incumbent of value 2.410917 after 0.86 sec. (1298.01 ticks)
+*    15+    2                            2.4647        6.4223           160.57%
+                                                      Cone: 4                  
+Found incumbent of value 2.464658 after 0.88 sec. (1303.21 ticks)
+*    16+    2                            2.5698        6.4223           149.91%
+Found incumbent of value 2.569810 after 0.88 sec. (1305.37 ticks)
+*    97+   12                            2.5716        6.4198           149.64%
+                                                     Cuts: 24                  
+Found incumbent of value 2.571631 after 0.91 sec. (1342.23 ticks)
+*   156+   11                            2.5941        6.4198           147.48%
+                                                     Cuts: 13                  
+Found incumbent of value 2.594061 after 0.91 sec. (1345.87 ticks)
+*   180+   11                            2.6040        6.4198           146.53%
+                                                      Cone: 1                  
+Found incumbent of value 2.604027 after 0.91 sec. (1347.07 ticks)
+*   846+  105                            2.6954        6.4198           138.18%
+                                                    Cuts: 106                  
+Found incumbent of value 2.695377 after 0.94 sec. (1364.64 ticks)
+   6310  1536        3.0935     5        2.6954        5.5314    53252  105.22%
+                                                    Cuts: 368                  
+*  9573  1400      integral     0        2.6954        3.5272    86728   30.86%
+                                                    Cuts: 276                  
+Found incumbent of value 2.695418 after 1.25 sec. (1595.92 ticks)
+*  9751  1289      integral     0        2.7348        3.5272    89772   28.97%
+                                                     Cuts: 22                  
+Found incumbent of value 2.734825 after 1.25 sec. (1600.19 ticks)
+*  9814  1195      integral     0        2.7723        3.5272    90626   27.23%
+                                                     Cuts: 14                  
+Found incumbent of value 2.772321 after 1.27 sec. (1602.28 ticks)
+* 11316   258      integral     0        2.8122        3.3299    96987   18.41%
+                                                     Cuts: 86                  
+Found incumbent of value 2.812176 after 1.31 sec. (1627.97 ticks)
+
+Implied bound cuts applied:  679
+Flow cuts applied:  184
+Mixed integer rounding cuts applied:  184
+Lift and project cuts applied:  28
+Cone linearizations applied:  22
+
+Root node processing (before b&c):
+  Real time             =    0.83 sec. (1270.01 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.50 sec. (364.19 ticks)
+  Sync time (average)   =    0.21 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.33 sec. (1634.20 ticks)
+
+--- MIQCP status (101): integer optimal solution.
+--- Cplex Time: 1.33sec (det. 1634.20 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Proven optimal solution
+MIP Solution:            2.812176    (97780 iterations, 11357 nodes)
+
+Best possible:           2.812176
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model maxrectangle2
+***
+*** Solver did not provide marginals for model maxrectangle2
+***
+--- Executing after solve: elapsed 0:00:07.584
+--- LargestEmptySquare.gms(212) 4 Mb
+--- Generating MIQCP model maxrectangle2
+--- LargestEmptySquare.gms(213) 6 Mb
+--- LOOPS run = run5
+---   531 rows  429 columns  1,479 non-zeroes
+---   7 nl-code  3 nl-non-zeroes
+---   408 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 7.908E-01, 1.000E+01]
+--- LargestEmptySquare.gms(213) 4 Mb
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:07.587
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO Q Extraction (ThreePass): 0.00s
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.03 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.67 Mb (peak 0.67 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.01 Mb (peak 0.07 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 2 times.
+MIQCP Presolve eliminated 7 rows and 6 columns.
+MIQCP Presolve modified 402 coefficients.
+Aggregator did 2 substitutions.
+Reduced MIQCP has 524 rows, 425 columns, and 1462 nonzeros.
+Reduced MIQCP has 406 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Reduced MIQCP has 1 quadratic constraints.
+Presolve time = 0.00 sec. (2.31 ticks)
+Probing time = 0.00 sec. (2.66 ticks)
+Clique table members: 1106.
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Dual infeasible due to empty column 'QCV0'.
+Presolve time = 0.00 sec. (0.07 ticks)
+Tried aggregator 1 time.
+LP Presolve eliminated 2 rows and 2 columns.
+Reduced LP has 522 rows, 423 columns, and 1456 nonzeros.
+Presolve time = 0.00 sec. (0.26 ticks)
+Initializing dual steep norms . . .
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1    Scaled infeas =             3.141844
+Switched to devex.
+Root relaxation solution time = 0.00 sec. (1.10 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+      0     0       10.0000     0                                    8         
+      0     0        7.5287     1                     Cone: 1      426         
+      0     0        7.5236   345                     Cone: 2      439         
+      0     0        7.5212   341                     Cone: 3      445         
+      0     0        7.5199   337                     Cone: 4      447         
+      0     0        7.5193   336                     Cone: 5      450         
+      0     0        7.5190   336                     Cone: 6      454         
+      0     0        7.5189   333                     Cone: 8      457         
+      0     0        7.5189   334                     Cone: 9      459         
+      0     0        7.5189   333                      7.5189      459         
+      0     0        7.4938   245                    Cuts: 75      617         
+*     0+    0                            0.8508        7.4938           780.79%
+Found incumbent of value 0.850803 after 0.14 sec. (175.81 ticks)
+      0     0        7.4242   275        0.8508     Cuts: 231      855  772.61%
+      0     0        7.3490   293        0.8508     Cuts: 231      974  763.77%
+*     0+    0                            1.0101        7.3490           627.51%
+Found incumbent of value 1.010149 after 0.25 sec. (376.26 ticks)
+      0     0        7.3251   284        1.0101     Cuts: 231     1097  625.15%
+      0     0        7.1551   270        1.0101     Cuts: 231     1204  608.32%
+      0     0        7.0762   327        1.0101     Cuts: 231     1377  600.51%
+      0     0        6.9719   303        1.0101     Cuts: 231     1570  590.18%
+*     0+    0                            1.2967        6.9719           437.68%
+Found incumbent of value 1.296657 after 0.28 sec. (413.30 ticks)
+      0     0        6.9187   308        1.2967     Cuts: 231     1643  433.58%
+*     0+    0                            1.3441        6.9187           414.76%
+Found incumbent of value 1.344081 after 0.30 sec. (424.79 ticks)
+      0     0        6.8966   294        1.3441     Cuts: 231     1759  413.11%
+      0     0        6.8801   296        1.3441     Cuts: 231     1847  411.88%
+*     0+    0                            1.7216        6.8801           299.62%
+Found incumbent of value 1.721647 after 0.31 sec. (442.70 ticks)
+      0     0        6.8765   289        1.7216     Cuts: 231     1898  299.41%
+      0     0        6.8206   307        1.7216     Cuts: 231     2114  296.17%
+      0     0        6.8099   310        1.7216     Cuts: 231     2255  295.54%
+      0     0        6.7951   316        1.7216     Cuts: 231     2354  294.68%
+      0     0        6.7862   314        1.7216     Cuts: 231     2476  294.17%
+      0     0        6.7799   322        1.7216     Cuts: 231     2596  293.80%
+      0     0        6.7750   320        1.7216     Cuts: 231     2686  293.52%
+      0     0        6.7559   320        1.7216     Cuts: 231     2814  292.41%
+      0     0        6.7488   325        1.7216     Cuts: 231     2882  292.00%
+      0     0        6.7446   326        1.7216     Cuts: 231     2963  291.75%
+      0     0        6.7374   322        1.7216     Cuts: 231     3053  291.34%
+      0     0        6.7204   316        1.7216     Cuts: 231     3227  290.35%
+*     0+    0                            1.9365        6.7204           247.04%
+Found incumbent of value 1.936492 after 0.38 sec. (547.47 ticks)
+*     0+    0                            2.0116        6.7204           234.09%
+Found incumbent of value 2.011573 after 0.38 sec. (548.94 ticks)
+*     0+    0                            2.0116        6.7204           234.09%
+Found incumbent of value 2.011573 after 0.39 sec. (549.86 ticks)
+      0     0        cutoff              2.0116        6.7204     3227  234.09%
+      0     0        6.7174   310        2.0116     Cuts: 231     3316  233.94%
+      0     0        6.6510   292        2.0116     Cuts: 231     3494  230.64%
+      0     0        6.6486   311        2.0116     Cuts: 231     3648  230.52%
+      0     0        6.6476   312        2.0116     Cuts: 231     3713  230.47%
+      0     0        6.6444   240        2.0116     Cuts: 165     3826  230.31%
+      0     0        6.6299   255        2.0116     Cuts: 231     3951  229.59%
+      0     0        6.6257   269        2.0116     Cuts: 231     4072  229.38%
+      0     0        6.6227   288        2.0116     Cuts: 231     4169  229.23%
+      0     0        6.6118   295        2.0116     Cuts: 231     4286  228.69%
+      0     0        6.5915   296        2.0116     Cuts: 231     4404  227.68%
+      0     0        6.5799   293        2.0116     Cuts: 231     4557  227.10%
+      0     0        6.5784   296        2.0116     Cuts: 231     4633  227.03%
+*     0+    0                            2.0322        6.5784           223.71%
+Found incumbent of value 2.032188 after 0.55 sec. (717.53 ticks)
+*     0+    0                            2.1616        6.5784           204.33%
+Found incumbent of value 2.161617 after 0.56 sec. (745.65 ticks)
+      0     2        6.5784   219        2.1616        6.5784     4633  204.33%
+Elapsed time = 0.59 sec. (761.61 ticks, tree = 0.02 MB)
+*    10+    1                            2.1616        6.5712           203.99%
+                                                      Cone: 2                  
+Found incumbent of value 2.161617 after 0.62 sec. (779.35 ticks)
+*    11+    2                            2.3205        6.5712           183.18%
+Found incumbent of value 2.320494 after 0.62 sec. (781.54 ticks)
+*    12+    6                            2.3205        6.5712           183.18%
+                                                      Cone: 1                  
+Found incumbent of value 2.320494 after 0.64 sec. (791.18 ticks)
+*    14+   12                            2.3205        6.5712           183.18%
+                                                      Cone: 2                  
+Found incumbent of value 2.320494 after 0.64 sec. (792.41 ticks)
+*    25+   13                            2.3205        6.5702           183.14%
+                                                      Cone: 1                  
+Found incumbent of value 2.320494 after 0.64 sec. (798.98 ticks)
+*  3228   779      integral     0        2.3311        6.5492    38615  180.95%
+                                                    Cuts: 489                  
+Found incumbent of value 2.331109 after 0.80 sec. (922.75 ticks)
+*  3395   797      integral     0        2.3567        6.5492    40087  177.89%
+                                                  Impl Bds: 2                  
+Found incumbent of value 2.356724 after 0.81 sec. (930.70 ticks)
+*  3437   786      integral     0        2.3657        6.5492    40681  176.84%
+                                                      Cuts: 8                  
+Found incumbent of value 2.365666 after 0.81 sec. (932.25 ticks)
+*  4090+  923                            2.4374        6.4899           166.26%
+                                                     Cuts: 46                  
+Found incumbent of value 2.437423 after 0.84 sec. (952.62 ticks)
+*  4201+  847                            2.4617        6.4065           160.25%
+Found incumbent of value 2.461666 after 0.84 sec. (955.59 ticks)
+*  4867+ 1152                            2.4767        6.0644           144.86%
+                                                     Cuts: 57                  
+Found incumbent of value 2.476723 after 0.86 sec. (974.47 ticks)
+*  4973+ 1112                            2.4767        6.0644           144.86%
+                                                      Cuts: 8                  
+Found incumbent of value 2.476723 after 0.86 sec. (977.73 ticks)
+*  5084  1173      integral     0        2.6296        5.6161    55571  113.57%
+                                                     Cuts: 16                  
+Found incumbent of value 2.629590 after 0.88 sec. (981.88 ticks)
+                                                  Impl Bds: 2                  
+  13686   205        2.6688    38        2.6296        2.9746   128021   13.12%
+
+Implied bound cuts applied:  1060
+Flow cuts applied:  178
+Mixed integer rounding cuts applied:  231
+Lift and project cuts applied:  5
+Cone linearizations applied:  23
+
+Root node processing (before b&c):
+  Real time             =    0.58 sec. (761.24 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.66 sec. (464.66 ticks)
+  Sync time (average)   =    0.28 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    1.23 sec. (1225.90 ticks)
+
+--- MIQCP status (102): integer optimal, tolerance.
+--- Cplex Time: 1.25sec (det. 1225.90 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+
+Solution satisfies tolerances
+MIP Solution:            2.629590    (129873 iterations, 13753 nodes)
+
+Best possible:           2.629601
+Absolute gap:            0.000011
+Relative gap:            0.000004
+
+--- Reading solution for model maxrectangle2
+***
+*** Solver did not provide marginals for model maxrectangle2
+***
+--- Executing after solve: elapsed 0:00:08.882
+--- LargestEmptySquare.gms(621) 6 Mb
+--- Putfile fdata C:\projects\OptimizationModels\Largest Empty Square\data.js
+*** Status: Normal completion
+--- Job LargestEmptySquare.gms Stop 05/12/26 04:23:20 elapsed 0:00:11.513
