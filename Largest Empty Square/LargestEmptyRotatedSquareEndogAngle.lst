@@ -1,0 +1,3199 @@
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+       
+          Largest Empty Rotated Square.
+          
+          This version: endogenous angle
+          This gives us a MINLP model.
+       
+   9   
+  10   
+  11   
+  12  *---------------------------------------------------------------
+  13  * options
+  14  *---------------------------------------------------------------
+  15   
+  16  * 0: no plot
+  17  * 1: produce HTML plot
+  19   
+  20  * baron, antigone don't have sin(),cos() functions, so we use scip for this example
+  21  option minlp=xpress;
+  22   
+  23  option seed=12345;
+  24   
+  25  *---------------------------------------------------------------
+  26  * data
+  27  *---------------------------------------------------------------
+  28   
+  29  scalar maxsize 'size of the box' / 10 /;
+  30   
+  31  sets
+  32     i     'points' /point1*point100/
+  33     a     'square attributes' /x,y,s/
+  34     c(a)  'coordinates' /x,y/
+  35  ;
+  36   
+  37  parameter p(i,c) 'points';
+  38  p(i,c) = uniform(0,maxsize);
+  39  display p;
+  40   
+  41   
+  42  *---------------------------------------------------------------
+  43  * MINLP MODEL
+  44  *---------------------------------------------------------------
+  45   
+  46  scalars  M  'big-M';
+  47  M = 2 * maxSize;
+  48   
+  49  set
+  50     case 'for comparison' /less,greater/
+  51     corners /00,01,10,11/
+  52  ;
+  53  table offset(corners,c) 'unit offset of corner points from lower-left'
+  54          x  y
+  55      00  0  0
+  56      01  0  1
+  57      10  1  0
+  58      11  1  1
+  59  ;
+  60   
+  61  variable
+  62     q(i,c) 'transformed data points: rotate by -theta'
+  63     sq(a) 'square location and size (transformed coordinates)'
+  64     sq2(corners,c) 'corner points (original coordinates)'
+  65     theta 'angle of rotation'
+  66  ;
+  67  q.lo(i,c) = -2*maxsize;
+  68  q.up(i,c) = 2*maxsize;
+  69   
+  70  theta.lo = 0;
+  71  theta.up = 90*pi/180;
+  72   
+  73  sq.lo(a) = -2*maxsize;
+  74  sq.up(a) = 2*maxsize;
+  75   
+  76  sq2.lo(corners,c) = 0;
+  77  sq2.up(corners,c) = maxsize;
+  78   
+  79  binary variable d(i,c,case) 'd=1 means: relax no-overlap constraint';
+  80  variable z 'objective';
+  81   
+  82  Equations
+  83     transfdatax(i) 'transform data points: x coordinate'
+  84     transfdatay(i) 'transform data points: y coordinate'
+  85     emptysq1(i,c)  'no-overlap constraint: less-than version'
+  86     emptysq2(i,c)  'no-overlap constraint: greater-than version'
+  87     sumd(i)        '(at least) one no-overlap constraint must hold'
+  88     transformx     "transform x',y' -> x back to original coordinates"
+  89     transformy     "transform x',y' -> y back to original coordinates"
+  90     objsq          'objective'
+  91  ;
+  92   
+  93  * transform data points
+  94  transfdatax(i).. q(i,'x') =e=  p(i,'x')*cos(theta) + p(i,'y')*sin(theta);
+  95  transfdatay(i).. q(i,'y') =e= -p(i,'x')*sin(theta) + p(i,'y')*cos(theta);
+  96   
+  97   
+  98  * this is like the original axis-aligned square model
+  99  objsq.. z =e= sq('s');
+ 100  emptysq1(i,c).. q(i,c) =l= sq(c) + d(i,c,'less')*M;
+ 101  emptysq2(i,c).. q(i,c) =g= sq(c) + sq('s') - d(i,c,'greater')*M;
+ 102  sumd(i)..  sum((c,case),d(i,c,case)) =e= 3;
+ 103   
+ 104  * transform back to original coordinates
+ 105  transformx(corners).. sq2(corners,'x') =e= (sq('x')+offset(corners,'x')*sq('s'))*cos(theta) - (sq('y')+offset(corners,'y')*s
+      q('s'))*sin(theta);
+ 106  transformy(corners).. sq2(corners,'y') =e= (sq('x')+offset(corners,'x')*sq('s'))*sin(theta) + (sq('y')+offset(corners,'y')*s
+      q('s'))*cos(theta);
+ 107   
+ 108  *theta.fx = 0;
+ 109  *theta.fx = 25*pi/180;
+ 110  *theta.fx = 45*pi/180;
+ 111   
+ 112  model emptysquare /all/;
+ 113  solve emptysquare maximizing z using minlp;
+ 114   
+ 115  display theta.l, sq.l, sq2.l;
+ 116   
+ 117   
+ 118  parameter square(*,*) 'optimal values';
+ 119  square(corners,c) = sq2.l(corners,c);
+ 120  square('side','-') = sq.l('s');
+ 121  square('area','-') = sqr(square('side','-'));
+ 122  display square;
+ 123   
+ 124   
+ 125  *---------------------------------------------------------------------
+ 126  * visualization
+ 127  *---------------------------------------------------------------------
+ 128   
+ 131   
+ 133   
+ 134   
+ 135  file fdata /data.js/; put fdata;
+ 136   
+ 137  * points
+ 138  put "p=["/;
+ 139  loop(i,
+ 140    put "  {i:'",i.tl:0,"',x:",p(i,'x'):0:4,",y:",p(i,'y'):0:4,"},"/;
+ 141  );
+ 142  put "]"/;
+ 143   
+ 144  put "box={x:0,y:0,size:",maxsize:0:4,"}"/;
+ 145  put "angle=",theta.l:0:4/;
+ 146  put "angledeg=",(theta.l*180/pi):0:4/;
+ 147  put "side=",square('side','-'):0:4/;
+ 148  put "area=",square('area','-'):0:4/;
+ 149   
+ 150   
+ 151  put "cp=["/;
+ 152  loop(corners,
+ 153    put "  {k:'",corners.tl:0,"',x:",square(corners,'x'):0:4,",y:",square(corners,'y'):0:4,"},"/;
+ 154  );
+ 155  put "]"/;
+ 156  putclose;
+ 157   
+ 158   
+ 263   
+ 264  executetool 'win32.ShellExecute "plot.html"';
+ 265   
+
+
+COMPILATION TIME     =        0.000 SECONDS      3 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     39 PARAMETER p  points
+
+                   x           y
+
+point1         4.973       9.639
+point2         8.739       8.443
+point3         1.912       4.945
+point4         2.346       3.810
+point5         6.009       1.515
+point6         5.077       4.633
+point7         3.591       1.526
+point8         3.664       8.260
+point9         0.239       0.593
+point10        2.848       1.140
+point11        8.905       3.743
+point12        2.341       1.477
+point13        0.191       0.784
+point14        9.280       5.550
+point15        6.164       3.605
+point16        5.214       4.320
+point17        7.499       8.174
+point18        0.160       3.729
+point19        6.971       7.669
+point20        8.875       8.117
+point21        7.897       8.036
+point22        0.166       3.932
+point23        9.601       7.215
+point24        8.147       8.375
+point25        7.745       5.283
+point26        6.557       3.924
+point27        4.851       4.026
+point28        4.346       1.935
+point29        1.290       4.876
+point30        7.912       6.856
+point31        3.026       0.001
+point32        4.463       8.148
+point33        2.080       3.360
+point34        2.816       1.565
+point35        6.203       8.599
+point36        6.153       3.857
+point37        7.633       7.315
+point38        0.798       0.829
+point39        0.192       2.454
+point40        3.341       3.038
+point41        8.349       3.863
+point42        0.531       5.056
+point43        1.919       2.345
+point44        9.347       7.861
+point45        9.435       1.718
+point46        1.817       2.026
+point47        5.323       5.065
+point48        2.108       6.382
+point49        2.959       5.533
+point50        0.342       8.075
+point51        3.551       9.887
+point52        8.136       7.153
+point53        2.435       5.417
+point54        5.019       1.108
+point55        1.686       2.869
+point56        8.416       8.060
+point57        5.631       1.570
+point58        2.715       0.339
+point59        7.184       7.050
+point60        1.577       7.522
+point61        9.554       7.855
+point62        2.566       0.880
+point63        7.997       2.193
+point64        9.556       8.034
+point65        4.599       2.022
+point66        8.957       5.241
+point67        8.720       9.062
+point68        3.519       3.229
+point69        9.245       6.341
+point70        4.141       2.687
+point71        2.817       7.412
+point72        6.571       4.559
+point73        3.806       4.961
+point74        8.999       5.323
+point75        0.602       3.960
+point76        4.302       9.600
+point77        2.717       8.777
+point78        1.872       4.952
+point79        3.734       4.279
+point80        9.519       5.120
+point81        4.618       4.190
+point82        0.915       9.232
+point83        9.528       6.382
+point84        5.353       8.983
+point85        0.462       4.249
+point86        8.164       4.834
+point87        8.054       3.067
+point88        8.594       7.318
+point89        5.609       3.905
+point90        2.741       4.446
+point91        9.810       2.776
+point92        7.988       9.737
+point93        5.810       7.965
+point94        8.287       7.178
+point95        4.339       2.033
+point96        2.708       6.648
+point97        1.108       8.467
+point98        2.175       2.350
+point99        8.997       8.511
+point100       8.928       2.236
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE emptysquare Using MINLP From line 113
+
+
+---- transfdatax  =E=  transform data points: x coordinate
+
+transfdatax(point1)..  q(point1,x) - (9.63862756)*theta =E= 0 ; (LHS = -4.97311132, INFES = 4.97311132 ****)
+     
+transfdatax(point2)..  q(point2,x) - (8.442735)*theta =E= 0 ; (LHS = -8.73922492, INFES = 8.73922492 ****)
+     
+transfdatax(point3)..  q(point3,x) - (4.94526579)*theta =E= 0 ; (LHS = -1.91226253, INFES = 1.91226253 ****)
+     
+REMAINING 97 ENTRIES SKIPPED
+
+
+---- transfdatay  =E=  transform data points: y coordinate
+
+transfdatay(point1)..  q(point1,y) + (4.97311132)*theta =E= 0 ; (LHS = -9.63862756, INFES = 9.63862756 ****)
+     
+transfdatay(point2)..  q(point2,y) + (8.73922492)*theta =E= 0 ; (LHS = -8.442735, INFES = 8.442735 ****)
+     
+transfdatay(point3)..  q(point3,y) + (1.91226253)*theta =E= 0 ; (LHS = -4.94526579, INFES = 4.94526579 ****)
+     
+REMAINING 97 ENTRIES SKIPPED
+
+
+---- emptysq1  =L=  no-overlap constraint: less-than version
+
+emptysq1(point1,x)..  q(point1,x) - sq(x) - 20*d(point1,x,less) =L= 0 ; (LHS = 0)
+     
+emptysq1(point1,y)..  q(point1,y) - sq(y) - 20*d(point1,y,less) =L= 0 ; (LHS = 0)
+     
+emptysq1(point2,x)..  q(point2,x) - sq(x) - 20*d(point2,x,less) =L= 0 ; (LHS = 0)
+     
+REMAINING 197 ENTRIES SKIPPED
+
+
+---- emptysq2  =G=  no-overlap constraint: greater-than version
+
+emptysq2(point1,x)..  q(point1,x) - sq(x) - sq(s) + 20*d(point1,x,greater) =G= 0 ; (LHS = 0)
+     
+emptysq2(point1,y)..  q(point1,y) - sq(y) - sq(s) + 20*d(point1,y,greater) =G= 0 ; (LHS = 0)
+     
+emptysq2(point2,x)..  q(point2,x) - sq(x) - sq(s) + 20*d(point2,x,greater) =G= 0 ; (LHS = 0)
+     
+REMAINING 197 ENTRIES SKIPPED
+
+
+---- sumd  =E=  (at least) one no-overlap constraint must hold
+
+sumd(point1)..  d(point1,x,less) + d(point1,x,greater) + d(point1,y,less) + d(point1,y,greater) =E= 3 ; (LHS = 0, INFES = 3 ****)
+     
+sumd(point2)..  d(point2,x,less) + d(point2,x,greater) + d(point2,y,less) + d(point2,y,greater) =E= 3 ; (LHS = 0, INFES = 3 ****)
+     
+sumd(point3)..  d(point3,x,less) + d(point3,x,greater) + d(point3,y,less) + d(point3,y,greater) =E= 3 ; (LHS = 0, INFES = 3 ****)
+     
+REMAINING 97 ENTRIES SKIPPED
+
+
+---- transformx  =E=  transform x',y' -> x back to original coordinates
+
+transformx(00)..  - (1)*sq(x) + (0)*sq(y) + sq2(00,x) + (0)*theta =E= 0 ; (LHS = 0)
+     
+transformx(01)..  - (1)*sq(x) + (0)*sq(y) + (0)*sq(s) + sq2(01,x) + (0)*theta =E= 0 ; (LHS = 0)
+     
+transformx(10)..  - (1)*sq(x) + (0)*sq(y) - (1)*sq(s) + sq2(10,x) + (0)*theta =E= 0 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- transformy  =E=  transform x',y' -> y back to original coordinates
+
+transformy(00)..  (0)*sq(x) - (1)*sq(y) + sq2(00,y) + (0)*theta =E= 0 ; (LHS = 0)
+     
+transformy(01)..  (0)*sq(x) - (1)*sq(y) - (1)*sq(s) + sq2(01,y) + (0)*theta =E= 0 ; (LHS = 0)
+     
+transformy(10)..  (0)*sq(x) - (1)*sq(y) + (0)*sq(s) + sq2(10,y) + (0)*theta =E= 0 ; (LHS = 0)
+     
+REMAINING ENTRY SKIPPED
+
+
+---- objsq  =E=  objective
+
+objsq..  - sq(s) + z =E= 0 ; (LHS = 0)
+     
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE emptysquare Using MINLP From line 113
+
+
+---- q  transformed data points: rotate by -theta
+
+q(point1,x)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+        1       transfdatax(point1)
+        1       emptysq1(point1,x)
+        1       emptysq2(point1,x)
+
+q(point1,y)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+        1       transfdatay(point1)
+        1       emptysq1(point1,y)
+        1       emptysq2(point1,y)
+
+q(point2,x)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+        1       transfdatax(point2)
+        1       emptysq1(point2,x)
+        1       emptysq2(point2,x)
+
+REMAINING 197 ENTRIES SKIPPED
+
+---- sq  square location and size (transformed coordinates)
+
+sq(x)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+       -1       emptysq1(point1,x)
+       -1       emptysq1(point2,x)
+       -1       emptysq1(point3,x)
+       -1       emptysq1(point4,x)
+       -1       emptysq1(point5,x)
+       -1       emptysq1(point6,x)
+       -1       emptysq1(point7,x)
+       -1       emptysq1(point8,x)
+       -1       emptysq1(point9,x)
+       -1       emptysq1(point10,x)
+       -1       emptysq1(point11,x)
+       -1       emptysq1(point12,x)
+       -1       emptysq1(point13,x)
+       -1       emptysq1(point14,x)
+       -1       emptysq1(point15,x)
+       -1       emptysq1(point16,x)
+       -1       emptysq1(point17,x)
+       -1       emptysq1(point18,x)
+       -1       emptysq1(point19,x)
+       -1       emptysq1(point20,x)
+       -1       emptysq1(point21,x)
+       -1       emptysq1(point22,x)
+       -1       emptysq1(point23,x)
+       -1       emptysq1(point24,x)
+       -1       emptysq1(point25,x)
+       -1       emptysq1(point26,x)
+       -1       emptysq1(point27,x)
+       -1       emptysq1(point28,x)
+       -1       emptysq1(point29,x)
+       -1       emptysq1(point30,x)
+       -1       emptysq1(point31,x)
+       -1       emptysq1(point32,x)
+       -1       emptysq1(point33,x)
+       -1       emptysq1(point34,x)
+       -1       emptysq1(point35,x)
+       -1       emptysq1(point36,x)
+       -1       emptysq1(point37,x)
+       -1       emptysq1(point38,x)
+       -1       emptysq1(point39,x)
+       -1       emptysq1(point40,x)
+       -1       emptysq1(point41,x)
+       -1       emptysq1(point42,x)
+       -1       emptysq1(point43,x)
+       -1       emptysq1(point44,x)
+       -1       emptysq1(point45,x)
+       -1       emptysq1(point46,x)
+       -1       emptysq1(point47,x)
+       -1       emptysq1(point48,x)
+       -1       emptysq1(point49,x)
+       -1       emptysq1(point50,x)
+       -1       emptysq1(point51,x)
+       -1       emptysq1(point52,x)
+       -1       emptysq1(point53,x)
+       -1       emptysq1(point54,x)
+       -1       emptysq1(point55,x)
+       -1       emptysq1(point56,x)
+       -1       emptysq1(point57,x)
+       -1       emptysq1(point58,x)
+       -1       emptysq1(point59,x)
+       -1       emptysq1(point60,x)
+       -1       emptysq1(point61,x)
+       -1       emptysq1(point62,x)
+       -1       emptysq1(point63,x)
+       -1       emptysq1(point64,x)
+       -1       emptysq1(point65,x)
+       -1       emptysq1(point66,x)
+       -1       emptysq1(point67,x)
+       -1       emptysq1(point68,x)
+       -1       emptysq1(point69,x)
+       -1       emptysq1(point70,x)
+       -1       emptysq1(point71,x)
+       -1       emptysq1(point72,x)
+       -1       emptysq1(point73,x)
+       -1       emptysq1(point74,x)
+       -1       emptysq1(point75,x)
+       -1       emptysq1(point76,x)
+       -1       emptysq1(point77,x)
+       -1       emptysq1(point78,x)
+       -1       emptysq1(point79,x)
+       -1       emptysq1(point80,x)
+       -1       emptysq1(point81,x)
+       -1       emptysq1(point82,x)
+       -1       emptysq1(point83,x)
+       -1       emptysq1(point84,x)
+       -1       emptysq1(point85,x)
+       -1       emptysq1(point86,x)
+       -1       emptysq1(point87,x)
+       -1       emptysq1(point88,x)
+       -1       emptysq1(point89,x)
+       -1       emptysq1(point90,x)
+       -1       emptysq1(point91,x)
+       -1       emptysq1(point92,x)
+       -1       emptysq1(point93,x)
+       -1       emptysq1(point94,x)
+       -1       emptysq1(point95,x)
+       -1       emptysq1(point96,x)
+       -1       emptysq1(point97,x)
+       -1       emptysq1(point98,x)
+       -1       emptysq1(point99,x)
+       -1       emptysq1(point100,x)
+       -1       emptysq2(point1,x)
+       -1       emptysq2(point2,x)
+       -1       emptysq2(point3,x)
+       -1       emptysq2(point4,x)
+       -1       emptysq2(point5,x)
+       -1       emptysq2(point6,x)
+       -1       emptysq2(point7,x)
+       -1       emptysq2(point8,x)
+       -1       emptysq2(point9,x)
+       -1       emptysq2(point10,x)
+       -1       emptysq2(point11,x)
+       -1       emptysq2(point12,x)
+       -1       emptysq2(point13,x)
+       -1       emptysq2(point14,x)
+       -1       emptysq2(point15,x)
+       -1       emptysq2(point16,x)
+       -1       emptysq2(point17,x)
+       -1       emptysq2(point18,x)
+       -1       emptysq2(point19,x)
+       -1       emptysq2(point20,x)
+       -1       emptysq2(point21,x)
+       -1       emptysq2(point22,x)
+       -1       emptysq2(point23,x)
+       -1       emptysq2(point24,x)
+       -1       emptysq2(point25,x)
+       -1       emptysq2(point26,x)
+       -1       emptysq2(point27,x)
+       -1       emptysq2(point28,x)
+       -1       emptysq2(point29,x)
+       -1       emptysq2(point30,x)
+       -1       emptysq2(point31,x)
+       -1       emptysq2(point32,x)
+       -1       emptysq2(point33,x)
+       -1       emptysq2(point34,x)
+       -1       emptysq2(point35,x)
+       -1       emptysq2(point36,x)
+       -1       emptysq2(point37,x)
+       -1       emptysq2(point38,x)
+       -1       emptysq2(point39,x)
+       -1       emptysq2(point40,x)
+       -1       emptysq2(point41,x)
+       -1       emptysq2(point42,x)
+       -1       emptysq2(point43,x)
+       -1       emptysq2(point44,x)
+       -1       emptysq2(point45,x)
+       -1       emptysq2(point46,x)
+       -1       emptysq2(point47,x)
+       -1       emptysq2(point48,x)
+       -1       emptysq2(point49,x)
+       -1       emptysq2(point50,x)
+       -1       emptysq2(point51,x)
+       -1       emptysq2(point52,x)
+       -1       emptysq2(point53,x)
+       -1       emptysq2(point54,x)
+       -1       emptysq2(point55,x)
+       -1       emptysq2(point56,x)
+       -1       emptysq2(point57,x)
+       -1       emptysq2(point58,x)
+       -1       emptysq2(point59,x)
+       -1       emptysq2(point60,x)
+       -1       emptysq2(point61,x)
+       -1       emptysq2(point62,x)
+       -1       emptysq2(point63,x)
+       -1       emptysq2(point64,x)
+       -1       emptysq2(point65,x)
+       -1       emptysq2(point66,x)
+       -1       emptysq2(point67,x)
+       -1       emptysq2(point68,x)
+       -1       emptysq2(point69,x)
+       -1       emptysq2(point70,x)
+       -1       emptysq2(point71,x)
+       -1       emptysq2(point72,x)
+       -1       emptysq2(point73,x)
+       -1       emptysq2(point74,x)
+       -1       emptysq2(point75,x)
+       -1       emptysq2(point76,x)
+       -1       emptysq2(point77,x)
+       -1       emptysq2(point78,x)
+       -1       emptysq2(point79,x)
+       -1       emptysq2(point80,x)
+       -1       emptysq2(point81,x)
+       -1       emptysq2(point82,x)
+       -1       emptysq2(point83,x)
+       -1       emptysq2(point84,x)
+       -1       emptysq2(point85,x)
+       -1       emptysq2(point86,x)
+       -1       emptysq2(point87,x)
+       -1       emptysq2(point88,x)
+       -1       emptysq2(point89,x)
+       -1       emptysq2(point90,x)
+       -1       emptysq2(point91,x)
+       -1       emptysq2(point92,x)
+       -1       emptysq2(point93,x)
+       -1       emptysq2(point94,x)
+       -1       emptysq2(point95,x)
+       -1       emptysq2(point96,x)
+       -1       emptysq2(point97,x)
+       -1       emptysq2(point98,x)
+       -1       emptysq2(point99,x)
+       -1       emptysq2(point100,x)
+      (-1)      transformx(00)
+      (-1)      transformx(01)
+      (-1)      transformx(10)
+      (-1)      transformx(11)
+       (0)      transformy(00)
+       (0)      transformy(01)
+       (0)      transformy(10)
+       (0)      transformy(11)
+
+sq(y)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+       -1       emptysq1(point1,y)
+       -1       emptysq1(point2,y)
+       -1       emptysq1(point3,y)
+       -1       emptysq1(point4,y)
+       -1       emptysq1(point5,y)
+       -1       emptysq1(point6,y)
+       -1       emptysq1(point7,y)
+       -1       emptysq1(point8,y)
+       -1       emptysq1(point9,y)
+       -1       emptysq1(point10,y)
+       -1       emptysq1(point11,y)
+       -1       emptysq1(point12,y)
+       -1       emptysq1(point13,y)
+       -1       emptysq1(point14,y)
+       -1       emptysq1(point15,y)
+       -1       emptysq1(point16,y)
+       -1       emptysq1(point17,y)
+       -1       emptysq1(point18,y)
+       -1       emptysq1(point19,y)
+       -1       emptysq1(point20,y)
+       -1       emptysq1(point21,y)
+       -1       emptysq1(point22,y)
+       -1       emptysq1(point23,y)
+       -1       emptysq1(point24,y)
+       -1       emptysq1(point25,y)
+       -1       emptysq1(point26,y)
+       -1       emptysq1(point27,y)
+       -1       emptysq1(point28,y)
+       -1       emptysq1(point29,y)
+       -1       emptysq1(point30,y)
+       -1       emptysq1(point31,y)
+       -1       emptysq1(point32,y)
+       -1       emptysq1(point33,y)
+       -1       emptysq1(point34,y)
+       -1       emptysq1(point35,y)
+       -1       emptysq1(point36,y)
+       -1       emptysq1(point37,y)
+       -1       emptysq1(point38,y)
+       -1       emptysq1(point39,y)
+       -1       emptysq1(point40,y)
+       -1       emptysq1(point41,y)
+       -1       emptysq1(point42,y)
+       -1       emptysq1(point43,y)
+       -1       emptysq1(point44,y)
+       -1       emptysq1(point45,y)
+       -1       emptysq1(point46,y)
+       -1       emptysq1(point47,y)
+       -1       emptysq1(point48,y)
+       -1       emptysq1(point49,y)
+       -1       emptysq1(point50,y)
+       -1       emptysq1(point51,y)
+       -1       emptysq1(point52,y)
+       -1       emptysq1(point53,y)
+       -1       emptysq1(point54,y)
+       -1       emptysq1(point55,y)
+       -1       emptysq1(point56,y)
+       -1       emptysq1(point57,y)
+       -1       emptysq1(point58,y)
+       -1       emptysq1(point59,y)
+       -1       emptysq1(point60,y)
+       -1       emptysq1(point61,y)
+       -1       emptysq1(point62,y)
+       -1       emptysq1(point63,y)
+       -1       emptysq1(point64,y)
+       -1       emptysq1(point65,y)
+       -1       emptysq1(point66,y)
+       -1       emptysq1(point67,y)
+       -1       emptysq1(point68,y)
+       -1       emptysq1(point69,y)
+       -1       emptysq1(point70,y)
+       -1       emptysq1(point71,y)
+       -1       emptysq1(point72,y)
+       -1       emptysq1(point73,y)
+       -1       emptysq1(point74,y)
+       -1       emptysq1(point75,y)
+       -1       emptysq1(point76,y)
+       -1       emptysq1(point77,y)
+       -1       emptysq1(point78,y)
+       -1       emptysq1(point79,y)
+       -1       emptysq1(point80,y)
+       -1       emptysq1(point81,y)
+       -1       emptysq1(point82,y)
+       -1       emptysq1(point83,y)
+       -1       emptysq1(point84,y)
+       -1       emptysq1(point85,y)
+       -1       emptysq1(point86,y)
+       -1       emptysq1(point87,y)
+       -1       emptysq1(point88,y)
+       -1       emptysq1(point89,y)
+       -1       emptysq1(point90,y)
+       -1       emptysq1(point91,y)
+       -1       emptysq1(point92,y)
+       -1       emptysq1(point93,y)
+       -1       emptysq1(point94,y)
+       -1       emptysq1(point95,y)
+       -1       emptysq1(point96,y)
+       -1       emptysq1(point97,y)
+       -1       emptysq1(point98,y)
+       -1       emptysq1(point99,y)
+       -1       emptysq1(point100,y)
+       -1       emptysq2(point1,y)
+       -1       emptysq2(point2,y)
+       -1       emptysq2(point3,y)
+       -1       emptysq2(point4,y)
+       -1       emptysq2(point5,y)
+       -1       emptysq2(point6,y)
+       -1       emptysq2(point7,y)
+       -1       emptysq2(point8,y)
+       -1       emptysq2(point9,y)
+       -1       emptysq2(point10,y)
+       -1       emptysq2(point11,y)
+       -1       emptysq2(point12,y)
+       -1       emptysq2(point13,y)
+       -1       emptysq2(point14,y)
+       -1       emptysq2(point15,y)
+       -1       emptysq2(point16,y)
+       -1       emptysq2(point17,y)
+       -1       emptysq2(point18,y)
+       -1       emptysq2(point19,y)
+       -1       emptysq2(point20,y)
+       -1       emptysq2(point21,y)
+       -1       emptysq2(point22,y)
+       -1       emptysq2(point23,y)
+       -1       emptysq2(point24,y)
+       -1       emptysq2(point25,y)
+       -1       emptysq2(point26,y)
+       -1       emptysq2(point27,y)
+       -1       emptysq2(point28,y)
+       -1       emptysq2(point29,y)
+       -1       emptysq2(point30,y)
+       -1       emptysq2(point31,y)
+       -1       emptysq2(point32,y)
+       -1       emptysq2(point33,y)
+       -1       emptysq2(point34,y)
+       -1       emptysq2(point35,y)
+       -1       emptysq2(point36,y)
+       -1       emptysq2(point37,y)
+       -1       emptysq2(point38,y)
+       -1       emptysq2(point39,y)
+       -1       emptysq2(point40,y)
+       -1       emptysq2(point41,y)
+       -1       emptysq2(point42,y)
+       -1       emptysq2(point43,y)
+       -1       emptysq2(point44,y)
+       -1       emptysq2(point45,y)
+       -1       emptysq2(point46,y)
+       -1       emptysq2(point47,y)
+       -1       emptysq2(point48,y)
+       -1       emptysq2(point49,y)
+       -1       emptysq2(point50,y)
+       -1       emptysq2(point51,y)
+       -1       emptysq2(point52,y)
+       -1       emptysq2(point53,y)
+       -1       emptysq2(point54,y)
+       -1       emptysq2(point55,y)
+       -1       emptysq2(point56,y)
+       -1       emptysq2(point57,y)
+       -1       emptysq2(point58,y)
+       -1       emptysq2(point59,y)
+       -1       emptysq2(point60,y)
+       -1       emptysq2(point61,y)
+       -1       emptysq2(point62,y)
+       -1       emptysq2(point63,y)
+       -1       emptysq2(point64,y)
+       -1       emptysq2(point65,y)
+       -1       emptysq2(point66,y)
+       -1       emptysq2(point67,y)
+       -1       emptysq2(point68,y)
+       -1       emptysq2(point69,y)
+       -1       emptysq2(point70,y)
+       -1       emptysq2(point71,y)
+       -1       emptysq2(point72,y)
+       -1       emptysq2(point73,y)
+       -1       emptysq2(point74,y)
+       -1       emptysq2(point75,y)
+       -1       emptysq2(point76,y)
+       -1       emptysq2(point77,y)
+       -1       emptysq2(point78,y)
+       -1       emptysq2(point79,y)
+       -1       emptysq2(point80,y)
+       -1       emptysq2(point81,y)
+       -1       emptysq2(point82,y)
+       -1       emptysq2(point83,y)
+       -1       emptysq2(point84,y)
+       -1       emptysq2(point85,y)
+       -1       emptysq2(point86,y)
+       -1       emptysq2(point87,y)
+       -1       emptysq2(point88,y)
+       -1       emptysq2(point89,y)
+       -1       emptysq2(point90,y)
+       -1       emptysq2(point91,y)
+       -1       emptysq2(point92,y)
+       -1       emptysq2(point93,y)
+       -1       emptysq2(point94,y)
+       -1       emptysq2(point95,y)
+       -1       emptysq2(point96,y)
+       -1       emptysq2(point97,y)
+       -1       emptysq2(point98,y)
+       -1       emptysq2(point99,y)
+       -1       emptysq2(point100,y)
+       (0)      transformx(00)
+       (0)      transformx(01)
+       (0)      transformx(10)
+       (0)      transformx(11)
+      (-1)      transformy(00)
+      (-1)      transformy(01)
+      (-1)      transformy(10)
+      (-1)      transformy(11)
+
+sq(s)
+                (.LO, .L, .UP, .M = -20, 0, 20, 0)
+       -1       emptysq2(point1,x)
+       -1       emptysq2(point1,y)
+       -1       emptysq2(point2,x)
+       -1       emptysq2(point2,y)
+       -1       emptysq2(point3,x)
+       -1       emptysq2(point3,y)
+       -1       emptysq2(point4,x)
+       -1       emptysq2(point4,y)
+       -1       emptysq2(point5,x)
+       -1       emptysq2(point5,y)
+       -1       emptysq2(point6,x)
+       -1       emptysq2(point6,y)
+       -1       emptysq2(point7,x)
+       -1       emptysq2(point7,y)
+       -1       emptysq2(point8,x)
+       -1       emptysq2(point8,y)
+       -1       emptysq2(point9,x)
+       -1       emptysq2(point9,y)
+       -1       emptysq2(point10,x)
+       -1       emptysq2(point10,y)
+       -1       emptysq2(point11,x)
+       -1       emptysq2(point11,y)
+       -1       emptysq2(point12,x)
+       -1       emptysq2(point12,y)
+       -1       emptysq2(point13,x)
+       -1       emptysq2(point13,y)
+       -1       emptysq2(point14,x)
+       -1       emptysq2(point14,y)
+       -1       emptysq2(point15,x)
+       -1       emptysq2(point15,y)
+       -1       emptysq2(point16,x)
+       -1       emptysq2(point16,y)
+       -1       emptysq2(point17,x)
+       -1       emptysq2(point17,y)
+       -1       emptysq2(point18,x)
+       -1       emptysq2(point18,y)
+       -1       emptysq2(point19,x)
+       -1       emptysq2(point19,y)
+       -1       emptysq2(point20,x)
+       -1       emptysq2(point20,y)
+       -1       emptysq2(point21,x)
+       -1       emptysq2(point21,y)
+       -1       emptysq2(point22,x)
+       -1       emptysq2(point22,y)
+       -1       emptysq2(point23,x)
+       -1       emptysq2(point23,y)
+       -1       emptysq2(point24,x)
+       -1       emptysq2(point24,y)
+       -1       emptysq2(point25,x)
+       -1       emptysq2(point25,y)
+       -1       emptysq2(point26,x)
+       -1       emptysq2(point26,y)
+       -1       emptysq2(point27,x)
+       -1       emptysq2(point27,y)
+       -1       emptysq2(point28,x)
+       -1       emptysq2(point28,y)
+       -1       emptysq2(point29,x)
+       -1       emptysq2(point29,y)
+       -1       emptysq2(point30,x)
+       -1       emptysq2(point30,y)
+       -1       emptysq2(point31,x)
+       -1       emptysq2(point31,y)
+       -1       emptysq2(point32,x)
+       -1       emptysq2(point32,y)
+       -1       emptysq2(point33,x)
+       -1       emptysq2(point33,y)
+       -1       emptysq2(point34,x)
+       -1       emptysq2(point34,y)
+       -1       emptysq2(point35,x)
+       -1       emptysq2(point35,y)
+       -1       emptysq2(point36,x)
+       -1       emptysq2(point36,y)
+       -1       emptysq2(point37,x)
+       -1       emptysq2(point37,y)
+       -1       emptysq2(point38,x)
+       -1       emptysq2(point38,y)
+       -1       emptysq2(point39,x)
+       -1       emptysq2(point39,y)
+       -1       emptysq2(point40,x)
+       -1       emptysq2(point40,y)
+       -1       emptysq2(point41,x)
+       -1       emptysq2(point41,y)
+       -1       emptysq2(point42,x)
+       -1       emptysq2(point42,y)
+       -1       emptysq2(point43,x)
+       -1       emptysq2(point43,y)
+       -1       emptysq2(point44,x)
+       -1       emptysq2(point44,y)
+       -1       emptysq2(point45,x)
+       -1       emptysq2(point45,y)
+       -1       emptysq2(point46,x)
+       -1       emptysq2(point46,y)
+       -1       emptysq2(point47,x)
+       -1       emptysq2(point47,y)
+       -1       emptysq2(point48,x)
+       -1       emptysq2(point48,y)
+       -1       emptysq2(point49,x)
+       -1       emptysq2(point49,y)
+       -1       emptysq2(point50,x)
+       -1       emptysq2(point50,y)
+       -1       emptysq2(point51,x)
+       -1       emptysq2(point51,y)
+       -1       emptysq2(point52,x)
+       -1       emptysq2(point52,y)
+       -1       emptysq2(point53,x)
+       -1       emptysq2(point53,y)
+       -1       emptysq2(point54,x)
+       -1       emptysq2(point54,y)
+       -1       emptysq2(point55,x)
+       -1       emptysq2(point55,y)
+       -1       emptysq2(point56,x)
+       -1       emptysq2(point56,y)
+       -1       emptysq2(point57,x)
+       -1       emptysq2(point57,y)
+       -1       emptysq2(point58,x)
+       -1       emptysq2(point58,y)
+       -1       emptysq2(point59,x)
+       -1       emptysq2(point59,y)
+       -1       emptysq2(point60,x)
+       -1       emptysq2(point60,y)
+       -1       emptysq2(point61,x)
+       -1       emptysq2(point61,y)
+       -1       emptysq2(point62,x)
+       -1       emptysq2(point62,y)
+       -1       emptysq2(point63,x)
+       -1       emptysq2(point63,y)
+       -1       emptysq2(point64,x)
+       -1       emptysq2(point64,y)
+       -1       emptysq2(point65,x)
+       -1       emptysq2(point65,y)
+       -1       emptysq2(point66,x)
+       -1       emptysq2(point66,y)
+       -1       emptysq2(point67,x)
+       -1       emptysq2(point67,y)
+       -1       emptysq2(point68,x)
+       -1       emptysq2(point68,y)
+       -1       emptysq2(point69,x)
+       -1       emptysq2(point69,y)
+       -1       emptysq2(point70,x)
+       -1       emptysq2(point70,y)
+       -1       emptysq2(point71,x)
+       -1       emptysq2(point71,y)
+       -1       emptysq2(point72,x)
+       -1       emptysq2(point72,y)
+       -1       emptysq2(point73,x)
+       -1       emptysq2(point73,y)
+       -1       emptysq2(point74,x)
+       -1       emptysq2(point74,y)
+       -1       emptysq2(point75,x)
+       -1       emptysq2(point75,y)
+       -1       emptysq2(point76,x)
+       -1       emptysq2(point76,y)
+       -1       emptysq2(point77,x)
+       -1       emptysq2(point77,y)
+       -1       emptysq2(point78,x)
+       -1       emptysq2(point78,y)
+       -1       emptysq2(point79,x)
+       -1       emptysq2(point79,y)
+       -1       emptysq2(point80,x)
+       -1       emptysq2(point80,y)
+       -1       emptysq2(point81,x)
+       -1       emptysq2(point81,y)
+       -1       emptysq2(point82,x)
+       -1       emptysq2(point82,y)
+       -1       emptysq2(point83,x)
+       -1       emptysq2(point83,y)
+       -1       emptysq2(point84,x)
+       -1       emptysq2(point84,y)
+       -1       emptysq2(point85,x)
+       -1       emptysq2(point85,y)
+       -1       emptysq2(point86,x)
+       -1       emptysq2(point86,y)
+       -1       emptysq2(point87,x)
+       -1       emptysq2(point87,y)
+       -1       emptysq2(point88,x)
+       -1       emptysq2(point88,y)
+       -1       emptysq2(point89,x)
+       -1       emptysq2(point89,y)
+       -1       emptysq2(point90,x)
+       -1       emptysq2(point90,y)
+       -1       emptysq2(point91,x)
+       -1       emptysq2(point91,y)
+       -1       emptysq2(point92,x)
+       -1       emptysq2(point92,y)
+       -1       emptysq2(point93,x)
+       -1       emptysq2(point93,y)
+       -1       emptysq2(point94,x)
+       -1       emptysq2(point94,y)
+       -1       emptysq2(point95,x)
+       -1       emptysq2(point95,y)
+       -1       emptysq2(point96,x)
+       -1       emptysq2(point96,y)
+       -1       emptysq2(point97,x)
+       -1       emptysq2(point97,y)
+       -1       emptysq2(point98,x)
+       -1       emptysq2(point98,y)
+       -1       emptysq2(point99,x)
+       -1       emptysq2(point99,y)
+       -1       emptysq2(point100,x)
+       -1       emptysq2(point100,y)
+       (0)      transformx(01)
+      (-1)      transformx(10)
+      (-1)      transformx(11)
+      (-1)      transformy(01)
+       (0)      transformy(10)
+      (-1)      transformy(11)
+       -1       objsq
+
+
+---- sq2  corner points (original coordinates)
+
+sq2(00,x)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       transformx(00)
+
+sq2(00,y)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       transformy(00)
+
+sq2(01,x)
+                (.LO, .L, .UP, .M = 0, 0, 10, 0)
+        1       transformx(01)
+
+REMAINING 5 ENTRIES SKIPPED
+
+---- theta  angle of rotation
+
+theta
+                (.LO, .L, .UP, .M = 0, 0, 1.5707963267949, 0)
+      (-9.6386) transfdatax(point1)
+      (-8.4427) transfdatax(point2)
+      (-4.9453) transfdatax(point3)
+      (-3.8098) transfdatax(point4)
+      (-1.5148) transfdatax(point5)
+      (-4.6332) transfdatax(point6)
+      (-1.5263) transfdatax(point7)
+      (-8.2605) transfdatax(point8)
+      (-0.5926) transfdatax(point9)
+      (-1.1401) transfdatax(point10)
+      (-3.7434) transfdatax(point11)
+      (-1.477)  transfdatax(point12)
+      (-0.784)  transfdatax(point13)
+      (-5.5504) transfdatax(point14)
+      (-3.6048) transfdatax(point15)
+      (-4.3202) transfdatax(point16)
+      (-8.1738) transfdatax(point17)
+      (-3.7295) transfdatax(point18)
+      (-7.669)  transfdatax(point19)
+      (-8.1167) transfdatax(point20)
+      (-8.0363) transfdatax(point21)
+      (-3.9324) transfdatax(point22)
+      (-7.2152) transfdatax(point23)
+      (-8.375)  transfdatax(point24)
+      (-5.2826) transfdatax(point25)
+      (-3.9238) transfdatax(point26)
+      (-4.0264) transfdatax(point27)
+      (-1.9347) transfdatax(point28)
+      (-4.876)  transfdatax(point29)
+      (-6.8562) transfdatax(point30)
+      (-0.0006) transfdatax(point31)
+      (-8.1482) transfdatax(point32)
+      (-3.3595) transfdatax(point33)
+      (-1.565)  transfdatax(point34)
+      (-8.5994) transfdatax(point35)
+      (-3.8572) transfdatax(point36)
+      (-7.3151) transfdatax(point37)
+      (-0.8294) transfdatax(point38)
+      (-2.4538) transfdatax(point39)
+      (-3.0384) transfdatax(point40)
+      (-3.8632) transfdatax(point41)
+      (-5.0561) transfdatax(point42)
+      (-2.3449) transfdatax(point43)
+      (-7.8607) transfdatax(point44)
+      (-1.7176) transfdatax(point45)
+      (-2.0257) transfdatax(point46)
+      (-5.0647) transfdatax(point47)
+      (-6.3817) transfdatax(point48)
+      (-5.5325) transfdatax(point49)
+      (-8.0751) transfdatax(point50)
+      (-9.8869) transfdatax(point51)
+      (-7.1528) transfdatax(point52)
+      (-5.4165) transfdatax(point53)
+      (-1.1075) transfdatax(point54)
+      (-2.8693) transfdatax(point55)
+      (-8.0605) transfdatax(point56)
+      (-1.5704) transfdatax(point57)
+      (-0.3391) transfdatax(point58)
+      (-7.0505) transfdatax(point59)
+      (-7.5217) transfdatax(point60)
+      (-7.8549) transfdatax(point61)
+      (-0.8801) transfdatax(point62)
+      (-2.1929) transfdatax(point63)
+      (-8.0338) transfdatax(point64)
+      (-2.0215) transfdatax(point65)
+      (-5.2408) transfdatax(point66)
+      (-9.062)  transfdatax(point67)
+      (-3.2291) transfdatax(point68)
+      (-6.3412) transfdatax(point69)
+      (-2.6871) transfdatax(point70)
+      (-7.4123) transfdatax(point71)
+      (-4.5585) transfdatax(point72)
+      (-4.9611) transfdatax(point73)
+      (-5.3228) transfdatax(point74)
+      (-3.9597) transfdatax(point75)
+      (-9.5996) transfdatax(point76)
+      (-8.7768) transfdatax(point77)
+      (-4.9516) transfdatax(point78)
+      (-4.2789) transfdatax(point79)
+      (-5.1199) transfdatax(point80)
+      (-4.1899) transfdatax(point81)
+      (-9.2319) transfdatax(point82)
+      (-6.3822) transfdatax(point83)
+      (-8.9827) transfdatax(point84)
+      (-4.2485) transfdatax(point85)
+      (-4.834)  transfdatax(point86)
+      (-3.0666) transfdatax(point87)
+      (-7.3179) transfdatax(point88)
+      (-3.9052) transfdatax(point89)
+      (-4.446)  transfdatax(point90)
+      (-2.7759) transfdatax(point91)
+      (-9.7369) transfdatax(point92)
+      (-7.9649) transfdatax(point93)
+      (-7.1781) transfdatax(point94)
+      (-2.0335) transfdatax(point95)
+      (-6.6483) transfdatax(point96)
+      (-8.4667) transfdatax(point97)
+      (-2.3501) transfdatax(point98)
+      (-8.5106) transfdatax(point99)
+      (-2.2356) transfdatax(point100)
+       (4.9731) transfdatay(point1)
+       (8.7392) transfdatay(point2)
+       (1.9123) transfdatay(point3)
+       (2.3455) transfdatay(point4)
+       (6.0089) transfdatay(point5)
+       (5.0772) transfdatay(point6)
+       (3.5906) transfdatay(point7)
+       (3.6642) transfdatay(point8)
+       (0.2389) transfdatay(point9)
+       (2.8476) transfdatay(point10)
+       (8.9045) transfdatay(point11)
+       (2.3407) transfdatay(point12)
+       (0.1912) transfdatay(point13)
+       (9.2797) transfdatay(point14)
+       (6.1636) transfdatay(point15)
+       (5.2142) transfdatay(point16)
+       (7.4993) transfdatay(point17)
+       (0.1604) transfdatay(point18)
+       (6.9709) transfdatay(point19)
+       (8.8746) transfdatay(point20)
+       (7.8965) transfdatay(point21)
+       (0.1658) transfdatay(point22)
+       (9.6014) transfdatay(point23)
+       (8.1473) transfdatay(point24)
+       (7.7454) transfdatay(point25)
+       (6.5566) transfdatay(point26)
+       (4.8509) transfdatay(point27)
+       (4.3462) transfdatay(point28)
+       (1.2896) transfdatay(point29)
+       (7.9116) transfdatay(point30)
+       (3.0262) transfdatay(point31)
+       (4.4628) transfdatay(point32)
+       (2.0802) transfdatay(point33)
+       (2.816)  transfdatay(point34)
+       (6.2028) transfdatay(point35)
+       (6.1526) transfdatay(point36)
+       (7.6334) transfdatay(point37)
+       (0.7983) transfdatay(point38)
+       (0.1924) transfdatay(point39)
+       (3.3409) transfdatay(point40)
+       (8.349)  transfdatay(point41)
+       (0.5311) transfdatay(point42)
+       (1.919)  transfdatay(point43)
+       (9.3471) transfdatay(point44)
+       (9.4345) transfdatay(point45)
+       (1.8172) transfdatay(point46)
+       (5.3234) transfdatay(point47)
+       (2.1079) transfdatay(point48)
+       (2.9592) transfdatay(point49)
+       (0.3418) transfdatay(point50)
+       (3.551)  transfdatay(point51)
+       (8.1361) transfdatay(point52)
+       (2.435)  transfdatay(point53)
+       (5.0193) transfdatay(point54)
+       (1.6857) transfdatay(point55)
+       (8.4157) transfdatay(point56)
+       (5.631)  transfdatay(point57)
+       (2.7152) transfdatay(point58)
+       (7.1841) transfdatay(point59)
+       (1.5771) transfdatay(point60)
+       (9.5535) transfdatay(point61)
+       (2.5656) transfdatay(point62)
+       (7.9975) transfdatay(point63)
+       (9.5557) transfdatay(point64)
+       (4.5985) transfdatay(point65)
+       (8.9571) transfdatay(point66)
+       (8.7195) transfdatay(point67)
+       (3.519)  transfdatay(point68)
+       (9.245)  transfdatay(point69)
+       (4.141)  transfdatay(point70)
+       (2.8165) transfdatay(point71)
+       (6.5711) transfdatay(point72)
+       (3.806)  transfdatay(point73)
+       (8.9994) transfdatay(point74)
+       (0.602)  transfdatay(point75)
+       (4.3015) transfdatay(point76)
+       (2.7165) transfdatay(point77)
+       (1.8723) transfdatay(point78)
+       (3.7343) transfdatay(point79)
+       (9.5194) transfdatay(point80)
+       (4.6182) transfdatay(point81)
+       (0.9151) transfdatay(point82)
+       (9.5284) transfdatay(point83)
+       (5.3528) transfdatay(point84)
+       (0.4619) transfdatay(point85)
+       (8.1644) transfdatay(point86)
+       (8.0538) transfdatay(point87)
+       (8.5942) transfdatay(point88)
+       (5.609)  transfdatay(point89)
+       (2.7414) transfdatay(point90)
+       (9.8104) transfdatay(point91)
+       (7.9877) transfdatay(point92)
+       (5.8103) transfdatay(point93)
+       (8.2867) transfdatay(point94)
+       (4.3388) transfdatay(point95)
+       (2.7077) transfdatay(point96)
+       (1.1085) transfdatay(point97)
+       (2.1747) transfdatay(point98)
+       (8.9966) transfdatay(point99)
+       (8.9275) transfdatay(point100)
+       (0)      transformx(00)
+       (0)      transformx(01)
+       (0)      transformx(10)
+       (0)      transformx(11)
+       (0)      transformy(00)
+       (0)      transformy(01)
+       (0)      transformy(10)
+       (0)      transformy(11)
+
+
+---- d  d=1 means: relax no-overlap constraint
+
+d(point1,x,less)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -20       emptysq1(point1,x)
+        1       sumd(point1)
+
+d(point1,x,greater)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+       20       emptysq2(point1,x)
+        1       sumd(point1)
+
+d(point1,y,less)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+      -20       emptysq1(point1,y)
+        1       sumd(point1)
+
+REMAINING 397 ENTRIES SKIPPED
+
+---- z  objective
+
+z
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       objsq
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Range Statistics    SOLVE emptysquare Using MINLP From line 113
+
+
+RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
+
+RHS       [min, max] : [ 3.000E+00, 3.000E+00] - Zero values observed as well
+Bound     [min, max] : [ 1.000E+00, 2.000E+01] - Zero values observed as well
+Matrix    [min, max] : [ 6.352E-04, 2.000E+01] - Zero values observed as well
+
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE emptysquare Using MINLP From line 113
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           8     SINGLE EQUATIONS          709
+BLOCKS OF VARIABLES           6     SINGLE VARIABLES          613
+NON ZERO ELEMENTS         2,240     NON LINEAR N-Z            230
+CODE LENGTH               1,996     CONSTANT POOL             216     DISCRETE VARIABLES        400
+
+
+GENERATION TIME      =        0.000 SECONDS      4 MB  53.1.0 6a03d3b9 WEX-WEI
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE emptysquare Using MINLP From line 113
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   emptysquare         OBJECTIVE  z
+     TYPE    MINLP               DIRECTION  MAXIMIZE
+     SOLVER  XPRESS              FROM LINE  113
+
+**** SOLVER STATUS     1 Normal Completion
+**** MODEL STATUS      1 Optimal
+**** OBJECTIVE VALUE                3.1411
+
+ RESOURCE USAGE, LIMIT          7.312 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+ EVALUATION ERRORS             NA             0
+
+    Xpress           53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+... GMO Q Extraction (ThreePass): 0.00s
+
+    Original problem size
+       linear:    708 rows, 612 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Nonlinear presolve
+       bound tightening reduced 400 bounds
+    Presolved problem size
+       linear:    708 rows, 613 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Problem is nonlinear presolved
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:27, May 17, 2026
+    Control settings used:
+    MIPADDCUTOFF = 0
+    MIPRELCUTOFF = 0
+    MIPABSSTOP = 0
+    MIPRELSTOP = .0001
+    INPUTTOL = 0
+    Maximum expanded nl-formula size: 18  (row 'transformx(11)')
+    Total tokens: 3028
+      16  parallel calculation threads
+      Jacobian: symbolic differentiation
+             208 base AD formula, 11.5481 average complexity
+             438 in the Jacobian, 6.89269 average complexity
+    Initial point objective:      .0000
+    Absolute / relative validation:           9.886  /     3.000
+     ------------------- Calling global solver ----------------- 
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:27, May 17, 2026
+    Heap usage: 750KB (peak 752KB, 478KB system)
+    Maximizing MINLP  using up to 16 threads and up to 63GB memory
+    Original problem has:
+           708 rows          613 cols         1800 elements       400 entities
+    Presolved problem has:
+           710 rows          624 cols         2230 elements       400 entities
+    LP relaxation tightened
+    Presolve finished in 0 seconds
+    Heap usage: 2467KB (peak 2891KB, 478KB system)
+    Coefficient range                    original                 solved        
+      Coefficients   [min,max] : [ 1.00e+00,  2.00e+01] / [ 3.18e-04,  2.00e+00]
+      RHS and bounds [min,max] : [ 1.96e-17,  2.00e+01] / [ 1.96e-17,  4.00e+01]
+      Objective      [min,max] : [ 1.00e+00,  1.00e+00] / [ 1.00e+00,  1.00e+00]
+    Autoscaling applied standard scaling
+    Will try to keep branch and bound tree memory usage below 57.1GB
+    Starting concurrent solve with dual (1 thread)
+     Concurrent-Solve,   0s
+                Dual        
+        objective   sum inf 
+     P  20.000000   .0000000
+                            
+    ------- optimal --------
+    Concurrent statistics:
+               Dual: 427 simplex iterations, 0.00s
+    Optimal solution found
+     
+       Its         Obj Value      S   Ninf  Nneg        Sum Inf  Time
+       427         20.000000      P      0     0        .000000     0
+    Dual solved problem
+      427 simplex iterations in 0.00 seconds at time 0
+    Final objective                       : 2.000000000000000e+01
+      Max primal violation      (abs/rel) : 1.110e-16 / 8.882e-17
+      Max dual violation        (abs/rel) :       0.0 /       0.0
+      Max complementarity viol. (abs/rel) :       0.0 /       0.0
+    Starting root cutting & heuristics
+    Deterministic mode with up to 3 additional threads
+     
+     Its Type    BestSoln    BestBound   Sols    Add    Del     Gap     GInf   Time
+    a             .281166    20.000000      1                 98.59%       0      0
+    b             .691174    20.000000      2                 96.54%       0      0
+    P             .718546    20.000000      3                 96.41%       0      0
+    P            1.444383    20.000000      4                 92.78%       0      0
+       1  K      1.444383    16.498838      4    331     21   91.25%     409      0
+       2  K      1.444383    16.471392      4    484    277   91.23%     419      0
+       3  K      1.444383    14.554706      4    443    470   90.08%     411      0
+       4  K      1.444383    14.539697      4    484    432   90.07%     410      0
+       5  K      1.444383    13.740285      4    381    455   89.49%     410      0
+       6  K      1.444383    13.484259      4    484    401   89.29%     410      0
+       7  K      1.444383    13.048121      4    484    424   88.93%     410      0
+       8  K      1.444383    12.908539      4    484    408   88.81%     410      0
+       9  K      1.444383    12.670889      4    189    388   88.60%     410      0
+      10  K      1.444383    12.594868      4    479    291   88.53%     410      0
+      11  K      1.444383    12.567597      4    121    515   88.51%     409      0
+      12  K      1.444383    12.424099      4     83     99   88.37%     409      0
+      13  K      1.444383    12.409257      4    102     87   88.36%     410      0
+      14  K      1.444383    12.331171      4    144    101   88.29%     410      0
+      15  K      1.444383    12.323096      4    146    159   88.28%     409      0
+      16  K      1.444383    12.280616      4    182     98   88.24%     410      0
+      17  K      1.444383    12.276224      4     59    171   88.23%     410      0
+      18  K      1.444383    12.253117      4     42     30   88.21%     410      0
+      19  K      1.444383    12.251177      4     27     26   88.21%     410      0
+      20  K      1.444383    12.238160      4     15     24   88.20%     410      0
+      21  K      1.444383    12.237302      4     23     15   88.20%     410      0
+      22  K      1.444383    12.230025      4     19     40   88.19%     410      0
+      23  K      1.444383    12.230025      4     14     17   88.19%     410      1
+      24  K      1.444383    12.225600      4     15     15   88.19%     410      1
+      25  K      1.444383    12.225600      4     11    171   88.19%     410      1
+      26  G      1.444383    12.225600      4     78      0   88.19%     410      1
+      27  G      1.444383    12.225600      4    471    581   88.19%     409      1
+    Heuristic search 'R' started
+    Heuristic search 'R' stopped
+     
+    Cuts in the matrix         : 108
+    Cut elements in the matrix : 590
+    Starting tree search.
+    Heap usage: 6248KB (peak 7716KB, 490KB system)
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+           1     1.444383    11.080960      4      2      1   86.97%     218      1
+           2     1.444383    11.080960      4      2      3   86.97%     270      1
+           3     1.444383    10.442359      4      3      3   86.17%     400      1
+           4     1.444383    10.442359      4      4      4   86.17%     314      1
+           5     1.444383    10.442359      4      5      4   86.17%     394      1
+           6     1.444383    10.141667      4      6      4   85.76%     402      1
+           7     1.444383    10.141667      4      7      4   85.76%     262      1
+           8     1.444383    10.141667      4      8      5   85.76%      81      1
+           9     1.444383    10.141667      4      9      5   85.76%     238      1
+          10     1.444383    10.141667      4     10      5   85.76%     260      1
+          20     1.444383    10.079249      4     20      6   85.67%     266      1
+          32     1.444383    10.079249      4     28      7   85.67%     246      1
+          43     1.444383    10.079249      4     33      7   85.67%     432      1
+          53     1.444383    10.079249      4     39     11   85.67%     114      1
+          63     1.444383    10.079249      4     44     10   85.67%     145      1
+          73     1.444383     9.380392      4     52     11   84.60%     282      1
+          84     1.444383     9.380392      4     61      7   84.60%     369      1
+    N     97     1.632147     9.380392      5     71     12   82.60%       0      1
+          99     1.632147     9.380392      5     71     12   82.60%     219      1
+    Elapsed time (sec): 1, estimated tree completion: 0.00981
+    Heap usage: 136MB (peak 139MB, 1628KB system)
+    B&B tree size: 0.8MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+         109     1.632147     9.380392      5     73     18   82.60%     252      1
+    *    113     1.646107     9.380392      6     74     12   82.45%       0      1
+         209     1.646107     8.838714      6    108     16   81.38%      61      1
+    E    213     1.837730     8.838714      7    117     30   79.21%       0      1
+         310     1.837730     8.838714      7    138     20   79.21%     272      1
+    N    412     1.887763     8.838714      8    177     23   78.64%       0      1
+         413     1.887763     8.838714      8    177     21   78.64%     300      1
+    *    460     2.311667     8.838714      9    197     23   73.85%       0      1
+         516     2.311667     8.838714      9    178     20   73.85%     328      2
+         626     2.311667     8.838714      9    198     24   73.85%      10      2
+    *    693     2.649825     8.838714     10    213     15   70.02%       0      2
+    E    725     2.713052     8.838714     11    186     41   69.30%       0      2
+         727     2.713052     8.838714     11    186     41   69.30%       4      2
+         828     2.713052     8.838714     11    229     19   69.30%     236      2
+         940     2.713052     8.838714     11    236     25   69.30%     224      2
+    N   1006     2.912555     8.838714     12    249     40   67.05%       0      2
+        1050     2.912555     8.838714     12    206      1   67.05%       2      2
+        1153     2.912555     8.838714     12    213     35   67.05%       2      2
+        1253     2.912555     8.838714     12    192     17   67.05%     274      2
+    *   1305     3.021614     8.838714     13    171     27   65.81%       0      2
+    Elapsed time (sec): 2, estimated tree completion: 0.16618
+    Heap usage: 326MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.8MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        1353     3.021614     8.838714     13    124     12   65.81%     268      2
+    N   1403     3.026619     8.838714     14    116     30   65.76%       0      2
+    N   1412     3.055029     8.838714     15    116     36   65.44%       0      2
+        1459     3.055029     8.838714     15    117     23   65.44%     255      2
+        1563     3.055029     8.838714     15    116     38   65.44%     209      2
+    N   1607     3.055029     8.838714     16    125     38   65.44%       0      2
+        1663     3.055029     8.838714     16    128      1   65.44%       2      2
+        1764     3.055029     8.838714     16    125     77   65.44%     188      2
+        1866     3.055029     8.838714     16    117     26   65.44%     214      2
+    *   1869     3.068874     8.838714     17    121     34   65.28%       0      2
+        1972     3.068874     8.838714     17    103     66   65.28%     187      2
+    *   2030     3.088190     8.838714     18    102     62   65.06%       0      2
+    N   2044     3.094741     8.838714     19    101     28   64.99%       0      2
+        2074     3.094741     8.838714     19    103     16   64.99%     301      2
+        2180     3.094741     8.838714     19    106     40   64.99%     208      2
+        2282     3.094741     8.838714     19    101     30   64.99%     209      2
+        2390     3.094741     8.838714     19     84     58   64.99%     179      2
+        2515     3.094741     8.838714     19     59      1   64.99%       2      2
+        2618     3.094741     8.838714     19     58     61   64.99%       1      2
+        2739     3.094741     8.838714     19     68     67   64.99%     184      2
+    Elapsed time (sec): 2, estimated tree completion: 0.53444
+    Heap usage: 328MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.3MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        2862     3.094741     8.838714     19     58     67   64.99%     183      2
+        2985     3.094741     8.838714     19     56      1   64.99%       2      2
+        3088     3.094741     8.838714     19     45     23   64.99%     226      2
+        3188     3.094741     8.838714     19     56     24   64.99%     292      2
+        3289     3.094741     8.565055     19     86     11   63.87%     321      2
+        3394     3.094741     8.565055     19     99     20   63.87%     248      2
+        3494     3.094741     8.565055     19     98     16   63.87%     292      3
+        3595     3.094741     8.565055     19     98     15   63.87%      64      3
+        3695     3.094741     8.565055     19    103     23   63.87%     292      3
+        3800     3.094741     8.506492     19     88     20   63.62%     276      3
+    *   3910     3.094741     8.506492     20    100     33   63.62%       0      3
+        3911     3.094741     8.506492     20    100     12   63.62%      54      3
+        4011     3.094741     8.506492     20    101     20   63.62%     250      3
+        4113     3.094741     8.506492     20     78     23   63.62%     276      3
+    N   4209     3.094741     8.506492     21     54     25   63.62%       0      3
+        4215     3.094741     8.506492     21     51     20   63.62%     256      3
+    N   4266     3.130245     8.506492     22     53     25   63.20%       0      3
+    N   4272     3.141077     8.506492     23     49     26   63.07%       0      3
+        4319     3.141077     7.847061     23     40     30   59.97%     157      3
+        4422     3.141077     7.847061     23     32      1   59.97%       2      3
+    Elapsed time (sec): 3, estimated tree completion: 0.91632
+    Heap usage: 328MB (peak 346MB, 3890KB system)
+    B&B tree size: 2.1MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        4556     3.141077     7.847061     23     28     63   59.97%     186      3
+        4656     3.141077     7.847061     23     44     40   59.97%     119      3
+        4760     3.141077     7.847061     23     48     42   59.97%     165      3
+        4860     3.141077     7.847061     23     40     41   59.97%      67      3
+        4960     3.141077     7.847061     23     37     50   59.97%     130      3
+    *   5006     3.141077     7.847061     24     30     44   59.97%       0      3
+    *   5036     3.141078     7.847061     25     34     48   59.97%       0      3
+        5096     3.141078     7.847061     25     40     51   59.97%     168      3
+    *   5139     3.141078     7.847061     26     38     46   59.97%       0      3
+    *   5152     3.141078     7.847061     27     31     44   59.97%       0      3
+        5198     3.141078     7.847061     27     29     50   59.97%     129      3
+        5300     3.141078     7.847061     27     29     51   59.97%     130      3
+    *   5405     3.141078     7.778865     28     18     50   59.62%       0      3
+    *   5406     3.141078     7.778865     29     18     50   59.62%       0      3
+        5408     3.141078     7.778865     29     18     25   59.62%     277      3
+        5522     3.141078     6.211972     29     10     37   49.44%     181      3
+        5623     3.141078     6.211972     29     34     43   49.44%      95      3
+        5724     3.141078     6.211972     29     61     45   49.44%     100      3
+        5827     3.141078     6.211972     29     62     44   49.44%     122      3
+        5927     3.141078     6.211972     29     59     44   49.44%      51      4
+    Elapsed time (sec): 4, estimated tree completion: 0.94694
+    Heap usage: 324MB (peak 346MB, 3314KB system)
+    B&B tree size: 1.7MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        6027     3.141078     5.495157     29     45     49   42.84%      41      4
+    *   6084     3.141078     5.495157     30     38     45   42.84%       0      4
+        6128     3.141078     5.495157     30     22     43   42.84%      55      4
+        6228     3.141078     5.495157     30     33     53   42.84%      81      4
+        6328     3.141078     5.495157     30     41     53   42.84%      81      4
+        6431     3.141078     5.495157     30     58     55   42.84%     164      4
+        6534     3.141078     5.495157     30     70     18   42.84%     339      4
+        6635     3.141078     5.495157     30     89     56   42.84%     138      4
+        6736     3.141078     5.495157     30     95     59   42.84%     164      4
+        6842     3.141078     5.495157     30    113     73   42.84%     148      4
+        6945     3.141078     5.495157     30    132     58   42.84%     137      4
+        7045     3.141078     5.495157     30    122     57   42.84%     138      4
+        7156     3.141078     5.397957     30    120     71   41.81%     148      4
+        7257     3.141078     5.397957     30    131     60   41.81%     137      4
+        7367     3.141078     5.397957     30    141     61   41.81%     137      4
+        7469     3.141078     5.397957     30    158     60   41.81%     164      4
+        7569     3.141078     5.397957     30    165     61   41.81%     137      4
+        7671     3.141078     5.397957     30    167     60   41.81%     101      4
+        7774     3.141078     5.397957     30    188     58   41.81%     164      4
+        7875     3.141078     5.397957     30    188     61   41.81%     137      4
+    Elapsed time (sec): 4, estimated tree completion: 0.95411
+    Heap usage: 328MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.1MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        7976     3.141078     5.397957     30    207     59   41.81%     160      4
+        8082     3.141078     5.397957     30    220     60   41.81%     102      4
+        8182     3.141078     5.397957     30    207     58   41.81%      98      4
+        8283     3.141078     5.397957     30    213     61   41.81%     137      4
+        8383     3.141078     5.397957     30    205     59   41.81%     138      4
+        8485     3.141078     5.397957     30    203     62   41.81%     137      4
+        8608     3.141078     5.397957     30    209     66   41.81%     153      4
+        8716     3.141078     5.241606     30    223     61   40.07%     137      4
+        8819     3.141078     5.241606     30    215     73   40.07%     146      4
+        8923     3.141078     5.241606     30    233     60   40.07%     137      4
+        9023     3.141078     5.184467     30    228     60   39.41%     163      4
+        9125     3.141078     5.184467     30    222     19   39.41%     269      4
+        9227     3.141078     5.184467     30    220     60   39.41%     137      4
+        9327     3.141078     5.184467     30    206     73   39.41%     145      4
+        9428     3.141078     5.184467     30    205     62   39.41%     161      4
+        9530     3.141078     5.184467     30    197     60   39.41%     102      4
+        9637     3.141078     5.184467     30    219     59   39.41%     137      4
+        9740     3.141078     5.184467     30    204     61   39.41%     138      4
+        9842     3.141078     5.184467     30    205     60   39.41%     138      4
+        9946     3.141078     5.184467     30    202     62   39.41%     137      4
+    Elapsed time (sec): 4, estimated tree completion: 0.97774
+    Heap usage: 327MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.3MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+       10047     3.141078     5.184467     30    197     58   39.41%     164      4
+       11049     3.141078     5.096573     30    149     59   38.37%     104      5
+       12055     3.141078     5.096573     30    150     71   38.37%     148      5
+       13055     3.141078     5.096573     30    121     58   38.37%     138      5
+       14058     3.141078     5.096573     30    114     59   38.37%     138      5
+       15064     3.141078     4.963209     30    178     64   36.71%     137      5
+       16068     3.141078     4.963209     30    150     63   36.71%     137      6
+       17068     3.141078     4.963209     30    124     63   36.71%     137      6
+       18070     3.141078     4.793325     30    126     64   34.47%     137      6
+       19073     3.141078     4.766327     30    134     58   34.10%     137      6
+       20076     3.141078     4.766327     30     80     65   34.10%     137      6
+       21077     3.141078     4.766327     30     23     56   34.10%     139      6
+       22080     3.141078     4.759640     30     40     63   34.01%     138      7
+     *** Search completed ***
+    Uncrunching matrix
+    Problem is nonlinear postsolved
+    Heap usage: 6642KB (peak 346MB, 369KB system)
+    Final MINLP objective (global optimum): 3.141077656780363e+00
+    Final MINLP bound                     : 3.141077656780363e+00
+      Max validation error      (abs/rel) :      .000 /      .000
+      Max primal violation      (abs/rel) : 9.722e-07 / 9.722e-07
+      Max integer violation     (abs    ) :       0.0
+      Number of solutions found / nodes   :        30 /     22465
+      Observed primal integral            :   16.005%
+      Solution time / primaldual integral :      7.24s/ 58.272296%
+      Work / work units per second        :      4.52 /      0.62
+    *** Search completed ***
+
+... XPRESS stop status: normal (0)
+... XPRESS sol status: optimal (1)
+... Solving fixed model...
+
+    Problem classification: trigonometrical functions (416)
+    Using bundled Knitro   [C:\GAMS\53]
+    Using Xpress Knitro      [C:\GAMS\53\xknitro.dll]
+    Loaded Knitro 15.0.1
+    Original problem size
+       linear:    708 rows, 612 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Nonlinear presolve
+       compressing formula space (in use\total : 3236\6199)
+       removed 214 formulas and 2962 formula tokens
+       linear presolve removed 100 rows, 0 columns, 400 linear coefficients
+       bound tightening reduced 400 bounds
+    Presolved problem size
+       linear:    608 rows, 613 columns, 1400 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Problem is nonlinear presolved
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:34, May 17, 2026
+    Control settings used:
+    MIPADDCUTOFF = 0
+    MIPRELCUTOFF = 0
+    MIPABSSTOP = 0
+    MIPRELSTOP = .0001
+    INPUTTOL = 0
+    NLPSOLVER = 1
+    Maximum expanded nl-formula size: 18  (row 'transformx(11)')
+    Total tokens: 3028
+      16  parallel calculation threads
+      Jacobian: automatic differentiation
+      Hessian:  automatic differentiation
+    Initial point objective:      .0000
+    Absolute / relative validation:           9.886  /     1.000
+    Maximizing problem using Knitro
+               4 Hessian entries, 231 cumulative size
+    Size of Jacobian: 438 (non-constant, constraints only)
+    =======================================
+              Commercial License
+             Artelys Knitro 15.0.1
+    =======================================
+    Knitro using 1 thread.
+    Knitro presolve eliminated 400 variables 
+    and 0 constraints.
+    act_lpsolver             3
+    concurrent_evals         0
+    feastol                  1e-06
+    feastol_abs              0.001
+    hessian_no_f             1
+    numthreads               1
+    opttol                   1e-06
+    opttol_abs               0.001
+    xpresslibname            C:\GAMS\53\xprs.dll
+    Knitro fixing 400 variables eliminated from the presolve.
+    Problem Characteristics                                 (   Presolved)
+    -----------------------
+    Objective goal:  Maximize
+    Objective type:  general
+    Number of variables:                                612 (         212)
+        bounded below only:                               0 (           1)
+        bounded above only:                               0 (           2)
+        bounded below and above:                        212 (         209)
+        fixed:                                          400 (           0)
+        free:                                             0 (           0)
+    Number of constraints:                              608 (         608)
+        linear equalities:                                0 (           0)
+        quadratic equalities:                             0 (           0)
+        gen. nonlinear equalities:                      208 (         208)
+        linear one-sided inequalities:                  400 (         400)
+        quadratic one-sided inequalities:                 0 (           0)
+        gen. nonlinear one-sided inequalities:            0 (           0)
+        linear two-sided inequalities:                    0 (           0)
+        quadratic two-sided inequalities:                 0 (           0)
+        gen. nonlinear two-sided inequalities:            0 (           0)
+    Number of nonzeros in Jacobian:                    1838 (        1438)
+    Number of nonzeros in Hessian:                        4 (           4)
+    
+    Interior-Point/Barrier Direct algorithm.
+      Iter      Objective      FeasError   OptError    ||Step||    CGits 
+    --------  --------------  ----------  ----------  ----------  -------
+           0    0.000000e+00   9.887e+00
+          10    3.142442e+00   7.356e-03   3.823e-03   2.328e+00        0
+          12    3.141077e+00   7.568e-11   1.112e-09   4.888e-04        0
+    EXIT: Locally optimal solution found.
+    Final Statistics
+    ----------------
+    Final objective value               =   3.14107746656909e+00
+    Final feasibility error (abs / rel) =   7.57e-11 / 7.65e-12
+    Final optimality error  (abs / rel) =   1.11e-09 / 1.11e-09
+    # of iterations                     =         12 
+    # of CG iterations                  =          0 
+    # of function evaluations           =         17
+    # of gradient evaluations           =         15
+    # of Hessian evaluations            =         12
+    Total program time (secs)           =       0.014 (     0.016 CPU time)
+    Time spent in evaluations (secs)    =       0.001
+    ===============================================================================
+    Problem solved using Xpress-NLP Knitro
+    No unconverged values in active constraints
+    Problem is nonlinear postsolved
+    Heap usage: 3078KB (peak 346MB, 213KB system)
+    Final NLP objective (local optimum)   : 3.141077466569094e+00
+      Max validation error      (abs/rel) :      .000 /      .000
+      Max primal violation      (abs/rel) : 7.568e-11 / 7.568e-11
+      Total time                          :     .033s
+    *** Search completed ***
+
+... XPRESS stop status: normal (0)
+... XPRESS sol status: feasible (2)
+
+
+---- EQU transfdatax  transform data points: x coordinate
+
+                LOWER          LEVEL          UPPER
+
+point1            .       1.274536E-11          .          
+point2            .       1.684874E-11          .          
+point3            .       5.709655E-12          .          
+point4            .       5.531131E-12          .          
+point5            .       8.784085E-12          .          
+point6            .       9.610979E-12          .          
+point7            .       5.654144E-12          .          
+point8            .       1.014744E-11          .          
+point9            .       6.969425E-13          .          
+point10           .       4.438228E-12          .          
+point11           .       1.399592E-11          .          
+point12           .       4.000356E-12          .          
+point13           .       7.599477E-13          .          
+point14           .       1.566214E-11          .          
+point15           .       1.034905E-11          .          
+point16           .       9.584333E-12          .          
+point17           .       1.506528E-11          .          
+point18           .       2.643885E-12          .          
+point19           .       1.405098E-11          .          
+point20           .       1.681144E-11          .          
+point21           .       1.548983E-11          .          
+point22           .       2.783551E-12          .          
+point23           .       1.716494E-11          .          
+point24           .       1.603695E-11          .          
+point25           .       1.349676E-11          .          
+point26           .       1.106759E-11          .          
+point27           .       8.920864E-12          .          
+point28           .       6.900258E-12          .          
+point29           .       4.857004E-12          .          
+point30           .       1.474021E-11          .          
+point31           .       3.925749E-12          .          
+point32           .       1.111111E-11          .          
+point33           .       4.892087E-12          .          
+point34           .       4.674483E-12          .          
+point35           .       1.366196E-11          .          
+point36           .       1.049916E-11          .          
+point37           .       1.467804E-11          .          
+point38           .       1.576961E-12          .          
+point39           .       1.852074E-12          .          
+point40           .       6.316725E-12          .          
+point41           .       1.335110E-11          .          
+point42           .       3.991474E-12          .          
+point43           .       4.020340E-12          .          
+point44           .       1.725731E-11          .          
+point45           .       1.335998E-11          .          
+point46           .       3.680611E-12          .          
+point47           .       1.021228E-11          .          
+point48           .       6.902034E-12          .          
+point49           .       7.451817E-12          .          
+point50           .       5.717649E-12          .          
+point51           .       1.106493E-11          .          
+point52           .       1.522515E-11          .          
+point53           .       6.695977E-12          .          
+point54           .       7.233325E-12          .          
+point55           .       4.059864E-12          .          
+point56           .       1.618083E-11          .          
+point57           .       8.328449E-12          .          
+point58           .       3.743228E-12          .          
+point59           .       1.392308E-11          .          
+point60           .       6.957990E-12          .          
+point61           .       1.752021E-11          .          
+point62           .       3.902656E-12          .          
+point63           .       1.180389E-11          .          
+point64           .       1.764100E-11          .          
+point65           .       7.284839E-12          .          
+point66           .       1.504041E-11          .          
+point67           .       1.722711E-11          .          
+point68           .       6.672884E-12          .          
+point69           .       1.613465E-11          .          
+point70           .       7.125855E-12          .          
+point71           .       8.494538E-12          .          
+point72           .       1.149925E-11          .          
+point73           .       8.176571E-12          .          
+point74           .       1.515055E-11          .          
+point75           .       3.367528E-12          .          
+point76           .       1.185008E-11          .          
+point77           .       9.255707E-12          .          
+point78           .       5.662137E-12          .          
+point79           .       7.638334E-12          .          
+point80           .       1.569056E-11          .          
+point81           .       8.726353E-12          .          
+point82           .       7.216450E-12          .          
+point83           .       1.652722E-11          .          
+point84           .       1.281109E-11          .          
+point85           .       3.373746E-12          .          
+point86           .       1.374723E-11          .          
+point87           .       1.244871E-11          .          
+point88           .       1.592504E-11          .          
+point89           .       9.826806E-12          .          
+point90           .       6.459722E-12          .          
+point91           .       1.453770E-11          .          
+point92           .       1.672085E-11          .          
+point93           .       1.273648E-11          .          
+point94           .       1.543654E-11          .          
+point95           .       6.956213E-12          .          
+point96           .       7.853274E-12          .          
+point97           .       6.967760E-12          .          
+point98           .       4.355627E-12          .          
+point99           .       1.722888E-11          .          
+point100          .       1.304024E-11          .          
+
+---- EQU transfdatay  transform data points: y coordinate
+
+                LOWER          LEVEL          UPPER
+
+point1            .       9.253043E-12          .          
+point2            .       5.242473E-12          .          
+point3            .       5.164758E-12          .          
+point4            .       3.409273E-12          .          
+point5            .       -1.95999E-12          .          
+point6            .       2.693401E-12          .          
+point7            .       -3.65874E-13          .          
+point8            .       8.320455E-12          .          
+point9            .       6.125656E-13          .          
+point10           .       -3.80862E-13          .          
+point11           .       -9.61231E-13          .          
+point12           .       3.866907E-13          .          
+point13           .       8.920642E-13          .          
+point14           .       1.137868E-12          .          
+point15           .       6.497580E-13          .          
+point16           .       2.197353E-12          .          
+point17           .       5.703438E-12          .          
+point18           .       4.732659E-12          .          
+point19           .       5.393019E-12          .          
+point20           .       4.731326E-12          .          
+point21           .       5.265566E-12          .          
+point22           .       4.992451E-12          .          
+point23           .       3.087752E-12          .          
+point24           .       5.540901E-12          .          
+point25           .       1.792122E-12          .          
+point26           .       8.071321E-13          .          
+point27           .       2.054357E-12          .          
+point28           .       -3.29042E-13          .          
+point29           .       5.481837E-12          .          
+point30           .       3.724576E-12          .          
+point31           .       -1.97553E-12          .          
+point32           .       7.652545E-12          .          
+point33           .       2.998934E-12          .          
+point34           .       1.907086E-13          .          
+point35           .       7.101875E-12          .          
+point36           .       9.845458E-13          .          
+point37           .       4.503065E-12          .          
+point38           .       5.544454E-13          .          
+point39           .       3.057110E-12          .          
+point40           .       1.758371E-12          .          
+point41           .       -4.42701E-13          .          
+point42           .       6.211032E-12          .          
+point43           .       1.787903E-12          .          
+point44           .       4.089618E-12          .          
+point45           .       -3.93463E-12          .          
+point46           .       1.440514E-12          .          
+point47           .       3.092637E-12          .          
+point48           .       6.900258E-12          .          
+point49           .       5.243805E-12          .          
+point50           .       1.025047E-11          .          
+point51           .       1.050271E-11          .          
+point52           .       3.963052E-12          .          
+point53           .       5.434764E-12          .          
+point54           .       -1.84186E-12          .          
+point55           .       2.620570E-12          .          
+point56           .       4.957812E-12          .          
+point57           .       -1.64091E-12          .          
+point58           .       -1.33360E-12          .          
+point59           .       4.452883E-12          .          
+point60           .       8.726353E-12          .          
+point61           .       3.947953E-12          .          
+point62           .       -5.34295E-13          .          
+point63           .       -2.37899E-12          .          
+point64           .       4.178879E-12          .          
+point65           .       -3.81750E-13          .          
+point66           .       9.466872E-13          .          
+point67           .       6.057377E-12          .          
+point68           .       1.890044E-12          .          
+point69           .       2.186251E-12          .          
+point70           .       7.809309E-13          .          
+point71           .       7.775114E-12          .          
+point72           .       1.620482E-12          .          
+point73           .       3.948397E-12          .          
+point74           .       1.025513E-12          .          
+point75           .       4.741985E-12          .          
+point76           .       9.642065E-12          .          
+point77           .       9.608314E-12          .          
+point78           .       5.199396E-12          .          
+point79           .       3.110845E-12          .          
+point80           .       4.244383E-13          .          
+point81           .       2.417844E-12          .          
+point82           .       1.137668E-11          .          
+point83           .       2.054579E-12          .          
+point84           .       8.157031E-12          .          
+point85           .       5.208722E-12          .          
+point86           .       9.372503E-13          .          
+point87           .       -1.28253E-12          .          
+point88           .       3.878231E-12          .          
+point89           .       1.402323E-12          .          
+point90           .       3.975931E-12          .          
+point91           .       -2.80687E-12          .          
+point92           .       7.410961E-12          .          
+point93           .       6.536993E-12          .          
+point94           .       3.897771E-12          .          
+point95           .       -1.96482E-13          .          
+point96           .       6.854073E-12          .          
+point97           .       1.025668E-11          .          
+point98           .       1.627809E-12          .          
+point99           .       5.162093E-12          .          
+point100          .       -2.93143E-12          .          
+
+---- EQU emptysq1  no-overlap constraint: less-than version
+
+                  LOWER          LEVEL          UPPER
+
+point1  .x        -INF          -16.8539          .          
+point1  .y        -INF          -15.7573          .          
+point2  .x        -INF          -14.0280          .          
+point2  .y        -INF          -18.5192          .          
+point3  .x        -INF           -1.6985          .          
+point3  .y        -INF          -18.5725          .          
+point4  .x        -INF           -1.8222          .          
+point4  .y        -INF          -19.7815          .          
+point5  .x        -INF          -19.5825          .          
+point5  .y        -INF           -3.4790          .          
+point6  .x        -INF          -19.0121          .          
+point6  .y        -INF           -0.2746          .          
+point7  .x        -INF           -1.7372          .          
+point7  .y        -INF          -22.3811          .          
+point8  .x        -INF          -18.6428          .          
+point8  .y        -INF          -16.3995          .          
+point9  .x        -INF           -5.1507          .          
+point9  .y        -INF          -21.7075          .          
+point10 .x        -INF           -2.5745          .          
+point10 .y        -INF          -22.3918          .          
+point11 .x        -INF          -15.9939          .          
+point11 .y        -INF           -2.7908          .          
+point12 .x        -INF           -2.8757          .          
+point12 .y        -INF          -21.8629          .          
+point13 .x        -INF           -5.1072          .          
+point13 .y        -INF          -21.5151          .          
+point14 .x        -INF          -14.8461          .          
+point14 .y        -INF          -21.3456          .          
+point15 .x        -INF          -18.5043          .          
+point15 .y        -INF           -1.6819          .          
+point16 .x        -INF          -19.0305          .          
+point16 .y        -INF           -0.6159          .          
+point17 .x        -INF          -15.2564          .          
+point17 .y        -INF          -18.2018          .          
+point18 .x        -INF           -3.8100          .          
+point18 .y        -INF          -18.8705          .          
+point19 .x        -INF          -15.9554          .          
+point19 .y        -INF          -18.4150          .          
+point20 .x        -INF          -14.0537          .          
+point20 .y        -INF          -18.8712          .          
+point21 .x        -INF          -14.9635          .          
+point21 .y        -INF          -18.5032          .          
+point22 .x        -INF           -3.7139          .          
+point22 .y        -INF          -18.6916          .          
+point23 .x        -INF          -13.8100          .          
+point23 .y        -INF          -20.0033          .          
+point24 .x        -INF          -14.5871          .          
+point24 .y        -INF          -18.3135          .          
+point25 .x        -INF          -16.3369          .          
+point25 .y        -INF          -20.8947          .          
+point26 .x        -INF          -18.0098          .          
+point26 .y        -INF           -1.5736          .          
+point27 .x        -INF          -19.4871          .          
+point27 .y        -INF           -0.7149          .          
+point28 .x        -INF           -0.8786          .          
+point28 .y        -INF          -22.3561          .          
+point29 .x        -INF           -2.2858          .          
+point29 .y        -INF          -18.3543          .          
+point30 .x        -INF          -15.4807          .          
+point30 .y        -INF          -19.5641          .          
+point31 .x        -INF           -2.9274          .          
+point31 .y        -INF          -23.4899          .          
+point32 .x        -INF          -17.9800          .          
+point32 .y        -INF          -16.8589          .          
+point33 .x        -INF           -2.2617          .          
+point33 .y        -INF          -20.0644          .          
+point34 .x        -INF           -2.4116          .          
+point34 .y        -INF          -21.9981          .          
+point35 .x        -INF          -16.2229          .          
+point35 .y        -INF          -17.2385          .          
+point36 .x        -INF          -18.4006          .          
+point36 .y        -INF           -1.4514          .          
+point37 .x        -INF          -15.5228          .          
+point37 .y        -INF          -19.0291          .          
+point38 .x        -INF           -4.5445          .          
+point38 .y        -INF          -21.7476          .          
+point39 .x        -INF           -4.3552          .          
+point39 .y        -INF          -20.0243          .          
+point40 .x        -INF           -1.2802          .          
+point40 .y        -INF          -20.9182          .          
+point41 .x        -INF          -16.4362          .          
+point41 .y        -INF          -22.4339          .          
+point42 .x        -INF           -2.8823          .          
+point42 .y        -INF          -17.8524          .          
+point43 .x        -INF           -2.8620          .          
+point43 .y        -INF          -20.8981          .          
+point44 .x        -INF          -13.7469          .          
+point44 .y        -INF          -19.3124          .          
+point45 .x        -INF          -16.4316          .          
+point45 .y        -INF          -24.8385          .          
+point46 .x        -INF           -3.0965          .          
+point46 .y        -INF          -21.1375          .          
+point47 .x        -INF          -18.5981          .          
+point47 .y        -INF      -9.39071E-12          .          
+point48 .x        -INF           -0.8778          .          
+point48 .y        -INF          -17.3775          .          
+point49 .x        -INF           -0.4993          .          
+point49 .y        -INF          -18.5189          .          
+point50 .x        -INF           -1.6935          .          
+point50 .y        -INF          -15.0708          .          
+point51 .x        -INF          -18.0123          .          
+point51 .y        -INF          -14.8959          .          
+point52 .x        -INF          -15.1469          .          
+point52 .y        -INF          -19.4000          .          
+point53 .x        -INF           -1.0197          .          
+point53 .y        -INF          -18.3867          .          
+point54 .x        -INF           -0.6495          .          
+point54 .y        -INF          -23.3976          .          
+point55 .x        -INF           -2.8345          .          
+point55 .y        -INF          -20.3248          .          
+point56 .x        -INF          -14.4889          .          
+point56 .y        -INF          -18.7151          .          
+point57 .x        -INF          -19.8950          .          
+point57 .y        -INF           -3.2593          .          
+point58 .x        -INF           -3.0530          .          
+point58 .y        -INF          -23.0477          .          
+point59 .x        -INF          -16.0431          .          
+point59 .y        -INF          -19.0633          .          
+point60 .x        -INF           -0.8391          .          
+point60 .y        -INF          -16.1207          .          
+point61 .x        -INF          -13.5651          .          
+point61 .y        -INF          -19.4104          .          
+point62 .x        -INF           -2.9434          .          
+point62 .y        -INF          -22.4972          .          
+point63 .x        -INF          -17.5013          .          
+point63 .y        -INF           -3.7676          .          
+point64 .x        -INF          -13.4827          .          
+point64 .y        -INF          -19.2516          .          
+point65 .x        -INF           -0.6142          .          
+point65 .y        -INF          -22.3921          .          
+point66 .x        -INF          -15.2734          .          
+point66 .y        -INF           -1.4770          .          
+point67 .x        -INF          -13.7671          .          
+point67 .y        -INF          -17.9572          .          
+point68 .x        -INF           -1.0353          .          
+point68 .y        -INF          -20.8280          .          
+point69 .x        -INF          -14.5214          .          
+point69 .y        -INF          -20.6236          .          
+point70 .x        -INF           -0.7235          .          
+point70 .y        -INF          -21.5918          .          
+point71 .x        -INF          -19.7813          .          
+point71 .y        -INF          -16.7758          .          
+point72 .x        -INF          -17.7114          .          
+point72 .y        -INF           -1.0133          .          
+point73 .x        -INF      -2.04263E-10          .          
+point73 .y        -INF          -19.4101          .          
+point74 .x        -INF          -15.1988          .          
+point74 .y        -INF           -1.4228          .          
+point75 .x        -INF           -3.3121          .          
+point75 .y        -INF          -18.8635          .          
+point76 .x        -INF          -17.4712          .          
+point76 .y        -INF          -15.4900          .          
+point77 .x        -INF          -19.2569          .          
+point77 .y        -INF          -15.5121          .          
+point78 .x        -INF           -1.7314          .          
+point78 .y        -INF          -18.5489          .          
+point79 .x        -INF           -0.3709          .          
+point79 .y        -INF          -19.9872          .          
+point80 .x        -INF          -14.8257          .          
+point80 .y        -INF          -21.8378          .          
+point81 .x        -INF          -19.6214          .          
+point81 .y        -INF           -0.4642          .          
+point82 .x        -INF           -0.6612          .          
+point82 .y        -INF          -14.2954          .          
+point83 .x        -INF          -14.2499          .          
+point83 .y        -INF           -0.7145          .          
+point84 .x        -INF          -16.8098          .          
+point84 .y        -INF          -16.5139          .          
+point85 .x        -INF           -3.3073          .          
+point85 .y        -INF          -18.5426          .          
+point86 .x        -INF          -16.1644          .          
+point86 .y        -INF          -21.4838          .          
+point87 .x        -INF          -17.0581          .          
+point87 .y        -INF           -3.0127          .          
+point88 .x        -INF          -14.6634          .          
+point88 .y        -INF          -19.4586          .          
+point89 .x        -INF          -18.8645          .          
+point89 .y        -INF           -1.1641          .          
+point90 .x        -INF           -1.1825          .          
+point90 .y        -INF          -19.3914          .          
+point91 .x        -INF          -15.6200          .          
+point91 .y        -INF           -4.0623          .          
+point92 .x        -INF          -14.1172          .          
+point92 .y        -INF          -17.0253          .          
+point93 .x        -INF          -16.8589          .          
+point93 .y        -INF          -17.6287          .          
+point94 .x        -INF          -15.0009          .          
+point94 .y        -INF          -19.4452          .          
+point95 .x        -INF           -0.8408          .          
+point95 .y        -INF          -22.2646          .          
+point96 .x        -INF           -0.2221          .          
+point96 .y        -INF          -17.4092          .          
+point97 .x        -INF           -0.8327          .          
+point97 .y        -INF          -15.0659          .          
+point98 .x        -INF           -2.6313          .          
+point98 .y        -INF          -21.0084          .          
+point99 .x        -INF          -13.7676          .          
+point99 .y        -INF          -18.5744          .          
+point100.x        -INF          -16.6515          .          
+point100.y        -INF          -24.1478          .          
+
+---- EQU emptysq2  no-overlap constraint: greater-than version
+
+                  LOWER          LEVEL          UPPER
+
+point1  .x          .             0.0051        +INF         
+point1  .y          .            21.1017        +INF         
+point2  .x          .             2.8309        +INF         
+point2  .y          .            18.3397        +INF         
+point3  .x          .            15.1604        +INF         
+point3  .y          .            18.2864        +INF         
+point4  .x          .            15.0367        +INF         
+point4  .y          .            17.0774        +INF         
+point5  .x          .            17.2764        +INF         
+point5  .y          .            13.3800        +INF         
+point6  .x          .            17.8468        +INF         
+point6  .y          .            16.5843        +INF         
+point7  .x          .            15.1218        +INF         
+point7  .y          .            14.4778        +INF         
+point8  .x          .            18.2162        +INF         
+point8  .y          .             0.4594        +INF         
+point9  .x          .            11.7083        +INF         
+point9  .y          .            15.1514        +INF         
+point10 .x          .            14.2844        +INF         
+point10 .y          .            14.4671        +INF         
+point11 .x          .            20.8651        +INF         
+point11 .y          .            14.0681        +INF         
+point12 .x          .            13.9832        +INF         
+point12 .y          .            14.9960        +INF         
+point13 .x          .            11.7517        +INF         
+point13 .y          .            15.3438        +INF         
+point14 .x          .             2.0128        +INF         
+point14 .y          .            15.5133        +INF         
+point15 .x          .            18.3546        +INF         
+point15 .y          .            15.1771        +INF         
+point16 .x          .            17.8284        +INF         
+point16 .y          .            16.2430        +INF         
+point17 .x          .             1.6025        +INF         
+point17 .y          .            18.6571        +INF         
+point18 .x          .            13.0489        +INF         
+point18 .y          .            17.9884        +INF         
+point19 .x          .             0.9035        +INF         
+point19 .y          .            18.4439        +INF         
+point20 .x          .             2.8052        +INF         
+point20 .y          .            17.9877        +INF         
+point21 .x          .             1.8955        +INF         
+point21 .y          .            18.3558        +INF         
+point22 .x          .            13.1450        +INF         
+point22 .y          .            18.1673        +INF         
+point23 .x          .             3.0489        +INF         
+point23 .y          .            16.8556        +INF         
+point24 .x          .             2.2718        +INF         
+point24 .y          .            18.5454        +INF         
+point25 .x          .             0.5220        +INF         
+point25 .y          .            15.9642        +INF         
+point26 .x          .            18.8492        +INF         
+point26 .y          .            15.2853        +INF         
+point27 .x          .            17.3718        +INF         
+point27 .y          .            16.1441        +INF         
+point28 .x          .            15.9803        +INF         
+point28 .y          .            14.5028        +INF         
+point29 .x          .            14.5731        +INF         
+point29 .y          .            18.5046        +INF         
+point30 .x          .             1.3782        +INF         
+point30 .y          .            17.2949        +INF         
+point31 .x          .            13.9315        +INF         
+point31 .y          .            13.3691        +INF         
+point32 .x          .            18.8789        +INF         
+point32 .y          .       8.871126E-12        +INF         
+point33 .x          .            14.5972        +INF         
+point33 .y          .            16.7945        +INF         
+point34 .x          .            14.4473        +INF         
+point34 .y          .            14.8608        +INF         
+point35 .x          .             0.6360        +INF         
+point35 .y          .            19.6204        +INF         
+point36 .x          .            18.4583        +INF         
+point36 .y          .            15.4075        +INF         
+point37 .x          .             1.3361        +INF         
+point37 .y          .            17.8299        +INF         
+point38 .x          .            12.3144        +INF         
+point38 .y          .            15.1113        +INF         
+point39 .x          .            12.5038        +INF         
+point39 .y          .            16.8346        +INF         
+point40 .x          .            15.5788        +INF         
+point40 .y          .            15.9407        +INF         
+point41 .x          .             0.4228        +INF         
+point41 .y          .            14.4250        +INF         
+point42 .x          .            13.9767        +INF         
+point42 .y          .            19.0066        +INF         
+point43 .x          .            13.9969        +INF         
+point43 .y          .            15.9608        +INF         
+point44 .x          .             3.1120        +INF         
+point44 .y          .            17.5465        +INF         
+point45 .x          .             0.4273        +INF         
+point45 .y          .            12.0205        +INF         
+point46 .x          .            13.7624        +INF         
+point46 .y          .            15.7215        +INF         
+point47 .x          .            18.2608        +INF         
+point47 .y          .            16.8589        +INF         
+point48 .x          .            15.9812        +INF         
+point48 .y          .            19.4814        +INF         
+point49 .x          .            16.3596        +INF         
+point49 .y          .            18.3400        +INF         
+point50 .x          .            15.1654        +INF         
+point50 .y          .            21.7882        +INF         
+point51 .x          .            18.8466        +INF         
+point51 .y          .             1.9630        +INF         
+point52 .x          .             1.7121        +INF         
+point52 .y          .            17.4589        +INF         
+point53 .x          .            15.8392        +INF         
+point53 .y          .            18.4722        +INF         
+point54 .x          .            16.2094        +INF         
+point54 .y          .            13.4613        +INF         
+point55 .x          .            14.0244        +INF         
+point55 .y          .            16.5341        +INF         
+point56 .x          .             2.3701        +INF         
+point56 .y          .            18.1438        +INF         
+point57 .x          .            16.9640        +INF         
+point57 .y          .            13.5996        +INF         
+point58 .x          .            13.8059        +INF         
+point58 .y          .            13.8113        +INF         
+point59 .x          .             0.8158        +INF         
+point59 .y          .            17.7956        +INF         
+point60 .x          .            16.0198        +INF         
+point60 .y          .            20.7383        +INF         
+point61 .x          .             3.2939        +INF         
+point61 .y          .            17.4485        +INF         
+point62 .x          .            13.9156        +INF         
+point62 .y          .            14.3617        +INF         
+point63 .x          .            19.3576        +INF         
+point63 .y          .            13.0913        +INF         
+point64 .x          .             3.3762        +INF         
+point64 .y          .            17.6073        +INF         
+point65 .x          .            16.2447        +INF         
+point65 .y          .            14.4669        +INF         
+point66 .x          .            21.5855        +INF         
+point66 .y          .            15.3819        +INF         
+point67 .x          .             3.0918        +INF         
+point67 .y          .            18.9017        +INF         
+point68 .x          .            15.8236        +INF         
+point68 .y          .            16.0309        +INF         
+point69 .x          .             2.3375        +INF         
+point69 .y          .            16.2353        +INF         
+point70 .x          .            16.1354        +INF         
+point70 .y          .            15.2671        +INF         
+point71 .x          .            17.0776        +INF         
+point71 .y          .             0.0832        +INF         
+point72 .x          .            19.1475        +INF         
+point72 .y          .            15.8457        +INF         
+point73 .x          .            16.8589        +INF         
+point73 .y          .            17.4488        +INF         
+point74 .x          .            21.6601        +INF         
+point74 .y          .            15.4361        +INF         
+point75 .x          .            13.5468        +INF         
+point75 .y          .            17.9954        +INF         
+point76 .x          .            19.3877        +INF         
+point76 .y          .             1.3689        +INF         
+point77 .x          .            17.6020        +INF         
+point77 .y          .             1.3468        +INF         
+point78 .x          .            15.1275        +INF         
+point78 .y          .            18.3100        +INF         
+point79 .x          .            16.4881        +INF         
+point79 .y          .            16.8717        +INF         
+point80 .x          .             2.0333        +INF         
+point80 .y          .            15.0211        +INF         
+point81 .x          .            17.2375        +INF         
+point81 .y          .            16.3947        +INF         
+point82 .x          .            16.1977        +INF         
+point82 .y          .            22.5635        +INF         
+point83 .x          .            22.6091        +INF         
+point83 .y          .            16.1445        +INF         
+point84 .x          .             0.0491        +INF         
+point84 .y          .            20.3450        +INF         
+point85 .x          .            13.5516        +INF         
+point85 .y          .            18.3164        +INF         
+point86 .x          .             0.6945        +INF         
+point86 .y          .            15.3751        +INF         
+point87 .x          .            19.8008        +INF         
+point87 .y          .            13.8462        +INF         
+point88 .x          .             2.1955        +INF         
+point88 .y          .            17.4003        +INF         
+point89 .x          .            17.9944        +INF         
+point89 .y          .            15.6949        +INF         
+point90 .x          .            15.6764        +INF         
+point90 .y          .            17.4675        +INF         
+point91 .x          .            21.2390        +INF         
+point91 .y          .            12.7966        +INF         
+point92 .x          .             2.7418        +INF         
+point92 .y          .            19.8336        +INF         
+point93 .x          .       2.094036E-10        +INF         
+point93 .y          .            19.2302        +INF         
+point94 .x          .             1.8580        +INF         
+point94 .y          .            17.4138        +INF         
+point95 .x          .            16.0181        +INF         
+point95 .y          .            14.5944        +INF         
+point96 .x          .            16.6368        +INF         
+point96 .y          .            19.4497        +INF         
+point97 .x          .            16.0263        +INF         
+point97 .y          .            21.7930        +INF         
+point98 .x          .            14.2276        +INF         
+point98 .y          .            15.8505        +INF         
+point99 .x          .             3.0913        +INF         
+point99 .y          .            18.2845        +INF         
+point100.x          .             0.2074        +INF         
+point100.y          .            12.7111        +INF         
+
+---- EQU sumd  (at least) one no-overlap constraint must hold
+
+                LOWER          LEVEL          UPPER
+
+point1           3.0000         3.0000         3.0000      
+point2           3.0000         3.0000         3.0000      
+point3           3.0000         3.0000         3.0000      
+point4           3.0000         3.0000         3.0000      
+point5           3.0000         3.0000         3.0000      
+point6           3.0000         3.0000         3.0000      
+point7           3.0000         3.0000         3.0000      
+point8           3.0000         3.0000         3.0000      
+point9           3.0000         3.0000         3.0000      
+point10          3.0000         3.0000         3.0000      
+point11          3.0000         3.0000         3.0000      
+point12          3.0000         3.0000         3.0000      
+point13          3.0000         3.0000         3.0000      
+point14          3.0000         3.0000         3.0000      
+point15          3.0000         3.0000         3.0000      
+point16          3.0000         3.0000         3.0000      
+point17          3.0000         3.0000         3.0000      
+point18          3.0000         3.0000         3.0000      
+point19          3.0000         3.0000         3.0000      
+point20          3.0000         3.0000         3.0000      
+point21          3.0000         3.0000         3.0000      
+point22          3.0000         3.0000         3.0000      
+point23          3.0000         3.0000         3.0000      
+point24          3.0000         3.0000         3.0000      
+point25          3.0000         3.0000         3.0000      
+point26          3.0000         3.0000         3.0000      
+point27          3.0000         3.0000         3.0000      
+point28          3.0000         3.0000         3.0000      
+point29          3.0000         3.0000         3.0000      
+point30          3.0000         3.0000         3.0000      
+point31          3.0000         3.0000         3.0000      
+point32          3.0000         3.0000         3.0000      
+point33          3.0000         3.0000         3.0000      
+point34          3.0000         3.0000         3.0000      
+point35          3.0000         3.0000         3.0000      
+point36          3.0000         3.0000         3.0000      
+point37          3.0000         3.0000         3.0000      
+point38          3.0000         3.0000         3.0000      
+point39          3.0000         3.0000         3.0000      
+point40          3.0000         3.0000         3.0000      
+point41          3.0000         3.0000         3.0000      
+point42          3.0000         3.0000         3.0000      
+point43          3.0000         3.0000         3.0000      
+point44          3.0000         3.0000         3.0000      
+point45          3.0000         3.0000         3.0000      
+point46          3.0000         3.0000         3.0000      
+point47          3.0000         3.0000         3.0000      
+point48          3.0000         3.0000         3.0000      
+point49          3.0000         3.0000         3.0000      
+point50          3.0000         3.0000         3.0000      
+point51          3.0000         3.0000         3.0000      
+point52          3.0000         3.0000         3.0000      
+point53          3.0000         3.0000         3.0000      
+point54          3.0000         3.0000         3.0000      
+point55          3.0000         3.0000         3.0000      
+point56          3.0000         3.0000         3.0000      
+point57          3.0000         3.0000         3.0000      
+point58          3.0000         3.0000         3.0000      
+point59          3.0000         3.0000         3.0000      
+point60          3.0000         3.0000         3.0000      
+point61          3.0000         3.0000         3.0000      
+point62          3.0000         3.0000         3.0000      
+point63          3.0000         3.0000         3.0000      
+point64          3.0000         3.0000         3.0000      
+point65          3.0000         3.0000         3.0000      
+point66          3.0000         3.0000         3.0000      
+point67          3.0000         3.0000         3.0000      
+point68          3.0000         3.0000         3.0000      
+point69          3.0000         3.0000         3.0000      
+point70          3.0000         3.0000         3.0000      
+point71          3.0000         3.0000         3.0000      
+point72          3.0000         3.0000         3.0000      
+point73          3.0000         3.0000         3.0000      
+point74          3.0000         3.0000         3.0000      
+point75          3.0000         3.0000         3.0000      
+point76          3.0000         3.0000         3.0000      
+point77          3.0000         3.0000         3.0000      
+point78          3.0000         3.0000         3.0000      
+point79          3.0000         3.0000         3.0000      
+point80          3.0000         3.0000         3.0000      
+point81          3.0000         3.0000         3.0000      
+point82          3.0000         3.0000         3.0000      
+point83          3.0000         3.0000         3.0000      
+point84          3.0000         3.0000         3.0000      
+point85          3.0000         3.0000         3.0000      
+point86          3.0000         3.0000         3.0000      
+point87          3.0000         3.0000         3.0000      
+point88          3.0000         3.0000         3.0000      
+point89          3.0000         3.0000         3.0000      
+point90          3.0000         3.0000         3.0000      
+point91          3.0000         3.0000         3.0000      
+point92          3.0000         3.0000         3.0000      
+point93          3.0000         3.0000         3.0000      
+point94          3.0000         3.0000         3.0000      
+point95          3.0000         3.0000         3.0000      
+point96          3.0000         3.0000         3.0000      
+point97          3.0000         3.0000         3.0000      
+point98          3.0000         3.0000         3.0000      
+point99          3.0000         3.0000         3.0000      
+point100         3.0000         3.0000         3.0000      
+
+---- EQU transformx  transform x',y' -> x back to original coordinates
+
+          LOWER          LEVEL          UPPER
+
+00          .       3.597034E-11          .          
+01          .       5.693490E-11          .          
+10          .       5.163425E-11          .          
+11          .       7.259970E-11          .          
+
+---- EQU transformy  transform x',y' -> y back to original coordinates
+
+          LOWER          LEVEL          UPPER
+
+00          .       -5.47127E-11          .          
+01          .       -3.90488E-11          .          
+10          .       -7.56772E-11          .          
+11          .       -6.00142E-11          .          
+
+                           LOWER          LEVEL          UPPER
+
+---- EQU objsq               .              .              .          
+
+  objsq  objective
+
+---- VAR q  transformed data points: rotate by -theta
+
+                  LOWER          LEVEL          UPPER
+
+point1  .x       -20.0000         8.7767        20.0000      
+point1  .y       -20.0000         6.3721        20.0000      
+point2  .x       -20.0000        11.6026        20.0000      
+point2  .y       -20.0000         3.6102        20.0000      
+point3  .x       -20.0000         3.9321        20.0000      
+point3  .y       -20.0000         3.5568        20.0000      
+point4  .x       -20.0000         3.8084        20.0000      
+point4  .y       -20.0000         2.3479        20.0000      
+point5  .x       -20.0000         6.0481        20.0000      
+point5  .y       -20.0000        -1.3496        20.0000      
+point6  .x       -20.0000         6.6185        20.0000      
+point6  .y       -20.0000         1.8547        20.0000      
+point7  .x       -20.0000         3.8934        20.0000      
+point7  .y       -20.0000        -0.2517        20.0000      
+point8  .x       -20.0000         6.9878        20.0000      
+point8  .y       -20.0000         5.7299        20.0000      
+point9  .x       -20.0000         0.4799        20.0000      
+point9  .y       -20.0000         0.4218        20.0000      
+point10 .x       -20.0000         3.0561        20.0000      
+point10 .y       -20.0000        -0.2624        20.0000      
+point11 .x       -20.0000         9.6367        20.0000      
+point11 .y       -20.0000        -0.6614        20.0000      
+point12 .x       -20.0000         2.7549        20.0000      
+point12 .y       -20.0000         0.2664        20.0000      
+point13 .x       -20.0000         0.5234        20.0000      
+point13 .y       -20.0000         0.6143        20.0000      
+point14 .x       -20.0000        10.7845        20.0000      
+point14 .y       -20.0000         0.7838        20.0000      
+point15 .x       -20.0000         7.1263        20.0000      
+point15 .y       -20.0000         0.4475        20.0000      
+point16 .x       -20.0000         6.6001        20.0000      
+point16 .y       -20.0000         1.5135        20.0000      
+point17 .x       -20.0000        10.3742        20.0000      
+point17 .y       -20.0000         3.9276        20.0000      
+point18 .x       -20.0000         1.8206        20.0000      
+point18 .y       -20.0000         3.2589        20.0000      
+point19 .x       -20.0000         9.6752        20.0000      
+point19 .y       -20.0000         3.7144        20.0000      
+point20 .x       -20.0000        11.5769        20.0000      
+point20 .y       -20.0000         3.2581        20.0000      
+point21 .x       -20.0000        10.6672        20.0000      
+point21 .y       -20.0000         3.6262        20.0000      
+point22 .x       -20.0000         1.9167        20.0000      
+point22 .y       -20.0000         3.4377        20.0000      
+point23 .x       -20.0000        11.8206        20.0000      
+point23 .y       -20.0000         2.1260        20.0000      
+point24 .x       -20.0000        11.0435        20.0000      
+point24 .y       -20.0000         3.8159        20.0000      
+point25 .x       -20.0000         9.2937        20.0000      
+point25 .y       -20.0000         1.2346        20.0000      
+point26 .x       -20.0000         7.6208        20.0000      
+point26 .y       -20.0000         0.5557        20.0000      
+point27 .x       -20.0000         6.1435        20.0000      
+point27 .y       -20.0000         1.4145        20.0000      
+point28 .x       -20.0000         4.7520        20.0000      
+point28 .y       -20.0000        -0.2267        20.0000      
+point29 .x       -20.0000         3.3448        20.0000      
+point29 .y       -20.0000         3.7750        20.0000      
+point30 .x       -20.0000        10.1499        20.0000      
+point30 .y       -20.0000         2.5653        20.0000      
+point31 .x       -20.0000         2.7032        20.0000      
+point31 .y       -20.0000        -1.3605        20.0000      
+point32 .x       -20.0000         7.6506        20.0000      
+point32 .y       -20.0000         5.2705        20.0000      
+point33 .x       -20.0000         3.3689        20.0000      
+point33 .y       -20.0000         2.0650        20.0000      
+point34 .x       -20.0000         3.2190        20.0000      
+point34 .y       -20.0000         0.1313        20.0000      
+point35 .x       -20.0000         9.4077        20.0000      
+point35 .y       -20.0000         4.8909        20.0000      
+point36 .x       -20.0000         7.2300        20.0000      
+point36 .y       -20.0000         0.6779        20.0000      
+point37 .x       -20.0000        10.1078        20.0000      
+point37 .y       -20.0000         3.1003        20.0000      
+point38 .x       -20.0000         1.0861        20.0000      
+point38 .y       -20.0000         0.3818        20.0000      
+point39 .x       -20.0000         1.2754        20.0000      
+point39 .y       -20.0000         2.1051        20.0000      
+point40 .x       -20.0000         4.3504        20.0000      
+point40 .y       -20.0000         1.2112        20.0000      
+point41 .x       -20.0000         9.1944        20.0000      
+point41 .y       -20.0000        -0.3046        20.0000      
+point42 .x       -20.0000         2.7484        20.0000      
+point42 .y       -20.0000         4.2770        20.0000      
+point43 .x       -20.0000         2.7686        20.0000      
+point43 .y       -20.0000         1.2313        20.0000      
+point44 .x       -20.0000        11.8837        20.0000      
+point44 .y       -20.0000         2.8169        20.0000      
+point45 .x       -20.0000         9.1990        20.0000      
+point45 .y       -20.0000        -2.7091        20.0000      
+point46 .x       -20.0000         2.5341        20.0000      
+point46 .y       -20.0000         0.9919        20.0000      
+point47 .x       -20.0000         7.0325        20.0000      
+point47 .y       -20.0000         2.1294        20.0000      
+point48 .x       -20.0000         4.7528        20.0000      
+point48 .y       -20.0000         4.7519        20.0000      
+point49 .x       -20.0000         5.1313        20.0000      
+point49 .y       -20.0000         3.6105        20.0000      
+point50 .x       -20.0000         3.9371        20.0000      
+point50 .y       -20.0000         7.0586        20.0000      
+point51 .x       -20.0000         7.6183        20.0000      
+point51 .y       -20.0000         7.2334        20.0000      
+point52 .x       -20.0000        10.4838        20.0000      
+point52 .y       -20.0000         2.7293        20.0000      
+point53 .x       -20.0000         4.6109        20.0000      
+point53 .y       -20.0000         3.7426        20.0000      
+point54 .x       -20.0000         4.9811        20.0000      
+point54 .y       -20.0000        -1.2683        20.0000      
+point55 .x       -20.0000         2.7961        20.0000      
+point55 .y       -20.0000         1.8045        20.0000      
+point56 .x       -20.0000        11.1417        20.0000      
+point56 .y       -20.0000         3.4143        20.0000      
+point57 .x       -20.0000         5.7356        20.0000      
+point57 .y       -20.0000        -1.1299        20.0000      
+point58 .x       -20.0000         2.5776        20.0000      
+point58 .y       -20.0000        -0.9183        20.0000      
+point59 .x       -20.0000         9.5875        20.0000      
+point59 .y       -20.0000         3.0661        20.0000      
+point60 .x       -20.0000         4.7915        20.0000      
+point60 .y       -20.0000         6.0087        20.0000      
+point61 .x       -20.0000        12.0655        20.0000      
+point61 .y       -20.0000         2.7189        20.0000      
+point62 .x       -20.0000         2.6872        20.0000      
+point62 .y       -20.0000        -0.3678        20.0000      
+point63 .x       -20.0000         8.1293        20.0000      
+point63 .y       -20.0000        -1.6383        20.0000      
+point64 .x       -20.0000        12.1479        20.0000      
+point64 .y       -20.0000         2.8777        20.0000      
+point65 .x       -20.0000         5.0164        20.0000      
+point65 .y       -20.0000        -0.2627        20.0000      
+point66 .x       -20.0000        10.3572        20.0000      
+point66 .y       -20.0000         0.6524        20.0000      
+point67 .x       -20.0000        11.8635        20.0000      
+point67 .y       -20.0000         4.1721        20.0000      
+point68 .x       -20.0000         4.5953        20.0000      
+point68 .y       -20.0000         1.3014        20.0000      
+point69 .x       -20.0000        11.1092        20.0000      
+point69 .y       -20.0000         1.5057        20.0000      
+point70 .x       -20.0000         4.9071        20.0000      
+point70 .y       -20.0000         0.5376        20.0000      
+point71 .x       -20.0000         5.8493        20.0000      
+point71 .y       -20.0000         5.3536        20.0000      
+point72 .x       -20.0000         7.9192        20.0000      
+point72 .y       -20.0000         1.1161        20.0000      
+point73 .x       -20.0000         5.6306        20.0000      
+point73 .y       -20.0000         2.7193        20.0000      
+point74 .x       -20.0000        10.4318        20.0000      
+point74 .y       -20.0000         0.7066        20.0000      
+point75 .x       -20.0000         2.3185        20.0000      
+point75 .y       -20.0000         3.2659        20.0000      
+point76 .x       -20.0000         8.1594        20.0000      
+point76 .y       -20.0000         6.6393        20.0000      
+point77 .x       -20.0000         6.3737        20.0000      
+point77 .y       -20.0000         6.6173        20.0000      
+point78 .x       -20.0000         3.8992        20.0000      
+point78 .y       -20.0000         3.5805        20.0000      
+point79 .x       -20.0000         5.2597        20.0000      
+point79 .y       -20.0000         2.1422        20.0000      
+point80 .x       -20.0000        10.8049        20.0000      
+point80 .y       -20.0000         0.2915        20.0000      
+point81 .x       -20.0000         6.0092        20.0000      
+point81 .y       -20.0000         1.6652        20.0000      
+point82 .x       -20.0000         4.9694        20.0000      
+point82 .y       -20.0000         7.8339        20.0000      
+point83 .x       -20.0000        11.3807        20.0000      
+point83 .y       -20.0000         1.4149        20.0000      
+point84 .x       -20.0000         8.8208        20.0000      
+point84 .y       -20.0000         5.6155        20.0000      
+point85 .x       -20.0000         2.3233        20.0000      
+point85 .y       -20.0000         3.5868        20.0000      
+point86 .x       -20.0000         9.4662        20.0000      
+point86 .y       -20.0000         0.6455        20.0000      
+point87 .x       -20.0000         8.5725        20.0000      
+point87 .y       -20.0000        -0.8833        20.0000      
+point88 .x       -20.0000        10.9672        20.0000      
+point88 .y       -20.0000         2.6708        20.0000      
+point89 .x       -20.0000         6.7661        20.0000      
+point89 .y       -20.0000         0.9653        20.0000      
+point90 .x       -20.0000         4.4481        20.0000      
+point90 .y       -20.0000         2.7380        20.0000      
+point91 .x       -20.0000        10.0107        20.0000      
+point91 .y       -20.0000        -1.9330        20.0000      
+point92 .x       -20.0000        11.5134        20.0000      
+point92 .y       -20.0000         5.1041        20.0000      
+point93 .x       -20.0000         8.7717        20.0000      
+point93 .y       -20.0000         4.5007        20.0000      
+point94 .x       -20.0000        10.6297        20.0000      
+point94 .y       -20.0000         2.6842        20.0000      
+point95 .x       -20.0000         4.7898        20.0000      
+point95 .y       -20.0000        -0.1352        20.0000      
+point96 .x       -20.0000         5.4085        20.0000      
+point96 .y       -20.0000         4.7202        20.0000      
+point97 .x       -20.0000         4.7980        20.0000      
+point97 .y       -20.0000         7.0635        20.0000      
+point98 .x       -20.0000         2.9993        20.0000      
+point98 .y       -20.0000         1.1210        20.0000      
+point99 .x       -20.0000        11.8630        20.0000      
+point99 .y       -20.0000         3.5550        20.0000      
+point100.x       -20.0000         8.9791        20.0000      
+point100.y       -20.0000        -2.0184        20.0000      
+
+---- VAR sq  square location and size (transformed coordinates)
+
+         LOWER          LEVEL          UPPER
+
+x       -20.0000         5.6306        20.0000      
+y       -20.0000         2.1294        20.0000      
+s       -20.0000         3.1411        20.0000      
+
+---- VAR sq2  corner points (original coordinates)
+
+            LOWER          LEVEL          UPPER
+
+00.x          .             4.0713        10.0000      
+00.y          .             4.4342        10.0000      
+01.x          .             2.6586        10.0000      
+01.y          .             7.2397        10.0000      
+10.x          .             6.8768        10.0000      
+10.y          .             5.8469        10.0000      
+11.x          .             5.4641        10.0000      
+11.y          .             8.6524        10.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR theta               .             0.4665         1.5708      
+
+  theta  angle of rotation
+
+---- VAR d  d=1 means: relax no-overlap constraint
+
+                          LOWER          LEVEL          UPPER
+
+point1  .x.less             .             1.0000         1.0000      
+point1  .x.greater          .              .             1.0000      
+point1  .y.less             .             1.0000         1.0000      
+point1  .y.greater          .             1.0000         1.0000      
+point2  .x.less             .             1.0000         1.0000      
+point2  .x.greater          .              .             1.0000      
+point2  .y.less             .             1.0000         1.0000      
+point2  .y.greater          .             1.0000         1.0000      
+point3  .x.less             .              .             1.0000      
+point3  .x.greater          .             1.0000         1.0000      
+point3  .y.less             .             1.0000         1.0000      
+point3  .y.greater          .             1.0000         1.0000      
+point4  .x.less             .              .             1.0000      
+point4  .x.greater          .             1.0000         1.0000      
+point4  .y.less             .             1.0000         1.0000      
+point4  .y.greater          .             1.0000         1.0000      
+point5  .x.less             .             1.0000         1.0000      
+point5  .x.greater          .             1.0000         1.0000      
+point5  .y.less             .              .             1.0000      
+point5  .y.greater          .             1.0000         1.0000      
+point6  .x.less             .             1.0000         1.0000      
+point6  .x.greater          .             1.0000         1.0000      
+point6  .y.less             .              .             1.0000      
+point6  .y.greater          .             1.0000         1.0000      
+point7  .x.less             .              .             1.0000      
+point7  .x.greater          .             1.0000         1.0000      
+point7  .y.less             .             1.0000         1.0000      
+point7  .y.greater          .             1.0000         1.0000      
+point8  .x.less             .             1.0000         1.0000      
+point8  .x.greater          .             1.0000         1.0000      
+point8  .y.less             .             1.0000         1.0000      
+point8  .y.greater          .              .             1.0000      
+point9  .x.less             .              .             1.0000      
+point9  .x.greater          .             1.0000         1.0000      
+point9  .y.less             .             1.0000         1.0000      
+point9  .y.greater          .             1.0000         1.0000      
+point10 .x.less             .              .             1.0000      
+point10 .x.greater          .             1.0000         1.0000      
+point10 .y.less             .             1.0000         1.0000      
+point10 .y.greater          .             1.0000         1.0000      
+point11 .x.less             .             1.0000         1.0000      
+point11 .x.greater          .             1.0000         1.0000      
+point11 .y.less             .              .             1.0000      
+point11 .y.greater          .             1.0000         1.0000      
+point12 .x.less             .              .             1.0000      
+point12 .x.greater          .             1.0000         1.0000      
+point12 .y.less             .             1.0000         1.0000      
+point12 .y.greater          .             1.0000         1.0000      
+point13 .x.less             .              .             1.0000      
+point13 .x.greater          .             1.0000         1.0000      
+point13 .y.less             .             1.0000         1.0000      
+point13 .y.greater          .             1.0000         1.0000      
+point14 .x.less             .             1.0000         1.0000      
+point14 .x.greater          .              .             1.0000      
+point14 .y.less             .             1.0000         1.0000      
+point14 .y.greater          .             1.0000         1.0000      
+point15 .x.less             .             1.0000         1.0000      
+point15 .x.greater          .             1.0000         1.0000      
+point15 .y.less             .              .             1.0000      
+point15 .y.greater          .             1.0000         1.0000      
+point16 .x.less             .             1.0000         1.0000      
+point16 .x.greater          .             1.0000         1.0000      
+point16 .y.less             .              .             1.0000      
+point16 .y.greater          .             1.0000         1.0000      
+point17 .x.less             .             1.0000         1.0000      
+point17 .x.greater          .              .             1.0000      
+point17 .y.less             .             1.0000         1.0000      
+point17 .y.greater          .             1.0000         1.0000      
+point18 .x.less             .              .             1.0000      
+point18 .x.greater          .             1.0000         1.0000      
+point18 .y.less             .             1.0000         1.0000      
+point18 .y.greater          .             1.0000         1.0000      
+point19 .x.less             .             1.0000         1.0000      
+point19 .x.greater          .              .             1.0000      
+point19 .y.less             .             1.0000         1.0000      
+point19 .y.greater          .             1.0000         1.0000      
+point20 .x.less             .             1.0000         1.0000      
+point20 .x.greater          .              .             1.0000      
+point20 .y.less             .             1.0000         1.0000      
+point20 .y.greater          .             1.0000         1.0000      
+point21 .x.less             .             1.0000         1.0000      
+point21 .x.greater          .              .             1.0000      
+point21 .y.less             .             1.0000         1.0000      
+point21 .y.greater          .             1.0000         1.0000      
+point22 .x.less             .              .             1.0000      
+point22 .x.greater          .             1.0000         1.0000      
+point22 .y.less             .             1.0000         1.0000      
+point22 .y.greater          .             1.0000         1.0000      
+point23 .x.less             .             1.0000         1.0000      
+point23 .x.greater          .              .             1.0000      
+point23 .y.less             .             1.0000         1.0000      
+point23 .y.greater          .             1.0000         1.0000      
+point24 .x.less             .             1.0000         1.0000      
+point24 .x.greater          .              .             1.0000      
+point24 .y.less             .             1.0000         1.0000      
+point24 .y.greater          .             1.0000         1.0000      
+point25 .x.less             .             1.0000         1.0000      
+point25 .x.greater          .              .             1.0000      
+point25 .y.less             .             1.0000         1.0000      
+point25 .y.greater          .             1.0000         1.0000      
+point26 .x.less             .             1.0000         1.0000      
+point26 .x.greater          .             1.0000         1.0000      
+point26 .y.less             .              .             1.0000      
+point26 .y.greater          .             1.0000         1.0000      
+point27 .x.less             .             1.0000         1.0000      
+point27 .x.greater          .             1.0000         1.0000      
+point27 .y.less             .              .             1.0000      
+point27 .y.greater          .             1.0000         1.0000      
+point28 .x.less             .              .             1.0000      
+point28 .x.greater          .             1.0000         1.0000      
+point28 .y.less             .             1.0000         1.0000      
+point28 .y.greater          .             1.0000         1.0000      
+point29 .x.less             .              .             1.0000      
+point29 .x.greater          .             1.0000         1.0000      
+point29 .y.less             .             1.0000         1.0000      
+point29 .y.greater          .             1.0000         1.0000      
+point30 .x.less             .             1.0000         1.0000      
+point30 .x.greater          .              .             1.0000      
+point30 .y.less             .             1.0000         1.0000      
+point30 .y.greater          .             1.0000         1.0000      
+point31 .x.less             .              .             1.0000      
+point31 .x.greater          .             1.0000         1.0000      
+point31 .y.less             .             1.0000         1.0000      
+point31 .y.greater          .             1.0000         1.0000      
+point32 .x.less             .             1.0000         1.0000      
+point32 .x.greater          .             1.0000         1.0000      
+point32 .y.less             .             1.0000         1.0000      
+point32 .y.greater          .              .             1.0000      
+point33 .x.less             .              .             1.0000      
+point33 .x.greater          .             1.0000         1.0000      
+point33 .y.less             .             1.0000         1.0000      
+point33 .y.greater          .             1.0000         1.0000      
+point34 .x.less             .              .             1.0000      
+point34 .x.greater          .             1.0000         1.0000      
+point34 .y.less             .             1.0000         1.0000      
+point34 .y.greater          .             1.0000         1.0000      
+point35 .x.less             .             1.0000         1.0000      
+point35 .x.greater          .              .             1.0000      
+point35 .y.less             .             1.0000         1.0000      
+point35 .y.greater          .             1.0000         1.0000      
+point36 .x.less             .             1.0000         1.0000      
+point36 .x.greater          .             1.0000         1.0000      
+point36 .y.less             .              .             1.0000      
+point36 .y.greater          .             1.0000         1.0000      
+point37 .x.less             .             1.0000         1.0000      
+point37 .x.greater          .              .             1.0000      
+point37 .y.less             .             1.0000         1.0000      
+point37 .y.greater          .             1.0000         1.0000      
+point38 .x.less             .              .             1.0000      
+point38 .x.greater          .             1.0000         1.0000      
+point38 .y.less             .             1.0000         1.0000      
+point38 .y.greater          .             1.0000         1.0000      
+point39 .x.less             .              .             1.0000      
+point39 .x.greater          .             1.0000         1.0000      
+point39 .y.less             .             1.0000         1.0000      
+point39 .y.greater          .             1.0000         1.0000      
+point40 .x.less             .              .             1.0000      
+point40 .x.greater          .             1.0000         1.0000      
+point40 .y.less             .             1.0000         1.0000      
+point40 .y.greater          .             1.0000         1.0000      
+point41 .x.less             .             1.0000         1.0000      
+point41 .x.greater          .              .             1.0000      
+point41 .y.less             .             1.0000         1.0000      
+point41 .y.greater          .             1.0000         1.0000      
+point42 .x.less             .              .             1.0000      
+point42 .x.greater          .             1.0000         1.0000      
+point42 .y.less             .             1.0000         1.0000      
+point42 .y.greater          .             1.0000         1.0000      
+point43 .x.less             .              .             1.0000      
+point43 .x.greater          .             1.0000         1.0000      
+point43 .y.less             .             1.0000         1.0000      
+point43 .y.greater          .             1.0000         1.0000      
+point44 .x.less             .             1.0000         1.0000      
+point44 .x.greater          .              .             1.0000      
+point44 .y.less             .             1.0000         1.0000      
+point44 .y.greater          .             1.0000         1.0000      
+point45 .x.less             .             1.0000         1.0000      
+point45 .x.greater          .              .             1.0000      
+point45 .y.less             .             1.0000         1.0000      
+point45 .y.greater          .             1.0000         1.0000      
+point46 .x.less             .              .             1.0000      
+point46 .x.greater          .             1.0000         1.0000      
+point46 .y.less             .             1.0000         1.0000      
+point46 .y.greater          .             1.0000         1.0000      
+point47 .x.less             .             1.0000         1.0000      
+point47 .x.greater          .             1.0000         1.0000      
+point47 .y.less             .              .             1.0000      
+point47 .y.greater          .             1.0000         1.0000      
+point48 .x.less             .              .             1.0000      
+point48 .x.greater          .             1.0000         1.0000      
+point48 .y.less             .             1.0000         1.0000      
+point48 .y.greater          .             1.0000         1.0000      
+point49 .x.less             .              .             1.0000      
+point49 .x.greater          .             1.0000         1.0000      
+point49 .y.less             .             1.0000         1.0000      
+point49 .y.greater          .             1.0000         1.0000      
+point50 .x.less             .              .             1.0000      
+point50 .x.greater          .             1.0000         1.0000      
+point50 .y.less             .             1.0000         1.0000      
+point50 .y.greater          .             1.0000         1.0000      
+point51 .x.less             .             1.0000         1.0000      
+point51 .x.greater          .             1.0000         1.0000      
+point51 .y.less             .             1.0000         1.0000      
+point51 .y.greater          .              .             1.0000      
+point52 .x.less             .             1.0000         1.0000      
+point52 .x.greater          .              .             1.0000      
+point52 .y.less             .             1.0000         1.0000      
+point52 .y.greater          .             1.0000         1.0000      
+point53 .x.less             .              .             1.0000      
+point53 .x.greater          .             1.0000         1.0000      
+point53 .y.less             .             1.0000         1.0000      
+point53 .y.greater          .             1.0000         1.0000      
+point54 .x.less             .              .             1.0000      
+point54 .x.greater          .             1.0000         1.0000      
+point54 .y.less             .             1.0000         1.0000      
+point54 .y.greater          .             1.0000         1.0000      
+point55 .x.less             .              .             1.0000      
+point55 .x.greater          .             1.0000         1.0000      
+point55 .y.less             .             1.0000         1.0000      
+point55 .y.greater          .             1.0000         1.0000      
+point56 .x.less             .             1.0000         1.0000      
+point56 .x.greater          .              .             1.0000      
+point56 .y.less             .             1.0000         1.0000      
+point56 .y.greater          .             1.0000         1.0000      
+point57 .x.less             .             1.0000         1.0000      
+point57 .x.greater          .             1.0000         1.0000      
+point57 .y.less             .              .             1.0000      
+point57 .y.greater          .             1.0000         1.0000      
+point58 .x.less             .              .             1.0000      
+point58 .x.greater          .             1.0000         1.0000      
+point58 .y.less             .             1.0000         1.0000      
+point58 .y.greater          .             1.0000         1.0000      
+point59 .x.less             .             1.0000         1.0000      
+point59 .x.greater          .              .             1.0000      
+point59 .y.less             .             1.0000         1.0000      
+point59 .y.greater          .             1.0000         1.0000      
+point60 .x.less             .              .             1.0000      
+point60 .x.greater          .             1.0000         1.0000      
+point60 .y.less             .             1.0000         1.0000      
+point60 .y.greater          .             1.0000         1.0000      
+point61 .x.less             .             1.0000         1.0000      
+point61 .x.greater          .              .             1.0000      
+point61 .y.less             .             1.0000         1.0000      
+point61 .y.greater          .             1.0000         1.0000      
+point62 .x.less             .              .             1.0000      
+point62 .x.greater          .             1.0000         1.0000      
+point62 .y.less             .             1.0000         1.0000      
+point62 .y.greater          .             1.0000         1.0000      
+point63 .x.less             .             1.0000         1.0000      
+point63 .x.greater          .             1.0000         1.0000      
+point63 .y.less             .              .             1.0000      
+point63 .y.greater          .             1.0000         1.0000      
+point64 .x.less             .             1.0000         1.0000      
+point64 .x.greater          .              .             1.0000      
+point64 .y.less             .             1.0000         1.0000      
+point64 .y.greater          .             1.0000         1.0000      
+point65 .x.less             .              .             1.0000      
+point65 .x.greater          .             1.0000         1.0000      
+point65 .y.less             .             1.0000         1.0000      
+point65 .y.greater          .             1.0000         1.0000      
+point66 .x.less             .             1.0000         1.0000      
+point66 .x.greater          .             1.0000         1.0000      
+point66 .y.less             .              .             1.0000      
+point66 .y.greater          .             1.0000         1.0000      
+point67 .x.less             .             1.0000         1.0000      
+point67 .x.greater          .              .             1.0000      
+point67 .y.less             .             1.0000         1.0000      
+point67 .y.greater          .             1.0000         1.0000      
+point68 .x.less             .              .             1.0000      
+point68 .x.greater          .             1.0000         1.0000      
+point68 .y.less             .             1.0000         1.0000      
+point68 .y.greater          .             1.0000         1.0000      
+point69 .x.less             .             1.0000         1.0000      
+point69 .x.greater          .              .             1.0000      
+point69 .y.less             .             1.0000         1.0000      
+point69 .y.greater          .             1.0000         1.0000      
+point70 .x.less             .              .             1.0000      
+point70 .x.greater          .             1.0000         1.0000      
+point70 .y.less             .             1.0000         1.0000      
+point70 .y.greater          .             1.0000         1.0000      
+point71 .x.less             .             1.0000         1.0000      
+point71 .x.greater          .             1.0000         1.0000      
+point71 .y.less             .             1.0000         1.0000      
+point71 .y.greater          .              .             1.0000      
+point72 .x.less             .             1.0000         1.0000      
+point72 .x.greater          .             1.0000         1.0000      
+point72 .y.less             .              .             1.0000      
+point72 .y.greater          .             1.0000         1.0000      
+point73 .x.less             .              .             1.0000      
+point73 .x.greater          .             1.0000         1.0000      
+point73 .y.less             .             1.0000         1.0000      
+point73 .y.greater          .             1.0000         1.0000      
+point74 .x.less             .             1.0000         1.0000      
+point74 .x.greater          .             1.0000         1.0000      
+point74 .y.less             .              .             1.0000      
+point74 .y.greater          .             1.0000         1.0000      
+point75 .x.less             .              .             1.0000      
+point75 .x.greater          .             1.0000         1.0000      
+point75 .y.less             .             1.0000         1.0000      
+point75 .y.greater          .             1.0000         1.0000      
+point76 .x.less             .             1.0000         1.0000      
+point76 .x.greater          .             1.0000         1.0000      
+point76 .y.less             .             1.0000         1.0000      
+point76 .y.greater          .              .             1.0000      
+point77 .x.less             .             1.0000         1.0000      
+point77 .x.greater          .             1.0000         1.0000      
+point77 .y.less             .             1.0000         1.0000      
+point77 .y.greater          .              .             1.0000      
+point78 .x.less             .              .             1.0000      
+point78 .x.greater          .             1.0000         1.0000      
+point78 .y.less             .             1.0000         1.0000      
+point78 .y.greater          .             1.0000         1.0000      
+point79 .x.less             .              .             1.0000      
+point79 .x.greater          .             1.0000         1.0000      
+point79 .y.less             .             1.0000         1.0000      
+point79 .y.greater          .             1.0000         1.0000      
+point80 .x.less             .             1.0000         1.0000      
+point80 .x.greater          .              .             1.0000      
+point80 .y.less             .             1.0000         1.0000      
+point80 .y.greater          .             1.0000         1.0000      
+point81 .x.less             .             1.0000         1.0000      
+point81 .x.greater          .             1.0000         1.0000      
+point81 .y.less             .              .             1.0000      
+point81 .y.greater          .             1.0000         1.0000      
+point82 .x.less             .              .             1.0000      
+point82 .x.greater          .             1.0000         1.0000      
+point82 .y.less             .             1.0000         1.0000      
+point82 .y.greater          .             1.0000         1.0000      
+point83 .x.less             .             1.0000         1.0000      
+point83 .x.greater          .             1.0000         1.0000      
+point83 .y.less             .              .             1.0000      
+point83 .y.greater          .             1.0000         1.0000      
+point84 .x.less             .             1.0000         1.0000      
+point84 .x.greater          .              .             1.0000      
+point84 .y.less             .             1.0000         1.0000      
+point84 .y.greater          .             1.0000         1.0000      
+point85 .x.less             .              .             1.0000      
+point85 .x.greater          .             1.0000         1.0000      
+point85 .y.less             .             1.0000         1.0000      
+point85 .y.greater          .             1.0000         1.0000      
+point86 .x.less             .             1.0000         1.0000      
+point86 .x.greater          .              .             1.0000      
+point86 .y.less             .             1.0000         1.0000      
+point86 .y.greater          .             1.0000         1.0000      
+point87 .x.less             .             1.0000         1.0000      
+point87 .x.greater          .             1.0000         1.0000      
+point87 .y.less             .              .             1.0000      
+point87 .y.greater          .             1.0000         1.0000      
+point88 .x.less             .             1.0000         1.0000      
+point88 .x.greater          .              .             1.0000      
+point88 .y.less             .             1.0000         1.0000      
+point88 .y.greater          .             1.0000         1.0000      
+point89 .x.less             .             1.0000         1.0000      
+point89 .x.greater          .             1.0000         1.0000      
+point89 .y.less             .              .             1.0000      
+point89 .y.greater          .             1.0000         1.0000      
+point90 .x.less             .              .             1.0000      
+point90 .x.greater          .             1.0000         1.0000      
+point90 .y.less             .             1.0000         1.0000      
+point90 .y.greater          .             1.0000         1.0000      
+point91 .x.less             .             1.0000         1.0000      
+point91 .x.greater          .             1.0000         1.0000      
+point91 .y.less             .              .             1.0000      
+point91 .y.greater          .             1.0000         1.0000      
+point92 .x.less             .             1.0000         1.0000      
+point92 .x.greater          .              .             1.0000      
+point92 .y.less             .             1.0000         1.0000      
+point92 .y.greater          .             1.0000         1.0000      
+point93 .x.less             .             1.0000         1.0000      
+point93 .x.greater          .              .             1.0000      
+point93 .y.less             .             1.0000         1.0000      
+point93 .y.greater          .             1.0000         1.0000      
+point94 .x.less             .             1.0000         1.0000      
+point94 .x.greater          .              .             1.0000      
+point94 .y.less             .             1.0000         1.0000      
+point94 .y.greater          .             1.0000         1.0000      
+point95 .x.less             .              .             1.0000      
+point95 .x.greater          .             1.0000         1.0000      
+point95 .y.less             .             1.0000         1.0000      
+point95 .y.greater          .             1.0000         1.0000      
+point96 .x.less             .              .             1.0000      
+point96 .x.greater          .             1.0000         1.0000      
+point96 .y.less             .             1.0000         1.0000      
+point96 .y.greater          .             1.0000         1.0000      
+point97 .x.less             .              .             1.0000      
+point97 .x.greater          .             1.0000         1.0000      
+point97 .y.less             .             1.0000         1.0000      
+point97 .y.greater          .             1.0000         1.0000      
+point98 .x.less             .              .             1.0000      
+point98 .x.greater          .             1.0000         1.0000      
+point98 .y.less             .             1.0000         1.0000      
+point98 .y.greater          .             1.0000         1.0000      
+point99 .x.less             .             1.0000         1.0000      
+point99 .x.greater          .              .             1.0000      
+point99 .y.less             .             1.0000         1.0000      
+point99 .y.greater          .             1.0000         1.0000      
+point100.x.less             .             1.0000         1.0000      
+point100.x.greater          .              .             1.0000      
+point100.y.less             .             1.0000         1.0000      
+point100.y.greater          .             1.0000         1.0000      
+
+                           LOWER          LEVEL          UPPER
+
+---- VAR z                 -INF            3.1411        +INF         
+
+  z  objective
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             0     ERRORS
+GAMS 53.1.0  6a03d3b9 Feb 16, 2026          WEX-WEI x86 64bit/MS Windows - 05/17/26 23:48:27 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    115 VARIABLE theta.L               =        0.466  angle of rotation
+
+----    115 VARIABLE sq.L  square location and size (transformed coordinates)
+
+x 5.631,    y 2.129,    s 3.141
+
+
+----    115 VARIABLE sq2.L  corner points (original coordinates)
+
+             x           y
+
+00       4.071       4.434
+01       2.659       7.240
+10       6.877       5.847
+11       5.464       8.652
+
+
+----    122 PARAMETER square  optimal values
+
+               x           y           -
+
+00         4.071       4.434
+01         2.659       7.240
+10         6.877       5.847
+11         5.464       8.652
+side                               3.141
+area                               9.866
+
+
+**** REPORT FILE SUMMARY
+
+fdata C:\projects\OptimizationModels\Largest Empty Square\data.js
+
+
+EXECUTION TIME       =        7.687 SECONDS      6 MB  53.1.0 6a03d3b9 WEX-WEI
+
+
+USER: Erwin Kalvelagen                               G260201+0003Cc-GEN
+      Amsterdam Optimization Modeling Group                     DCE4744
+
+
+**** FILE SUMMARY
+
+Input      C:\projects\OptimizationModels\Largest Empty Square\LargestEmptyRotatedSquareEndogAngle.gms
+Output     C:\projects\OptimizationModels\Largest Empty Square\LargestEmptyRotatedSquareEndogAngle.lst

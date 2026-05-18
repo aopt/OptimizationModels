@@ -1,0 +1,487 @@
+
+--- Job LargestEmptyRotatedSquareEndogAngle.gms Start 05/17/26 23:48:27 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Largest Empty Square\LargestEmptyRotatedSquareEndogAngle.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Largest Empty Square\225b\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225b\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:52162 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- LargestEmptyRotatedSquareEndogAngle.gms(159) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Largest Empty Square\plot.html
+--- LargestEmptyRotatedSquareEndogAngle.gms(266) 3 Mb
+--- Starting execution: elapsed 0:00:00.017
+--- LargestEmptyRotatedSquareEndogAngle.gms(77) 4 Mb
+--- Generating MINLP model emptysquare
+--- LargestEmptyRotatedSquareEndogAngle.gms(113) 6 Mb
+---   709 rows  613 columns  2,240 non-zeroes
+---   1,996 nl-code  230 nl-non-zeroes
+---   400 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 3.000E+00, 3.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 2.000E+01] - Zero values observed as well
+--- Matrix    [min, max] : [ 6.352E-04, 2.000E+01] - Zero values observed as well
+--- LargestEmptyRotatedSquareEndogAngle.gms(113) 4 Mb
+--- Executing XPRESS (Solvelink=2): elapsed 0:00:00.024
+
+    Xpress           53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+... GMO Q Extraction (ThreePass): 0.00s
+... This solver runs with a demo license. No commercial use.
+
+    Original problem size
+       linear:    708 rows, 612 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Nonlinear presolve
+       bound tightening reduced 400 bounds
+    Presolved problem size
+       linear:    708 rows, 613 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Problem is nonlinear presolved
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:27, May 17, 2026
+    Control settings used:
+    MIPADDCUTOFF = 0
+    MIPRELCUTOFF = 0
+    MIPABSSTOP = 0
+    MIPRELSTOP = .0001
+    INPUTTOL = 0
+    Maximum expanded nl-formula size: 18  (row 'transformx(11)')
+    Total tokens: 3028
+      16  parallel calculation threads
+      Jacobian: symbolic differentiation
+             208 base AD formula, 11.5481 average complexity
+             438 in the Jacobian, 6.89269 average complexity
+    Initial point objective:      .0000
+    Absolute / relative validation:           9.886  /     3.000
+     ------------------- Calling global solver ----------------- 
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:27, May 17, 2026
+    Heap usage: 750KB (peak 752KB, 478KB system)
+    Maximizing MINLP  using up to 16 threads and up to 63GB memory
+    Original problem has:
+           708 rows          613 cols         1800 elements       400 entities
+    Presolved problem has:
+           710 rows          624 cols         2230 elements       400 entities
+    LP relaxation tightened
+    Presolve finished in 0 seconds
+    Heap usage: 2467KB (peak 2891KB, 478KB system)
+    Coefficient range                    original                 solved        
+      Coefficients   [min,max] : [ 1.00e+00,  2.00e+01] / [ 3.18e-04,  2.00e+00]
+      RHS and bounds [min,max] : [ 1.96e-17,  2.00e+01] / [ 1.96e-17,  4.00e+01]
+      Objective      [min,max] : [ 1.00e+00,  1.00e+00] / [ 1.00e+00,  1.00e+00]
+    Autoscaling applied standard scaling
+    Will try to keep branch and bound tree memory usage below 57.1GB
+    Starting concurrent solve with dual (1 thread)
+     Concurrent-Solve,   0s
+                Dual        
+        objective   sum inf 
+     P  20.000000   .0000000
+                            
+    ------- optimal --------
+    Concurrent statistics:
+               Dual: 427 simplex iterations, 0.00s
+    Optimal solution found
+     
+       Its         Obj Value      S   Ninf  Nneg        Sum Inf  Time
+       427         20.000000      P      0     0        .000000     0
+    Dual solved problem
+      427 simplex iterations in 0.00 seconds at time 0
+    Final objective                       : 2.000000000000000e+01
+      Max primal violation      (abs/rel) : 1.110e-16 / 8.882e-17
+      Max dual violation        (abs/rel) :       0.0 /       0.0
+      Max complementarity viol. (abs/rel) :       0.0 /       0.0
+    Starting root cutting & heuristics
+    Deterministic mode with up to 3 additional threads
+     
+     Its Type    BestSoln    BestBound   Sols    Add    Del     Gap     GInf   Time
+    a             .281166    20.000000      1                 98.59%       0      0
+    b             .691174    20.000000      2                 96.54%       0      0
+    P             .718546    20.000000      3                 96.41%       0      0
+    P            1.444383    20.000000      4                 92.78%       0      0
+       1  K      1.444383    16.498838      4    331     21   91.25%     409      0
+       2  K      1.444383    16.471392      4    484    277   91.23%     419      0
+       3  K      1.444383    14.554706      4    443    470   90.08%     411      0
+       4  K      1.444383    14.539697      4    484    432   90.07%     410      0
+       5  K      1.444383    13.740285      4    381    455   89.49%     410      0
+       6  K      1.444383    13.484259      4    484    401   89.29%     410      0
+       7  K      1.444383    13.048121      4    484    424   88.93%     410      0
+       8  K      1.444383    12.908539      4    484    408   88.81%     410      0
+       9  K      1.444383    12.670889      4    189    388   88.60%     410      0
+      10  K      1.444383    12.594868      4    479    291   88.53%     410      0
+      11  K      1.444383    12.567597      4    121    515   88.51%     409      0
+      12  K      1.444383    12.424099      4     83     99   88.37%     409      0
+      13  K      1.444383    12.409257      4    102     87   88.36%     410      0
+      14  K      1.444383    12.331171      4    144    101   88.29%     410      0
+      15  K      1.444383    12.323096      4    146    159   88.28%     409      0
+      16  K      1.444383    12.280616      4    182     98   88.24%     410      0
+      17  K      1.444383    12.276224      4     59    171   88.23%     410      0
+      18  K      1.444383    12.253117      4     42     30   88.21%     410      0
+      19  K      1.444383    12.251177      4     27     26   88.21%     410      0
+      20  K      1.444383    12.238160      4     15     24   88.20%     410      0
+      21  K      1.444383    12.237302      4     23     15   88.20%     410      0
+      22  K      1.444383    12.230025      4     19     40   88.19%     410      0
+      23  K      1.444383    12.230025      4     14     17   88.19%     410      1
+      24  K      1.444383    12.225600      4     15     15   88.19%     410      1
+      25  K      1.444383    12.225600      4     11    171   88.19%     410      1
+      26  G      1.444383    12.225600      4     78      0   88.19%     410      1
+      27  G      1.444383    12.225600      4    471    581   88.19%     409      1
+    Heuristic search 'R' started
+    Heuristic search 'R' stopped
+     
+    Cuts in the matrix         : 108
+    Cut elements in the matrix : 590
+    Starting tree search.
+    Deterministic mode with up to 16 running threads and up to 32 tasks.
+    Heap usage: 6248KB (peak 7716KB, 490KB system)
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+           1     1.444383    11.080960      4      2      1   86.97%     218      1
+           2     1.444383    11.080960      4      2      3   86.97%     270      1
+           3     1.444383    10.442359      4      3      3   86.17%     400      1
+           4     1.444383    10.442359      4      4      4   86.17%     314      1
+           5     1.444383    10.442359      4      5      4   86.17%     394      1
+           6     1.444383    10.141667      4      6      4   85.76%     402      1
+           7     1.444383    10.141667      4      7      4   85.76%     262      1
+           8     1.444383    10.141667      4      8      5   85.76%      81      1
+           9     1.444383    10.141667      4      9      5   85.76%     238      1
+          10     1.444383    10.141667      4     10      5   85.76%     260      1
+          20     1.444383    10.079249      4     20      6   85.67%     266      1
+          32     1.444383    10.079249      4     28      7   85.67%     246      1
+          43     1.444383    10.079249      4     33      7   85.67%     432      1
+          53     1.444383    10.079249      4     39     11   85.67%     114      1
+          63     1.444383    10.079249      4     44     10   85.67%     145      1
+          73     1.444383     9.380392      4     52     11   84.60%     282      1
+          84     1.444383     9.380392      4     61      7   84.60%     369      1
+    N     97     1.632147     9.380392      5     71     12   82.60%       0      1
+          99     1.632147     9.380392      5     71     12   82.60%     219      1
+    Elapsed time (sec): 1, estimated tree completion: 0.00981
+    Heap usage: 136MB (peak 139MB, 1628KB system)
+    B&B tree size: 0.8MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+         109     1.632147     9.380392      5     73     18   82.60%     252      1
+    *    113     1.646107     9.380392      6     74     12   82.45%       0      1
+         209     1.646107     8.838714      6    108     16   81.38%      61      1
+    E    213     1.837730     8.838714      7    117     30   79.21%       0      1
+         310     1.837730     8.838714      7    138     20   79.21%     272      1
+    N    412     1.887763     8.838714      8    177     23   78.64%       0      1
+         413     1.887763     8.838714      8    177     21   78.64%     300      1
+    *    460     2.311667     8.838714      9    197     23   73.85%       0      1
+         516     2.311667     8.838714      9    178     20   73.85%     328      2
+         626     2.311667     8.838714      9    198     24   73.85%      10      2
+    *    693     2.649825     8.838714     10    213     15   70.02%       0      2
+    E    725     2.713052     8.838714     11    186     41   69.30%       0      2
+         727     2.713052     8.838714     11    186     41   69.30%       4      2
+         828     2.713052     8.838714     11    229     19   69.30%     236      2
+         940     2.713052     8.838714     11    236     25   69.30%     224      2
+    N   1006     2.912555     8.838714     12    249     40   67.05%       0      2
+        1050     2.912555     8.838714     12    206      1   67.05%       2      2
+        1153     2.912555     8.838714     12    213     35   67.05%       2      2
+        1253     2.912555     8.838714     12    192     17   67.05%     274      2
+    *   1305     3.021614     8.838714     13    171     27   65.81%       0      2
+    Elapsed time (sec): 2, estimated tree completion: 0.16618
+    Heap usage: 326MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.8MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        1353     3.021614     8.838714     13    124     12   65.81%     268      2
+    N   1403     3.026619     8.838714     14    116     30   65.76%       0      2
+    N   1412     3.055029     8.838714     15    116     36   65.44%       0      2
+        1459     3.055029     8.838714     15    117     23   65.44%     255      2
+        1563     3.055029     8.838714     15    116     38   65.44%     209      2
+    N   1607     3.055029     8.838714     16    125     38   65.44%       0      2
+        1663     3.055029     8.838714     16    128      1   65.44%       2      2
+        1764     3.055029     8.838714     16    125     77   65.44%     188      2
+        1866     3.055029     8.838714     16    117     26   65.44%     214      2
+    *   1869     3.068874     8.838714     17    121     34   65.28%       0      2
+        1972     3.068874     8.838714     17    103     66   65.28%     187      2
+    *   2030     3.088190     8.838714     18    102     62   65.06%       0      2
+    N   2044     3.094741     8.838714     19    101     28   64.99%       0      2
+        2074     3.094741     8.838714     19    103     16   64.99%     301      2
+        2180     3.094741     8.838714     19    106     40   64.99%     208      2
+        2282     3.094741     8.838714     19    101     30   64.99%     209      2
+        2390     3.094741     8.838714     19     84     58   64.99%     179      2
+        2515     3.094741     8.838714     19     59      1   64.99%       2      2
+        2618     3.094741     8.838714     19     58     61   64.99%       1      2
+        2739     3.094741     8.838714     19     68     67   64.99%     184      2
+    Elapsed time (sec): 2, estimated tree completion: 0.53444
+    Heap usage: 328MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.3MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        2862     3.094741     8.838714     19     58     67   64.99%     183      2
+        2985     3.094741     8.838714     19     56      1   64.99%       2      2
+        3088     3.094741     8.838714     19     45     23   64.99%     226      2
+        3188     3.094741     8.838714     19     56     24   64.99%     292      2
+        3289     3.094741     8.565055     19     86     11   63.87%     321      2
+        3394     3.094741     8.565055     19     99     20   63.87%     248      2
+        3494     3.094741     8.565055     19     98     16   63.87%     292      3
+        3595     3.094741     8.565055     19     98     15   63.87%      64      3
+        3695     3.094741     8.565055     19    103     23   63.87%     292      3
+        3800     3.094741     8.506492     19     88     20   63.62%     276      3
+    *   3910     3.094741     8.506492     20    100     33   63.62%       0      3
+        3911     3.094741     8.506492     20    100     12   63.62%      54      3
+        4011     3.094741     8.506492     20    101     20   63.62%     250      3
+        4113     3.094741     8.506492     20     78     23   63.62%     276      3
+    N   4209     3.094741     8.506492     21     54     25   63.62%       0      3
+        4215     3.094741     8.506492     21     51     20   63.62%     256      3
+    N   4266     3.130245     8.506492     22     53     25   63.20%       0      3
+    N   4272     3.141077     8.506492     23     49     26   63.07%       0      3
+        4319     3.141077     7.847061     23     40     30   59.97%     157      3
+        4422     3.141077     7.847061     23     32      1   59.97%       2      3
+    Elapsed time (sec): 3, estimated tree completion: 0.91632
+    Heap usage: 328MB (peak 346MB, 3890KB system)
+    B&B tree size: 2.1MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        4556     3.141077     7.847061     23     28     63   59.97%     186      3
+        4656     3.141077     7.847061     23     44     40   59.97%     119      3
+        4760     3.141077     7.847061     23     48     42   59.97%     165      3
+        4860     3.141077     7.847061     23     40     41   59.97%      67      3
+        4960     3.141077     7.847061     23     37     50   59.97%     130      3
+    *   5006     3.141077     7.847061     24     30     44   59.97%       0      3
+    *   5036     3.141078     7.847061     25     34     48   59.97%       0      3
+        5096     3.141078     7.847061     25     40     51   59.97%     168      3
+    *   5139     3.141078     7.847061     26     38     46   59.97%       0      3
+    *   5152     3.141078     7.847061     27     31     44   59.97%       0      3
+        5198     3.141078     7.847061     27     29     50   59.97%     129      3
+        5300     3.141078     7.847061     27     29     51   59.97%     130      3
+    *   5405     3.141078     7.778865     28     18     50   59.62%       0      3
+    *   5406     3.141078     7.778865     29     18     50   59.62%       0      3
+        5408     3.141078     7.778865     29     18     25   59.62%     277      3
+        5522     3.141078     6.211972     29     10     37   49.44%     181      3
+        5623     3.141078     6.211972     29     34     43   49.44%      95      3
+        5724     3.141078     6.211972     29     61     45   49.44%     100      3
+        5827     3.141078     6.211972     29     62     44   49.44%     122      3
+        5927     3.141078     6.211972     29     59     44   49.44%      51      4
+    Elapsed time (sec): 4, estimated tree completion: 0.94694
+    Heap usage: 324MB (peak 346MB, 3314KB system)
+    B&B tree size: 1.7MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        6027     3.141078     5.495157     29     45     49   42.84%      41      4
+    *   6084     3.141078     5.495157     30     38     45   42.84%       0      4
+        6128     3.141078     5.495157     30     22     43   42.84%      55      4
+        6228     3.141078     5.495157     30     33     53   42.84%      81      4
+        6328     3.141078     5.495157     30     41     53   42.84%      81      4
+        6431     3.141078     5.495157     30     58     55   42.84%     164      4
+        6534     3.141078     5.495157     30     70     18   42.84%     339      4
+        6635     3.141078     5.495157     30     89     56   42.84%     138      4
+        6736     3.141078     5.495157     30     95     59   42.84%     164      4
+        6842     3.141078     5.495157     30    113     73   42.84%     148      4
+        6945     3.141078     5.495157     30    132     58   42.84%     137      4
+        7045     3.141078     5.495157     30    122     57   42.84%     138      4
+        7156     3.141078     5.397957     30    120     71   41.81%     148      4
+        7257     3.141078     5.397957     30    131     60   41.81%     137      4
+        7367     3.141078     5.397957     30    141     61   41.81%     137      4
+        7469     3.141078     5.397957     30    158     60   41.81%     164      4
+        7569     3.141078     5.397957     30    165     61   41.81%     137      4
+        7671     3.141078     5.397957     30    167     60   41.81%     101      4
+        7774     3.141078     5.397957     30    188     58   41.81%     164      4
+        7875     3.141078     5.397957     30    188     61   41.81%     137      4
+    Elapsed time (sec): 4, estimated tree completion: 0.95411
+    Heap usage: 328MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.1MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+        7976     3.141078     5.397957     30    207     59   41.81%     160      4
+        8082     3.141078     5.397957     30    220     60   41.81%     102      4
+        8182     3.141078     5.397957     30    207     58   41.81%      98      4
+        8283     3.141078     5.397957     30    213     61   41.81%     137      4
+        8383     3.141078     5.397957     30    205     59   41.81%     138      4
+        8485     3.141078     5.397957     30    203     62   41.81%     137      4
+        8608     3.141078     5.397957     30    209     66   41.81%     153      4
+        8716     3.141078     5.241606     30    223     61   40.07%     137      4
+        8819     3.141078     5.241606     30    215     73   40.07%     146      4
+        8923     3.141078     5.241606     30    233     60   40.07%     137      4
+        9023     3.141078     5.184467     30    228     60   39.41%     163      4
+        9125     3.141078     5.184467     30    222     19   39.41%     269      4
+        9227     3.141078     5.184467     30    220     60   39.41%     137      4
+        9327     3.141078     5.184467     30    206     73   39.41%     145      4
+        9428     3.141078     5.184467     30    205     62   39.41%     161      4
+        9530     3.141078     5.184467     30    197     60   39.41%     102      4
+        9637     3.141078     5.184467     30    219     59   39.41%     137      4
+        9740     3.141078     5.184467     30    204     61   39.41%     138      4
+        9842     3.141078     5.184467     30    205     60   39.41%     138      4
+        9946     3.141078     5.184467     30    202     62   39.41%     137      4
+    Elapsed time (sec): 4, estimated tree completion: 0.97774
+    Heap usage: 327MB (peak 346MB, 3314KB system)
+    B&B tree size: 2.3MB total
+     
+        Node     BestSoln    BestBound   Sols Active  Depth     Gap     GInf   Time
+       10047     3.141078     5.184467     30    197     58   39.41%     164      4
+       11049     3.141078     5.096573     30    149     59   38.37%     104      5
+       12055     3.141078     5.096573     30    150     71   38.37%     148      5
+       13055     3.141078     5.096573     30    121     58   38.37%     138      5
+       14058     3.141078     5.096573     30    114     59   38.37%     138      5
+       15064     3.141078     4.963209     30    178     64   36.71%     137      5
+       16068     3.141078     4.963209     30    150     63   36.71%     137      6
+       17068     3.141078     4.963209     30    124     63   36.71%     137      6
+       18070     3.141078     4.793325     30    126     64   34.47%     137      6
+       19073     3.141078     4.766327     30    134     58   34.10%     137      6
+       20076     3.141078     4.766327     30     80     65   34.10%     137      6
+       21077     3.141078     4.766327     30     23     56   34.10%     139      6
+       22080     3.141078     4.759640     30     40     63   34.01%     138      7
+     *** Search completed ***
+    Uncrunching matrix
+    Problem is nonlinear postsolved
+    Heap usage: 6642KB (peak 346MB, 369KB system)
+    Final MINLP objective (global optimum): 3.141077656780363e+00
+    Final MINLP bound                     : 3.141077656780363e+00
+      Max validation error      (abs/rel) :      .000 /      .000
+      Max primal violation      (abs/rel) : 9.722e-07 / 9.722e-07
+      Max integer violation     (abs    ) :       0.0
+      Number of solutions found / nodes   :        30 /     22465
+      Observed primal integral            :   16.005%
+      Solution time / primaldual integral :      7.24s/ 58.272296%
+      Work / work units per second        :      4.52 /      0.62
+    *** Search completed ***
+
+... XPRESS stop status: normal (0)
+... XPRESS sol status: optimal (1)
+... Solving fixed model...
+... This solver runs with a demo license. No commercial use.
+
+    Problem classification: trigonometrical functions (416)
+    Using bundled Knitro   [C:\GAMS\53]
+    Using Xpress Knitro      [C:\GAMS\53\xknitro.dll]
+    Loaded Knitro 15.0.1
+    Original problem size
+       linear:    708 rows, 612 columns, 1800 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Nonlinear presolve
+       compressing formula space (in use\total : 3236\6199)
+       removed 214 formulas and 2962 formula tokens
+       linear presolve removed 100 rows, 0 columns, 400 linear coefficients
+       bound tightening reduced 400 bounds
+    Presolved problem size
+       linear:    608 rows, 613 columns, 1400 linear coefficients
+       nonlinear: 208 coefficients, 3028 tokens
+                  416 mul             0 div         0 sqrt
+                  208 sin           208 cos         0 tan
+    Problem is nonlinear presolved
+    FICO Xpress v9.8.0, Hyper, solve started 23:48:34, May 17, 2026
+    Control settings used:
+    MIPADDCUTOFF = 0
+    MIPRELCUTOFF = 0
+    MIPABSSTOP = 0
+    MIPRELSTOP = .0001
+    INPUTTOL = 0
+    NLPSOLVER = 1
+    Maximum expanded nl-formula size: 18  (row 'transformx(11)')
+    Total tokens: 3028
+      16  parallel calculation threads
+      Jacobian: automatic differentiation
+      Hessian:  automatic differentiation
+    Initial point objective:      .0000
+    Absolute / relative validation:           9.886  /     1.000
+    Maximizing problem using Knitro
+               4 Hessian entries, 231 cumulative size
+    Size of Jacobian: 438 (non-constant, constraints only)
+    =======================================
+              Commercial License
+             Artelys Knitro 15.0.1
+    =======================================
+    Knitro using 1 thread.
+    Knitro presolve eliminated 400 variables 
+    and 0 constraints.
+    act_lpsolver             3
+    concurrent_evals         0
+    feastol                  1e-06
+    feastol_abs              0.001
+    hessian_no_f             1
+    numthreads               1
+    opttol                   1e-06
+    opttol_abs               0.001
+    xpresslibname            C:\GAMS\53\xprs.dll
+    Knitro fixing 400 variables eliminated from the presolve.
+    Problem Characteristics                                 (   Presolved)
+    -----------------------
+    Objective goal:  Maximize
+    Objective type:  general
+    Number of variables:                                612 (         212)
+        bounded below only:                               0 (           1)
+        bounded above only:                               0 (           2)
+        bounded below and above:                        212 (         209)
+        fixed:                                          400 (           0)
+        free:                                             0 (           0)
+    Number of constraints:                              608 (         608)
+        linear equalities:                                0 (           0)
+        quadratic equalities:                             0 (           0)
+        gen. nonlinear equalities:                      208 (         208)
+        linear one-sided inequalities:                  400 (         400)
+        quadratic one-sided inequalities:                 0 (           0)
+        gen. nonlinear one-sided inequalities:            0 (           0)
+        linear two-sided inequalities:                    0 (           0)
+        quadratic two-sided inequalities:                 0 (           0)
+        gen. nonlinear two-sided inequalities:            0 (           0)
+    Number of nonzeros in Jacobian:                    1838 (        1438)
+    Number of nonzeros in Hessian:                        4 (           4)
+    
+    Knitro using the 
+    Interior-Point/Barrier Direct algorithm.
+      Iter      Objective      FeasError   OptError    ||Step||    CGits 
+    --------  --------------  ----------  ----------  ----------  -------
+           0    0.000000e+00   9.887e+00
+          10    3.142442e+00   7.356e-03   3.823e-03   2.328e+00        0
+          12    3.141077e+00   7.568e-11   1.112e-09   4.888e-04        0
+    EXIT: Locally optimal solution found.
+    Final Statistics
+    ----------------
+    Final objective value               =   3.14107746656909e+00
+    Final feasibility error (abs / rel) =   7.57e-11 / 7.65e-12
+    Final optimality error  (abs / rel) =   1.11e-09 / 1.11e-09
+    # of iterations                     =         12 
+    # of CG iterations                  =          0 
+    # of function evaluations           =         17
+    # of gradient evaluations           =         15
+    # of Hessian evaluations            =         12
+    Total program time (secs)           =       0.014 (     0.016 CPU time)
+    Time spent in evaluations (secs)    =       0.001
+    ===============================================================================
+    Problem solved using Xpress-NLP Knitro
+    No unconverged values in active constraints
+    Problem is nonlinear postsolved
+    Heap usage: 3078KB (peak 346MB, 213KB system)
+    Final NLP objective (local optimum)   : 3.141077466569094e+00
+      Max validation error      (abs/rel) :      .000 /      .000
+      Max primal violation      (abs/rel) : 7.568e-11 / 7.568e-11
+      Total time                          :     .033s
+    *** Search completed ***
+
+... XPRESS stop status: normal (0)
+... XPRESS sol status: feasible (2)
+
+--- Reading solution for model emptysquare
+***
+*** Solver did not provide marginals for model emptysquare
+***
+--- Executing after solve: elapsed 0:00:07.453
+--- LargestEmptyRotatedSquareEndogAngle.gms(264) 6 Mb
+--- Putfile fdata C:\projects\OptimizationModels\Largest Empty Square\data.js
+*** Status: Normal completion
+--- Job LargestEmptyRotatedSquareEndogAngle.gms Stop 05/17/26 23:48:35 elapsed 0:00:07.726
