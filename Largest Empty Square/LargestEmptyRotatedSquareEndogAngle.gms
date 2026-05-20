@@ -3,7 +3,7 @@ $onText
     Largest Empty Rotated Square.
     
     This version: endogenous angle
-    This gives us a MINLP model.
+    This gives us a MINLP or MIQCP model.
 
 $offText
 
@@ -17,16 +17,17 @@ $offText
 * 1: produce HTML plot
 $set htmlplot 1
 
-* baron, antigone don't have sin(),cos() functions, so we use scip for this example
-option minlp=xpress;
-
+* baron, antigone don't have sin(),cos() functions, so we use xpress and gurobi for this example
+option minlp=xpress,miqcp=xpress;
+*option minlp=gurobi,miqcp=gurobi;
+  
 option seed=12345;
 
 *---------------------------------------------------------------
 * data
 *---------------------------------------------------------------
 
-scalar maxsize 'size of the box' / 10 /;
+scalar maxsize 'size of the outer box' / 10 /;
 
 sets
    i     'points' /point1*point100/
@@ -40,15 +41,15 @@ display p;
 
 
 *---------------------------------------------------------------
-* MINLP MODEL
+* MINLP model with angles
 *---------------------------------------------------------------
 
 scalars  M  'big-M';
 M = 2 * maxSize;
 
 set 
-   case 'for comparison' /less,greater/
-   corners /00,01,10,11/   
+   case    'for comparison' /less,greater/
+   corners 'enumerate four corners' /00,01,10,11/   
 ;
 table offset(corners,c) 'unit offset of corner points from lower-left' 
         x  y
@@ -57,6 +58,7 @@ table offset(corners,c) 'unit offset of corner points from lower-left'
     10  1  0  
     11  1  1
 ;
+
 
 variable 
    q(i,c) 'transformed data points: rotate by -theta'
@@ -68,7 +70,7 @@ q.lo(i,c) = -2*maxsize;
 q.up(i,c) = 2*maxsize;
 
 theta.lo = 0;
-theta.up = 90*pi/180;
+theta.up = 90*pi/180 - 0.00001;
 
 sq.lo(a) = -2*maxsize;
 sq.up(a) = 2*maxsize;
@@ -80,14 +82,14 @@ binary variable d(i,c,case) 'd=1 means: relax no-overlap constraint';
 variable z 'objective';
 
 Equations
-   transfdatax(i) 'transform data points: x coordinate'
-   transfdatay(i) 'transform data points: y coordinate'
-   emptysq1(i,c)  'no-overlap constraint: less-than version'  
-   emptysq2(i,c)  'no-overlap constraint: greater-than version'
-   sumd(i)        '(at least) one no-overlap constraint must hold'
-   transformx     "transform x',y' -> x back to original coordinates"
-   transformy     "transform x',y' -> y back to original coordinates"
-   objsq          'objective' 
+   transfdatax(i)          'transform data points: x coordinate'
+   transfdatay(i)          'transform data points: y coordinate'
+   emptysq1(i,c)           'no-overlap constraint: less-than version'  
+   emptysq2(i,c)           'no-overlap constraint: greater-than version'
+   sumd(i)                 '(at least) one no-overlap constraint must hold'
+   transformx(corners)     "transform x',y' -> x back to original coordinates"
+   transformy(corners)     "transform x',y' -> y back to original coordinates"
+   objsq                   'objective' 
 ;
 
 * transform data points
@@ -105,26 +107,99 @@ sumd(i)..  sum((c,case),d(i,c,case)) =e= 3;
 transformx(corners).. sq2(corners,'x') =e= (sq('x')+offset(corners,'x')*sq('s'))*cos(theta) - (sq('y')+offset(corners,'y')*sq('s'))*sin(theta); 
 transformy(corners).. sq2(corners,'y') =e= (sq('x')+offset(corners,'x')*sq('s'))*sin(theta) + (sq('y')+offset(corners,'y')*sq('s'))*cos(theta); 
 
+
+* to simulate earlier runs
 *theta.fx = 0; 
 *theta.fx = 25*pi/180; 
 *theta.fx = 45*pi/180; 
 
-model emptysquare /all/;
-solve emptysquare maximizing z using minlp;
+model emptysquare1 /all/;
+solve emptysquare1 maximizing z using minlp;
 
 display theta.l, sq.l, sq2.l;
 
 
-parameter square(*,*) 'optimal values';
-square(corners,c) = sq2.l(corners,c);
-square('side','-') = sq.l('s');
-square('area','-') = sqr(square('side','-'));
-display square;
+parameter m1results(*,*) 'optimal values model 1';
+m1results(corners,c) = sq2.l(corners,c);
+m1results('side','-') = sq.l('s');
+m1results('area','-') = sqr(m1results('side','-'));
+m1results('angle (rad)','-') = theta.l;
+m1results('angle (deg)','-') = theta.l * 180 / pi;
+display m1results;
+
+*---------------------------------------------------------------
+* MIQCP model without angles
+*---------------------------------------------------------------
+
+* reset variable levels so we don't have a good starting point for the MIQCP model
+* just in case the solver would use these 
+sq.l(a) = 0;
+sq2.l(corners,c) = 0;
+d.l(i,c,case) = 0;
+q.l(i,c) = 0;
+
+variables
+    sintheta 'sine of angle'
+    costheta 'cosine of angle'
+;
+* note: angle is between 0 and 0.5pi, so cos and sin are nonnegative  
+costheta.lo = 1e-6;
+sintheta.lo = 0;
+costheta.up = 1;
+sintheta.up = 1;  
+
+equations
+   transfdata2x(i)           'transform data points: x coordinate'
+   transfdata2y(i)           'transform data points: y coordinate'
+   transform2x(corners)      "transform x',y' -> x back to original coordinates"
+   transform2y(corners)      "transform x',y' -> y back to original coordinates"
+   sincos                    'unit circle constraint'
+;
+
+* transform data points
+transfdata2x(i).. q(i,'x') =e=  p(i,'x')*costheta + p(i,'y')*sintheta;
+transfdata2y(i).. q(i,'y') =e= -p(i,'x')*sintheta + p(i,'y')*costheta;
+
+* transform back to original coordinates
+transform2x(corners).. sq2(corners,'x') =e= (sq('x')+offset(corners,'x')*sq('s'))*costheta - (sq('y')+offset(corners,'y')*sq('s'))*sintheta; 
+transform2y(corners).. sq2(corners,'y') =e= (sq('x')+offset(corners,'x')*sq('s'))*sintheta + (sq('y')+offset(corners,'y')*sq('s'))*costheta; 
+
+sincos.. sqr(costheta) + sqr(sintheta) =e= 1;
+
+model emptysquare2 /all-transfdatax-transfdatay-transformx-transformy/;
+solve emptysquare2 maximizing z using miqcp;
 
 
-*---------------------------------------------------------------------
+scalar angle;
+* recover the angle from the sine and cosine values
+angle = arctan(sintheta.l/costheta.l);
+
+display angle,sintheta.l, costheta.l, sq.l, sq2.l;
+
+parameter m2results(*,*) 'optimal values model 2';
+m2results(corners,c) = sq2.l(corners,c);
+m2results('side','-') = sq.l('s');
+m2results('area','-') = sqr(m2results('side','-'));
+m2results('angle (rad)','-') = angle;
+m2results('angle (deg)','-') = angle * 180 / pi;
+display m1results,m2results;
+
+parameter perf(*,*) 'performance comparison';
+$macro modelperf(m,s) \
+   perf(s,'#vars') = m.numvar;\
+   perf(s,'#dvars') = m.numdvar;\
+   perf(s,'#equs') = m.numequ;\
+   perf(s,'obj') = m.objval;\
+   perf(s,'time') = m.resusd;\
+   perf(s,'its') = m.iterusd;\
+   perf(s,'nodes') = m.nodusd;
+modelperf(emptysquare1,'model 1')
+modelperf(emptysquare2,'model 2')
+display perf;
+
+*---------------------------------------------------------------
 * visualization
-*---------------------------------------------------------------------
+*---------------------------------------------------------------
 
 $set html  plot.html
 $set data  data.js
@@ -142,15 +217,15 @@ loop(i,
 put "]"/;
 
 put "box={x:0,y:0,size:",maxsize:0:4,"}"/;
-put "angle=",theta.l:0:4/; 
-put "angledeg=",(theta.l*180/pi):0:4/; 
-put "side=",square('side','-'):0:4/;
-put "area=",square('area','-'):0:4/;
+put "angle=",m1results('angle (rad)','-'):0:4/; 
+put "angledeg=",m1results('angle (deg)','-'):0:4/; 
+put "side=",m1results('side','-'):0:4/;
+put "area=",m1results('area','-'):0:4/;
 
 
 put "cp=["/;
 loop(corners,
-  put "  {k:'",corners.tl:0,"',x:",square(corners,'x'):0:4,",y:",square(corners,'y'):0:4,"},"/;
+  put "  {k:'",corners.tl:0,"',x:",m1results(corners,'x'):0:4,",y:",m1results(corners,'y'):0:4,"},"/;
 );
 put "]"/;
 putclose;
