@@ -1,0 +1,345 @@
+--- Job noindicators.gms Start 06/02/26 14:57:53 53.1.0 6a03d3b9 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\53\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\No Indicator Constraints\noindicators.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\No Indicator Constraints\225a\"
+    SysDir C:\GAMS\53\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260201+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:23592203 mem:64 cores:8 ipport:63422 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Aug 30, 2026
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 53.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- noindicators.gms(155) 3 Mb
+--- $echo File C:\projects\OptimizationModels\No Indicator Constraints\plot.html
+--- noindicators.gms(256) 3 Mb
+--- Starting execution: elapsed 0:00:00.019
+--- noindicators.gms(86) 4 Mb
+--- Generating MINLP model m1
+--- noindicators.gms(92) 7 Mb
+---   1,226 rows  51 columns  3,725 non-zeroes
+---   6,125 nl-code  3,675 nl-non-zeroes
+---   50 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.973E+00, 1.165E+02]
+--- Bound     [min, max] : [ 1.000E+00, 1.165E+02] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- noindicators.gms(92) 5 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:00.026
+
+GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 25.12.10. Built: WIN-64 2025-12-10 23:23:38           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm. For more information and 
+ related optimization and data analytics products visit https://minlp.com.
+
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl, 92, 1123-1161, 2025. 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+===========================================================================
+ Doing local search
+ Preprocessing found feasible solution with value 8.37391
+ Solving bounding LP
+ Starting multi-start local search
+ Done with local search
+===========================================================================
+  Iteration       Time (s)     Mem   Lower bound     Upper bound   Progress
+*         1           0.84    37MB     30.4314         116.526        2.04%
+          1           0.84    37MB     30.4314         30.4314      100.00%
+
+                         *** Normal completion ***            
+
+ Wall clock time:                     0.87
+ Total CPU time used:                 0.84
+
+ Total no. of BaR iterations:       1
+ Best solution found at node:       1
+ Max. no. of nodes in memory:       1
+ 
+ All done
+===========================================================================
+
+Solution      = 30.4314291559083  found at node 1
+Best possible = 30.4314291559083
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+--- Reading solution for model m1
+--- Executing after solve: elapsed 0:00:01.053
+--- Generating MINLP model m2
+--- noindicators.gms(93) 7 Mb
+---   1,226 rows  51 columns  3,725 non-zeroes
+---   11,025 nl-code  3,675 nl-non-zeroes
+---   50 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+01, 1.000E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.165E+02] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.820E-01, 8.609E+01] - Zero values observed as well
+--- noindicators.gms(93) 5 Mb
+--- Executing BARON (Solvelink=2): elapsed 0:00:01.058
+
+GAMS/BARON       53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+===========================================================================
+ BARON version 25.12.10. Built: WIN-64 2025-12-10 23:23:38           
+ Running on machine DESKTOP-J6L6PVC
+
+ BARON is a product of The Optimization Firm. For more information and 
+ related optimization and data analytics products visit https://minlp.com.
+
+
+ If you publish work using this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Zhang, Y. and N. V. Sahinidis, Solving continuous and discrete
+ nonlinear programs with BARON, Comput Optim Appl, 92, 1123-1161, 2025. 
+ https://doi.org/10.1007/s10589-024-00633-0
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: CLP/CBC, ILOG CPLEX                             
+ For NLP: MINOS, SNOPT, External NLP, IPOPT, FILTERSQP
+===========================================================================
+ Starting solution is feasible with a value of   30.4314          
+ Doing local search
+ Solving bounding LP
+ Starting multi-start local search
+ Done with local search
+===========================================================================
+  Iteration       Time (s)     Mem   Lower bound     Upper bound   Progress
+          1           1.17    57MB     30.4314         30.4314      100.00%
+
+                         *** Normal completion ***            
+
+ Wall clock time:                     1.22
+ Total CPU time used:                 1.17
+
+ Total no. of BaR iterations:       1
+ Best solution found at node:      -2
+ Max. no. of nodes in memory:       1
+ 
+ All done
+===========================================================================
+
+Solution      = 30.4314291559083  initial point is best found
+Best possible = 30.4314291559083
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+
+--- Reading solution for model m2
+--- Executing after solve: elapsed 0:00:02.424
+--- Generating MIP model m3
+--- noindicators.gms(94) 5 Mb
+---   1,226 rows  51 columns  3,723 non-zeroes
+---   50 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+01, 2.311E+02]
+--- Bound     [min, max] : [ 1.000E+00, 1.165E+02] - Zero values observed as well
+--- Matrix    [min, max] : [ 8.068E-01, 1.146E+02]
+--- Executing CPLEX (Solvelink=2): elapsed 0:00:02.427
+
+IBM ILOG CPLEX   53.1.0 6a03d3b9 Feb 16, 2026          WEI x86 64bit/MS Window
+
+--- GAMS/CPLEX licensed for continuous and discrete problems.
+--- GMO setup time: 0.00s
+--- Space for names approximately 0.05 Mb
+--- Use option 'names no' to turn use of names off
+--- GMO memory 0.64 Mb (peak 0.64 Mb)
+--- Dictionary memory 0.00 Mb
+--- Cplex 22.1.2.0 link memory 0.02 Mb (peak 0.11 Mb)
+--- Starting Cplex
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 0
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Generic callback                                 0x50
+Tried aggregator 1 time.
+MIP Presolve eliminated 1 rows and 1 columns.
+Reduced MIP has 1225 rows, 51 columns, and 3722 nonzeros.
+Reduced MIP has 50 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.41 ticks)
+Found incumbent of value 1.972681 after 0.00 sec. (1.83 ticks)
+Probing time = 0.00 sec. (0.13 ticks)
+Tried aggregator 1 time.
+Detecting symmetries...
+Reduced MIP has 1225 rows, 51 columns, and 3722 nonzeros.
+Reduced MIP has 50 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (1.93 ticks)
+Probing time = 0.00 sec. (0.13 ticks)
+MIP emphasis: balance optimality and feasibility.
+MIP search method: dynamic search.
+Parallel mode: deterministic, using up to 16 threads.
+Parallel mode: deterministic, using up to 3 threads for parallel tasks at root LP.
+Parallel mode: deterministic, using up to 13 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 10 threads...
+ * Starting primal Simplex on 1 thread...
+ * Starting Sifting on 1 thread...
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.42 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           116.525689
+
+Dual simplex solved model.
+
+Root relaxation solution time = 0.00 sec. (2.44 ticks)
+
+        Nodes                                         Cuts/
+   Node  Left     Objective  IInf  Best Integer    Best Bound    ItCnt     Gap
+
+*     0+    0                            1.9727      116.5257              --- 
+Found incumbent of value 1.972681 after 0.00 sec. (8.05 ticks)
+*     0+    0                            8.3739      116.5257              --- 
+Found incumbent of value 8.373914 after 0.00 sec. (8.05 ticks)
+      0     0      116.5257    26        8.3739      116.5257       49     --- 
+*     0+    0                           10.2736      116.5257              --- 
+Found incumbent of value 10.273582 after 0.00 sec. (10.30 ticks)
+      0     0      116.5257    21       10.2736      Fract: 1       52     --- 
+*     0+    0                           15.7135      116.5257           641.56%
+Found incumbent of value 15.713528 after 0.02 sec. (25.98 ticks)
+      0     0      116.5257    21       15.7135      Cuts: 14       74  641.56%
+*     0+    0                           15.7537      116.5257           639.67%
+Found incumbent of value 15.753704 after 0.02 sec. (30.72 ticks)
+*     0+    0                           15.8233      116.5257           636.42%
+Found incumbent of value 15.823250 after 0.03 sec. (43.68 ticks)
+*     0+    0                           17.9837      116.5257           547.95%
+Found incumbent of value 17.983728 after 0.03 sec. (50.79 ticks)
+*     0+    0                           24.0454      116.5257           384.61%
+Found incumbent of value 24.045372 after 0.05 sec. (51.70 ticks)
+Detecting symmetries...
+      0     2      116.5257    20       24.0454      116.5257       74  384.61%
+Elapsed time = 0.06 sec. (53.61 ticks, tree = 0.02 MB)
+*     7+    3                           24.1336      116.5257           382.84%
+Found incumbent of value 24.133556 after 0.08 sec. (56.49 ticks)
+*    10+    1                           24.3961      116.5257           377.64%
+Found incumbent of value 24.396133 after 0.08 sec. (57.00 ticks)
+*    10+    5                           24.4674      116.5257           376.25%
+Found incumbent of value 24.467411 after 0.08 sec. (58.41 ticks)
+*    10+    3                           29.4127      116.5257           296.17%
+Found incumbent of value 29.412695 after 0.08 sec. (60.58 ticks)
+*   344+  113                           29.4241      116.5257           296.02%
+                                                      Cuts: 5                  
+Found incumbent of value 29.424052 after 0.09 sec. (70.69 ticks)
+*   464+  230                           29.7363      116.5257           291.86%
+Found incumbent of value 29.736296 after 0.09 sec. (73.71 ticks)
+*  1228+  540                           30.2743      116.5257           284.90%
+                                                 Impl Bds: 10                  
+Found incumbent of value 30.274350 after 0.11 sec. (92.46 ticks)
+
+Performing restart 1
+
+Repeating presolve.
+Tried aggregator 1 time.
+Reduced MIP has 1225 rows, 51 columns, and 3520 nonzeros.
+Reduced MIP has 50 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.90 ticks)
+Tried aggregator 1 time.
+MIP Presolve eliminated 172 rows and 0 columns.
+MIP Presolve modified 229 coefficients.
+Reduced MIP has 1053 rows, 51 columns, and 3262 nonzeros.
+Reduced MIP has 50 binaries, 0 generals, 0 SOSs, and 0 indicators.
+Presolve time = 0.00 sec. (2.48 ticks)
+Represolve time = 0.00 sec. (6.95 ticks)
+Tried aggregator 1 time.
+No LP presolve or aggregator reductions.
+Presolve time = 0.00 sec. (0.40 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =           116.525689
+Perturbation started.
+Iteration:    51   Dual objective     =           116.525689
+Iteration:   115   Dual objective     =           113.764305
+Removing perturbation.
+   7372     0      101.9819    29       30.2743      Cuts: 29    36198   74.54%
+   7372     0       88.5843    28       30.2743      Cuts: 81    36247   74.54%
+   7372     0       75.5481    20       30.2743      Cuts: 68    36285   74.54%
+   7372     0       61.5209    15       30.2743      Cuts: 47    36308   74.54%
+   7372     0       61.4145    22       30.2743     Cuts: 363    36337   74.54%
+   7372     0       49.1624    17       30.2743      Cuts: 44    36358   62.39%
+   7372     0       44.2695    19       30.2743      Cuts: 24    36376   46.23%
+   7372     0       44.2695    16       30.2743     Cuts: 363    36386   46.23%
+   7372     0       44.2695    17       30.2743      Cuts: 26    36394   46.23%
+*  7372+    0                           30.4314       44.2695            45.47%
+Found incumbent of value 30.431429 after 0.39 sec. (354.25 ticks)
+   7372     0        cutoff             30.4314       30.4314    36409    0.00%
+
+Cover cuts applied:  9
+Flow cuts applied:  2
+Mixed integer rounding cuts applied:  199
+Zero-half cuts applied:  33
+Gomory fractional cuts applied:  3
+
+Root node processing (before b&c):
+  Real time             =    0.06 sec. (53.20 ticks)
+Parallel b&c, 16 threads:
+  Real time             =    0.33 sec. (301.12 ticks)
+  Sync time (average)   =    0.07 sec.
+  Wait time (average)   =    0.00 sec.
+                          ------------
+Total (root+branch&cut) =    0.39 sec. (354.32 ticks)
+
+--- MIP status (101): integer optimal solution.
+--- Cplex Time: 0.39sec (det. 354.32 ticks)
+
+--- Returning a primal only solution to GAMS (marginals all set to NA).
+--- Fixing integer variables and solving final LP...
+
+Version identifier: 22.1.2.0 | 2024-11-25 | 0edbb82fd
+CPXPARAM_Advance                                 2
+CPXPARAM_MIP_Display                             4
+CPXPARAM_MIP_Pool_Capacity                       0
+CPXPARAM_MIP_Tolerances_AbsMIPGap                0
+Tried aggregator 1 time.
+LP Presolve eliminated 1226 rows and 52 columns.
+All rows and columns eliminated.
+Presolve time = 0.00 sec. (0.44 ticks)
+
+--- Fixed MIP status (1): optimal.
+--- Cplex Time: 0.00sec (det. 0.83 ticks)
+
+
+Proven optimal solution
+MIP Solution:           30.431429    (36409 iterations, 7372 nodes)
+Final Solve:            30.431429    (0 iterations)
+
+Best possible:          30.431429
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+--- Reading solution for model m3
+--- Executing after solve: elapsed 0:00:02.883
+--- noindicators.gms(253) 6 Mb
+--- Putfile fdata C:\projects\OptimizationModels\No Indicator Constraints\data.js
+*** Status: Normal completion
+--- Job noindicators.gms Stop 06/02/26 14:57:57 elapsed 0:00:03.166
