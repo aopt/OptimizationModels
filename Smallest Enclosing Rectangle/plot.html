@@ -1,0 +1,134 @@
+<html>
+<script src="https://cdn.plot.ly/plotly-3.4.0.min.js" charset="utf-8"></script>
+<script src="data.js" charset="utf-8"></script>
+<style>
+.brdr {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+th, td {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+</style>
+
+<h1>Data</h1>
+<table><tr><td>
+<table class="brdr">
+<tr><th colspan=2 class="brdr">points</th></tr>
+<tr><td class="brdr">&#x1D45B;</td><td class="brdr" id="d_n"></td></tr>
+<tr><td class="brdr">map</td><td class="brdr" id="d_map"></td></tr>
+<tr><td class="brdr">min &#x1D465;</td><td class="brdr" id="d_minx"></td></tr>
+<tr><td class="brdr">max &#x1D465;</td><td class="brdr" id="d_maxx"></td></tr>
+<tr><td class="brdr">avg &#x1D465;</td><td class="brdr" id="d_avgx"></td></tr>
+<tr><td class="brdr">min &#x1D466;</td><td class="brdr" id="d_miny"></td></tr>
+<tr><td class="brdr">max &#x1D466;</td><td class="brdr" id="d_maxy"></td></tr>
+<tr><td class="brdr">avg &#x1D466;</td><td class="brdr" id="d_avgy"></td></tr>
+</table>
+</td><td>
+<div id="plotDiv0" style="width: 800px; height: 600px;"></div>
+</td></tr></table>
+
+
+<h1>Smallest Rectangle</h1>
+<table><tr><td>
+<table class="brdr">
+<tr><th colspan=2 class="brdr">solution</th></tr>
+<tr><td class="brdr">&#x1D45B;</td><td class="brdr" id="d_n2"></td></tr>
+<tr><td class="brdr">&#x1D458;</td><td class="brdr" id="d_k"></td></tr>
+<tr><td class="brdr">&#x1D465;min</td><td class="brdr" id="xmin">0</td></tr>
+<tr><td class="brdr">&#x1D465;max</td><td class="brdr" id="xmax">0</td></tr>
+<tr><td class="brdr">&#x1D466;min</td><td class="brdr" id="ymin">0</td></tr>
+<tr><td class="brdr">&#x1D466;max</td><td class="brdr" id="ymax">0</td></tr>
+<tr><td class="brdr">area</td><td class="brdr" id="area">0</td></tr>
+</table>
+</td><td>
+<div id="plotDiv1" style="width: 800px; height: 600px;"></div>
+</td></tr></table>
+
+
+<script>
+
+document.getElementById("d_n").innerHTML = pnts['n'];
+document.getElementById("d_map").innerHTML = pnts['map'];
+document.getElementById("d_minx").innerHTML = pnts['minx'];
+document.getElementById("d_maxx").innerHTML = pnts['maxx'];
+document.getElementById("d_miny").innerHTML = pnts['miny'];
+document.getElementById("d_maxy").innerHTML = pnts['maxy'];
+document.getElementById("d_avgx").innerHTML = pnts['avgx'];
+document.getElementById("d_avgy").innerHTML = pnts['avgy'];
+
+document.getElementById("d_n2").innerHTML = pnts['n'];
+document.getElementById("d_k").innerHTML = pnts['k'];
+document.getElementById("xmin").innerHTML = pnts['rxmin'];
+document.getElementById("xmax").innerHTML = pnts['rxmax'];
+document.getElementById("ymin").innerHTML = pnts['rymin'];
+document.getElementById("ymax").innerHTML = pnts['rymax'];
+document.getElementById("area").innerHTML = pnts['area'];
+
+
+
+px = p.map((x) => x['x'])
+py = p.map((x) => x['y'])
+delta = p.map((x) => x['delta'])
+
+var data1 = {
+  x: px,
+  y: py,
+  mode: 'markers',
+  type: 'scatter',
+  name: 'data points',
+  color: 'darkblue'
+  
+};
+
+var layout1 = {
+  autosize: false,
+  width: 650,
+  height: 600,
+  showlegend: false,
+  title: {text:"Data Points"},
+}
+
+
+var data2 = {
+  x: px,
+  y: py,
+  mode: 'markers',
+  type: 'scatter',
+  name: 'solution',
+  marker: { color: delta },
+  showlegend: false,
+
+};
+
+var layout2 = {
+  autosize: false,
+  width: 650,
+  height: 600,
+  showlegend: false,
+  title: {text:"Solution"},
+  shapes: [{type:'rect',
+            xref:'x',
+            yref:'y',
+            x0:pnts['rxmin'],
+            y0:pnts['rymin'],
+            x1:pnts['rxmax'],
+            y1:pnts['rymax'],
+            line:{color:'darkred',width:2,opacity:0.5},
+            fillcolor:'rgba(0, 255, 255, 0.5)',
+            },]
+}
+
+
+var trc1 = [data1];
+var options1 = {staticPlot: true, displayModeBar: false, responsive: false};
+Plotly.newPlot('plotDiv0', trc1, layout1, options1);
+
+var trc2 = [data2];
+var options2 = {staticPlot: true, displayModeBar: false, responsive: false};
+Plotly.newPlot('plotDiv1', trc2, layout2, options2);
+
+
+</script>
+</html>

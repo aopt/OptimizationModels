@@ -1,0 +1,123 @@
+
+--- Job Smallest Enclosing Rectangle.gms Start 09/26/26 10:39:54 54.1.0 37378ce0 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\54\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Smallest Enclosing Rectangle.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\225a\"
+    SysDir C:\GAMS\54\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260914+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:50926806 mem:64 cores:8 ipport:65203 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Apr 12, 2027
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 54.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- Smallest Enclosing Rectangle.gms(97) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Smallest Enclosing Rectangle\cplex.opt
+--- Smallest Enclosing Rectangle.gms(143) 3 Mb
+--- $echo File C:\projects\OptimizationModels\Smallest Enclosing Rectangle\plot.html
+--- Smallest Enclosing Rectangle.gms(283) 3 Mb
+--- Starting execution: elapsed 0:00:00.015
+--- Smallest Enclosing Rectangle.gms(94) 4 Mb
+--- Generating MIQCP model m
+--- Smallest Enclosing Rectangle.gms(95) 6 Mb
+---   404 rows  105 columns  909 non-zeroes
+---   8 nl-code  4 nl-non-zeroes
+---   100 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+01, 2.500E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 6.352E-04, 9.887E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 6.352E-04, 9.999E+00] - Zero values observed as well
+--- Smallest Enclosing Rectangle.gms(95) 4 Mb
+--- Executing ANTIGONE (Solvelink=2): elapsed 0:00:00.020
+
+ANTIGONE         54.1.0 37378ce0 Jun 15, 2026          WEI x86 64bit/MS Window
+ 
+-------------------------------------------------------------------------------
+ANTIGONE: Algorithms for coNTinuous/Integer Global Optimization; Version 1.1
+
+          Ruth Misener and Christodoulos A. Floudas
+
+          Computer-Aided Systems Laboratory (CASL)
+          Department of Chemical & Biological Engineering; Princeton University
+-------------------------------------------------------------------------------
+*** Error Cannot open parameter file "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\antigone.opt"
+*** Error Error code = 2; No such file or directory
+
+Before Pre-processing:
+          104 Variables
+                   4 Continuous
+                 100 Binary
+          404 Equations
+
+After Pre-processing:
+          104 Variables
+                   4 Continuous
+                 100 Binary
+          404 Equations
+                 403 Linear
+                   1 Nonconvex nonlinear
+            4 Nonlinear Terms
+                   4 Bilinear/Quadratic
+            9 Possible Reformulation Linearization Technique (RLT) equations
+
+Constituent Libraries:
+            CPLEX  Solving relaxations
+            CONOPT Finding feasible points
+            LAPACK Addressing linear systems
+            Boost  Bounding Intervals
+ 
+-------------------------------------------------------------------------------
+Time (s) Nodes explored Nodes remaining Best possible   Best found Relative Gap
+-------------------------------------------------------------------------------
+ 
+       0              1               1    +0.000e+00   +2.341e+01           --
+       6             13              11    +4.392e+00   +8.887e+00   +5.058e-01
+      10             76               0    +8.886e+00   +8.887e+00   +1.000e-04
+ 
+-------------------------------------------------------------------------------
+Termination Status : Global minimum
+Best Feasible Point: +8.887291e+00
+Best Possible Point: +8.886402e+00
+       Relative Gap: +1.000000e-04
+Algorithm analysis :
+
+                 76 Nodes explored
+                  0 Nodes remaining
+
+                 13 Maximum tree depth
+
+                  1 Cutting Planes
+                         1 Edge-Concave
+ 
+              10.00 Total time (wall s)
+                      0.00 Pre-processing
+                      9.88 Solving MILP relaxations
+                      0.17 Searching for feasible solutions
+                      0.50 Variable bounds tightening
+                             0.47 OBBT
+                             0.14 FBBT (0.01 EC; 0.03 RLT; 0.00 Factoring)
+                      0.05 Branching
+                             0.04 Reliability branching
+-------------------------------------------------------------------------------
+--- Reading solution for model m
+--- Solver did not provide marginals for model m
+--- Executing after solve: elapsed 0:00:10.686
+--- Smallest Enclosing Rectangle.gms(280) 6 Mb
+--- Putfile fdata C:\projects\OptimizationModels\Smallest Enclosing Rectangle\data.js
+*** Status: Normal completion
+--- Job Smallest Enclosing Rectangle.gms Stop 09/26/26 10:40:05 elapsed 0:00:10.986
