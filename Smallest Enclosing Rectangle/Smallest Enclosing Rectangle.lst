@@ -1,4 +1,4 @@
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 1
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -20,48 +20,48 @@ C o m p i l a t i o n
   17  * 1: produce HTML plot)
   19   
   20  option miqcp=antigone;
-  21  *option miqcp=xpress;
-  22   
-  23  option seed=12345;
-  24   
-  25  *---------------------------------------------------------------
-  26  * data
-  27  *---------------------------------------------------------------
-  28   
-  29  scalar maxsize 'size of the outer box' / 10 /;
-  30   
-  31  sets
-  32     i   'points' /point1*point100/
-  33     c   'coordinates' /x,y/
-  34  ;
-  35   
-  36  parameter p(i,c) 'points';
-  37  p(i,c) = uniform(0,maxsize);
-  38  display p;
+  21   
+  22  option seed=12345;
+  23   
+  24  *---------------------------------------------------------------
+  25  * data
+  26  *---------------------------------------------------------------
+  27   
+  28  scalar maxsize 'size of the outer box' / 10 /;
+  29   
+  30  sets
+  31     i   'points' /point1*point100/
+  32     c   'coordinates' /x,y/
+  33  ;
+  34   
+  35  parameter p(i,c) 'points';
+  36  p(i,c) = uniform(0,maxsize);
+  37  display p;
+  38   
   39   
-  40   
-  41  *---------------------------------------------------------------
-  42  * enclose all points (easy)
-  43  *---------------------------------------------------------------
-  44   
-  45  Parameter
-  46     rect1(c,*) 'contain all points'
-  47  ;
-  48   
-  49  rect1(c,'min') = smin(i,p(i,c));
-  50  rect1(c,'max') = smax(i,p(i,c));
-  51  display rect1;
-  52   
-  53  *---------------------------------------------------------------
-  54  * enclose k points
-  55  *---------------------------------------------------------------
-  56   
-  57  scalar k 'number of points (subset)' /25/;
-  58   
-  59  binary variable delta(i) 'point is selected';
-  60  variable
-  61     rect2(c,*) 'contain k points'
-  62     area  'size of rectangle'
+  40  *---------------------------------------------------------------
+  41  * enclose all points (easy)
+  42  *---------------------------------------------------------------
+  43   
+  44  Parameter
+  45     rect1(c,*) 'contain all points'
+  46  ;
+  47   
+  48  rect1(c,'min') = smin(i,p(i,c));
+  49  rect1(c,'max') = smax(i,p(i,c));
+  50  display rect1;
+  51   
+  52  *---------------------------------------------------------------
+  53  * enclose k points
+  54  *---------------------------------------------------------------
+  55   
+  56  scalar k 'number of points (subset)' /25/;
+  57   
+  58  binary variable delta(i) 'point is selected';
+  59  variable
+  60     rect2(c,*) 'contain k points'
+  61     d(c)       'length of sides'
+  62     area       'size of rectangle'
   63  ;
   64   
   65  * bounds
@@ -70,85 +70,84 @@ C o m p i l a t i o n
   68  rect2.up(c,'min') = smax(i,p(i,c));
   69  rect2.up(c,'max') = smax(i,p(i,c));
   70   
-  71   
-  72  equations
-  73      obj      'objective: area of enclosing rectangle'
-  74      count    'number of points to select'
-  75      inside_min(i,c)  'points are inside'
-  76      inside_max(i,c)  'points are inside'
-  77      extra(c) 'may help some solvers'
-  78  ;
-  79   
-  80  count..  sum(i, delta(i)) =e= k;
-  81   
-  82  * inside: delta(i)=1  ==> rect2(c,'min') <= p(i,c) <= rect2(c,'max')
-  83  inside_min(i,c)..  rect2(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*maxsize;
-  84  inside_max(i,c)..  rect2(c,'max') =g= delta(i)*p(i,c);
-  85   
-  86  obj.. area =e= prod(c,rect2(c,'max')-rect2(c,'min'));
-  87   
-  88  extra(c) .. rect2(c,'min') =l= rect2(c,'max');
-  89   
-  90  * cplex w/o extra: 133 sec
-  91  * cplex w extra: 86 sec
+  71  d.lo(c) = 0;
+  72  d.up(c) =  smax(i,p(i,c)) - smin(i,p(i,c));
+  73   
+  74   
+  75  equations
+  76      obj      'objective: area of enclosing rectangle'
+  77      count    'number of points to select'
+  78      inside_min(i,c)  'points are inside'
+  79      inside_max(i,c)  'points are inside'
+  80      calcd(c)         'calculate d'
+  81  ;
+  82   
+  83  count..  sum(i, delta(i)) =e= k;
+  84   
+  85  * inside: delta(i)=1  ==> rect2(c,'min') <= p(i,c) <= rect2(c,'max')
+  86  inside_min(i,c)..  rect2(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*maxsize;
+  87  inside_max(i,c)..  rect2(c,'max') =g= delta(i)*p(i,c);
+  88   
+  89  calcd(c).. d(c) =e= rect2(c,'max')-rect2(c,'min');
+  90   
+  91  obj.. area =e= d('x')*d('y');
   92   
-  93  model m /all/;
-  94  m.optfile=1;
+  93   
+  94  model m /all/;
   95  solve m minimizing area using miqcp;
   96   
- 100   
- 101  display rect2.l,delta.l,area.l;
- 102   
+  97  display rect2.l,delta.l,area.l;
+  98   
+  99   
+ 100  *---------------------------------------------------------------------
+ 101  * visualization
+ 102  *---------------------------------------------------------------------
  103   
- 104  *---------------------------------------------------------------------
- 105  * visualization
- 106  *---------------------------------------------------------------------
- 107   
- 110   
- 112   
- 113   
- 114  file fdata /data.js/; put fdata;
- 115   
- 116  * points
- 117  put "p=["/;
- 118  loop(i,
- 119    put "  {i:'",i.tl:0,"',x:",p(i,'x'):0:4,",y:",p(i,'y'):0:4,",delta:";
- 120    put$(delta.l(i)>0.5) "'red'";
- 121    put$(delta.l(i)<0.5) "'darkblue'";
- 122    put "},"/;
- 123  );
- 124  put "]"/;
- 125  put "pnts={n:",(card(i)):0:0,
- 126         ",map:'[0,",maxsize:0:0,"]&times;[0,",maxsize:0:0,"]'",
- 127         ",minx:",(smin(i,p(i,'x'))):0:3,
- 128         ",miny:",(smin(i,p(i,'y'))):0:3,
- 129         ",maxx:",(smax(i,p(i,'x'))):0:3,
- 130         ",maxy:",(smax(i,p(i,'y'))):0:3,
- 131         ",avgx:",(sum(i,p(i,'x'))/card(i)):0:3,
- 132         ",avgy:",(sum(i,p(i,'y'))/card(i)):0:3,
- 133         ",k:",k:0:0,
- 134         ",rxmin:",(rect2.l('x','min')):0:3,
- 135         ",rxmax:",(rect2.l('x','max')):0:3,
- 136         ",rymin:",(rect2.l('y','min')):0:3,
- 137         ",rymax:",(rect2.l('y','max')):0:3,
- 138         ",area:",(area.l):0:3,
- 139         "}"/;
- 140   
- 141  putclose;
- 142   
+ 106   
+ 108   
+ 109   
+ 110  file fdata /data.js/; put fdata;
+ 111   
+ 112  * points
+ 113  put "p=["/;
+ 114  loop(i,
+ 115    put "  {i:'",i.tl:0,"',x:",p(i,'x'):0:4,",y:",p(i,'y'):0:4,",delta:";
+ 116    put$(delta.l(i)>0.5) "'red'";
+ 117    put$(delta.l(i)<0.5) "'darkblue'";
+ 118    put "},"/;
+ 119  );
+ 120  put "]"/;
+ 121  put "pnts={n:",(card(i)):0:0,
+ 122         ",map:'[0,",maxsize:0:0,"]&times;[0,",maxsize:0:0,"]'",
+ 123         ",minx:",(smin(i,p(i,'x'))):0:3,
+ 124         ",miny:",(smin(i,p(i,'y'))):0:3,
+ 125         ",maxx:",(smax(i,p(i,'x'))):0:3,
+ 126         ",maxy:",(smax(i,p(i,'y'))):0:3,
+ 127         ",avgx:",(sum(i,p(i,'x'))/card(i)):0:3,
+ 128         ",avgy:",(sum(i,p(i,'y'))/card(i)):0:3,
+ 129         ",k:",k:0:0,
+ 130         ",rxmin:",(rect2.l('x','min')):0:3,
+ 131         ",rxmax:",(rect2.l('x','max')):0:3,
+ 132         ",rymin:",(rect2.l('y','min')):0:3,
+ 133         ",rymax:",(rect2.l('y','max')):0:3,
+ 134         ",area:",(area.l):0:3,
+ 135         "}"/;
+ 136   
+ 137  putclose;
+ 138   
+ 275   
+ 276  executetool 'win32.ShellExecute "plot.html"';
+ 277   
  279   
- 280  executetool 'win32.ShellExecute "plot.html"';
- 281   
- 283   
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  54.1.0 37378ce0 WEX-WEI
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 2
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     38 PARAMETER p  points
+----     37 PARAMETER p  points
 
                    x           y
 
@@ -254,21 +253,21 @@ point99        8.997       8.511
 point100       8.928       2.236
 
 
-----     51 PARAMETER rect1  contain all points
+----     50 PARAMETER rect1  contain all points
 
           min         max
 
 x       0.160       9.810
 y       0.001       9.887
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 3
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Equation Listing    SOLVE m Using MIQCP From line 95
 
 
 ---- obj  =E=  objective: area of enclosing rectangle
 
-obj..  (0)*rect2(x,min) + (0)*rect2(x,max) + (0)*rect2(y,min) + (0)*rect2(y,max) + area =E= 0 ; (LHS = 0)
+obj..  (0)*d(x) + (0)*d(y) + area =E= 0 ; (LHS = 0)
      
 
 ---- count  =E=  number of points to select
@@ -326,13 +325,13 @@ inside_max(point2,x)..  - 8.73922492*delta(point2) + rect2(x,max) =G= 0 ; (LHS =
 REMAINING 197 ENTRIES SKIPPED
 
 
----- extra  =L=  may help some solvers
+---- calcd  =E=  calculate d
 
-extra(x)..  rect2(x,min) - rect2(x,max) =L= 0 ; (LHS = 0)
+calcd(x)..  rect2(x,min) - rect2(x,max) + d(x) =E= 0 ; (LHS = 0)
      
-extra(y)..  rect2(y,min) - rect2(y,max) =L= 0 ; (LHS = 0)
+calcd(y)..  rect2(y,min) - rect2(y,max) + d(y) =E= 0 ; (LHS = 0)
      
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 4
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Column Listing      SOLVE m Using MIQCP From line 95
 
@@ -369,7 +368,6 @@ REMAINING 97 ENTRIES SKIPPED
 
 rect2(x,min)
                 (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
-       (0)      obj
         1       inside_min(point1,x)
         1       inside_min(point2,x)
         1       inside_min(point3,x)
@@ -470,12 +468,11 @@ rect2(x,min)
         1       inside_min(point98,x)
         1       inside_min(point99,x)
         1       inside_min(point100,x)
-        1       extra(x)
+        1       calcd(x)
         0       (OLD LEVEL ****)
 
 rect2(x,max)
                 (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
-       (0)      obj
         1       inside_max(point1,x)
         1       inside_max(point2,x)
         1       inside_max(point3,x)
@@ -576,12 +573,11 @@ rect2(x,max)
         1       inside_max(point98,x)
         1       inside_max(point99,x)
         1       inside_max(point100,x)
-       -1       extra(x)
+       -1       calcd(x)
         0       (OLD LEVEL ****)
 
 rect2(y,min)
                 (.LO, .L, .UP, .M = 0.00063517, 0.00063517, 9.88688936, 0)
-       (0)      obj
         1       inside_min(point1,y)
         1       inside_min(point2,y)
         1       inside_min(point3,y)
@@ -682,10 +678,23 @@ rect2(y,min)
         1       inside_min(point98,y)
         1       inside_min(point99,y)
         1       inside_min(point100,y)
-        1       extra(y)
+        1       calcd(y)
         0       (OLD LEVEL ****)
 
 REMAINING ENTRY SKIPPED
+
+---- d  length of sides
+
+d(x)
+                (.LO, .L, .UP, .M = 0, 0, 9.65003296, 0)
+       (0)      obj
+        1       calcd(x)
+
+d(y)
+                (.LO, .L, .UP, .M = 0, 0, 9.88625419, 0)
+       (0)      obj
+        1       calcd(y)
+
 
 ---- area  size of rectangle
 
@@ -693,7 +702,7 @@ area
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 5
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Range Statistics    SOLVE m Using MIQCP From line 95
 
@@ -704,7 +713,7 @@ RHS       [min, max] : [ 1.000E+01, 2.500E+01] - Zero values observed as well
 Bound     [min, max] : [ 6.352E-04, 9.887E+00] - Zero values observed as well
 Matrix    [min, max] : [ 6.352E-04, 9.999E+00] - Zero values observed as well
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 6
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Model Statistics    SOLVE m Using MIQCP From line 95
 
@@ -712,13 +721,13 @@ Model Statistics    SOLVE m Using MIQCP From line 95
 MODEL STATISTICS
 
 BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          404
-BLOCKS OF VARIABLES           3     SINGLE VARIABLES          105  4 projected
-NON ZERO ELEMENTS           909     NON LINEAR N-Z              4
-CODE LENGTH                   8     CONSTANT POOL              16     DISCRETE VARIABLES        100
+BLOCKS OF VARIABLES           4     SINGLE VARIABLES          107  4 projected
+NON ZERO ELEMENTS           909     NON LINEAR N-Z              2
+CODE LENGTH                   5     CONSTANT POOL              16     DISCRETE VARIABLES        100
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  54.1.0 37378ce0 WEX-WEI
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 7
+GENERATION TIME      =        0.016 SECONDS      4 MB  54.1.0 37378ce0 WEX-WEI
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 Solution Report     SOLVE m Using MIQCP From line 95
 
@@ -733,7 +742,7 @@ Solution Report     SOLVE m Using MIQCP From line 95
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE                8.8873
 
- RESOURCE USAGE, LIMIT         10.000 10000000000.000
+ RESOURCE USAGE, LIMIT          3.000 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
  EVALUATION ERRORS              0             0
 
@@ -746,8 +755,6 @@ ANTIGONE: Algorithms for coNTinuous/Integer Global Optimization; Version 1.1
           Computer-Aided Systems Laboratory (CASL)
           Department of Chemical & Biological Engineering; Princeton University
 -------------------------------------------------------------------------------
-*** Error Cannot open parameter file "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\antigone.opt"
-*** Error Error code = 2; No such file or directory
  
 Termination Status : Global minimum
 Best Feasible Point: +8.887291e+00
@@ -1015,7 +1022,7 @@ point21 .x          .             1.7049        +INF
 point21 .y          .             0.4742        +INF         
 point22 .x          .             9.6014        +INF         
 point22 .y          .             8.5106        +INF         
-point23 .x          .       1.776357E-15        +INF         
+point23 .x          .       -1.77636E-15        +INF         
 point23 .y          .             1.2954        +INF         
 point24 .x          .             1.4540        +INF         
 point24 .y          .             0.1356        +INF         
@@ -1168,16 +1175,16 @@ point97 .y          .             8.5106        +INF
 point98 .x          .             9.6014        +INF         
 point98 .y          .             8.5106        +INF         
 point99 .x          .             0.6048        +INF         
-point99 .y          .              .            +INF         
+point99 .y          .       -3.55271E-15        +INF         
 point100.x          .             9.6014        +INF         
 point100.y          .             8.5106        +INF         
 
----- EQU extra  may help some solvers
+---- EQU calcd  calculate d
 
          LOWER          LEVEL          UPPER
 
-x        -INF           -2.4173          .          
-y        -INF           -3.6766          .          
+x          .              .              .          
+y          .              .              .          
 
 ---- VAR delta  point is selected
 
@@ -1293,6 +1300,13 @@ x.max         0.1604         9.6014         9.8104
 y.min         0.0006         4.8340         9.8869      
 y.max         0.0006         8.5106         9.8869      
 
+---- VAR d  length of sides
+
+         LOWER          LEVEL          UPPER
+
+x          .             2.4173         9.6500      
+y          .             3.6766         9.8863      
+
                            LOWER          LEVEL          UPPER
 
 ---- VAR area              -INF            8.8873        +INF         
@@ -1304,12 +1318,12 @@ y.max         0.0006         8.5106         9.8869
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 10:39:54 Page 8
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----    101 VARIABLE rect2.L  contain k points
+----     97 VARIABLE rect2.L  contain k points
 
           min         max
 
@@ -1317,7 +1331,7 @@ x       7.184       9.601
 y       4.834       8.511
 
 
-----    101 VARIABLE delta.L  point is selected
+----     97 VARIABLE delta.L  point is selected
 
 point2  1.000,    point14 1.000,    point17 1.000,    point20 1.000,    point21 1.000,    point23 1.000,    point24 1.000
 point25 1.000,    point30 1.000,    point37 1.000,    point44 1.000,    point52 1.000,    point56 1.000,    point59 1.000
@@ -1325,14 +1339,14 @@ point61 1.000,    point64 1.000,    point66 1.000,    point69 1.000,    point74 
 point86 1.000,    point88 1.000,    point94 1.000,    point99 1.000
 
 
-----    101 VARIABLE area.L                =        8.887  size of rectangle
+----     97 VARIABLE area.L                =        8.887  size of rectangle
 
 **** REPORT FILE SUMMARY
 
 fdata C:\projects\OptimizationModels\Smallest Enclosing Rectangle\data.js
 
 
-EXECUTION TIME       =       10.953 SECONDS      6 MB  54.1.0 37378ce0 WEX-WEI
+EXECUTION TIME       =        3.844 SECONDS      6 MB  54.1.0 37378ce0 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260914+0003Cc-GEN

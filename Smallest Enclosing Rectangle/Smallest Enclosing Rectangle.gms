@@ -18,7 +18,6 @@ $offtext
 $set htmlplot 1
 
 option miqcp=antigone;
-*option miqcp=xpress;
 
 option seed=12345;
 
@@ -59,7 +58,8 @@ scalar k 'number of points (subset)' /25/;
 binary variable delta(i) 'point is selected';
 variable
    rect2(c,*) 'contain k points'
-   area  'size of rectangle'    
+   d(c)       'length of sides'
+   area       'size of rectangle'    
 ;
 
 * bounds
@@ -68,13 +68,16 @@ rect2.lo(c,'max') = smin(i,p(i,c));
 rect2.up(c,'min') = smax(i,p(i,c));
 rect2.up(c,'max') = smax(i,p(i,c));
 
+d.lo(c) = 0;
+d.up(c) =  smax(i,p(i,c)) - smin(i,p(i,c));
+
 
 equations
     obj      'objective: area of enclosing rectangle'
     count    'number of points to select'
     inside_min(i,c)  'points are inside'
     inside_max(i,c)  'points are inside'
-    extra(c) 'may help some solvers'
+    calcd(c)         'calculate d' 
 ;
 
 count..  sum(i, delta(i)) =e= k;
@@ -83,20 +86,13 @@ count..  sum(i, delta(i)) =e= k;
 inside_min(i,c)..  rect2(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*maxsize;
 inside_max(i,c)..  rect2(c,'max') =g= delta(i)*p(i,c);
 
-obj.. area =e= prod(c,rect2(c,'max')-rect2(c,'min'));
+calcd(c).. d(c) =e= rect2(c,'max')-rect2(c,'min');
 
-extra(c) .. rect2(c,'min') =l= rect2(c,'max');
+obj.. area =e= d('x')*d('y');
 
-* cplex w/o extra: 133 sec
-* cplex w extra: 86 sec
 
 model m /all/;
-m.optfile=1;
 solve m minimizing area using miqcp;
-
-$onecho > cplex.opt
-OptimalityTarget=3
-$offecho
 
 display rect2.l,delta.l,area.l;
 
