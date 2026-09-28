@@ -1,0 +1,111 @@
+
+--- Job Smallest Weight Constrained Box.gms Start 09/28/26 08:29:42 54.1.0 37378ce0 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\54\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP CPLEX
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Smallest Weight Constrained Box.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\225a\"
+    SysDir C:\GAMS\54\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260914+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225a\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:50857606 mem:64 cores:8 ipport:52830 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Apr 12, 2027
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 54.1.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- Smallest Weight Constrained Box.gms(93) 3 Mb
+--- Starting execution: elapsed 0:00:00.014
+--- Smallest Weight Constrained Box.gms(62) 4 Mb
+--- Generating MINLP model m
+--- Smallest Weight Constrained Box.gms(84) 6 Mb
+---   605 rows  110 columns  1,304 non-zeroes
+---   6 nl-code  3 nl-non-zeroes
+---   100 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 6.352E-04, 2.500E+01] - Zero values observed as well
+--- Bound     [min, max] : [ 6.352E-04, 9.945E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.165E-02, 9.944E+00] - Zero values observed as well
+--- Smallest Weight Constrained Box.gms(84) 4 Mb
+--- Executing ANTIGONE (Solvelink=2): elapsed 0:00:00.021
+
+ANTIGONE         54.1.0 37378ce0 Jun 15, 2026          WEI x86 64bit/MS Window
+ 
+-------------------------------------------------------------------------------
+ANTIGONE: Algorithms for coNTinuous/Integer Global Optimization; Version 1.1
+
+          Ruth Misener and Christodoulos A. Floudas
+
+          Computer-Aided Systems Laboratory (CASL)
+          Department of Chemical & Biological Engineering; Princeton University
+-------------------------------------------------------------------------------
+
+Before Pre-processing:
+          109 Variables
+                   9 Continuous
+                 100 Binary
+          605 Equations
+
+After Pre-processing:
+          106 Variables
+                   6 Continuous
+                 100 Binary
+          596 Equations
+                 595 Linear
+                   1 Nonconvex nonlinear
+            1 Nonlinear Terms
+                   1 Signomial
+
+Constituent Libraries:
+            CPLEX  Solving relaxations
+            CONOPT Finding feasible points
+            LAPACK Addressing linear systems
+            Boost  Bounding Intervals
+ 
+-------------------------------------------------------------------------------
+Time (s) Nodes explored Nodes remaining Best possible   Best found Relative Gap
+-------------------------------------------------------------------------------
+ 
+       0              1               1    +0.000e+00   +1.814e+02           --
+       3             14               0    +1.345e+02   +1.346e+02   +1.000e-04
+ 
+-------------------------------------------------------------------------------
+Termination Status : Global minimum
+Best Feasible Point: +1.345542e+02
+Best Possible Point: +1.345407e+02
+       Relative Gap: +1.000000e-04
+Algorithm analysis :
+
+                 14 Nodes explored
+                  0 Nodes remaining
+
+                  4 Maximum tree depth
+
+               3.00 Total time (wall s)
+                      0.00 Pre-processing
+                      1.83 Solving MILP relaxations
+                      0.42 Searching for feasible solutions
+                      0.37 Variable bounds tightening
+                             0.34 OBBT
+                             0.12 FBBT (0.00 EC; 0.00 RLT; 0.00 Factoring)
+                      0.04 Branching
+                             0.03 Reliability branching
+-------------------------------------------------------------------------------
+--- Reading solution for model m
+--- Solver did not provide marginals for model m
+--- Executing after solve: elapsed 0:00:02.846
+--- Smallest Weight Constrained Box.gms(93) 4 Mb
+*** Status: Normal completion
+--- Job Smallest Weight Constrained Box.gms Stop 09/28/26 08:29:45 elapsed 0:00:02.847
