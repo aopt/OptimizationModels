@@ -1,4 +1,4 @@
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 1
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -27,127 +27,167 @@ C o m p i l a t i o n
   25  * data
   26  *---------------------------------------------------------------
   27   
-  28  scalar maxsize 'size of the outer box' / 10 /;
-  29   
-  30  sets
-  31     i   'points' /point1*point100/
-  32     c   'coordinates' /x,y/
-  33  ;
-  34   
-  35  parameter p(i,c) 'points';
-  36  p(i,c) = uniform(0,maxsize);
-  37  display p;
+  28  scalars
+  29     maxsize 'size of the outer box' / 10 /
+  30     k       'number of points to select' / 25 /
+  31  ;
+  32   
+  33  sets
+  34     i   'points' /point1*point100/
+  35     c   'coordinates' /x,y/
+  36     lu  'lower/upper values' /min,max/
+  37  ;
   38   
-  39   
-  40  *---------------------------------------------------------------
-  41  * enclose all points (easy)
-  42  *---------------------------------------------------------------
+  39  parameter p(i,c) 'points';
+  40  p(i,c) = uniform(0,maxsize);
+  41   
+  42  display k,p;
   43   
-  44  Parameter
-  45     rect1(c,*) 'contain all points'
-  46  ;
+  44  *---------------------------------------------------------------
+  45  * derived data
+  46  *---------------------------------------------------------------
   47   
-  48  rect1(c,'min') = smin(i,p(i,c));
-  49  rect1(c,'max') = smax(i,p(i,c));
-  50  display rect1;
+  48  parameter box(c,lu) 'min/max values';
+  49  box(c,'min') = smin(i, p(i,c));
+  50  box(c,'max') = smax(i, p(i,c));
   51   
-  52  *---------------------------------------------------------------
-  53  * enclose k points
+  52  display box;
+  53   
   54  *---------------------------------------------------------------
-  55   
-  56  scalar k 'number of points (subset)' /25/;
+  55  * model: enclose k points
+  56  *---------------------------------------------------------------
   57   
   58  binary variable delta(i) 'point is selected';
-  59  variable
-  60     rect2(c,*) 'contain k points'
-  61     d(c)       'length of sides'
-  62     area       'size of rectangle'
-  63  ;
-  64   
-  65  * bounds
-  66  rect2.lo(c,'min') = smin(i,p(i,c));
-  67  rect2.lo(c,'max') = smin(i,p(i,c));
-  68  rect2.up(c,'min') = smax(i,p(i,c));
-  69  rect2.up(c,'max') = smax(i,p(i,c));
-  70   
-  71  d.lo(c) = 0;
-  72  d.up(c) =  smax(i,p(i,c)) - smin(i,p(i,c));
+  59   
+  60  variable
+  61     rect(c,lu) 'rectangle to contain k points'
+  62     d(c)       'length of sides'
+  63     area       'size of rectangle'
+  64  ;
+  65   
+  66  * bounds
+  67  rect.lo(c,lu) = box(c,'min');
+  68  rect.up(c,lu) = box(c,'max');
+  69   
+  70  d.lo(c) = 0;
+  71  d.up(c) = box(c,'max') - box(c,'min');
+  72   
   73   
-  74   
-  75  equations
-  76      obj      'objective: area of enclosing rectangle'
-  77      count    'number of points to select'
-  78      inside_min(i,c)  'points are inside'
-  79      inside_max(i,c)  'points are inside'
-  80      calcd(c)         'calculate d'
-  81  ;
-  82   
-  83  count..  sum(i, delta(i)) =e= k;
-  84   
-  85  * inside: delta(i)=1  ==> rect2(c,'min') <= p(i,c) <= rect2(c,'max')
-  86  inside_min(i,c)..  rect2(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*maxsize;
-  87  inside_max(i,c)..  rect2(c,'max') =g= delta(i)*p(i,c);
-  88   
-  89  calcd(c).. d(c) =e= rect2(c,'max')-rect2(c,'min');
-  90   
-  91  obj.. area =e= d('x')*d('y');
+  74  equations
+  75      obj      'objective: area of enclosing rectangle'
+  76      count    'number of points to select'
+  77      inside_min(i,c)  'points are inside'
+  78      inside_max(i,c)  'points are inside'
+  79      calcd(c)         'calculate d'
+  80  ;
+  81   
+  82  count..  sum(i, delta(i)) =e= k;
+  83   
+  84  * inside: delta(i)=1  ==> rect(c,'min') <= p(i,c) <= rect(c,'max')
+  85  inside_min(i,c)..  rect(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*box(c,'max');
+  86  inside_max(i,c)..  rect(c,'max') =g= delta(i)*p(i,c) + (1-delta(i))*box(c,'min');
+  87   
+  88  calcd(c).. d(c) =e= rect(c,'max')-rect(c,'min');
+  89   
+  90  obj.. area =e= d('x')*d('y');
+  91   
   92   
-  93   
-  94  model m /all/;
-  95  solve m minimizing area using miqcp;
-  96   
-  97  display rect2.l,delta.l,area.l;
+  93  model m /all/;
+  94  solve m minimizing area using miqcp;
+  95   
+  96  display rect.l,delta.l,area.l;
+  97   
   98   
-  99   
- 100  *---------------------------------------------------------------------
- 101  * visualization
- 102  *---------------------------------------------------------------------
- 103   
- 106   
- 108   
- 109   
- 110  file fdata /data.js/; put fdata;
+  99  *---------------------------------------------------------------------
+ 100  * algorithm
+ 101  *---------------------------------------------------------------------
+ 102   
+ 103  scalar n;
+ 104  n = card(i);
+ 105   
+ 106  embeddedCode Python:
+ 107   
+ 108  n = int(list(gams.get("n"))[0]);
+ 109  k = int(list(gams.get("k"))[0]);
+ 110  print(f"n={n},k={k}")
  111   
- 112  * points
- 113  put "p=["/;
- 114  loop(i,
- 115    put "  {i:'",i.tl:0,"',x:",p(i,'x'):0:4,",y:",p(i,'y'):0:4,",delta:";
- 116    put$(delta.l(i)>0.5) "'red'";
- 117    put$(delta.l(i)<0.5) "'darkblue'";
- 118    put "},"/;
- 119  );
- 120  put "]"/;
- 121  put "pnts={n:",(card(i)):0:0,
- 122         ",map:'[0,",maxsize:0:0,"]&times;[0,",maxsize:0:0,"]'",
- 123         ",minx:",(smin(i,p(i,'x'))):0:3,
- 124         ",miny:",(smin(i,p(i,'y'))):0:3,
- 125         ",maxx:",(smax(i,p(i,'x'))):0:3,
- 126         ",maxy:",(smax(i,p(i,'y'))):0:3,
- 127         ",avgx:",(sum(i,p(i,'x'))/card(i)):0:3,
- 128         ",avgy:",(sum(i,p(i,'y'))/card(i)):0:3,
- 129         ",k:",k:0:0,
- 130         ",rxmin:",(rect2.l('x','min')):0:3,
- 131         ",rxmax:",(rect2.l('x','max')):0:3,
- 132         ",rymin:",(rect2.l('y','min')):0:3,
- 133         ",rymax:",(rect2.l('y','max')):0:3,
- 134         ",area:",(area.l):0:3,
- 135         "}"/;
+ 112  # get points and store as list of tuples (id,x,y)
+ 113  points=[]
+ 114  pgen = gams.get("p",keyFormat=KeyFormat.FLAT) 
+ 115  for i in range(n):
+ 116      px = next(pgen)
+ 117      py = next(pgen)
+ 118      points.append((i+1,px[2],py[2]))
+ 119   
+ 120  # the test was generated by ChatGPT
+ 121  # I think this can be improved upon
+ 122   
+ 123  y_values = sorted({y for _, _, y in points})
+ 124   
+ 125  best = None
+ 126   
+ 127  # Try every possible bottom and top edge.
+ 128  for i, bottom in enumerate(y_values):
+ 129      for top in y_values[i:]:
+ 130          # Points inside this horizontal band, sorted by x.
+ 131          in_band = sorted(
+ 132              (x, number)
+ 133              for number, x, y in points
+ 134              if bottom <= y <= top
+ 135          )
  136   
- 137  putclose;
- 138   
- 275   
- 276  executetool 'win32.ShellExecute "plot.html"';
- 277   
- 279   
+ 137          if len(in_band) < k:
+ 138              continue
+ 139   
+ 140          # Any minimal-width interval containing k points can be
+ 141          # represented by k consecutive points in this sorted list.
+ 142          for start in range(len(in_band) - k + 1):
+ 143              left = in_band[start][0]
+ 144              right = in_band[start + k - 1][0]
+ 145              width = right - left
+ 146              height = top - bottom
+ 147              area = width * height
+ 148   
+ 149              if best is None or area < best["area"]:
+ 150                  best = {
+ 151                      "area": area,
+ 152                      "left": left,
+ 153                      "right": right,
+ 154                      "bottom": bottom,
+ 155                      "top": top,
+ 156                      "point_numbers": [
+ 157                          number
+ 158                          for _, number in in_band[start:start + k]
+ 159                      ],
+ 160                  }
+ 161   
+ 162  print(f"x bounds: [{best['left']}, {best['right']}]")
+ 163  print(f"y bounds: [{best['bottom']}, {best['top']}]")
+ 164  print(f"width: {best['right'] - best['left']}")
+ 165  print(f"height: {best['top'] - best['bottom']}")
+ 166  print(f"area: {best['area']}")
+ 167  print(f"25 contained points: {sorted(best['point_numbers'])}")
+ 168   
+ 169  endEmbeddedCode
+ 170   
+ 171   
+ 172  *---------------------------------------------------------------------
+ 173  * visualization
+ 174  *---------------------------------------------------------------------
+ 175   
+ 178   
+ 180   
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  54.1.0 37378ce0 WEX-WEI
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 2
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 2
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     37 PARAMETER p  points
+----     42 PARAMETER k                    =       25.000  number of points to select
+
+----     42 PARAMETER p  points
 
                    x           y
 
@@ -253,16 +293,16 @@ point99        8.997       8.511
 point100       8.928       2.236
 
 
-----     50 PARAMETER rect1  contain all points
+----     52 PARAMETER box  min/max values
 
           min         max
 
 x       0.160       9.810
 y       0.001       9.887
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 3
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MIQCP From line 95
+Equation Listing    SOLVE m Using MIQCP From line 94
 
 
 ---- obj  =E=  objective: area of enclosing rectangle
@@ -305,35 +345,35 @@ count..  delta(point1) + delta(point2) + delta(point3) + delta(point4) + delta(p
 
 ---- inside_min  =L=  points are inside
 
-inside_min(point1,x)..  5.02688868*delta(point1) + rect2(x,min) =L= 10 ; (LHS = 0.16037081)
+inside_min(point1,x)..  4.83729245*delta(point1) + rect(x,min) =L= 9.81040377 ; (LHS = 0.16037081)
      
-inside_min(point1,y)..  0.36137244*delta(point1) + rect2(y,min) =L= 10 ; (LHS = 0.000635170000000684)
+inside_min(point1,y)..  0.248261800000002*delta(point1) + rect(y,min) =L= 9.88688936 ; (LHS = 0.000635170000000684)
      
-inside_min(point2,x)..  1.26077508*delta(point2) + rect2(x,min) =L= 10 ; (LHS = 0.16037081)
+inside_min(point2,x)..  1.07117885*delta(point2) + rect(x,min) =L= 9.81040377 ; (LHS = 0.16037081)
      
 REMAINING 197 ENTRIES SKIPPED
 
 
 ---- inside_max  =G=  points are inside
 
-inside_max(point1,x)..  - 4.97311132*delta(point1) + rect2(x,max) =G= 0 ; (LHS = 0.16037081)
+inside_max(point1,x)..  - 4.81274051*delta(point1) + rect(x,max) =G= 0.16037081 ; (LHS = 0.16037081)
      
-inside_max(point1,y)..  - 9.63862756*delta(point1) + rect2(y,max) =G= 0 ; (LHS = 0.00063517)
+inside_max(point1,y)..  - 9.63799239*delta(point1) + rect(y,max) =G= 0.00063517 ; (LHS = 0.00063517)
      
-inside_max(point2,x)..  - 8.73922492*delta(point2) + rect2(x,max) =G= 0 ; (LHS = 0.16037081)
+inside_max(point2,x)..  - 8.57885411*delta(point2) + rect(x,max) =G= 0.16037081 ; (LHS = 0.16037081)
      
 REMAINING 197 ENTRIES SKIPPED
 
 
 ---- calcd  =E=  calculate d
 
-calcd(x)..  rect2(x,min) - rect2(x,max) + d(x) =E= 0 ; (LHS = 0)
+calcd(x)..  rect(x,min) - rect(x,max) + d(x) =E= 0 ; (LHS = 0)
      
-calcd(y)..  rect2(y,min) - rect2(y,max) + d(y) =E= 0 ; (LHS = 0)
+calcd(y)..  rect(y,min) - rect(y,max) + d(y) =E= 0 ; (LHS = 0)
      
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 4
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MIQCP From line 95
+Column Listing      SOLVE m Using MIQCP From line 94
 
 
 ---- delta  point is selected
@@ -341,32 +381,32 @@ Column Listing      SOLVE m Using MIQCP From line 95
 delta(point1)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       count
-        5.0269  inside_min(point1,x)
-        0.3614  inside_min(point1,y)
-       -4.9731  inside_max(point1,x)
-       -9.6386  inside_max(point1,y)
+        4.8373  inside_min(point1,x)
+        0.2483  inside_min(point1,y)
+       -4.8127  inside_max(point1,x)
+       -9.638   inside_max(point1,y)
 
 delta(point2)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       count
-        1.2608  inside_min(point2,x)
-        1.5573  inside_min(point2,y)
-       -8.7392  inside_max(point2,x)
-       -8.4427  inside_max(point2,y)
+        1.0712  inside_min(point2,x)
+        1.4442  inside_min(point2,y)
+       -8.5789  inside_max(point2,x)
+       -8.4421  inside_max(point2,y)
 
 delta(point3)
                 (.LO, .L, .UP, .M = 0, 0, 1, 0)
         1       count
-        8.0877  inside_min(point3,x)
-        5.0547  inside_min(point3,y)
-       -1.9123  inside_max(point3,x)
-       -4.9453  inside_max(point3,y)
+        7.8981  inside_min(point3,x)
+        4.9416  inside_min(point3,y)
+       -1.7519  inside_max(point3,x)
+       -4.9446  inside_max(point3,y)
 
 REMAINING 97 ENTRIES SKIPPED
 
----- rect2  contain k points
+---- rect  rectangle to contain k points
 
-rect2(x,min)
+rect(x,min)
                 (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
         1       inside_min(point1,x)
         1       inside_min(point2,x)
@@ -471,7 +511,7 @@ rect2(x,min)
         1       calcd(x)
         0       (OLD LEVEL ****)
 
-rect2(x,max)
+rect(x,max)
                 (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
         1       inside_max(point1,x)
         1       inside_max(point2,x)
@@ -576,7 +616,7 @@ rect2(x,max)
        -1       calcd(x)
         0       (OLD LEVEL ****)
 
-rect2(y,min)
+rect(y,min)
                 (.LO, .L, .UP, .M = 0.00063517, 0.00063517, 9.88688936, 0)
         1       inside_min(point1,y)
         1       inside_min(point2,y)
@@ -702,47 +742,47 @@ area
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 5
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m Using MIQCP From line 95
+Range Statistics    SOLVE m Using MIQCP From line 94
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
 
-RHS       [min, max] : [ 1.000E+01, 2.500E+01] - Zero values observed as well
+RHS       [min, max] : [ 6.352E-04, 2.500E+01] - Zero values observed as well
 Bound     [min, max] : [ 6.352E-04, 9.887E+00] - Zero values observed as well
-Matrix    [min, max] : [ 6.352E-04, 9.999E+00] - Zero values observed as well
+Matrix    [min, max] : [ 5.395E-03, 9.886E+00] - Zero values observed as well
 
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 6
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MIQCP From line 95
+Model Statistics    SOLVE m Using MIQCP From line 94
 
 
 MODEL STATISTICS
 
 BLOCKS OF EQUATIONS           5     SINGLE EQUATIONS          404
 BLOCKS OF VARIABLES           4     SINGLE VARIABLES          107  4 projected
-NON ZERO ELEMENTS           909     NON LINEAR N-Z              2
+NON ZERO ELEMENTS           905     NON LINEAR N-Z              2
 CODE LENGTH                   5     CONSTANT POOL              16     DISCRETE VARIABLES        100
 
 
-GENERATION TIME      =        0.016 SECONDS      4 MB  54.1.0 37378ce0 WEX-WEI
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 7
+GENERATION TIME      =        0.000 SECONDS      4 MB  54.1.0 37378ce0 WEX-WEI
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MIQCP From line 95
+Solution Report     SOLVE m Using MIQCP From line 94
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  area
      TYPE    MIQCP               DIRECTION  MINIMIZE
-     SOLVER  ANTIGONE            FROM LINE  95
+     SOLVER  ANTIGONE            FROM LINE  94
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      8 Integer Solution
 **** OBJECTIVE VALUE                8.8873
 
- RESOURCE USAGE, LIMIT          3.000 10000000000.000
+ RESOURCE USAGE, LIMIT          4.000 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
  EVALUATION ERRORS              0             0
 
@@ -773,411 +813,411 @@ Best Possible Point: +8.886402e+00
 
                   LOWER          LEVEL          UPPER
 
-point1  .x        -INF            7.1841        10.0000      
-point1  .y        -INF            4.8340        10.0000      
-point2  .x        -INF            8.4449        10.0000      
-point2  .y        -INF            6.3912        10.0000      
-point3  .x        -INF            7.1841        10.0000      
-point3  .y        -INF            4.8340        10.0000      
-point4  .x        -INF            7.1841        10.0000      
-point4  .y        -INF            4.8340        10.0000      
-point5  .x        -INF            7.1841        10.0000      
-point5  .y        -INF            4.8340        10.0000      
-point6  .x        -INF            7.1841        10.0000      
-point6  .y        -INF            4.8340        10.0000      
-point7  .x        -INF            7.1841        10.0000      
-point7  .y        -INF            4.8340        10.0000      
-point8  .x        -INF            7.1841        10.0000      
-point8  .y        -INF            4.8340        10.0000      
-point9  .x        -INF            7.1841        10.0000      
-point9  .y        -INF            4.8340        10.0000      
-point10 .x        -INF            7.1841        10.0000      
-point10 .y        -INF            4.8340        10.0000      
-point11 .x        -INF            7.1841        10.0000      
-point11 .y        -INF            4.8340        10.0000      
-point12 .x        -INF            7.1841        10.0000      
-point12 .y        -INF            4.8340        10.0000      
-point13 .x        -INF            7.1841        10.0000      
-point13 .y        -INF            4.8340        10.0000      
-point14 .x        -INF            7.9044        10.0000      
-point14 .y        -INF            9.2836        10.0000      
-point15 .x        -INF            7.1841        10.0000      
-point15 .y        -INF            4.8340        10.0000      
-point16 .x        -INF            7.1841        10.0000      
-point16 .y        -INF            4.8340        10.0000      
-point17 .x        -INF            9.6848        10.0000      
-point17 .y        -INF            6.6602        10.0000      
-point18 .x        -INF            7.1841        10.0000      
-point18 .y        -INF            4.8340        10.0000      
-point19 .x        -INF            7.1841        10.0000      
-point19 .y        -INF            4.8340        10.0000      
-point20 .x        -INF            8.3095        10.0000      
-point20 .y        -INF            6.7172        10.0000      
-point21 .x        -INF            9.2876        10.0000      
-point21 .y        -INF            6.7976        10.0000      
-point22 .x        -INF            7.1841        10.0000      
-point22 .y        -INF            4.8340        10.0000      
-point23 .x        -INF            7.5827        10.0000      
-point23 .y        -INF            7.6188        10.0000      
-point24 .x        -INF            9.0368        10.0000      
-point24 .y        -INF            6.4590        10.0000      
-point25 .x        -INF            9.4387        10.0000      
-point25 .y        -INF            9.5514        10.0000      
-point26 .x        -INF            7.1841        10.0000      
-point26 .y        -INF            4.8340        10.0000      
-point27 .x        -INF            7.1841        10.0000      
-point27 .y        -INF            4.8340        10.0000      
-point28 .x        -INF            7.1841        10.0000      
-point28 .y        -INF            4.8340        10.0000      
-point29 .x        -INF            7.1841        10.0000      
-point29 .y        -INF            4.8340        10.0000      
-point30 .x        -INF            9.2725        10.0000      
-point30 .y        -INF            7.9778        10.0000      
-point31 .x        -INF            7.1841        10.0000      
-point31 .y        -INF            4.8340        10.0000      
-point32 .x        -INF            7.1841        10.0000      
-point32 .y        -INF            4.8340        10.0000      
-point33 .x        -INF            7.1841        10.0000      
-point33 .y        -INF            4.8340        10.0000      
-point34 .x        -INF            7.1841        10.0000      
-point34 .y        -INF            4.8340        10.0000      
-point35 .x        -INF            7.1841        10.0000      
-point35 .y        -INF            4.8340        10.0000      
-point36 .x        -INF            7.1841        10.0000      
-point36 .y        -INF            4.8340        10.0000      
-point37 .x        -INF            9.5507        10.0000      
-point37 .y        -INF            7.5189        10.0000      
-point38 .x        -INF            7.1841        10.0000      
-point38 .y        -INF            4.8340        10.0000      
-point39 .x        -INF            7.1841        10.0000      
-point39 .y        -INF            4.8340        10.0000      
-point40 .x        -INF            7.1841        10.0000      
-point40 .y        -INF            4.8340        10.0000      
-point41 .x        -INF            7.1841        10.0000      
-point41 .y        -INF            4.8340        10.0000      
-point42 .x        -INF            7.1841        10.0000      
-point42 .y        -INF            4.8340        10.0000      
-point43 .x        -INF            7.1841        10.0000      
-point43 .y        -INF            4.8340        10.0000      
-point44 .x        -INF            7.8371        10.0000      
-point44 .y        -INF            6.9733        10.0000      
-point45 .x        -INF            7.1841        10.0000      
-point45 .y        -INF            4.8340        10.0000      
-point46 .x        -INF            7.1841        10.0000      
-point46 .y        -INF            4.8340        10.0000      
-point47 .x        -INF            7.1841        10.0000      
-point47 .y        -INF            4.8340        10.0000      
-point48 .x        -INF            7.1841        10.0000      
-point48 .y        -INF            4.8340        10.0000      
-point49 .x        -INF            7.1841        10.0000      
-point49 .y        -INF            4.8340        10.0000      
-point50 .x        -INF            7.1841        10.0000      
-point50 .y        -INF            4.8340        10.0000      
-point51 .x        -INF            7.1841        10.0000      
-point51 .y        -INF            4.8340        10.0000      
-point52 .x        -INF            9.0480        10.0000      
-point52 .y        -INF            7.6812        10.0000      
-point53 .x        -INF            7.1841        10.0000      
-point53 .y        -INF            4.8340        10.0000      
-point54 .x        -INF            7.1841        10.0000      
-point54 .y        -INF            4.8340        10.0000      
-point55 .x        -INF            7.1841        10.0000      
-point55 .y        -INF            4.8340        10.0000      
-point56 .x        -INF            8.7684        10.0000      
-point56 .y        -INF            6.7735        10.0000      
-point57 .x        -INF            7.1841        10.0000      
-point57 .y        -INF            4.8340        10.0000      
-point58 .x        -INF            7.1841        10.0000      
-point58 .y        -INF            4.8340        10.0000      
-point59 .x        -INF           10.0000        10.0000      
-point59 .y        -INF            7.7835        10.0000      
-point60 .x        -INF            7.1841        10.0000      
-point60 .y        -INF            4.8340        10.0000      
-point61 .x        -INF            7.6306        10.0000      
-point61 .y        -INF            6.9791        10.0000      
-point62 .x        -INF            7.1841        10.0000      
-point62 .y        -INF            4.8340        10.0000      
-point63 .x        -INF            7.1841        10.0000      
-point63 .y        -INF            4.8340        10.0000      
-point64 .x        -INF            7.6284        10.0000      
-point64 .y        -INF            6.8002        10.0000      
-point65 .x        -INF            7.1841        10.0000      
-point65 .y        -INF            4.8340        10.0000      
-point66 .x        -INF            8.2270        10.0000      
-point66 .y        -INF            9.5932        10.0000      
-point67 .x        -INF            7.1841        10.0000      
-point67 .y        -INF            4.8340        10.0000      
-point68 .x        -INF            7.1841        10.0000      
-point68 .y        -INF            4.8340        10.0000      
-point69 .x        -INF            7.9391        10.0000      
-point69 .y        -INF            8.4928        10.0000      
-point70 .x        -INF            7.1841        10.0000      
-point70 .y        -INF            4.8340        10.0000      
-point71 .x        -INF            7.1841        10.0000      
-point71 .y        -INF            4.8340        10.0000      
-point72 .x        -INF            7.1841        10.0000      
-point72 .y        -INF            4.8340        10.0000      
-point73 .x        -INF            7.1841        10.0000      
-point73 .y        -INF            4.8340        10.0000      
-point74 .x        -INF            8.1847        10.0000      
-point74 .y        -INF            9.5112        10.0000      
-point75 .x        -INF            7.1841        10.0000      
-point75 .y        -INF            4.8340        10.0000      
-point76 .x        -INF            7.1841        10.0000      
-point76 .y        -INF            4.8340        10.0000      
-point77 .x        -INF            7.1841        10.0000      
-point77 .y        -INF            4.8340        10.0000      
-point78 .x        -INF            7.1841        10.0000      
-point78 .y        -INF            4.8340        10.0000      
-point79 .x        -INF            7.1841        10.0000      
-point79 .y        -INF            4.8340        10.0000      
-point80 .x        -INF            7.6648        10.0000      
-point80 .y        -INF            9.7141        10.0000      
-point81 .x        -INF            7.1841        10.0000      
-point81 .y        -INF            4.8340        10.0000      
-point82 .x        -INF            7.1841        10.0000      
-point82 .y        -INF            4.8340        10.0000      
-point83 .x        -INF            7.6557        10.0000      
-point83 .y        -INF            8.4517        10.0000      
-point84 .x        -INF            7.1841        10.0000      
-point84 .y        -INF            4.8340        10.0000      
-point85 .x        -INF            7.1841        10.0000      
-point85 .y        -INF            4.8340        10.0000      
-point86 .x        -INF            9.0197        10.0000      
-point86 .y        -INF           10.0000        10.0000      
-point87 .x        -INF            7.1841        10.0000      
-point87 .y        -INF            4.8340        10.0000      
-point88 .x        -INF            8.5899        10.0000      
-point88 .y        -INF            7.5161        10.0000      
-point89 .x        -INF            7.1841        10.0000      
-point89 .y        -INF            4.8340        10.0000      
-point90 .x        -INF            7.1841        10.0000      
-point90 .y        -INF            4.8340        10.0000      
-point91 .x        -INF            7.1841        10.0000      
-point91 .y        -INF            4.8340        10.0000      
-point92 .x        -INF            7.1841        10.0000      
-point92 .y        -INF            4.8340        10.0000      
-point93 .x        -INF            7.1841        10.0000      
-point93 .y        -INF            4.8340        10.0000      
-point94 .x        -INF            8.8974        10.0000      
-point94 .y        -INF            7.6559        10.0000      
-point95 .x        -INF            7.1841        10.0000      
-point95 .y        -INF            4.8340        10.0000      
-point96 .x        -INF            7.1841        10.0000      
-point96 .y        -INF            4.8340        10.0000      
-point97 .x        -INF            7.1841        10.0000      
-point97 .y        -INF            4.8340        10.0000      
-point98 .x        -INF            7.1841        10.0000      
-point98 .y        -INF            4.8340        10.0000      
-point99 .x        -INF            8.1875        10.0000      
-point99 .y        -INF            6.3234        10.0000      
-point100.x        -INF            7.1841        10.0000      
-point100.y        -INF            4.8340        10.0000      
+point1  .x        -INF            7.1841         9.8104      
+point1  .y        -INF            4.8340         9.8869      
+point2  .x        -INF            8.2553         9.8104      
+point2  .y        -INF            6.2781         9.8869      
+point3  .x        -INF            7.1841         9.8104      
+point3  .y        -INF            4.8340         9.8869      
+point4  .x        -INF            7.1841         9.8104      
+point4  .y        -INF            4.8340         9.8869      
+point5  .x        -INF            7.1841         9.8104      
+point5  .y        -INF            4.8340         9.8869      
+point6  .x        -INF            7.1841         9.8104      
+point6  .y        -INF            4.8340         9.8869      
+point7  .x        -INF            7.1841         9.8104      
+point7  .y        -INF            4.8340         9.8869      
+point8  .x        -INF            7.1841         9.8104      
+point8  .y        -INF            4.8340         9.8869      
+point9  .x        -INF            7.1841         9.8104      
+point9  .y        -INF            4.8340         9.8869      
+point10 .x        -INF            7.1841         9.8104      
+point10 .y        -INF            4.8340         9.8869      
+point11 .x        -INF            7.1841         9.8104      
+point11 .y        -INF            4.8340         9.8869      
+point12 .x        -INF            7.1841         9.8104      
+point12 .y        -INF            4.8340         9.8869      
+point13 .x        -INF            7.1841         9.8104      
+point13 .y        -INF            4.8340         9.8869      
+point14 .x        -INF            7.7148         9.8104      
+point14 .y        -INF            9.1705         9.8869      
+point15 .x        -INF            7.1841         9.8104      
+point15 .y        -INF            4.8340         9.8869      
+point16 .x        -INF            7.1841         9.8104      
+point16 .y        -INF            4.8340         9.8869      
+point17 .x        -INF            9.4952         9.8104      
+point17 .y        -INF            6.5471         9.8869      
+point18 .x        -INF            7.1841         9.8104      
+point18 .y        -INF            4.8340         9.8869      
+point19 .x        -INF            7.1841         9.8104      
+point19 .y        -INF            4.8340         9.8869      
+point20 .x        -INF            8.1199         9.8104      
+point20 .y        -INF            6.6041         9.8869      
+point21 .x        -INF            9.0980         9.8104      
+point21 .y        -INF            6.6845         9.8869      
+point22 .x        -INF            7.1841         9.8104      
+point22 .y        -INF            4.8340         9.8869      
+point23 .x        -INF            7.3931         9.8104      
+point23 .y        -INF            7.5057         9.8869      
+point24 .x        -INF            8.8472         9.8104      
+point24 .y        -INF            6.3459         9.8869      
+point25 .x        -INF            9.2491         9.8104      
+point25 .y        -INF            9.4383         9.8869      
+point26 .x        -INF            7.1841         9.8104      
+point26 .y        -INF            4.8340         9.8869      
+point27 .x        -INF            7.1841         9.8104      
+point27 .y        -INF            4.8340         9.8869      
+point28 .x        -INF            7.1841         9.8104      
+point28 .y        -INF            4.8340         9.8869      
+point29 .x        -INF            7.1841         9.8104      
+point29 .y        -INF            4.8340         9.8869      
+point30 .x        -INF            9.0829         9.8104      
+point30 .y        -INF            7.8647         9.8869      
+point31 .x        -INF            7.1841         9.8104      
+point31 .y        -INF            4.8340         9.8869      
+point32 .x        -INF            7.1841         9.8104      
+point32 .y        -INF            4.8340         9.8869      
+point33 .x        -INF            7.1841         9.8104      
+point33 .y        -INF            4.8340         9.8869      
+point34 .x        -INF            7.1841         9.8104      
+point34 .y        -INF            4.8340         9.8869      
+point35 .x        -INF            7.1841         9.8104      
+point35 .y        -INF            4.8340         9.8869      
+point36 .x        -INF            7.1841         9.8104      
+point36 .y        -INF            4.8340         9.8869      
+point37 .x        -INF            9.3611         9.8104      
+point37 .y        -INF            7.4058         9.8869      
+point38 .x        -INF            7.1841         9.8104      
+point38 .y        -INF            4.8340         9.8869      
+point39 .x        -INF            7.1841         9.8104      
+point39 .y        -INF            4.8340         9.8869      
+point40 .x        -INF            7.1841         9.8104      
+point40 .y        -INF            4.8340         9.8869      
+point41 .x        -INF            7.1841         9.8104      
+point41 .y        -INF            4.8340         9.8869      
+point42 .x        -INF            7.1841         9.8104      
+point42 .y        -INF            4.8340         9.8869      
+point43 .x        -INF            7.1841         9.8104      
+point43 .y        -INF            4.8340         9.8869      
+point44 .x        -INF            7.6475         9.8104      
+point44 .y        -INF            6.8602         9.8869      
+point45 .x        -INF            7.1841         9.8104      
+point45 .y        -INF            4.8340         9.8869      
+point46 .x        -INF            7.1841         9.8104      
+point46 .y        -INF            4.8340         9.8869      
+point47 .x        -INF            7.1841         9.8104      
+point47 .y        -INF            4.8340         9.8869      
+point48 .x        -INF            7.1841         9.8104      
+point48 .y        -INF            4.8340         9.8869      
+point49 .x        -INF            7.1841         9.8104      
+point49 .y        -INF            4.8340         9.8869      
+point50 .x        -INF            7.1841         9.8104      
+point50 .y        -INF            4.8340         9.8869      
+point51 .x        -INF            7.1841         9.8104      
+point51 .y        -INF            4.8340         9.8869      
+point52 .x        -INF            8.8584         9.8104      
+point52 .y        -INF            7.5681         9.8869      
+point53 .x        -INF            7.1841         9.8104      
+point53 .y        -INF            4.8340         9.8869      
+point54 .x        -INF            7.1841         9.8104      
+point54 .y        -INF            4.8340         9.8869      
+point55 .x        -INF            7.1841         9.8104      
+point55 .y        -INF            4.8340         9.8869      
+point56 .x        -INF            8.5788         9.8104      
+point56 .y        -INF            6.6604         9.8869      
+point57 .x        -INF            7.1841         9.8104      
+point57 .y        -INF            4.8340         9.8869      
+point58 .x        -INF            7.1841         9.8104      
+point58 .y        -INF            4.8340         9.8869      
+point59 .x        -INF            9.8104         9.8104      
+point59 .y        -INF            7.6704         9.8869      
+point60 .x        -INF            7.1841         9.8104      
+point60 .y        -INF            4.8340         9.8869      
+point61 .x        -INF            7.4410         9.8104      
+point61 .y        -INF            6.8660         9.8869      
+point62 .x        -INF            7.1841         9.8104      
+point62 .y        -INF            4.8340         9.8869      
+point63 .x        -INF            7.1841         9.8104      
+point63 .y        -INF            4.8340         9.8869      
+point64 .x        -INF            7.4388         9.8104      
+point64 .y        -INF            6.6871         9.8869      
+point65 .x        -INF            7.1841         9.8104      
+point65 .y        -INF            4.8340         9.8869      
+point66 .x        -INF            8.0374         9.8104      
+point66 .y        -INF            9.4801         9.8869      
+point67 .x        -INF            7.1841         9.8104      
+point67 .y        -INF            4.8340         9.8869      
+point68 .x        -INF            7.1841         9.8104      
+point68 .y        -INF            4.8340         9.8869      
+point69 .x        -INF            7.7495         9.8104      
+point69 .y        -INF            8.3796         9.8869      
+point70 .x        -INF            7.1841         9.8104      
+point70 .y        -INF            4.8340         9.8869      
+point71 .x        -INF            7.1841         9.8104      
+point71 .y        -INF            4.8340         9.8869      
+point72 .x        -INF            7.1841         9.8104      
+point72 .y        -INF            4.8340         9.8869      
+point73 .x        -INF            7.1841         9.8104      
+point73 .y        -INF            4.8340         9.8869      
+point74 .x        -INF            7.9951         9.8104      
+point74 .y        -INF            9.3981         9.8869      
+point75 .x        -INF            7.1841         9.8104      
+point75 .y        -INF            4.8340         9.8869      
+point76 .x        -INF            7.1841         9.8104      
+point76 .y        -INF            4.8340         9.8869      
+point77 .x        -INF            7.1841         9.8104      
+point77 .y        -INF            4.8340         9.8869      
+point78 .x        -INF            7.1841         9.8104      
+point78 .y        -INF            4.8340         9.8869      
+point79 .x        -INF            7.1841         9.8104      
+point79 .y        -INF            4.8340         9.8869      
+point80 .x        -INF            7.4752         9.8104      
+point80 .y        -INF            9.6009         9.8869      
+point81 .x        -INF            7.1841         9.8104      
+point81 .y        -INF            4.8340         9.8869      
+point82 .x        -INF            7.1841         9.8104      
+point82 .y        -INF            4.8340         9.8869      
+point83 .x        -INF            7.4661         9.8104      
+point83 .y        -INF            8.3386         9.8869      
+point84 .x        -INF            7.1841         9.8104      
+point84 .y        -INF            4.8340         9.8869      
+point85 .x        -INF            7.1841         9.8104      
+point85 .y        -INF            4.8340         9.8869      
+point86 .x        -INF            8.8301         9.8104      
+point86 .y        -INF            9.8869         9.8869      
+point87 .x        -INF            7.1841         9.8104      
+point87 .y        -INF            4.8340         9.8869      
+point88 .x        -INF            8.4003         9.8104      
+point88 .y        -INF            7.4029         9.8869      
+point89 .x        -INF            7.1841         9.8104      
+point89 .y        -INF            4.8340         9.8869      
+point90 .x        -INF            7.1841         9.8104      
+point90 .y        -INF            4.8340         9.8869      
+point91 .x        -INF            7.1841         9.8104      
+point91 .y        -INF            4.8340         9.8869      
+point92 .x        -INF            7.1841         9.8104      
+point92 .y        -INF            4.8340         9.8869      
+point93 .x        -INF            7.1841         9.8104      
+point93 .y        -INF            4.8340         9.8869      
+point94 .x        -INF            8.7078         9.8104      
+point94 .y        -INF            7.5427         9.8869      
+point95 .x        -INF            7.1841         9.8104      
+point95 .y        -INF            4.8340         9.8869      
+point96 .x        -INF            7.1841         9.8104      
+point96 .y        -INF            4.8340         9.8869      
+point97 .x        -INF            7.1841         9.8104      
+point97 .y        -INF            4.8340         9.8869      
+point98 .x        -INF            7.1841         9.8104      
+point98 .y        -INF            4.8340         9.8869      
+point99 .x        -INF            7.9979         9.8104      
+point99 .y        -INF            6.2103         9.8869      
+point100.x        -INF            7.1841         9.8104      
+point100.y        -INF            4.8340         9.8869      
 
 ---- EQU inside_max  points are inside
 
                   LOWER          LEVEL          UPPER
 
-point1  .x          .             9.6014        +INF         
-point1  .y          .             8.5106        +INF         
-point2  .x          .             0.8622        +INF         
-point2  .y          .             0.0678        +INF         
-point3  .x          .             9.6014        +INF         
-point3  .y          .             8.5106        +INF         
-point4  .x          .             9.6014        +INF         
-point4  .y          .             8.5106        +INF         
-point5  .x          .             9.6014        +INF         
-point5  .y          .             8.5106        +INF         
-point6  .x          .             9.6014        +INF         
-point6  .y          .             8.5106        +INF         
-point7  .x          .             9.6014        +INF         
-point7  .y          .             8.5106        +INF         
-point8  .x          .             9.6014        +INF         
-point8  .y          .             8.5106        +INF         
-point9  .x          .             9.6014        +INF         
-point9  .y          .             8.5106        +INF         
-point10 .x          .             9.6014        +INF         
-point10 .y          .             8.5106        +INF         
-point11 .x          .             9.6014        +INF         
-point11 .y          .             8.5106        +INF         
-point12 .x          .             9.6014        +INF         
-point12 .y          .             8.5106        +INF         
-point13 .x          .             9.6014        +INF         
-point13 .y          .             8.5106        +INF         
-point14 .x          .             0.3217        +INF         
-point14 .y          .             2.9602        +INF         
-point15 .x          .             9.6014        +INF         
-point15 .y          .             8.5106        +INF         
-point16 .x          .             9.6014        +INF         
-point16 .y          .             8.5106        +INF         
-point17 .x          .             2.1021        +INF         
-point17 .y          .             0.3368        +INF         
-point18 .x          .             9.6014        +INF         
-point18 .y          .             8.5106        +INF         
-point19 .x          .             9.6014        +INF         
-point19 .y          .             8.5106        +INF         
-point20 .x          .             0.7268        +INF         
-point20 .y          .             0.3938        +INF         
-point21 .x          .             1.7049        +INF         
-point21 .y          .             0.4742        +INF         
-point22 .x          .             9.6014        +INF         
-point22 .y          .             8.5106        +INF         
-point23 .x          .       -1.77636E-15        +INF         
-point23 .y          .             1.2954        +INF         
-point24 .x          .             1.4540        +INF         
-point24 .y          .             0.1356        +INF         
-point25 .x          .             1.8560        +INF         
-point25 .y          .             3.2280        +INF         
-point26 .x          .             9.6014        +INF         
-point26 .y          .             8.5106        +INF         
-point27 .x          .             9.6014        +INF         
-point27 .y          .             8.5106        +INF         
-point28 .x          .             9.6014        +INF         
-point28 .y          .             8.5106        +INF         
-point29 .x          .             9.6014        +INF         
-point29 .y          .             8.5106        +INF         
-point30 .x          .             1.6898        +INF         
-point30 .y          .             1.6544        +INF         
-point31 .x          .             9.6014        +INF         
-point31 .y          .             8.5106        +INF         
-point32 .x          .             9.6014        +INF         
-point32 .y          .             8.5106        +INF         
-point33 .x          .             9.6014        +INF         
-point33 .y          .             8.5106        +INF         
-point34 .x          .             9.6014        +INF         
-point34 .y          .             8.5106        +INF         
-point35 .x          .             9.6014        +INF         
-point35 .y          .             8.5106        +INF         
-point36 .x          .             9.6014        +INF         
-point36 .y          .             8.5106        +INF         
-point37 .x          .             1.9679        +INF         
-point37 .y          .             1.1955        +INF         
-point38 .x          .             9.6014        +INF         
-point38 .y          .             8.5106        +INF         
-point39 .x          .             9.6014        +INF         
-point39 .y          .             8.5106        +INF         
-point40 .x          .             9.6014        +INF         
-point40 .y          .             8.5106        +INF         
-point41 .x          .             9.6014        +INF         
-point41 .y          .             8.5106        +INF         
-point42 .x          .             9.6014        +INF         
-point42 .y          .             8.5106        +INF         
-point43 .x          .             9.6014        +INF         
-point43 .y          .             8.5106        +INF         
-point44 .x          .             0.2543        +INF         
-point44 .y          .             0.6499        +INF         
-point45 .x          .             9.6014        +INF         
-point45 .y          .             8.5106        +INF         
-point46 .x          .             9.6014        +INF         
-point46 .y          .             8.5106        +INF         
-point47 .x          .             9.6014        +INF         
-point47 .y          .             8.5106        +INF         
-point48 .x          .             9.6014        +INF         
-point48 .y          .             8.5106        +INF         
-point49 .x          .             9.6014        +INF         
-point49 .y          .             8.5106        +INF         
-point50 .x          .             9.6014        +INF         
-point50 .y          .             8.5106        +INF         
-point51 .x          .             9.6014        +INF         
-point51 .y          .             8.5106        +INF         
-point52 .x          .             1.4653        +INF         
-point52 .y          .             1.3578        +INF         
-point53 .x          .             9.6014        +INF         
-point53 .y          .             8.5106        +INF         
-point54 .x          .             9.6014        +INF         
-point54 .y          .             8.5106        +INF         
-point55 .x          .             9.6014        +INF         
-point55 .y          .             8.5106        +INF         
-point56 .x          .             1.1857        +INF         
-point56 .y          .             0.4501        +INF         
-point57 .x          .             9.6014        +INF         
-point57 .y          .             8.5106        +INF         
-point58 .x          .             9.6014        +INF         
-point58 .y          .             8.5106        +INF         
-point59 .x          .             2.4173        +INF         
-point59 .y          .             1.4601        +INF         
-point60 .x          .             9.6014        +INF         
-point60 .y          .             8.5106        +INF         
-point61 .x          .             0.0479        +INF         
-point61 .y          .             0.6557        +INF         
-point62 .x          .             9.6014        +INF         
-point62 .y          .             8.5106        +INF         
-point63 .x          .             9.6014        +INF         
-point63 .y          .             8.5106        +INF         
-point64 .x          .             0.0457        +INF         
-point64 .y          .             0.4768        +INF         
-point65 .x          .             9.6014        +INF         
-point65 .y          .             8.5106        +INF         
-point66 .x          .             0.6443        +INF         
-point66 .y          .             3.2698        +INF         
-point67 .x          .             9.6014        +INF         
-point67 .y          .             8.5106        +INF         
-point68 .x          .             9.6014        +INF         
-point68 .y          .             8.5106        +INF         
-point69 .x          .             0.3564        +INF         
-point69 .y          .             2.1693        +INF         
-point70 .x          .             9.6014        +INF         
-point70 .y          .             8.5106        +INF         
-point71 .x          .             9.6014        +INF         
-point71 .y          .             8.5106        +INF         
-point72 .x          .             9.6014        +INF         
-point72 .y          .             8.5106        +INF         
-point73 .x          .             9.6014        +INF         
-point73 .y          .             8.5106        +INF         
-point74 .x          .             0.6020        +INF         
-point74 .y          .             3.1878        +INF         
-point75 .x          .             9.6014        +INF         
-point75 .y          .             8.5106        +INF         
-point76 .x          .             9.6014        +INF         
-point76 .y          .             8.5106        +INF         
-point77 .x          .             9.6014        +INF         
-point77 .y          .             8.5106        +INF         
-point78 .x          .             9.6014        +INF         
-point78 .y          .             8.5106        +INF         
-point79 .x          .             9.6014        +INF         
-point79 .y          .             8.5106        +INF         
-point80 .x          .             0.0820        +INF         
-point80 .y          .             3.3907        +INF         
-point81 .x          .             9.6014        +INF         
-point81 .y          .             8.5106        +INF         
-point82 .x          .             9.6014        +INF         
-point82 .y          .             8.5106        +INF         
-point83 .x          .             0.0730        +INF         
-point83 .y          .             2.1283        +INF         
-point84 .x          .             9.6014        +INF         
-point84 .y          .             8.5106        +INF         
-point85 .x          .             9.6014        +INF         
-point85 .y          .             8.5106        +INF         
-point86 .x          .             1.4370        +INF         
-point86 .y          .             3.6766        +INF         
-point87 .x          .             9.6014        +INF         
-point87 .y          .             8.5106        +INF         
-point88 .x          .             1.0072        +INF         
-point88 .y          .             1.1927        +INF         
-point89 .x          .             9.6014        +INF         
-point89 .y          .             8.5106        +INF         
-point90 .x          .             9.6014        +INF         
-point90 .y          .             8.5106        +INF         
-point91 .x          .             9.6014        +INF         
-point91 .y          .             8.5106        +INF         
-point92 .x          .             9.6014        +INF         
-point92 .y          .             8.5106        +INF         
-point93 .x          .             9.6014        +INF         
-point93 .y          .             8.5106        +INF         
-point94 .x          .             1.3147        +INF         
-point94 .y          .             1.3324        +INF         
-point95 .x          .             9.6014        +INF         
-point95 .y          .             8.5106        +INF         
-point96 .x          .             9.6014        +INF         
-point96 .y          .             8.5106        +INF         
-point97 .x          .             9.6014        +INF         
-point97 .y          .             8.5106        +INF         
-point98 .x          .             9.6014        +INF         
-point98 .y          .             8.5106        +INF         
-point99 .x          .             0.6048        +INF         
-point99 .y          .       -3.55271E-15        +INF         
-point100.x          .             9.6014        +INF         
-point100.y          .             8.5106        +INF         
+point1  .x         0.1604         9.6014        +INF         
+point1  .y         0.0006         8.5106        +INF         
+point2  .x         0.1604         1.0225        +INF         
+point2  .y         0.0006         0.0685        +INF         
+point3  .x         0.1604         9.6014        +INF         
+point3  .y         0.0006         8.5106        +INF         
+point4  .x         0.1604         9.6014        +INF         
+point4  .y         0.0006         8.5106        +INF         
+point5  .x         0.1604         9.6014        +INF         
+point5  .y         0.0006         8.5106        +INF         
+point6  .x         0.1604         9.6014        +INF         
+point6  .y         0.0006         8.5106        +INF         
+point7  .x         0.1604         9.6014        +INF         
+point7  .y         0.0006         8.5106        +INF         
+point8  .x         0.1604         9.6014        +INF         
+point8  .y         0.0006         8.5106        +INF         
+point9  .x         0.1604         9.6014        +INF         
+point9  .y         0.0006         8.5106        +INF         
+point10 .x         0.1604         9.6014        +INF         
+point10 .y         0.0006         8.5106        +INF         
+point11 .x         0.1604         9.6014        +INF         
+point11 .y         0.0006         8.5106        +INF         
+point12 .x         0.1604         9.6014        +INF         
+point12 .y         0.0006         8.5106        +INF         
+point13 .x         0.1604         9.6014        +INF         
+point13 .y         0.0006         8.5106        +INF         
+point14 .x         0.1604         0.4820        +INF         
+point14 .y         0.0006         2.9608        +INF         
+point15 .x         0.1604         9.6014        +INF         
+point15 .y         0.0006         8.5106        +INF         
+point16 .x         0.1604         9.6014        +INF         
+point16 .y         0.0006         8.5106        +INF         
+point17 .x         0.1604         2.2625        +INF         
+point17 .y         0.0006         0.3374        +INF         
+point18 .x         0.1604         9.6014        +INF         
+point18 .y         0.0006         8.5106        +INF         
+point19 .x         0.1604         9.6014        +INF         
+point19 .y         0.0006         8.5106        +INF         
+point20 .x         0.1604         0.8872        +INF         
+point20 .y         0.0006         0.3945        +INF         
+point21 .x         0.1604         1.8653        +INF         
+point21 .y         0.0006         0.4749        +INF         
+point22 .x         0.1604         9.6014        +INF         
+point22 .y         0.0006         8.5106        +INF         
+point23 .x         0.1604         0.1604        +INF         
+point23 .y         0.0006         1.2960        +INF         
+point24 .x         0.1604         1.6144        +INF         
+point24 .y         0.0006         0.1362        +INF         
+point25 .x         0.1604         2.0163        +INF         
+point25 .y         0.0006         3.2286        +INF         
+point26 .x         0.1604         9.6014        +INF         
+point26 .y         0.0006         8.5106        +INF         
+point27 .x         0.1604         9.6014        +INF         
+point27 .y         0.0006         8.5106        +INF         
+point28 .x         0.1604         9.6014        +INF         
+point28 .y         0.0006         8.5106        +INF         
+point29 .x         0.1604         9.6014        +INF         
+point29 .y         0.0006         8.5106        +INF         
+point30 .x         0.1604         1.8501        +INF         
+point30 .y         0.0006         1.6551        +INF         
+point31 .x         0.1604         9.6014        +INF         
+point31 .y         0.0006         8.5106        +INF         
+point32 .x         0.1604         9.6014        +INF         
+point32 .y         0.0006         8.5106        +INF         
+point33 .x         0.1604         9.6014        +INF         
+point33 .y         0.0006         8.5106        +INF         
+point34 .x         0.1604         9.6014        +INF         
+point34 .y         0.0006         8.5106        +INF         
+point35 .x         0.1604         9.6014        +INF         
+point35 .y         0.0006         8.5106        +INF         
+point36 .x         0.1604         9.6014        +INF         
+point36 .y         0.0006         8.5106        +INF         
+point37 .x         0.1604         2.1283        +INF         
+point37 .y         0.0006         1.1961        +INF         
+point38 .x         0.1604         9.6014        +INF         
+point38 .y         0.0006         8.5106        +INF         
+point39 .x         0.1604         9.6014        +INF         
+point39 .y         0.0006         8.5106        +INF         
+point40 .x         0.1604         9.6014        +INF         
+point40 .y         0.0006         8.5106        +INF         
+point41 .x         0.1604         9.6014        +INF         
+point41 .y         0.0006         8.5106        +INF         
+point42 .x         0.1604         9.6014        +INF         
+point42 .y         0.0006         8.5106        +INF         
+point43 .x         0.1604         9.6014        +INF         
+point43 .y         0.0006         8.5106        +INF         
+point44 .x         0.1604         0.4147        +INF         
+point44 .y         0.0006         0.6505        +INF         
+point45 .x         0.1604         9.6014        +INF         
+point45 .y         0.0006         8.5106        +INF         
+point46 .x         0.1604         9.6014        +INF         
+point46 .y         0.0006         8.5106        +INF         
+point47 .x         0.1604         9.6014        +INF         
+point47 .y         0.0006         8.5106        +INF         
+point48 .x         0.1604         9.6014        +INF         
+point48 .y         0.0006         8.5106        +INF         
+point49 .x         0.1604         9.6014        +INF         
+point49 .y         0.0006         8.5106        +INF         
+point50 .x         0.1604         9.6014        +INF         
+point50 .y         0.0006         8.5106        +INF         
+point51 .x         0.1604         9.6014        +INF         
+point51 .y         0.0006         8.5106        +INF         
+point52 .x         0.1604         1.6257        +INF         
+point52 .y         0.0006         1.3584        +INF         
+point53 .x         0.1604         9.6014        +INF         
+point53 .y         0.0006         8.5106        +INF         
+point54 .x         0.1604         9.6014        +INF         
+point54 .y         0.0006         8.5106        +INF         
+point55 .x         0.1604         9.6014        +INF         
+point55 .y         0.0006         8.5106        +INF         
+point56 .x         0.1604         1.3461        +INF         
+point56 .y         0.0006         0.4507        +INF         
+point57 .x         0.1604         9.6014        +INF         
+point57 .y         0.0006         8.5106        +INF         
+point58 .x         0.1604         9.6014        +INF         
+point58 .y         0.0006         8.5106        +INF         
+point59 .x         0.1604         2.5776        +INF         
+point59 .y         0.0006         1.4608        +INF         
+point60 .x         0.1604         9.6014        +INF         
+point60 .y         0.0006         8.5106        +INF         
+point61 .x         0.1604         0.2082        +INF         
+point61 .y         0.0006         0.6563        +INF         
+point62 .x         0.1604         9.6014        +INF         
+point62 .y         0.0006         8.5106        +INF         
+point63 .x         0.1604         9.6014        +INF         
+point63 .y         0.0006         8.5106        +INF         
+point64 .x         0.1604         0.2061        +INF         
+point64 .y         0.0006         0.4774        +INF         
+point65 .x         0.1604         9.6014        +INF         
+point65 .y         0.0006         8.5106        +INF         
+point66 .x         0.1604         0.8046        +INF         
+point66 .y         0.0006         3.2704        +INF         
+point67 .x         0.1604         9.6014        +INF         
+point67 .y         0.0006         8.5106        +INF         
+point68 .x         0.1604         9.6014        +INF         
+point68 .y         0.0006         8.5106        +INF         
+point69 .x         0.1604         0.5167        +INF         
+point69 .y         0.0006         2.1700        +INF         
+point70 .x         0.1604         9.6014        +INF         
+point70 .y         0.0006         8.5106        +INF         
+point71 .x         0.1604         9.6014        +INF         
+point71 .y         0.0006         8.5106        +INF         
+point72 .x         0.1604         9.6014        +INF         
+point72 .y         0.0006         8.5106        +INF         
+point73 .x         0.1604         9.6014        +INF         
+point73 .y         0.0006         8.5106        +INF         
+point74 .x         0.1604         0.7623        +INF         
+point74 .y         0.0006         3.1884        +INF         
+point75 .x         0.1604         9.6014        +INF         
+point75 .y         0.0006         8.5106        +INF         
+point76 .x         0.1604         9.6014        +INF         
+point76 .y         0.0006         8.5106        +INF         
+point77 .x         0.1604         9.6014        +INF         
+point77 .y         0.0006         8.5106        +INF         
+point78 .x         0.1604         9.6014        +INF         
+point78 .y         0.0006         8.5106        +INF         
+point79 .x         0.1604         9.6014        +INF         
+point79 .y         0.0006         8.5106        +INF         
+point80 .x         0.1604         0.2424        +INF         
+point80 .y         0.0006         3.3913        +INF         
+point81 .x         0.1604         9.6014        +INF         
+point81 .y         0.0006         8.5106        +INF         
+point82 .x         0.1604         9.6014        +INF         
+point82 .y         0.0006         8.5106        +INF         
+point83 .x         0.1604         0.2334        +INF         
+point83 .y         0.0006         2.1290        +INF         
+point84 .x         0.1604         9.6014        +INF         
+point84 .y         0.0006         8.5106        +INF         
+point85 .x         0.1604         9.6014        +INF         
+point85 .y         0.0006         8.5106        +INF         
+point86 .x         0.1604         1.5974        +INF         
+point86 .y         0.0006         3.6772        +INF         
+point87 .x         0.1604         9.6014        +INF         
+point87 .y         0.0006         8.5106        +INF         
+point88 .x         0.1604         1.1676        +INF         
+point88 .y         0.0006         1.1933        +INF         
+point89 .x         0.1604         9.6014        +INF         
+point89 .y         0.0006         8.5106        +INF         
+point90 .x         0.1604         9.6014        +INF         
+point90 .y         0.0006         8.5106        +INF         
+point91 .x         0.1604         9.6014        +INF         
+point91 .y         0.0006         8.5106        +INF         
+point92 .x         0.1604         9.6014        +INF         
+point92 .y         0.0006         8.5106        +INF         
+point93 .x         0.1604         9.6014        +INF         
+point93 .y         0.0006         8.5106        +INF         
+point94 .x         0.1604         1.4750        +INF         
+point94 .y         0.0006         1.3331        +INF         
+point95 .x         0.1604         9.6014        +INF         
+point95 .y         0.0006         8.5106        +INF         
+point96 .x         0.1604         9.6014        +INF         
+point96 .y         0.0006         8.5106        +INF         
+point97 .x         0.1604         9.6014        +INF         
+point97 .y         0.0006         8.5106        +INF         
+point98 .x         0.1604         9.6014        +INF         
+point98 .y         0.0006         8.5106        +INF         
+point99 .x         0.1604         0.7651        +INF         
+point99 .y         0.0006         0.0006        +INF         
+point100.x         0.1604         9.6014        +INF         
+point100.y         0.0006         8.5106        +INF         
 
 ---- EQU calcd  calculate d
 
@@ -1291,7 +1331,7 @@ point98           .              .             1.0000
 point99           .             1.0000         1.0000      
 point100          .              .             1.0000      
 
----- VAR rect2  contain k points
+---- VAR rect  rectangle to contain k points
 
              LOWER          LEVEL          UPPER
 
@@ -1318,12 +1358,12 @@ y          .             3.6766         9.8863
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 09/26/26 17:17:59 Page 8
+GAMS 54.1.0  37378ce0 Jun 15, 2026          WEX-WEI x86 64bit/MS Windows - 10/04/26 19:59:52 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     97 VARIABLE rect2.L  contain k points
+----     96 VARIABLE rect.L  rectangle to contain k points
 
           min         max
 
@@ -1331,7 +1371,7 @@ x       7.184       9.601
 y       4.834       8.511
 
 
-----     97 VARIABLE delta.L  point is selected
+----     96 VARIABLE delta.L  point is selected
 
 point2  1.000,    point14 1.000,    point17 1.000,    point20 1.000,    point21 1.000,    point23 1.000,    point24 1.000
 point25 1.000,    point30 1.000,    point37 1.000,    point44 1.000,    point52 1.000,    point56 1.000,    point59 1.000
@@ -1339,14 +1379,13 @@ point61 1.000,    point64 1.000,    point66 1.000,    point69 1.000,    point74 
 point86 1.000,    point88 1.000,    point94 1.000,    point99 1.000
 
 
-----     97 VARIABLE area.L                =        8.887  size of rectangle
+----     96 VARIABLE area.L                =        8.887  size of rectangle
 
 **** REPORT FILE SUMMARY
 
-fdata C:\projects\OptimizationModels\Smallest Enclosing Rectangle\data.js
 
 
-EXECUTION TIME       =        3.844 SECONDS      6 MB  54.1.0 37378ce0 WEX-WEI
+EXECUTION TIME       =        3.984 SECONDS      6 MB  54.1.0 37378ce0 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260914+0003Cc-GEN

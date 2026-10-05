@@ -1,10 +1,17 @@
+$onText
+
+
+   Find smallest axis-aligned 3d containing box containing
+   a subset of given 3d points such that the total weight
+   of the points inside the box is larger than a given number.
+     
+
+$offText
+
+
 *---------------------------------------------------------------
 * options
 *---------------------------------------------------------------
-
-* 0: no plot
-* 1: produce HTML plot)
-$set htmlplot 0
 
 option minlp=antigone;
 
@@ -29,7 +36,7 @@ sets
 parameters p(i,a) 'points';
       
 p(i,c) = uniform(0,maxsize);
-p(i,'w') = uniform(0,2);
+p(i,'w') = uniform(0,3);
 display minWeight,p;
 
 
