@@ -2,11 +2,8 @@ $onText
 
    Find smallest axis-aligned rectangle containing k out of n points.
      
-   References:
-      Timothy M. Chan, Sariel Har-Peled
-      Smallest k-Enclosing Rectangle Revisited
-      https://arxiv.org/abs/1903.06785
-
+   https://yetanothermathprogrammingconsultant.blogspot.com/2026/09/minimum-enclosing-rectangle-for-k-out.html
+   
 $offtext
 
 *---------------------------------------------------------------
@@ -15,9 +12,12 @@ $offtext
 
 * 0: no plot
 * 1: produce HTML plot)
-$set htmlplot 0
+$set htmlplot 1
 
 option miqcp=antigone;
+
+* don't stop on tolerance: we want global optimal solutions
+option optcr=0;
 
 option seed=12345;
 
@@ -39,12 +39,14 @@ sets
 parameter p(i,c) 'points';
 p(i,c) = uniform(0,maxsize);
 
+option k:0,p:8;
 display k,p;
 
 *---------------------------------------------------------------
 * derived data
 *---------------------------------------------------------------
 
+* bounding box for data points
 parameter box(c,lu) 'min/max values';
 box(c,'min') = smin(i, p(i,c));
 box(c,'max') = smax(i, p(i,c));
@@ -89,18 +91,46 @@ calcd(c).. d(c) =e= rect(c,'max')-rect(c,'min');
 
 obj.. area =e= d('x')*d('y');
 
-
 model m /all/;
 solve m minimizing area using miqcp;
+abort$(m.solvestat<>%solveStat.normalCompletion%) "Solver problem";
 
 display rect.l,delta.l,area.l;
+
+
+parameter solution(*,*) 'comparison';
+solution('miqcp','area') = area.l;
+solution('miqcp','xmin') = rect.l('x','min');
+solution('miqcp','xmax') = rect.l('x','max');
+solution('miqcp','ymin') = rect.l('y','min');
+solution('miqcp','ymax') = rect.l('y','max');
+
+
+*---------------------------------------------------------------------
+* quick solution consistency check
+* recalc area from delta variables
+*---------------------------------------------------------------------
+
+Scalars
+  checktol 'tolerance for check' /1e-6/
+  k2 'number of selected points'
+  area2 'calculated from selected points'
+  absdiff 'difference'  
+;
+
+k2 = sum(i,round(delta.l(i)));
+area2 = prod(c, smax(i$(delta.l(i)>0.5), p(i,c)) - smin(i$(delta.l(i)>0.5), p(i,c)));
+absdiff = abs(area.l-area2);
+
+abort$(k2<>k) "number of selected points incorrect",k2;
+abort$(absdiff > checktol) "solution check failed",absdiff;
 
 
 *---------------------------------------------------------------------
 * algorithm
 *---------------------------------------------------------------------
 
-scalar n;
+scalar n 'number of data points';
 n = card(i);
 
 embeddedCode Python:
@@ -158,15 +188,29 @@ for i, bottom in enumerate(y_values):
                     ],
                 }
 
-print(f"x bounds: [{best['left']}, {best['right']}]")
-print(f"y bounds: [{best['bottom']}, {best['top']}]")
-print(f"width: {best['right'] - best['left']}")
-print(f"height: {best['top'] - best['bottom']}")
-print(f"area: {best['area']}")
-print(f"selected points: {sorted(best['point_numbers'])}")
+# print results
+print(f"x bounds: [{best['left']:.3f}, {best['right']:.3f}]")
+print(f"y bounds: [{best['bottom']:.3f}, {best['top']:.3f}]")
+print(f"width: {best['right'] - best['left']:.3f}")
+print(f"height: {best['top'] - best['bottom']:.3f}")
+print(f"area: {best['area']:.3f}")
+# print(f"selected points: {sorted(best['point_numbers'])}")
 
-endEmbeddedCode
+# export to GAMS
+sol = [('enumeration','area',best['area']),
+       ('enumeration','xmin',best['left']),
+       ('enumeration','xmax',best['right']),
+       ('enumeration','ymin',best['bottom']),
+       ('enumeration','ymax',best['top']),
+      ]
+gams.set('solution',sol)
 
+endEmbeddedCode solution
+
+* introduce set element *at compile time*
+set dummy 'register elements' /enumeration/;
+
+display solution;
 
 *---------------------------------------------------------------------
 * visualization
