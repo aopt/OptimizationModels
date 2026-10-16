@@ -1,5 +1,5 @@
 
---- Job Smallest Enclosing Rectangle.gms Start 10/15/26 17:40:28 54.5.0 f2bc4e68 WEX-WEI x86 64bit/MS Windows
+--- Job Smallest Enclosing Rectangle.gms Start 10/16/26 02:33:42 54.5.0 f2bc4e68 WEX-WEI x86 64bit/MS Windows
 --- Applying:
     C:\GAMS\54\gmsprmNT.txt
     C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
@@ -16,24 +16,23 @@
     ErrorLog 99
     IDE 1
     GDX "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\x.gdx"
+    Threads 8
     LstTitleLeftAligned 1
 Licensee: Erwin Kalvelagen                               G260914+0003Cc-GEN
           Amsterdam Optimization Modeling Group                     DCE4744
           225a\gamslice.dat
           8ed7e271-7287-4ff2
-          node:82884505 mem:64 cores:8 ipport:54677 v:2                    
+          node:82884505 mem:64 cores:8 ipport:54744 v:2                    
           Evaluation license: Not for commercial or production use
           The time-limited license stops working on : Apr 12, 2027
 System information: 8 physical cores and 64 Gb physical memory detected
 GAMS 54.5.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
 --- Starting compilation
---- Smallest Enclosing Rectangle.gms(254) 3 Mb
---- $echo File C:\projects\OptimizationModels\Smallest Enclosing Rectangle\plot.html
---- Smallest Enclosing Rectangle.gms(394) 3 Mb
---- Starting execution: elapsed 0:00:00.016
---- Smallest Enclosing Rectangle.gms(73) 4 Mb
+--- Smallest Enclosing Rectangle.gms(305) 3 Mb
+--- Starting execution: elapsed 0:00:00.019
+--- Smallest Enclosing Rectangle.gms(75) 4 Mb
 --- Generating MIQCP model m
---- Smallest Enclosing Rectangle.gms(95) 6 Mb
+--- Smallest Enclosing Rectangle.gms(97) 6 Mb
 ---   404 rows  107 columns  905 non-zeroes
 ---   5 nl-code  2 nl-non-zeroes
 ---   100 discrete-columns
@@ -41,8 +40,8 @@ GAMS 54.5.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
 --- RHS       [min, max] : [ 6.352E-04, 2.500E+01] - Zero values observed as well
 --- Bound     [min, max] : [ 6.352E-04, 9.887E+00] - Zero values observed as well
 --- Matrix    [min, max] : [ 5.395E-03, 9.886E+00] - Zero values observed as well
---- Smallest Enclosing Rectangle.gms(95) 4 Mb
---- Executing ANTIGONE (Solvelink=2): elapsed 0:00:00.022
+--- Smallest Enclosing Rectangle.gms(97) 4 Mb
+--- Executing ANTIGONE (Solvelink=2): elapsed 0:00:00.025
 
 ANTIGONE         54.5.0 f2bc4e68 Sep 29, 2026          WEI x86 64bit/MS Window
  
@@ -86,8 +85,7 @@ Time (s) Nodes explored Nodes remaining Best possible   Best found Relative Gap
 -------------------------------------------------------------------------------
  
        0              1               1    +0.000e+00   +1.894e+01           --
-       5             41              21    +8.336e+00   +8.887e+00   +6.208e-02
-       5             83               0    +8.887e+00   +8.887e+00   +1.000e-09
+       4             70               0    +8.887e+00   +8.887e+00   +1.000e-09
  
 -------------------------------------------------------------------------------
 Termination Status : Global minimum
@@ -96,29 +94,29 @@ Best Possible Point: +8.887291e+00
        Relative Gap: +1.000000e-09
 Algorithm analysis :
 
-                 83 Nodes explored
+                 70 Nodes explored
                   0 Nodes remaining
 
-                 15 Maximum tree depth
+                 13 Maximum tree depth
 
-                  8 Cutting Planes
-                         8 Edge-Concave
+                  1 Cutting Planes
+                         1 Edge-Concave
  
-               5.00 Total time (wall s)
+               4.00 Total time (wall s)
                       0.00 Pre-processing
-                      4.28 Solving MILP relaxations
-                      0.16 Searching for feasible solutions
-                      0.33 Variable bounds tightening
-                             0.29 OBBT
-                             0.12 FBBT (0.01 EC; 0.04 RLT; 0.00 Factoring)
+                      3.29 Solving MILP relaxations
+                      0.15 Searching for feasible solutions
+                      0.39 Variable bounds tightening
+                             0.34 OBBT
+                             0.15 FBBT (0.00 EC; 0.05 RLT; 0.01 Factoring)
                       0.06 Branching
-                             0.04 Reliability branching
+                             0.05 Reliability branching
 -------------------------------------------------------------------------------
 --- Reading solution for model m
 --- Solver did not provide marginals for model m
 --- To request marginals from the solver set option requestMarginals >= 1
---- Executing after solve: elapsed 0:00:04.903
---- Smallest Enclosing Rectangle.gms(136) 6 Mb
+--- Executing after solve: elapsed 0:00:03.964
+--- Smallest Enclosing Rectangle.gms(139) 6 Mb
 --- Initialize embedded library embpycclib64.dll
 --- Execute embedded library embpycclib64.dll
 n=100,k=25
@@ -127,8 +125,13 @@ y bounds: [4.834, 8.511]
 width: 2.417
 height: 3.677
 area: 8.887
---- Smallest Enclosing Rectangle.gms(391) 8 Mb
---- Putfile fdata C:\projects\OptimizationModels\Smallest Enclosing Rectangle\data.js
+--- Smallest Enclosing Rectangle.gms(225) 6 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+n=100,k=25
+best area: 8.887290852436903
+evaluations: 100001
+--- Smallest Enclosing Rectangle.gms(302) 6 Mb
 --- GDX File C:\projects\OptimizationModels\Smallest Enclosing Rectangle\x.gdx
 *** Status: Normal completion
---- Job Smallest Enclosing Rectangle.gms Stop 10/15/26 17:40:34 elapsed 0:00:05.271
+--- Job Smallest Enclosing Rectangle.gms Stop 10/16/26 02:33:46 elapsed 0:00:04.587

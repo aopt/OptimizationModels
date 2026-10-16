@@ -1,4 +1,4 @@
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 1
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 1
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 C o m p i l a t i o n
 
@@ -39,232 +39,294 @@ C o m p i l a t i o n
   37  ;
   38   
   39  parameter p(i,c) 'points';
-  40  p(i,c) = uniform(0,maxsize);
-  41   
-  42  option k:0,p:8;
-  43  display k,p;
-  44   
-  45  *---------------------------------------------------------------
-  46  * derived data
+  40  p(i,c) = uniform(1.0e-10,maxsize);
+  41  * I don't want exact zeros (easier to export to Python)
+  42   
+  43   
+  44  option k:0,p:8;
+  45  display k,p;
+  46   
   47  *---------------------------------------------------------------
-  48   
-  49  * bounding box for data points
-  50  parameter box(c,lu) 'min/max values';
-  51  box(c,'min') = smin(i, p(i,c));
-  52  box(c,'max') = smax(i, p(i,c));
-  53   
-  54  display box;
+  48  * derived data
+  49  *---------------------------------------------------------------
+  50   
+  51  * bounding box for data points
+  52  parameter box(c,lu) 'min/max values';
+  53  box(c,'min') = smin(i, p(i,c));
+  54  box(c,'max') = smax(i, p(i,c));
   55   
-  56  *---------------------------------------------------------------
-  57  * model: enclose k points
+  56  display box;
+  57   
   58  *---------------------------------------------------------------
-  59   
-  60  binary variable delta(i) 'point is selected';
+  59  * model: enclose k points
+  60  *---------------------------------------------------------------
   61   
-  62  variable
-  63     rect(c,lu) 'rectangle to contain k points'
-  64     d(c)       'length of sides'
-  65     area       'size of rectangle'
-  66  ;
-  67   
-  68  * bounds
-  69  rect.lo(c,lu) = box(c,'min');
-  70  rect.up(c,lu) = box(c,'max');
-  71   
-  72  d.lo(c) = 0;
-  73  d.up(c) = box(c,'max') - box(c,'min');
-  74   
-  75   
-  76  equations
-  77      obj      'objective: area of enclosing rectangle'
-  78      count    'number of points to select'
-  79      inside_min(i,c)  'points are inside'
-  80      inside_max(i,c)  'points are inside'
-  81      calcd(c)         'calculate d'
-  82  ;
-  83   
-  84  count..  sum(i, delta(i)) =e= k;
+  62  binary variable delta(i) 'point is selected';
+  63   
+  64  variable
+  65     rect(c,lu) 'rectangle to contain k points'
+  66     d(c)       'length of sides'
+  67     area       'size of rectangle'
+  68  ;
+  69   
+  70  * bounds
+  71  rect.lo(c,lu) = box(c,'min');
+  72  rect.up(c,lu) = box(c,'max');
+  73   
+  74  d.lo(c) = 0;
+  75  d.up(c) = box(c,'max') - box(c,'min');
+  76   
+  77   
+  78  equations
+  79      obj      'objective: area of enclosing rectangle'
+  80      count    'number of points to select'
+  81      inside_min(i,c)  'points are inside'
+  82      inside_max(i,c)  'points are inside'
+  83      calcd(c)         'calculate d'
+  84  ;
   85   
-  86  * inside: delta(i)=1  ==> rect(c,'min') <= p(i,c) <= rect(c,'max')
-  87  inside_min(i,c)..  rect(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*box(c,'max');
-  88  inside_max(i,c)..  rect(c,'max') =g= delta(i)*p(i,c) + (1-delta(i))*box(c,'min');
-  89   
-  90  calcd(c).. d(c) =e= rect(c,'max')-rect(c,'min');
+  86  count..  sum(i, delta(i)) =e= k;
+  87   
+  88  * inside: delta(i)=1  ==> rect(c,'min') <= p(i,c) <= rect(c,'max')
+  89  inside_min(i,c)..  rect(c,'min') =l= delta(i)*p(i,c) + (1-delta(i))*box(c,'max');
+  90  inside_max(i,c)..  rect(c,'max') =g= delta(i)*p(i,c) + (1-delta(i))*box(c,'min');
   91   
-  92  obj.. area =e= d('x')*d('y');
+  92  calcd(c).. d(c) =e= rect(c,'max')-rect(c,'min');
   93   
-  94  model m /all/;
-  95  solve m minimizing area using miqcp;
-  96  abort$(m.solvestat<>1) "Solver problem";
-  97   
-  98  display rect.l,delta.l,area.l;
+  94  obj.. area =e= d('x')*d('y');
+  95   
+  96  model m /all/;
+  97  solve m minimizing area using miqcp;
+  98  abort$(m.solvestat<>1) "Abnormal completion";
   99   
- 100   
- 101  parameter solution(*,*) 'comparison';
- 102  solution('miqcp','area') = area.l;
- 103  solution('miqcp','xmin') = rect.l('x','min');
- 104  solution('miqcp','xmax') = rect.l('x','max');
- 105  solution('miqcp','ymin') = rect.l('y','min');
- 106  solution('miqcp','ymax') = rect.l('y','max');
- 107   
- 108   
- 109  *---------------------------------------------------------------------
- 110  * quick solution consistency check
- 111  * recalc area from delta variables
- 112  *---------------------------------------------------------------------
- 113   
- 114  Scalars
- 115    checktol 'tolerance for check' /1e-6/
- 116    k2 'number of selected points'
- 117    area2 'calculated from selected points'
- 118    absdiff 'difference'
- 119  ;
- 120   
- 121  k2 = sum(i,round(delta.l(i)));
- 122  area2 = prod(c, smax(i$(delta.l(i)>0.5), p(i,c)) - smin(i$(delta.l(i)>0.5), p(i,c)));
- 123  absdiff = abs(area.l-area2);
- 124   
- 125  abort$(k2<>k) "number of selected points incorrect",k2;
- 126  abort$(absdiff > checktol) "solution check failed",absdiff;
- 127   
- 128   
- 129  *---------------------------------------------------------------------
- 130  * algorithm
- 131  *---------------------------------------------------------------------
- 132   
- 133  scalar n 'number of data points';
- 134  n = card(i);
- 135   
- 136  embeddedCode Python:
- 137   
- 138  n = int(list(gams.get("n"))[0]);
- 139  k = int(list(gams.get("k"))[0]);
- 140  print(f"n={n},k={k}")
- 141   
- 142  # get points and store as list of tuples (id,x,y)
- 143  points=[]
- 144  pgen = gams.get("p",keyFormat=KeyFormat.FLAT) 
- 145  for i in range(n):
- 146      px = next(pgen)
- 147      py = next(pgen)
- 148      points.append((i+1,px[2],py[2]))
- 149   
- 150  # the rest was largely generated by ChatGPT
- 151   
- 152  y_values = sorted({y for _, _, y in points})
- 153   
- 154  best = None
- 155   
- 156  # Try every possible bottom and top edge.
- 157  for i, bottom in enumerate(y_values):
- 158      for top in y_values[i:]:
- 159          # Points inside this horizontal band, sorted by x.
- 160          in_band = sorted(
- 161              (x, number)
- 162              for number, x, y in points
- 163              if bottom <= y <= top
- 164          )
- 165   
- 166          if len(in_band) < k:
- 167              continue
+ 100  display rect.l,delta.l,area.l;
+ 101   
+ 102   
+ 103  parameter solution(*,*) 'compare solutions';
+ 104  solution('area','miqcp') = area.l;
+ 105  solution('xmin','miqcp') = rect.l('x','min');
+ 106  solution('xmax','miqcp') = rect.l('x','max');
+ 107  solution('ymin','miqcp') = rect.l('y','min');
+ 108  solution('ymax','miqcp') = rect.l('y','max');
+ 109   
+ 110   
+ 111  *---------------------------------------------------------------------
+ 112  * quick solution consistency check
+ 113  * recalc area from delta variables
+ 114  *---------------------------------------------------------------------
+ 115   
+ 116  Scalars
+ 117    checktol 'tolerance for check' /1e-6/
+ 118    k2 'number of selected points'
+ 119    area2 'calculated from selected points'
+ 120    absdiff 'difference'
+ 121  ;
+ 122   
+ 123  k2 = sum(i,round(delta.l(i)));
+ 124  area2 = prod(c, smax(i$(delta.l(i)>0.5), p(i,c)) - smin(i$(delta.l(i)>0.5), p(i,c)));
+ 125  absdiff = abs(area.l-area2);
+ 126   
+ 127  abort$(k2<>k) "number of selected points incorrect",k2;
+ 128  abort$(absdiff > checktol) "solution check failed",absdiff;
+ 129   
+ 130  *---------------------------------------------------------------------
+ 131  * geometric algorithm
+ 132  *---------------------------------------------------------------------
+ 133   
+ 134  scalar n 'number of data points';
+ 135  n = card(i);
+ 136   
+ 137  parameter solution(*,*) 'compare solutions';
+ 138   
+ 139  embeddedCode Python:
+ 140   
+ 141  n = int(list(gams.get("n"))[0]);
+ 142  k = int(list(gams.get("k"))[0]);
+ 143  print(f"n={n},k={k}")
+ 144   
+ 145  # get points and store as list of tuples (id,x,y)
+ 146  points=[]
+ 147  pgen = gams.get("p",keyFormat=KeyFormat.FLAT) 
+ 148  for i in range(n):
+ 149      px = next(pgen)
+ 150      py = next(pgen)
+ 151      points.append((i+1,px[2],py[2]))
+ 152   
+ 153  # the rest was largely generated by ChatGPT
+ 154   
+ 155  y_values = sorted({y for _, _, y in points})
+ 156   
+ 157  best = None
+ 158   
+ 159  # Try every possible bottom and top edge.
+ 160  for i, bottom in enumerate(y_values):
+ 161      for top in y_values[i:]:
+ 162          # Points inside this horizontal band, sorted by x.
+ 163          in_band = sorted(
+ 164              (x, number)
+ 165              for number, x, y in points
+ 166              if bottom <= y <= top
+ 167          )
  168   
- 169          # Any minimal-width interval containing k points can be
- 170          # represented by k consecutive points in this sorted list.
- 171          for start in range(len(in_band) - k + 1):
- 172              left = in_band[start][0]
- 173              right = in_band[start + k - 1][0]
- 174              width = right - left
- 175              height = top - bottom
- 176              area = width * height
- 177   
- 178              if best is None or area < best["area"]:
- 179                  best = {
- 180                      "area": area,
- 181                      "left": left,
- 182                      "right": right,
- 183                      "bottom": bottom,
- 184                      "top": top,
- 185                      "point_numbers": [
- 186                          number
- 187                          for _, number in in_band[start:start + k]
- 188                      ],
- 189                  }
- 190   
- 191  # print results
- 192  print(f"x bounds: [{best['left']:.3f}, {best['right']:.3f}]")
- 193  print(f"y bounds: [{best['bottom']:.3f}, {best['top']:.3f}]")
- 194  print(f"width: {best['right'] - best['left']:.3f}")
- 195  print(f"height: {best['top'] - best['bottom']:.3f}")
- 196  print(f"area: {best['area']:.3f}")
- 197  # print(f"selected points: {sorted(best['point_numbers'])}")
- 198   
- 199  # export to GAMS
- 200  sol = [('enumeration','area',best['area']),
- 201         ('enumeration','xmin',best['left']),
- 202         ('enumeration','xmax',best['right']),
- 203         ('enumeration','ymin',best['bottom']),
- 204         ('enumeration','ymax',best['top']),
- 205        ]
- 206  gams.set('solution',sol)
- 207   
- 208  endEmbeddedCode solution
- 209   
- 210  * introduce set element *at compile time*
- 211  set dummy 'register elements' /enumeration/;
+ 169          if len(in_band) < k:
+ 170              continue
+ 171   
+ 172          # Any minimal-width interval containing k points can be
+ 173          # represented by k consecutive points in this sorted list.
+ 174          for start in range(len(in_band) - k + 1):
+ 175              left = in_band[start][0]
+ 176              right = in_band[start + k - 1][0]
+ 177              width = right - left
+ 178              height = top - bottom
+ 179              area = width * height
+ 180   
+ 181              if best is None or area < best["area"]:
+ 182                  best = {
+ 183                      "area": area,
+ 184                      "left": left,
+ 185                      "right": right,
+ 186                      "bottom": bottom,
+ 187                      "top": top,
+ 188                      "point_numbers": [
+ 189                          number
+ 190                          for _, number in in_band[start:start + k]
+ 191                      ],
+ 192                  }
+ 193   
+ 194  # print results
+ 195  print(f"x bounds: [{best['left']:.3f}, {best['right']:.3f}]")
+ 196  print(f"y bounds: [{best['bottom']:.3f}, {best['top']:.3f}]")
+ 197  print(f"width: {best['right'] - best['left']:.3f}")
+ 198  print(f"height: {best['top'] - best['bottom']:.3f}")
+ 199  print(f"area: {best['area']:.3f}")
+ 200  # print(f"selected points: {sorted(best['point_numbers'])}")
+ 201   
+ 202  # export to GAMS
+ 203  sol = [('area','enum',best['area']),
+ 204         ('xmin','enum',best['left']),
+ 205         ('xmax','enum',best['right']),
+ 206         ('ymin','enum',best['bottom']),
+ 207         ('ymax','enum',best['top']),
+ 208        ]
+ 209  gams.set('solution',sol)
+ 210   
+ 211  endEmbeddedCode solution
  212   
- 213  display solution;
- 214   
- 215  *---------------------------------------------------------------------
- 216  * visualization
- 217  *---------------------------------------------------------------------
+ 213  * introduce set element *at compile time*
+ 214  set dummy 'register elements' /enum,sa/;
+ 215   
+ 216  display solution;
+ 217   
  218   
- 221   
+ 219  *---------------------------------------------------------------------
+ 220  *  algorithm
+ 221  *---------------------------------------------------------------------
+ 222   
  223   
  224   
- 225  file fdata /data.js/; put fdata;
+ 225  embeddedCode Python:
  226   
- 227  * points
- 228  put "p=["/;
- 229  loop(i,
- 230    put "  {i:'",i.tl:0,"',x:",p(i,'x'):0:4,",y:",p(i,'y'):0:4,",delta:";
- 231    put$(delta.l(i)>0.5) "'red'";
- 232    put$(delta.l(i)<0.5) "'darkblue'";
- 233    put "},"/;
- 234  );
- 235  put "]"/;
- 236  put "pnts={n:",(card(i)):0:0,
- 237         ",map:'[0,",maxsize:0:0,"]&times;[0,",maxsize:0:0,"]'",
- 238         ",minx:",box('x','min'):0:3,
- 239         ",miny:",box('y','min'):0:3,
- 240         ",maxx:",box('x','max'):0:3,
- 241         ",maxy:",box('y','max'):0:3,
- 242         ",avgx:",(sum(i,p(i,'x'))/card(i)):0:3,
- 243         ",avgy:",(sum(i,p(i,'y'))/card(i)):0:3,
- 244         ",k:",k:0:0,
- 245         ",rxmin:",(rect.l('x','min')):0:3,
- 246         ",rxmax:",(rect.l('x','max')):0:3,
- 247         ",rymin:",(rect.l('y','min')):0:3,
- 248         ",rymax:",(rect.l('y','max')):0:3,
- 249         ",area:",(area.l):0:3,
- 250         "}"/;
- 251   
- 252  putclose;
- 253   
- 390   
- 391  executetool 'win32.ShellExecute "plot.html"';
- 392   
- 394   
+ 227  import random, math
+ 228   
+ 229  random.seed(123)
+ 230  random.seed(2) # finds optimal solution
+ 231   
+ 232  n = int(list(gams.get("n"))[0]);
+ 233  k = int(list(gams.get("k"))[0]);
+ 234  print(f"n={n},k={k}")
+ 235   
+ 236   
+ 237  # get points and store as list of tuples (id,x,y)
+ 238  points=[]
+ 239  pgen = gams.get("p",keyFormat=KeyFormat.FLAT) 
+ 240  for i in range(n):
+ 241      px = next(pgen)
+ 242      py = next(pgen)
+ 243      points.append((px[0],px[2],py[2]))
+ 244   
+ 245  numevals = 0
+ 246   
+ 247  def eval(sel):
+ 248     global numevals
+ 249     numevals = numevals + 1
+ 250     xmin = 1.0e+10
+ 251     ymin = 1.0e+10
+ 252     xmax = -1.0e10
+ 253     ymax = -1.0e10
+ 254   
+ 255     for ind in sel:
+ 256        p = points[ind]
+ 257        x = p[1]
+ 258        y = p[2]
+ 259        if x<xmin:xmin=x
+ 260        if y<ymin:ymin=y
+ 261        if x>xmax:xmax=x
+ 262        if y>ymax:ymax=y
+ 263     area = (xmax-xmin)*(ymax-ymin)
+ 264     return xmin,xmax,ymin,ymax,area
+ 265     
+ 266  def obj(sel):
+ 267      r = eval(sel)
+ 268      return r[4]
+ 269   
+ 270  def sa(obj, n, k, iters=100_000, T0=1.0, alpha=0.9999):
+ 271      sel = set(random.sample(range(n), k)); out = set(range(n)) - sel
+ 272      cur = obj(sel); best, best_val, T = set(sel), cur, T0
+ 273      for _ in range(iters):
+ 274          i, j = random.choice(tuple(sel)), random.choice(tuple(out))
+ 275          sel.remove(i); sel.add(j)
+ 276          new = obj(sel)
+ 277          if new <= cur or random.random() < math.exp((cur - new) / T):
+ 278              out.remove(j); out.add(i); cur = new
+ 279              if cur < best_val: best, best_val = set(sel), cur
+ 280          else:
+ 281              sel.remove(j); sel.add(i)
+ 282          T *= alpha
+ 283      return best, best_val
+ 284   
+ 285  best, best_val = sa(obj,n,k)
+ 286  print(f"best area: {best_val}")
+ 287  print(f"evaluations: {numevals}")
+ 288   
+ 289  # export to GAMS
+ 290  xmin,xmax,ymin,ymax,area = eval(best) 
+ 291  sol = [('area','sa',area),
+ 292         ('xmin','sa',xmin),
+ 293         ('xmax','sa',xmax),
+ 294         ('ymin','sa',ymin),
+ 295         ('ymax','sa',ymax),
+ 296        ]
+ 297  gams.set('solution',sol)
+ 298   
+ 299   
+ 300  endEmbeddedCode solution
+ 301   
+ 302  display solution;
+ 303   
+ 304   
+STOP C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Smallest Enclosing Rectangle.gms
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  INCLVL  FILENAME
+
+     1        1 INPUT          0       0       0  C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Smallest Enclosing R
+                                                  ectangle.gms
+     2      305 STOP           1     305       0  C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Smallest Enclosing R
+                                                  ectangle.gms
 
 
 COMPILATION TIME     =        0.000 SECONDS      3 MB  54.5.0 f2bc4e68 WEX-WEI
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 2
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 3
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     43 PARAMETER k                    =           25  number of points to select
+----     45 PARAMETER k                    =           25  number of points to select
 
-----     43 PARAMETER p  points
+----     45 PARAMETER p  points
 
                    x           y
 
@@ -370,16 +432,16 @@ point99   8.99662815  8.51057738
 point100  8.92751427  2.23560422
 
 
-----     54 PARAMETER box  min/max values
+----     56 PARAMETER box  min/max values
 
           min         max
 
 x       0.160       9.810
 y       0.001       9.887
 
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 3
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 4
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Equation Listing    SOLVE m Using MIQCP From line 95
+Equation Listing    SOLVE m Using MIQCP From line 97
 
 
 ---- obj  =E=  objective: area of enclosing rectangle
@@ -422,22 +484,22 @@ count..  delta(point1) + delta(point2) + delta(point3) + delta(point4) + delta(p
 
 ---- inside_min  =L=  points are inside
 
-inside_min(point1,x)..  4.83729245*delta(point1) + rect(x,min) =L= 9.81040377 ; (LHS = 0.16037081)
+inside_min(point1,x)..  4.83729244995163*delta(point1) + rect(x,min) =L= 9.8104037700019 ; (LHS = 0.160370810098396)
      
-inside_min(point1,y)..  0.248261800000002*delta(point1) + rect(y,min) =L= 9.88688936 ; (LHS = 0.000635170000000684)
+inside_min(point1,y)..  0.248261799997517*delta(point1) + rect(y,min) =L= 9.88688936000113 ; (LHS = 0.000635170099993587)
      
-inside_min(point2,x)..  1.07117885*delta(point2) + rect(x,min) =L= 9.81040377 ; (LHS = 0.16037081)
+inside_min(point2,x)..  1.07117884998929*delta(point2) + rect(x,min) =L= 9.8104037700019 ; (LHS = 0.160370810098396)
      
 REMAINING 197 ENTRIES SKIPPED
 
 
 ---- inside_max  =G=  points are inside
 
-inside_max(point1,x)..  - 4.81274051*delta(point1) + rect(x,max) =G= 0.16037081 ; (LHS = 0.16037081)
+inside_max(point1,x)..  - 4.81274050995187*delta(point1) + rect(x,max) =G= 0.160370810098396 ; (LHS = 0.160370810098396)
      
-inside_max(point1,y)..  - 9.63799239*delta(point1) + rect(y,max) =G= 0.00063517 ; (LHS = 0.00063517)
+inside_max(point1,y)..  - 9.63799238990362*delta(point1) + rect(y,max) =G= 0.000635170099993648 ; (LHS = 0.000635170099993648)
      
-inside_max(point2,x)..  - 8.57885411*delta(point2) + rect(x,max) =G= 0.16037081 ; (LHS = 0.16037081)
+inside_max(point2,x)..  - 8.57885410991421*delta(point2) + rect(x,max) =G= 0.160370810098396 ; (LHS = 0.160370810098396)
      
 REMAINING 197 ENTRIES SKIPPED
 
@@ -448,9 +510,9 @@ calcd(x)..  rect(x,min) - rect(x,max) + d(x) =E= 0 ; (LHS = 0)
      
 calcd(y)..  rect(y,min) - rect(y,max) + d(y) =E= 0 ; (LHS = 0)
      
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 4
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 5
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Column Listing      SOLVE m Using MIQCP From line 95
+Column Listing      SOLVE m Using MIQCP From line 97
 
 
 ---- delta  point is selected
@@ -484,7 +546,7 @@ REMAINING 97 ENTRIES SKIPPED
 ---- rect  rectangle to contain k points
 
 rect(x,min)
-                (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
+                (.LO, .L, .UP, .M = 0.160370810098396, 0.160370810098396, 9.8104037700019, 0)
         1       inside_min(point1,x)
         1       inside_min(point2,x)
         1       inside_min(point3,x)
@@ -589,7 +651,7 @@ rect(x,min)
         0       (OLD LEVEL ****)
 
 rect(x,max)
-                (.LO, .L, .UP, .M = 0.16037081, 0.16037081, 9.81040377, 0)
+                (.LO, .L, .UP, .M = 0.160370810098396, 0.160370810098396, 9.8104037700019, 0)
         1       inside_max(point1,x)
         1       inside_max(point2,x)
         1       inside_max(point3,x)
@@ -694,7 +756,7 @@ rect(x,max)
         0       (OLD LEVEL ****)
 
 rect(y,min)
-                (.LO, .L, .UP, .M = 0.00063517, 0.00063517, 9.88688936, 0)
+                (.LO, .L, .UP, .M = 0.000635170099993648, 0.000635170099993648, 9.88688936000113, 0)
         1       inside_min(point1,y)
         1       inside_min(point2,y)
         1       inside_min(point3,y)
@@ -803,12 +865,12 @@ REMAINING ENTRY SKIPPED
 ---- d  length of sides
 
 d(x)
-                (.LO, .L, .UP, .M = 0, 0, 9.65003296, 0)
+                (.LO, .L, .UP, .M = 0, 0, 9.6500329599035, 0)
        (0)      obj
         1       calcd(x)
 
 d(y)
-                (.LO, .L, .UP, .M = 0, 0, 9.88625419, 0)
+                (.LO, .L, .UP, .M = 0, 0, 9.88625418990114, 0)
        (0)      obj
         1       calcd(y)
 
@@ -819,9 +881,9 @@ area
                 (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
         1       obj
 
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 5
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 6
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Range Statistics    SOLVE m Using MIQCP From line 95
+Range Statistics    SOLVE m Using MIQCP From line 97
 
 
 RANGE STATISTICS (ABSOLUTE NON-ZERO FINITE VALUES)
@@ -830,9 +892,9 @@ RHS       [min, max] : [ 6.352E-04, 2.500E+01] - Zero values observed as well
 Bound     [min, max] : [ 6.352E-04, 9.887E+00] - Zero values observed as well
 Matrix    [min, max] : [ 5.395E-03, 9.886E+00] - Zero values observed as well
 
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 6
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 7
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Model Statistics    SOLVE m Using MIQCP From line 95
+Model Statistics    SOLVE m Using MIQCP From line 97
 
 
 MODEL STATISTICS
@@ -843,23 +905,23 @@ NON ZERO ELEMENTS           905     NON LINEAR N-Z              2
 CODE LENGTH                   5     CONSTANT POOL              16     DISCRETE VARIABLES        100
 
 
-GENERATION TIME      =        0.000 SECONDS      4 MB  54.5.0 f2bc4e68 WEX-WEI
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 7
+GENERATION TIME      =        0.016 SECONDS      4 MB  54.5.0 f2bc4e68 WEX-WEI
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 8
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
-Solution Report     SOLVE m Using MIQCP From line 95
+Solution Report     SOLVE m Using MIQCP From line 97
 
 
                S O L V E      S U M M A R Y
 
      MODEL   m                   OBJECTIVE  area
      TYPE    MIQCP               DIRECTION  MINIMIZE
-     SOLVER  ANTIGONE            FROM LINE  95
+     SOLVER  ANTIGONE            FROM LINE  97
 
 **** SOLVER STATUS     1 Normal Completion
 **** MODEL STATUS      1 Optimal
 **** OBJECTIVE VALUE                8.8873
 
- RESOURCE USAGE, LIMIT          5.000 10000000000.000
+ RESOURCE USAGE, LIMIT          4.000 10000000000.000
  ITERATION COUNT, LIMIT         0    2147483647
  EVALUATION ERRORS              0             0
 
@@ -1435,12 +1497,12 @@ y          .             3.6766         9.8863
                              0 INFEASIBLE
                              0  UNBOUNDED
                              0     ERRORS
-GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/15/26 17:40:28 Page 8
+GAMS 54.5.0  f2bc4e68 Sep 29, 2026          WEX-WEI x86 64bit/MS Windows - 10/16/26 02:33:42 Page 9
 G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
 E x e c u t i o n
 
 
-----     98 VARIABLE rect.L  rectangle to contain k points
+----    100 VARIABLE rect.L  rectangle to contain k points
 
           min         max
 
@@ -1448,7 +1510,7 @@ x       7.184       9.601
 y       4.834       8.511
 
 
-----     98 VARIABLE delta.L  point is selected
+----    100 VARIABLE delta.L  point is selected
 
 point2  1.000,    point14 1.000,    point17 1.000,    point20 1.000,    point21 1.000,    point23 1.000,    point24 1.000
 point25 1.000,    point30 1.000,    point37 1.000,    point44 1.000,    point52 1.000,    point56 1.000,    point59 1.000
@@ -1456,22 +1518,35 @@ point61 1.000,    point64 1.000,    point66 1.000,    point69 1.000,    point74 
 point86 1.000,    point88 1.000,    point94 1.000,    point99 1.000
 
 
-----     98 VARIABLE area.L                =        8.887  size of rectangle
+----    100 VARIABLE area.L                =        8.887  size of rectangle
 
-----    213 PARAMETER solution  comparison
+----    216 PARAMETER solution  compare solutions
 
-                   area        xmin        xmax        ymin        ymax
+           miqcp        enum
 
-miqcp             8.887       7.184       9.601       4.834       8.511
-enumeration       8.887       7.184       9.601       4.834       8.511
+area       8.887       8.887
+xmin       7.184       7.184
+xmax       9.601       9.601
+ymin       4.834       4.834
+ymax       8.511       8.511
+
+
+----    302 PARAMETER solution  compare solutions
+
+           miqcp        enum          sa
+
+area       8.887       8.887       8.887
+xmin       7.184       7.184       7.184
+xmax       9.601       9.601       9.601
+ymin       4.834       4.834       4.834
+ymax       8.511       8.511       8.511
 
 
 **** REPORT FILE SUMMARY
 
-fdata C:\projects\OptimizationModels\Smallest Enclosing Rectangle\data.js
 
 
-EXECUTION TIME       =        5.219 SECONDS      8 MB  54.5.0 f2bc4e68 WEX-WEI
+EXECUTION TIME       =        4.547 SECONDS      6 MB  54.5.0 f2bc4e68 WEX-WEI
 
 
 USER: Erwin Kalvelagen                               G260914+0003Cc-GEN

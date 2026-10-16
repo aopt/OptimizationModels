@@ -37,7 +37,9 @@ sets
 ;
 
 parameter p(i,c) 'points';
-p(i,c) = uniform(0,maxsize);
+p(i,c) = uniform(1.0e-10,maxsize);
+* I don't want exact zeros (easier to export to Python)
+
 
 option k:0,p:8;
 display k,p;
@@ -93,17 +95,17 @@ obj.. area =e= d('x')*d('y');
 
 model m /all/;
 solve m minimizing area using miqcp;
-abort$(m.solvestat<>%solveStat.normalCompletion%) "Solver problem";
+abort$(m.solvestat<>%solveStat.normalCompletion%) "Abnormal completion";
 
 display rect.l,delta.l,area.l;
 
 
-parameter solution(*,*) 'comparison';
-solution('miqcp','area') = area.l;
-solution('miqcp','xmin') = rect.l('x','min');
-solution('miqcp','xmax') = rect.l('x','max');
-solution('miqcp','ymin') = rect.l('y','min');
-solution('miqcp','ymax') = rect.l('y','max');
+parameter solution(*,*) 'compare solutions';
+solution('area','miqcp') = area.l;
+solution('xmin','miqcp') = rect.l('x','min');
+solution('xmax','miqcp') = rect.l('x','max');
+solution('ymin','miqcp') = rect.l('y','min');
+solution('ymax','miqcp') = rect.l('y','max');
 
 
 *---------------------------------------------------------------------
@@ -125,13 +127,14 @@ absdiff = abs(area.l-area2);
 abort$(k2<>k) "number of selected points incorrect",k2;
 abort$(absdiff > checktol) "solution check failed",absdiff;
 
-
 *---------------------------------------------------------------------
-* algorithm
+* geometric algorithm
 *---------------------------------------------------------------------
 
 scalar n 'number of data points';
 n = card(i);
+
+parameter solution(*,*) 'compare solutions';
 
 embeddedCode Python:
 
@@ -197,20 +200,109 @@ print(f"area: {best['area']:.3f}")
 # print(f"selected points: {sorted(best['point_numbers'])}")
 
 # export to GAMS
-sol = [('enumeration','area',best['area']),
-       ('enumeration','xmin',best['left']),
-       ('enumeration','xmax',best['right']),
-       ('enumeration','ymin',best['bottom']),
-       ('enumeration','ymax',best['top']),
+sol = [('area','enum',best['area']),
+       ('xmin','enum',best['left']),
+       ('xmax','enum',best['right']),
+       ('ymin','enum',best['bottom']),
+       ('ymax','enum',best['top']),
       ]
 gams.set('solution',sol)
 
 endEmbeddedCode solution
 
 * introduce set element *at compile time*
-set dummy 'register elements' /enumeration/;
+set dummy 'register elements' /enum,sa/;
 
 display solution;
+
+
+*---------------------------------------------------------------------
+*  algorithm
+*---------------------------------------------------------------------
+
+
+
+embeddedCode Python:
+
+import random, math
+
+random.seed(123)
+# random.seed(2) # finds optimal solution
+
+n = int(list(gams.get("n"))[0]);
+k = int(list(gams.get("k"))[0]);
+print(f"n={n},k={k}")
+
+
+# get points and store as list of tuples (id,x,y)
+points=[]
+pgen = gams.get("p",keyFormat=KeyFormat.FLAT) 
+for i in range(n):
+    px = next(pgen)
+    py = next(pgen)
+    points.append((px[0],px[2],py[2]))
+
+numevals = 0
+
+def eval(sel):
+   global numevals
+   numevals = numevals + 1
+   xmin = 1.0e+10
+   ymin = 1.0e+10
+   xmax = -1.0e10
+   ymax = -1.0e10
+
+   for ind in sel:
+      p = points[ind]
+      x = p[1]
+      y = p[2]
+      if x<xmin:xmin=x
+      if y<ymin:ymin=y
+      if x>xmax:xmax=x
+      if y>ymax:ymax=y
+   area = (xmax-xmin)*(ymax-ymin)
+   return xmin,xmax,ymin,ymax,area
+   
+def obj(sel):
+    r = eval(sel)
+    return r[4]
+
+def sa(obj, n, k, iters=100_000, T0=1.0, alpha=0.9999):
+    sel = set(random.sample(range(n), k)); out = set(range(n)) - sel
+    cur = obj(sel); best, best_val, T = set(sel), cur, T0
+    for _ in range(iters):
+        i, j = random.choice(tuple(sel)), random.choice(tuple(out))
+        sel.remove(i); sel.add(j)
+        new = obj(sel)
+        if new <= cur or random.random() < math.exp((cur - new) / T):
+            out.remove(j); out.add(i); cur = new
+            if cur < best_val: best, best_val = set(sel), cur
+        else:
+            sel.remove(j); sel.add(i)
+        T *= alpha
+    return best, best_val
+
+best, best_val = sa(obj,n,k)
+print(f"best area: {best_val}")
+print(f"evaluations: {numevals}")
+
+# export to GAMS
+xmin,xmax,ymin,ymax,area = eval(best) 
+sol = [('area','sa',area),
+       ('xmin','sa',xmin),
+       ('xmax','sa',xmax),
+       ('ymin','sa',ymin),
+       ('ymax','sa',ymax),
+      ]
+gams.set('solution',sol)
+
+
+endEmbeddedCode solution
+
+display solution;
+
+
+$stop
 
 *---------------------------------------------------------------------
 * visualization
