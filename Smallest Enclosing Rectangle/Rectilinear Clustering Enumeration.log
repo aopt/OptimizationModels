@@ -1,0 +1,120 @@
+
+--- Job Rectilinear Clustering Enumeration.gms Start 10/27/26 12:01:33 54.6.0 38ab6eeb WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\54\gmsprmNT.txt
+    C:\Users\erwin\Documents\GAMS\gamsconfig.yaml
+--- GAMS Parameters defined
+    MIP copt
+    Input "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\Rectilinear Clustering Enumeration.gms"
+    PageWidth 130
+    PageSize 0
+    ScrDir "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\225c\"
+    SysDir C:\GAMS\54\
+    LogOption 3
+    AppendLog 1
+    ErrMsg 1
+    ErrorLog 99
+    IDE 1
+    GDX "C:\projects\OptimizationModels\Smallest Enclosing Rectangle\x.gdx"
+    LstTitleLeftAligned 1
+Licensee: Erwin Kalvelagen                               G260914+0003Cc-GEN
+          Amsterdam Optimization Modeling Group                     DCE4744
+          225c\gamslice.dat
+          8ed7e271-7287-4ff2
+          node:82884505 mem:64 cores:8 ipport:59016 v:2                    
+          Evaluation license: Not for commercial or production use
+          The time-limited license stops working on : Apr 12, 2027
+System information: 8 physical cores and 64 Gb physical memory detected
+GAMS 54.6.0   Copyright (C) 1987-2026 GAMS Development. All rights reserved
+--- Starting compilation
+--- Rectilinear Clustering Enumeration.gms(161) 11 Mb
+--- Starting execution: elapsed 0:00:00.038
+--- Rectilinear Clustering Enumeration.gms(60) 14 Mb
+--- Initialize embedded library embpycclib64.dll
+--- Execute embedded library embpycclib64.dll
+renumerate 1.0.0
+points:50
+rectangles:51587
+--- Rectilinear Clustering Enumeration.gms(60) 51 Mb  4 secs
+--- Rectilinear Clustering Enumeration.gms(130) 54 Mb
+--- Generating MIP model m1
+--- Rectilinear Clustering Enumeration.gms(161) 125 Mb
+---   52 rows  51,588 columns  1,089,648 non-zeroes
+---   51,587 discrete-columns
+--- Range statistics (absolute non-zero finite values)
+--- RHS       [min, max] : [ 1.000E+00, 5.000E+00] - Zero values observed as well
+--- Bound     [min, max] : [ 1.000E+00, 1.000E+00] - Zero values observed as well
+--- Matrix    [min, max] : [ 1.095E-03, 9.099E+01]
+--- Executing COPT (Solvelink=2): elapsed 0:00:04.720
+
+COPT             54.6.0 38ab6eeb Oct 14, 2026          WEI x86 64bit/MS Window
+
+Passing GAMS variable levels as full MIP start to COPT.
+
+Cardinal Optimizer v8.0.7. Build date Sep 20 2026
+Copyright Cardinal Operations 2026. All Rights Reserved
+
+Modified COPT parameters:
+TimeLimit                 1e+10
+AbsGap                    0
+LogToConsole              0
+ReqFarkasRay              1
+BarIterLimit              2147483647
+NLPIterLimit              2147483647
+
+Model fingerprint: 11002402
+
+Using Cardinal Optimizer v8.0.7 (e9a62f7d0e) on Windows (26H2 Build 26300 - x86_64)
+The CPU model is AMD Ryzen 9 5900HX with Radeon Graphics
+Hardware has 8 physical cores and 16 logical cores. Using instruction set X86_NATIVE (1)
+Minimizing a MIP problem
+
+The original problem has:
+    51 rows, 51587 columns and 1038110 non-zero elements
+    51587 binaries
+
+Starting the MIP solver with 16 threads and 32 tasks
+
+Loading 1 initial MIP solution
+Initial MIP solution # 1 was rejected: Primal Inf 5.00e+00  Int Inf 0.00e+00
+Presolving the problem
+
+The presolved problem has:
+    51 rows, 51587 columns and 1038110 non-zero elements
+    51587 binaries
+
+Problem info:
+    Range of matrix coefficients:    [1e+00,1e+00]
+    Range of rhs coefficients:       [1e+00,5e+00]
+    Range of bound coefficients:     [1e+00,1e+00]
+    Range of cost coefficients:      [1e-03,9e+01]
+    Density of cost:                     99.9%
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+         0         1      --       0  0.000000e+00            --     Inf  0.66s
+H        0         1      --       0  0.000000e+00  9.099242e+01 100.00%  0.93s
+*        0         1      --       0  4.339055e+01  4.339055e+01  0.000%  1.53s
+         0         1      --       0  4.339055e+01  4.339055e+01  0.000%  1.53s
+         1         0     0.0       0  4.339055e+01  4.339055e+01  0.000%  1.53s
+         1         0     0.0       0  4.339055e+01  4.339055e+01  0.000%  1.53s
+
+Best solution   : 43.390545845
+Best bound      : 43.390545845
+Best gap        : 0.0000%
+Solve time      : 1.93
+Solve node      : 1
+MIP status      : solved
+Solution status : integer optimal (relative gap limit 0.0001)
+
+Violations      :     absolute     relative
+    bounds      :            0            0
+    rows        :            0            0
+    integrality :            0
+--- Reading solution for model m1
+--- Solver did not provide marginals for model m1
+--- To request marginals from the solver set option requestMarginals >= 1
+--- Rectilinear Clustering Enumeration.gms(161) 125 Mb  3 secs
+--- GDX File C:\projects\OptimizationModels\Smallest Enclosing Rectangle\x.gdx
+--- Rectilinear Clustering Enumeration.gms(161) 123 Mb  3 secs
+*** Status: Normal completion
+--- Job Rectilinear Clustering Enumeration.gms Stop 10/27/26 12:01:42 elapsed 0:00:08.546
